@@ -188,7 +188,7 @@ details{border:1px solid var(--rule);border-radius:9px;background:var(--surface)
 details[open]{border-color:var(--rule-strong)}
 summary{
   cursor:pointer;padding:.9rem 1.15rem;font-weight:600;font-size:.93rem;list-style:none;
-  display:flex;align-items:center;gap:.8rem;
+  display:flex;align-items:center;gap:.5rem .8rem;flex-wrap:wrap;
 }
 summary::-webkit-details-marker{display:none}
 summary::after{content:"+";margin-left:auto;color:var(--ink-3);font-weight:400;font-size:1.15rem;line-height:1}
@@ -199,6 +199,8 @@ details[open] summary::after{content:"\2212"}
 }
 .qbadge.block{background:var(--accent);color:var(--accent-ink)}
 .qbadge.soft{background:var(--sunken);color:var(--ink-3)}
+.qt{flex:1 1 auto;min-width:0}
+.qbadge{white-space:nowrap}
 details .body{padding:0 1.15rem 1.1rem;font-size:.885rem;color:var(--ink-2)}
 details .body p{max-width:none}
 details .body .rec{
@@ -223,77 +225,172 @@ footer p{max-width:var(--readw)}
 <div class="wrap">
 
 <header class="mast">
-  <div class="eyebrow"><span class="dot"></span>Phase 0 <span aria-hidden="true">/</span> Plan, not code <span aria-hidden="true">/</span> 24 August 2026</div>
+  <div class="eyebrow"><span class="dot"></span>Phase 0 <span aria-hidden="true">/</span> Plan, not code <span aria-hidden="true">/</span> Revised 24 August 2026</div>
   <h1>Rynet<span class="thin">A verified-dealers-only marketplace, and the agency that feeds it.</span></h1>
-  <p class="lede">Everything below is the plan the brief asked for. It also contains <strong>seven places where the research changed the answer</strong> rather than confirming it, including one that removes a payment provider from the table entirely and one that makes the obvious hosting stack unworkable from South Africa.</p>
+  <p class="lede">Four decisions are now made, and one of them, hosting on your existing cPanel, changed the architecture more than the other three combined. <strong>Postgres is out and SQLite is in</strong>, along with everything that follows from that. Below is what it bought, what it cost, and the two questions to your host that now block Phase 1.</p>
   <div class="metabar">
     <div>Market<b>South Africa, ZAR</b></div>
     <div>Front doors<b>2</b></div>
     <div>Collections<b>~50</b></div>
     <div>Phases<b>11</b></div>
-    <div>Open questions<b>16</b></div>
-    <div>Blocking<b>4</b></div>
+    <div>Decided<b>4</b></div>
+    <div>Blocking Phase 1<b>2</b></div>
   </div>
 </header>
 
 <section>
   <div class="tick"><i></i><i></i><i></i><i></i><i></i></div>
-  <h2>Seven calls that go against the brief</h2>
-  <p class="sub">The brief asked me to argue when I disagree. These are the arguments. Each one is written up properly in the docs.</p>
+  <h2>Decisions taken</h2>
+  <p class="sub">Your four answers, and what each one moved.</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>Question</th><th>Answer</th><th>What it changed</th></tr></thead>
+      <tbody>
+        <tr><td><b>Domain</b></td><td>Marketplace on the apex, agency at <code>/digital</code></td><td>Nothing. The sitemap already assumed it, so the agency inherits the marketplace's domain authority as planned.</td></tr>
+        <tr><td><b>Hosting</b></td><td>Your existing cPanel with Node</td><td>A great deal. See the next section.</td></tr>
+        <tr><td><b>Billing</b></td><td>PayFast, shipping in v1</td><td>Verboten's PayFast integration ports across. Plans, subscriptions and invoices added to the content model. Lands in Phase 6.</td></tr>
+        <tr><td><b>Launch stock</b></td><td>No dealers yet, seeded demonstration stock</td><td>Phase 5 inverts its priorities. Phase 10's seed stops being scaffolding and becomes the thing you show a dealer principal.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="tick"><i></i><i></i><i></i><i></i><i></i></div>
+  <h2>What cPanel cost, honestly</h2>
+  <p class="sub">It is the right call for where this business is today. It is not free, and I would rather name the price than discover it in Phase 3.</p>
   <div class="calls">
 
     <div class="call">
       <span class="n">01</span>
       <div>
-        <span class="flag">Removes an option</span>
-        <h3>Stripe cannot be used</h3>
-        <p>Stripe does not support South African registered entities for ZAR settlement or Connect payouts. If Rynet Digital is a South African company, Stripe is off the table no matter what the brief assumed. Peach Payments has native recurring billing and debit orders. Paystack has the cleaner API. My recommendation is neither in v1: invoice the first dealer cohort by hand and build billing once you know your plan structure.</p>
+        <h3>SQLite, not Postgres</h3>
+        <p>Your cPanel's PostgreSQL is version 10, from 2017 and long out of support, which Payload 3 does not accept. Payload supports Postgres, SQLite and MongoDB, and not MySQL or MariaDB, so the host's MariaDB is out too. That leaves SQLite, the same as Amico and Verboten, with the adapter switching on the connection string so a later move is a config change rather than a rewrite.</p>
       </div>
     </div>
 
     <div class="call">
       <span class="n">02</span>
       <div>
-        <span class="flag">Breaks the default stack</span>
-        <h3>Vercel plus Neon cannot hit your TTFB budget</h3>
-        <p>Vercel does have a Cape Town region. Neon and Supabase have no African region at all. So the default pairing puts your functions in Cape Town and your database in Frankfurt, roughly 170ms away, on a search page that issues several queries. Sub-500ms TTFB is not reachable that way. Vercel <code>cpt1</code> with managed Postgres in AWS <code>af-south-1</code>, or a single VPS in the same region. Three options costed in the docs.</p>
+        <span class="flag">The ceiling, named</span>
+        <h3>Amico is one dealership. This is a marketplace.</h3>
+        <p>SQLite serialises writes, and Rynet has many dealers writing at once. It will be fine at launch and it has a ceiling. The trigger to move is written down rather than left to feel: <code>SQLITE_BUSY</code> appearing under normal load, or roughly 25 dealers actively managing stock, or p95 search above 300ms. Then it is managed Postgres in AWS <code>af-south-1</code>, which is in the same country as your host.</p>
       </div>
     </div>
 
     <div class="call">
       <span class="n">03</span>
       <div>
-        <h3>Not taking the newest TypeScript</h3>
-        <p>TypeScript 7.0 is stable and roughly ten times faster. It also dropped <code>lib/typescript.js</code>, the compiler API Next needs, so Next 16.3 only supports it behind <code>experimental.useTypeScriptCli</code>, and typescript-eslint closed its 7.0 support request as not planned. 7.1 closes both gaps around October 2026. Pinning 5.9.3 with the revisit dated in writing.</p>
+        <h3>Three things become mandatory</h3>
+        <p>Nothing writes on the read path, so view counters buffer in memory and flush by cron instead of writing per page view. Feed imports run chunked through a queue rather than as one long transaction that blocks every other writer. And no hand-written SQL uses SQLite-only syntax, because the Postgres move is a when rather than an if.</p>
       </div>
     </div>
 
     <div class="call">
       <span class="n">04</span>
       <div>
-        <h3>Your brand red fails contrast twice</h3>
-        <p>Not a problem, but it does mean the palette needs a real ramp rather than three hex values dropped into components. The measured numbers are in the next section. The short version: red-600 for link text, red-300 for accents on navy, and silver demoted to a dark-theme text colour and a light-theme decorative rule.</p>
+        <h3>No PostGIS, no trigram</h3>
+        <p>Radius search becomes an R-tree bounding box plus an exact haversine filter, which is precisely MotoHubSA's <code>geo.ts</code>. That file just moved from optional reuse to load-bearing. Fuzzy text becomes FTS5 prefix search, which costs less than it sounds because the typeahead does its real work in a deterministic parser rather than in the fuzzy match.</p>
       </div>
     </div>
 
     <div class="call">
       <span class="n">05</span>
       <div>
-        <h3>Poppins is wrong for the interface</h3>
-        <p>It sets wide, reads slowly at 14px, and has no useful tabular figures, on a platform that is mostly prices, mileage, kilowatts and rates. Montserrat for display, because it is the logo's own voice. Inter for interface, tables and every numeral. Poppins kept for the agency site's large marketing type, where it looks good. I will build it your way if you disagree.</p>
+        <span class="flag">A real gap against the brief</span>
+        <h3>No per-pull-request preview deployments</h3>
+        <p>The brief asks for them and this host cannot do them. The substitutes are CI building and testing every pull request against a local production build, including axe and Lighthouse, plus a staging Node app on a subdomain running the same bundle. That is thinner than preview URLs and I would rather say so than let it pass unmentioned.</p>
       </div>
     </div>
 
     <div class="call">
       <span class="n">06</span>
       <div>
-        <h3>The dealer portal is not the Payload admin</h3>
-        <p>A lead pipeline board, a feed mapping UI with dry-run preview, and drag-reorderable galleries make an application, not a content editor. Bending Payload's admin into that shape means fighting it on every screen. The portal gets its own route group and talks to Payload through the Local API, so the access control still applies without the admin shell.</p>
+        <h3>Node 22 and npm, not 24 and pnpm</h3>
+        <p>Your cPanel offers Node 20 or 22, and Next 16 needs 20.9 or above, so 22. Pinning Node 24 because it is the current LTS would be pinning a fiction. And cPanel's Setup Node.js App runs <code>npm install</code> from its own button, so npm it is: a lockfile the host cannot read is worse than a slower install.</p>
       </div>
     </div>
 
     <div class="call">
       <span class="n">07</span>
+      <div>
+        <h3>Media still goes to Cloudflare R2</h3>
+        <p>This one does not bend. Amico keeps photos on the cPanel disk, which is right for one dealership with 97 cars. Twenty images per listing across 300 seed vehicles is 6 000 files before a single real dealer signs, and shared hosting caps inodes long before disk. R2 also leaves the cPanel disk holding one thing that matters, <code>rynet.db</code>, which makes the restore drill genuinely simple.</p>
+      </div>
+    </div>
+
+    <div class="call">
+      <span class="n">08</span>
+      <div>
+        <h3>PayFast holds up, with one caveat</h3>
+        <p>It does support recurring billing, through Subscriptions and through Tokenisation for ad-hoc amounts, with an API to update, pause, cancel and query. Verboten's signature generation and ITN notify route port across. The caveat: PayFast recurring is credit card only, no debit order, and some dealer principals will want a debit order for a monthly plan.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <div class="tick"><i></i><i></i><i></i><i></i><i></i></div>
+  <h2>Two questions to your host, and they block Phase 1</h2>
+  <p class="sub">Both take one support ticket. I cannot check either from here, and both are load-bearing enough that guessing would be irresponsible.</p>
+  <div class="tscroll">
+    <table>
+      <thead><tr><th>Question</th><th>Why it decides something</th><th>If the answer is bad</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><b>Is the home directory on local disk or NFS?</b></td>
+          <td>SQLite's file locking is safe on local disk and unsafe on NFS. Almost every cPanel host uses local disk, but "almost every" is not a good enough basis for the single file holding every dealer's stock.</td>
+          <td>SQLite is off the table entirely and we need managed Postgres in <code>af-south-1</code>, which changes the cost picture.</td>
+        </tr>
+        <tr>
+          <td><b>Does Passenger run one Node process or several?</b></td>
+          <td>Several processes writing one SQLite file is fine in WAL mode on local disk. It also makes the in-memory caches and the counter buffer per-process.</td>
+          <td>Not bad, just different: the counter flush and the Next cache tag invalidation both have to be designed for it, and I need to know before rather than after.</td>
+        </tr>
+        <tr>
+          <td>Two smaller ones for the same ticket</td>
+          <td>What is the disk quota and the inode limit on the account? And has the host's PostgreSQL moved off version 10 since Amico went up?</td>
+          <td>If Postgres is now 14 or later, SQLite becomes optional rather than forced, and I would want to reconsider.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="tick"><i></i><i></i><i></i><i></i><i></i></div>
+  <h2>Still arguing with the brief on four points</h2>
+  <p class="sub">The brief said to argue when I disagree, so these stand until you overrule them.</p>
+  <div class="calls">
+
+    <div class="call">
+      <span class="n">01</span>
+      <div>
+        <h3>Not taking the newest TypeScript</h3>
+        <p>7.0 is stable and roughly ten times faster. It also dropped <code>lib/typescript.js</code>, the compiler API Next needs, so Next 16.3 only supports it behind <code>experimental.useTypeScriptCli</code>, and typescript-eslint closed its support request as not planned. 7.1 closes both gaps around October 2026. Pinning 5.9.3 with the revisit dated in writing. On this host the build only runs locally, so a build failure is a deploy that cannot happen.</p>
+      </div>
+    </div>
+
+    <div class="call">
+      <span class="n">02</span>
+      <div>
+        <span class="flag">Last design question standing</span>
+        <h3>Poppins is wrong for the interface</h3>
+        <p>It sets wide, reads slowly at 14px, and has no useful tabular figures, on a platform that is mostly prices, mileage and rates. Montserrat for display, because it is the logo's own voice. Inter for interface, tables and every numeral. Poppins kept for the agency site's large marketing type, where it looks good. This one gates the component library in Phase 1b, so it needs an answer before the others.</p>
+      </div>
+    </div>
+
+    <div class="call">
+      <span class="n">03</span>
+      <div>
+        <h3>The dealer portal is not the Payload admin</h3>
+        <p>A lead pipeline board, a feed mapping UI with dry-run preview, and drag-reorderable galleries make an application, not a content editor. Bending Payload's admin into that shape means fighting it on every screen. Own route group, Payload Local API, so the access control still applies without the admin shell.</p>
+      </div>
+    </div>
+
+    <div class="call">
+      <span class="n">04</span>
       <div>
         <h3>SEO cannot be Phase 7</h3>
         <p>Server rendering, URL shape, canonical rules and structured data are decisions made while a template is built. Retrofitting them means rebuilding the template. SEO architecture moves into Phases 3 and 4. Phase 7 becomes sitemaps, redirects, Search Console and cutover, which is a real and much smaller phase.</p>
@@ -362,7 +459,7 @@ footer p{max-width:var(--readw)}
   <div class="tree">
 <span class="k">/cars</span>                                         <span class="c">all live stock</span>
 <span class="k">/cars/[make]</span>                                  <span class="c">/cars/toyota</span>
-<span class="k">/cars/[make]/[model]</span>                          <span class="c">/cars/toyota/hilux    <-  model hub</span>
+<span class="k">/cars/[make]/[model]</span>                          <span class="c">/cars/toyota/hilux    &lt;-  model hub</span>
 <span class="k">/cars/[make]/[model]/[variant]</span>                <span class="c">/cars/toyota/hilux/2-8-gd-6-raider</span>
 <span class="k">/cars/in/[province]</span>                           <span class="c">/cars/in/gauteng</span>
 <span class="k">/cars/in/[province]/[city]</span>                    <span class="c">/cars/in/gauteng/pretoria</span>
@@ -401,7 +498,7 @@ footer p{max-width:var(--readw)}
         <tr>
           <td><b>API</b></td>
           <td><code>beforeValidate</code> overwrites the dealer field with the session user's own dealer, discarding what the client sent. <code>access.create</code> requires <code>verificationStatus: verified</code>.</td>
-          <td>That single overwrite is what stops dealer A posting stock under dealer B, and it is what the adversarial test suite aims at. Read access returns a <code>Where</code> clause, so the filtering happens inside the query rather than after it.</td>
+          <td>That single overwrite is what stops dealer A posting stock under dealer B, and it is what the adversarial test suite aims at. Read access returns a <code>Where</code> clause, so filtering happens inside the query rather than after it.</td>
         </tr>
         <tr>
           <td><b>UI</b></td>
@@ -411,13 +508,13 @@ footer p{max-width:var(--readw)}
       </tbody>
     </table>
   </div>
-  <p style="margin-top:1.2rem">Postgres row-level security was considered and rejected: Payload pools connections, so a session variable that sometimes fails to get set is worse than no fourth layer at all. The defence in depth is a test that authenticates as dealer A, tries to read and mutate dealer B, and asserts failure, for every scoped collection.</p>
+  <p style="margin-top:1.2rem">Row-level security in the database was considered and rejected on both engines: SQLite has none, and on Postgres a session variable that sometimes fails to get set is worse than no fourth layer at all. The defence in depth is a test that authenticates as dealer A, tries to read and mutate dealer B, and asserts failure, for every scoped collection.</p>
 </section>
 
 <section>
   <div class="tick"><i></i><i></i><i></i><i></i><i></i></div>
   <h2>Stack, versions read off the registry today</h2>
-  <p class="sub">Not recalled. Every pin below was checked on 24 August 2026, and the Payload and Next pairing was verified from Payload's published peer range rather than assumed.</p>
+  <p class="sub">Not recalled. Every pin checked on 24 August 2026, and the Payload and Next pairing verified from Payload's published peer range rather than assumed. Revised after the hosting decision.</p>
   <div class="tscroll">
     <table>
       <thead><tr><th>Layer</th><th class="num">Pinned</th><th>The reason it is that number</th></tr></thead>
@@ -425,15 +522,17 @@ footer p{max-width:var(--readw)}
         <tr><td>Next.js</td><td class="num">16.3.2</td><td>Payload 3.88 declares <code>next: &gt;=16.2.6 &lt;17.0.0</code>, so this is a supported pair</td></tr>
         <tr><td>Payload</td><td class="num">3.88.0</td><td>Current stable. Payload 4 exists only as canary and internal builds</td></tr>
         <tr><td>React</td><td class="num">19.2.8</td><td>Required by Next 16</td></tr>
-        <tr><td>TypeScript</td><td class="num">5.9.3</td><td>Deliberately not 7.0.2. See call 03</td></tr>
-        <tr><td>Node</td><td class="num">24 LTS</td><td>26 is Current, not LTS, until October 2026. Production runs LTS</td></tr>
-        <tr><td>PostgreSQL</td><td class="num">17.x</td><td>Plus PostGIS for radius search, which is why the region matters</td></tr>
+        <tr><td>TypeScript</td><td class="num">5.9.3</td><td>Deliberately not 7.0.2</td></tr>
+        <tr><td>Node</td><td class="num">22.x</td><td>What your cPanel offers. Node 24 is the current LTS and is not on the host</td></tr>
+        <tr><td>Package manager</td><td class="num">npm</td><td>Reversed from pnpm. cPanel's Node app UI runs npm from its own button</td></tr>
+        <tr><td>Database</td><td class="num">SQLite</td><td>Host Postgres is v10, which Payload 3 rejects. Adapter switches on the connection string</td></tr>
         <tr><td>Tailwind</td><td class="num">4.3.3</td><td>CSS-first config, so an arbitrary hex is a lint failure not a habit</td></tr>
         <tr><td>Zod</td><td class="num">4.4.3</td><td>One schema per contract, shared by form, server action and field validator</td></tr>
-        <tr><td>Biome</td><td class="num">2.5.10</td><td>Over ESLint plus Prettier: one tool, and it does not depend on the TypeScript compiler API, which is what lets us move to TS7 later</td></tr>
+        <tr><td>Biome</td><td class="num">2.5.10</td><td>One binary instead of ESLint plus Prettier. It also avoids <code>unrs-resolver</code>, the ESLint-adjacent native module whose postinstall already fails on your host</td></tr>
         <tr><td>Motion</td><td class="num">13.1.1</td><td>Layout animation and shared elements only. Route transitions use the native View Transitions API</td></tr>
         <tr><td>Vitest / Playwright</td><td class="num">4.1.11 / 1.62.1</td><td>axe-core runs inside the Playwright pass, so one CI job covers both</td></tr>
-        <tr><td>Search</td><td class="num">Postgres only</td><td>No Typesense in v1. The trigger to add one is written down: p95 above 300ms at 50 concurrent, or 250 000 live listings</td></tr>
+        <tr><td>Payments</td><td class="num">PayFast</td><td>Verboten's integration ports across, signature generation and ITN route included</td></tr>
+        <tr><td>Search</td><td class="num">SQLite FTS5</td><td>No second service on a shared host. The trigger to add one is written down</td></tr>
       </tbody>
     </table>
   </div>
@@ -442,68 +541,52 @@ footer p{max-width:var(--readw)}
 <section>
   <div class="tick"><i></i><i></i><i></i><i></i><i></i></div>
   <h2>Eleven phases</h2>
-  <p class="sub">Ten as briefed, plus a 1b so the component library gets reviewed on its own, per your rule about seeing the component before the page. Highlighted rows are the two changes to the order.</p>
+  <p class="sub">Ten as briefed, plus a 1b so the component library gets reviewed on its own, per your rule about seeing the component before the page. Highlighted rows are the ones the four decisions changed.</p>
   <div class="phases">
-    <div class="phase"><span class="id">1</span><span class="nm">Foundation</span><span class="dn">Clean machine to a themed page and a working admin login in under ten minutes, following the README only. Contrast report generated and green.</span></div>
-    <div class="phase moved"><span class="id">1b</span><span class="nm">Component library</span><span class="dn">Added. Every primitive in all nine states, both themes, 320px and 1440px, with its axe result inline. Approved once, rather than re-litigated inside a search page review.</span></div>
+    <div class="phase"><span class="id">1</span><span class="nm">Foundation</span><span class="dn">Clean machine to a themed page and a working admin login in under ten minutes, following the README only. A deploy bundle builds locally and starts under <code>server.cjs</code>, with staging running it.</span></div>
+    <div class="phase moved"><span class="id">1b</span><span class="nm">Component library</span><span class="dn">Added. Every primitive in all nine states, both themes, 320px and 1440px, with its axe result inline. Gated on the typeface answer.</span></div>
     <div class="phase"><span class="id">2</span><span class="nm">Content model and admin</span><span class="dn">A non-technical person creates, blocks, uploads, schedules and rolls back using the CMS guide only, with me not in the room.</span></div>
-    <div class="phase"><span class="id">3</span><span class="nm">Marketplace public</span><span class="dn">The biggest phase by a wide margin. Split the review into search, then listing detail, then microsites and accounts. Lighthouse 95 across all four, budgets enforced in CI.</span></div>
+    <div class="phase"><span class="id">3</span><span class="nm">Marketplace public</span><span class="dn">The biggest phase by a wide margin. Split the review into search, then listing detail, then microsites and accounts. Lighthouse 95 across all four, budgets enforced in CI against a local production build.</span></div>
     <div class="phase"><span class="id">4</span><span class="nm">Agency site</span><span class="dn">Seven real service pages. Multi-step form survives a browser close and reopen. No unverified metric rendered to the public.</span></div>
-    <div class="phase"><span class="id">5</span><span class="nm">Dealer portal</span><span class="dn">Second biggest, and the highest real-world risk: South African stock feeds are not standardised, so the mapping UI is the feature, not a nicety. Done when a real dealer imports a real feed unassisted.</span></div>
-    <div class="phase"><span class="id">6</span><span class="nm">Admin operations</span><span class="dn">Merging two makes rewrites every reference and writes the redirects. The audit log has no delete path for anyone, including platform admin.</span></div>
+    <div class="phase moved"><span class="id">5</span><span class="nm">Dealer portal</span><span class="dn">Inverted by the launch decision. Manual capture and the licence disc reader first, because that is every dealer on day one. The importer is built format-agnostic against fixtures, and honestly marked unvalidated until a real feed exists.</span></div>
+    <div class="phase moved"><span class="id">6</span><span class="nm">Admin operations, plus PayFast billing</span><span class="dn">Full subscription lifecycle against sandbox, then one real low-value charge. Every state change from a signature-verified ITN, raw payload stored before it is acted on, replays rejected. The browser redirect changes nothing.</span></div>
     <div class="phase moved"><span class="id">7</span><span class="nm">SEO operations and cutover</span><span class="dn">Reduced. The architecture moved into phases 3 and 4. What is left is sitemaps, the redirect map import, the sold-listing lifecycle, and Search Console.</span></div>
     <div class="phase"><span class="id">8</span><span class="nm">Motion, empty and error states</span><span class="dn">Whole site walked with reduced motion enabled, and nothing broken, hidden or unreachable. Every list has a designed empty state naming the next action.</span></div>
     <div class="phase"><span class="id">9</span><span class="nm">Hardening</span><span class="dn">External header scan committed. A data subject deletion request that actually deletes. Retention purge tested against seeded expired records.</span></div>
-    <div class="phase"><span class="id">10</span><span class="nm">Launch prep</span><span class="dn">12 dealers, 300 vehicles, real makes, believable rand prices. A restore drill run and written up with timings.</span></div>
+    <div class="phase moved"><span class="id">10</span><span class="nm">Launch prep</span><span class="dn">The seed stops being scaffolding. It is what a dealer principal sees, so it has to survive that scrutiny: 12 dealers, 300 vehicles, real makes, believable prices, addresses that geocode, and every fictional name labelled as demonstration stock.</span></div>
   </div>
-  <p style="margin-top:1.6rem"><strong>If there is a date,</strong> two levers actually move it. Ship the marketplace before the portal, onboarding the first dealer cohort by hand through the admin, which gets a live product with real stock months earlier and then builds the portal against real dealer behaviour. Or ship the agency site first of all: it is the smallest phase, it does not depend on the marketplace existing, and it is the only one that produces revenue on its own. I have assumed neither.</p>
+  <p style="margin-top:1.6rem"><strong>One sequencing argument.</strong> With no dealers signed, the constraint is no longer a launch date, it is that you need something to show a dealer principal before you can sign one. That argues for moving <strong>Phase 4, the agency site, ahead of the marketplace</strong>: it is the smallest phase, it does not depend on the marketplace existing, it is the only one that earns on its own, and it is what you send a dealer principal first. Then the marketplace on seeded stock as the demo, then the portal built against real dealer behaviour. I have not reordered anything yet.</p>
 </section>
 
 <section>
   <div class="tick"><i></i><i></i><i></i><i></i><i></i></div>
-  <h2>What I need from you</h2>
-  <p class="sub">Sixteen questions in total. Four block the foundation and are marked. The rest can be answered as we go, but sooner is cheaper.</p>
+  <h2>Still open</h2>
+  <p class="sub">Eighteen questions in the doc. Four are answered. Two go to your host. These are the ones that need you.</p>
   <div class="qs">
 
     <details open>
-      <summary><span class="qbadge block">Blocking</span> Where does the agency site live?</summary>
+      <summary><span class="qbadge block">Gates 1b</span><span class="qt">Montserrat and Inter, or Poppins throughout?</span></summary>
       <div class="body">
-        <p>Marketplace on <code>rynet.co.za</code> with the agency at <code>/digital</code>, or the agency on <code>digital.rynet.co.za</code>, or a separate domain entirely?</p>
-        <div class="rec"><b>Recommendation: subfolder.</b> The marketplace will carry tens of thousands of URLs and is the only side of the business that builds real domain authority. A subfolder lets the agency inherit it; a subdomain is treated as a separate site and starts from zero. The cost is that the agency reads as subordinate to the marketplace, which may be exactly wrong commercially. That part is your call, not mine.</div>
+        <p>The only design question left. Montserrat for display is right either way, because it is the logo's own voice. The argument is about the interface face.</p>
+        <div class="rec"><b>My case for Inter:</b> Poppins sets wide, which costs horizontal space in a filter rail you do not have to spare. It reads slowly at 14px in a spec table or a lead pipeline. And it has no useful tabular figures, on a platform where prices, mileage, kilowatts, instalments and rates all need to align in columns. Poppins stays for the agency site's large marketing type, where it looks good. Say the word and I build it your way instead.</div>
       </div>
     </details>
 
     <details open>
-      <summary><span class="qbadge block">Blocking</span> Hosting, and are you willing to pay for Cape Town?</summary>
+      <summary><span class="qbadge block">Needed to seed</span><span class="qt">What are the dealer plans, and what do they cost?</span></summary>
       <div class="body">
-        <p>Vercel Pro pinned to <code>cpt1</code> with managed Postgres in AWS <code>af-south-1</code> is the fast, low-ops answer and the most expensive. A single VPS in the same region with Docker is far cheaper and we own patching, backups, restore drills and PR previews. Vercel plus Neon is cheapest of the managed options and cannot meet the performance budget from here.</p>
-        <div class="rec"><b>Recommendation: Vercel <code>cpt1</code> plus af-south-1 Postgres.</b> If the monthly cost is the blocker, the VPS is the right answer and I will build that path properly rather than half of it.</div>
-      </div>
-    </details>
-
-    <details open>
-      <summary><span class="qbadge block">Blocking</span> Does billing ship in v1?</summary>
-      <div class="body">
-        <p>Stripe is out, as above. Peach Payments has native recurring billing and debit orders. Paystack has the cleaner API and same-day payouts but is weaker on debit order, which matters for monthly dealer plans in this market.</p>
-        <div class="rec"><b>Recommendation: no billing in v1.</b> Your first dealers will be hand-signed anyway. Building billing before you know your plan structure is how you build the wrong billing. Peach in Phase 6.</div>
-      </div>
-    </details>
-
-    <details open>
-      <summary><span class="qbadge block">Blocking</span> Where does launch stock come from?</summary>
-      <div class="body">
-        <p>Do you have dealers signed? How many? Can you get me one real stock feed to build the import mapper against? If not, is v1 launching on seeded demo stock, and is that stock clearly labelled as a demonstration?</p>
-        <div class="rec">This one changes Phase 5 completely. South African DMS vendors have no common feed format, so building an importer against an imagined schema guarantees rework. One real feed is worth more to me than any spec.</div>
+        <p>Now that billing ships in v1 I need the real structure: how many tiers, what each costs per month, the listing limit on each, and what the higher tiers unlock. Microsite theming, extra branches, extra users, placement in search.</p>
+        <div class="rec">I can build the plan machinery without this. I cannot seed it, and a demo with invented prices on the pricing page is exactly the sort of thing that gets quoted back at you by a dealer principal.</div>
       </div>
     </details>
 
     <details>
-      <summary><span class="qbadge soft">Shapes the build</span> Dealer verification: what do we actually check?</summary>
+      <summary><span class="qbadge soft">Shapes the build</span><span class="qt">Dealer verification: what do we actually check?</span></summary>
       <div class="body"><p>My assumption is CIPC registration number, VAT number where applicable, motor trade number, proof of business address, and RMI, NADA or MIWA membership where held, with a named human making the decision and the decision recorded in an audit trail. Confirm or correct. The entire product argument rests on this being real rather than a checkbox.</p></div>
     </details>
 
     <details>
-      <summary><span class="qbadge soft">Shapes the build</span> Finance calculator: whose numbers are we quoting?</summary>
+      <summary><span class="qbadge soft">Shapes the build</span><span class="qt">Finance calculator: whose numbers are we quoting?</span></summary>
       <div class="body">
         <p>Our own estimate with a disclaimer, or a real finance partner whose rates we quote? Very different compliance profiles under the National Credit Act.</p>
         <div class="rec"><b>Default assumption:</b> our own estimate, clearly labelled an estimate, prime plus a configurable offset, total cost of credit shown, and a disclaimer field that is required and marked "requires legal review" until a qualified human has seen it. Prime is 10.5 percent on a 7.00 repo, effective 28 May 2026, and it lives in the CMS so an admin updates it the day it moves.</div>
@@ -511,9 +594,9 @@ footer p{max-width:var(--readw)}
     </details>
 
     <details>
-      <summary><span class="qbadge soft">Shapes the build</span> Reviews, ratings, WhatsApp, Afrikaans, trade-in data</summary>
+      <summary><span class="qbadge soft">Shapes the build</span><span class="qt">Reviews, WhatsApp, Afrikaans, trade-in data</span></summary>
       <div class="body">
-        <p><b>Reviews.</b> Collect our own, import Google, or ship without? Never mark up a rating we have not earned, so no source means no <code>aggregateRating</code> at all. My default: collect our own, verified against a real lead, show nothing until a dealer has five.</p>
+        <p><b>Reviews.</b> Collect our own, import Google, or ship without? Never mark up a rating we have not earned, so no source means no <code>aggregateRating</code> at all. Default: collect our own, verified against a real lead, show nothing until a dealer has five. On seeded demonstration dealers, no ratings whatsoever.</p>
         <p><b>WhatsApp.</b> A <code>wa.me</code> deep link is free and works today. The Business API gives templated messages and lead routing into the portal inbox, and costs per conversation plus Meta verification. Default: deep link in v1.</p>
         <p><b>Afrikaans.</b> Structure is scaffolded either way and costs nothing now. Real content at launch means translating every string, taxonomy label and legal page. If it is coming within a year, tell me now.</p>
         <p><b>Trade-in.</b> A licensed data source such as TransUnion or Lightstone is a real product feature and a real licence fee. A lead-capture form producing a range and handing to the dealer is honest and free. Which?</p>
@@ -521,13 +604,21 @@ footer p{max-width:var(--readw)}
     </details>
 
     <details>
-      <summary><span class="qbadge soft">Confirm and I proceed</span> Analytics, email, pricing, legal, timeline</summary>
+      <summary><span class="qbadge soft">Confirm only</span><span class="qt">Cloudflare, analytics, email, legal, pricing page</span></summary>
       <div class="body">
-        <p><b>Analytics:</b> Plausible, which needs no consent banner because it collects no personal data, plus our own server-side lead event log. GA4 would sit behind the POPIA gate and lose most of its data to refusals.</p>
-        <p><b>Email:</b> Resend sending from <code>rynet.co.za</code>, which needs SPF, DKIM and DMARC. Who controls that DNS?</p>
-        <p><b>Agency pricing:</b> public tiers convert warmer traffic and filter better. A qualification path protects margin and suits dealer groups. I would publish a starting-from figure and gate the rest.</p>
-        <p><b>Legal:</b> privacy, terms, POPIA notice, cookie policy, credit disclaimer and the dealer agreement all need a South African lawyer. I will write plain-language drafts marked "requires legal review" so they are cheap to review. Do you have someone?</p>
-        <p><b>Timeline:</b> is there a date, or a date by which you need something live to show dealers?</p>
+        <p><b>Cloudflare.</b> I want the domain on it, for the CDN cache your host does not provide, plus WAF, rate limiting, Turnstile on public forms, and R2 for the photography. R2 is not optional at marketplace scale. Confirm you are happy to move DNS.</p>
+        <p><b>Analytics.</b> Plausible, which needs no consent banner because it collects no personal data, plus our own server-side lead event log. GA4 would sit behind the POPIA gate and lose most of its data.</p>
+        <p><b>Email.</b> cPanel SMTP through nodemailer, matching Amico and Verboten. Needs SPF, DKIM and DMARC on <code>rynet.co.za</code>. Who controls that DNS?</p>
+        <p><b>Agency pricing page.</b> Public tiers convert warmer traffic and filter better. A qualification path protects margin and suits dealer groups. I would publish a starting-from figure and gate the rest.</p>
+        <p><b>Legal.</b> Privacy, terms, POPIA notice, cookie policy, credit disclaimer and the dealer agreement all need a South African lawyer. I will write plain-language drafts marked "requires legal review" so they are cheap to review. Do you have someone?</p>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="qbadge soft">Recollection</span><span class="qt">Why did MotoHubSA move off Next and Payload?</span></summary>
+      <div class="body">
+        <p>Its <code>.gitignore</code> excludes <code>_archive-old-nextjs-payload/</code>, so that project ran on this exact stack, on this exact class of host, and moved away from it.</p>
+        <div class="rec">If it was a hosting constraint that Amico and Verboten have since solved, that is settled ground and I will stop worrying. If it was something else, a build that would not complete, a memory ceiling, an admin that would not load under LVE limits, then it is the most valuable piece of prior experience available and I would rather hear it now than rediscover it in Phase 2. The archive was not in the zip.</div>
       </div>
     </details>
 
@@ -540,14 +631,14 @@ footer p{max-width:var(--readw)}
   <p class="sub">Committed to <code>C:\CC\rynet</code>. Logo assets copied into <code>brand/</code>. No application code, as briefed.</p>
   <div class="docs">
     <div class="doc"><span class="f">docs/PLAN.md</span><span class="d">The master document. Start here.</span></div>
-    <div class="doc"><span class="f">docs/ARCHITECTURE.md</span><span class="d">Shape, dealer isolation, search design, the hosting fork, dated decisions to revisit.</span></div>
+    <div class="doc"><span class="f">docs/ARCHITECTURE.md</span><span class="d">Shape, dealer isolation, the SQLite ceiling, search without PostGIS, cPanel deployment.</span></div>
     <div class="doc"><span class="f">docs/CONTENT-MODEL.md</span><span class="d">Roughly 50 collections and globals, with the enforcement points marked.</span></div>
     <div class="doc"><span class="f">docs/SITEMAP.md</span><span class="d">Every URL for both front doors, plus the index rules and sitemap split.</span></div>
     <div class="doc"><span class="f">docs/DESIGN-SYSTEM.md</span><span class="d">Three directions, the recommendation, the full computed token set.</span></div>
     <div class="doc"><span class="f">docs/DELIVERY-PLAN.md</span><span class="d">Eleven phases with what done means for each.</span></div>
     <div class="doc"><span class="f">docs/STACK.md</span><span class="d">Every pin with a one-line justification.</span></div>
-    <div class="doc"><span class="f">docs/QUESTIONS.md</span><span class="d">All sixteen, with recommendations.</span></div>
-    <div class="doc"><span class="f">docs/REFERENCE-NOTES.md</span><span class="d">What was taken from MotoHubSA and what was deliberately left.</span></div>
+    <div class="doc"><span class="f">docs/QUESTIONS.md</span><span class="d">Four answered, two for your host, twelve still open.</span></div>
+    <div class="doc"><span class="f">docs/REFERENCE-NOTES.md</span><span class="d">What was taken from MotoHubSA, and the one paragraph the hosting decision proved wrong.</span></div>
     <div class="doc"><span class="f">brand/</span><span class="d">Five logo lockups, icon, favicon.</span></div>
   </div>
 </section>

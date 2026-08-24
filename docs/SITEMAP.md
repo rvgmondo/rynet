@@ -1,7 +1,6 @@
 # SITEMAP AND URL STRUCTURE (proposed, Phase 0)
 
-Two front doors. The domain split is open question 1 and this document assumes the recommendation:
-marketplace on the apex, agency in a `/digital` subfolder.
+Two front doors. **Decided:** marketplace on the apex, agency in a `/digital` subfolder.
 
 ## Why the marketplace gets the apex
 

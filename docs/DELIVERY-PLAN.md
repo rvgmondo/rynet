@@ -28,10 +28,15 @@ Repo, pnpm workspace, Biome, Husky, commitlint, GitHub Actions, portable Postgre
 matching your Amico and Verboten pattern, Payload wired into Next 16, argon2id auth with the two
 separate auth collections, the token file, and the theme system.
 
-**Done when:** a clean machine runs `pnpm install && pnpm db:setup && pnpm dev` and reaches a
-themed page and a working `/admin` login in under ten minutes following `README.md` only. CI runs
-typecheck, lint, and an empty-but-green test suite on a pull request. `docs/contrast-report.md` is
-generated and committed with every pair passing. `docs/STACK.md` and `docs/THREAT-MODEL.md` exist.
+**Done when:** a clean machine runs `npm install && npm run dev` and reaches a themed page and a
+working `/admin` login in under ten minutes following `README.md` only. CI runs typecheck, lint,
+and an empty-but-green test suite on a pull request. `docs/contrast-report.md` is generated and
+committed with every pair passing. `docs/STACK.md` and `docs/THREAT-MODEL.md` exist. A deploy
+bundle builds locally and starts under `server.cjs`, and `staging.rynet.co.za` is running it.
+
+Note against the brief: this host cannot do per-pull-request preview deployments. CI compensates by
+building and testing every pull request against a local production build, and the staging Node app
+is the shared preview. That is a real gap and it is stated rather than glossed.
 
 ## Phase 1b: Component library
 
@@ -99,23 +104,44 @@ The second-biggest phase, and the one carrying the most real-world risk, because
 stock feeds are not standardised. There is no common XML schema between DMS vendors here, so the
 mapping UI is not a nice-to-have, it is the feature.
 
-**Done when:** a real dealer imports a real feed, edits a listing, and works a lead to "sold"
-without help, watched but not assisted. Dry run reports created, updated and archived counts
-correctly against a deliberately messy fixture feed with missing fields, duplicate VINs, bad
-encodings and prices as text. Rollback restores the previous state exactly. Gallery reorder has a
-tested keyboard path, per WCAG 2.2 SC 2.5.7. Dealer isolation tests still green.
+**Changed by the launch decision.** With no dealers signed yet, there is no real feed to build
+against, and building an importer against an imagined schema is guaranteed rework. So this phase
+inverts its priorities:
+
+1. **Manual stock capture first**, including the licence disc reader ported from MotoHubSA: the
+   dealer photographs the disc, the PDF417 barcode decodes (with OCR as fallback), and the VIN,
+   plate, make, model, colour and disc expiry prefill the form. For a dealer with no feed, which is
+   every dealer on day one, this is the fast path, and it is a better demo than an importer.
+2. **The importer is built format-agnostic**, against a fixture set I write covering the shapes
+   these feeds actually take: flat CSV, nested XML, one-row-per-image, one-column-per-image,
+   prices as text with an R prefix, dates in three formats, and duplicate VINs.
+3. **It stays unvalidated until a real feed exists.** I will say so in the docs rather than
+   claiming it works. The first real feed becomes a small follow-up phase, not a surprise.
+
+**Done when:** stock capture works end to end, disc reader included, with a keyboard path for
+gallery reordering per WCAG 2.2 SC 2.5.7. Dry run reports created, updated and archived counts
+correctly against every fixture shape above. Rollback restores the previous state exactly. Imports
+run chunked through the cron queue and do not block other writers, verified by running an import
+while a second dealer saves a listing. Dealer isolation tests still green.
 
 ## Phase 6: Admin operations
 
 Dealer approval queue with verification checklist and audit trail. Listing moderation with
 configurable rules and a review queue. Taxonomy management with merge and alias handling. Plan and
 pricing configuration. Global lead view and routing. Feature flags. Users and roles. Audit log.
-Health dashboard.
+Health dashboard. **PayFast billing**, since you have chosen to ship it.
 
 **Done when:** merging two makes rewrites every reference and writes the redirects, verified on a
 seeded duplicate. The audit log records actor, action, before and after, and IP for every privileged
-action, and has no update or delete path for anyone including platform admin. Moderation rules
-catch a seeded set of bad listings.
+action, and has no update or delete path for anyone including platform admin. Moderation rules catch
+a seeded set of bad listings.
+
+On billing specifically: a full subscription lifecycle runs against PayFast sandbox, then once with
+a real low-value charge as Verboten's deploy doc does. Signup, first charge, a failed renewal moving
+the dealer to `past_due`, a pause, a resume, a cancel, and the listing limit enforcing itself when a
+subscription lapses. Every state change comes from a signature-verified ITN webhook, confirmed
+server to server, with the raw payload stored before it is acted on. A replayed ITN is rejected. The
+browser redirect changes nothing.
 
 ## Phase 7: SEO operations and cutover
 
@@ -155,24 +181,41 @@ reader results documented for search, listing, enquiry, dealer login and stock c
 
 Seed content, all documentation, runbook, restore drill, cutover checklist.
 
-**Done when:** the full `docs/` set exists. Seed data is 12 or more dealers across Gauteng, the
-Western Cape and KwaZulu-Natal with 300 or more vehicles across makes actually sold here, at
-believable rand prices and mileages. A restore-from-backup drill has been run and written up with
-timings. `docs/SEO-LAUNCH-CHECKLIST.md` and `docs/RUNBOOK.md` are complete. Every item in Section 17
-is ticked with evidence attached.
+**Changed by the launch decision.** Seed data is no longer test scaffolding, it is the launch
+content. It is what a dealer principal sees when you show them the platform, so it has to survive
+that scrutiny: 12 or more dealers across Gauteng, the Western Cape and KwaZulu-Natal, 300 or more
+vehicles across makes actually sold here, believable rand prices and mileages, real branch addresses
+that geocode, trading hours that make sense, and photography that does not look like placeholder
+art. Every fictional dealer name, review and metric is listed in `docs/CONTENT-NEEDED.md` and
+labelled in the UI as demonstration stock. We do not put invented dealers on a live site pretending
+to be real businesses.
+
+**Done when:** the full `docs/` set exists. The seed passes the demo test above. A
+restore-from-backup drill has been run and written up with timings, restoring `rynet.db` and
+confirming R2 media still resolves. `docs/SEO-LAUNCH-CHECKLIST.md` and `docs/RUNBOOK.md` are
+complete. Every item in Section 17 is ticked with evidence attached.
 
 ---
 
-## Honest note on scale
+## Sequencing, now that there are no dealers yet
 
-This is a large platform. Phases 3 and 5 together are more work than phases 1, 2, 4, 6 and 7
-combined. If there is a commercial deadline, the two levers that actually move it are:
+This is a large platform. Phases 3 and 5 together are more work than 1, 2, 4, 6 and 7 combined.
+With no dealers signed, the ordering question changes shape: the constraint is no longer a launch
+date, it is that **you need something to show a dealer principal before you can sign one.**
 
-- **Ship the marketplace before the dealer portal.** The first cohort of dealers can be onboarded
-  by us through the admin while the portal is built. That gets you a live product with real stock
-  months earlier, and the portal then gets built against real dealer behaviour rather than
-  guesses.
-- **Ship the agency site first of all.** It is the smallest phase and the only one that produces
-  revenue on its own. It also does not depend on the marketplace existing.
+That argues for a specific order:
 
-I have not assumed either. Tell me whether there is a date and I will sequence to it.
+1. **Phase 4, the agency site, moves up.** It is the smallest phase, it does not depend on the
+   marketplace existing, and it is the only one that can produce revenue on its own. It is also
+   what you send a dealer principal first.
+2. **Then Phase 3, the marketplace, on seeded stock.** A working search over 300 believable
+   vehicles across 12 dealers is the demo. It sells the platform far better than a slide.
+3. **Then Phase 5, the portal**, built against the behaviour of the first real dealers rather than
+   against guesses, with the feed importer validated on their actual feeds.
+
+The cost of moving the agency site up is that its case studies have no real metrics yet, because
+there are no clients. That is handled by the `metricsVerified` flag in the content model: an
+unverified case study renders the narrative and hides the numbers. It never shows an invented one.
+
+I have not reordered anything yet. Say the word and the delivery plan renumbers to 1, 1b, 2, 4, 3,
+5, 6, 7, 8, 9, 10.

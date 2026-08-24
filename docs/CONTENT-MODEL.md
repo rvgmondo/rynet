@@ -66,7 +66,8 @@ per Section 6.
 dealer -> dealers (required)
 name, slug, addressLine1, addressLine2, suburb
 city -> cities, province -> provinces, postalCode
-geo (PostGIS point, geocoded on save, manually overridable)
+latitude, longitude (geocoded on save, manually overridable)
+  mirrored into an R-tree index for radius search, since SQLite has no PostGIS
 phone, whatsapp, email
 tradingHours[] { day, opensAt, closesAt, closed }
 holidayOverrides[] { date, opensAt, closesAt, closed, label }
@@ -108,7 +109,7 @@ video { url, provider }, spin360 { url }
 documents -> documents[]
 status: draft | pending_review | live | reserved | sold | expired | archived
 publishedAt, soldAt, expiresAt
-viewCount, leadCount, saveCount   (counters, written by a queue not on the request path)
+viewCount, leadCount, saveCount   (buffered in memory, flushed by cron, never written per request)
 _versions (Payload drafts and version history)
 ```
 
@@ -188,8 +189,34 @@ page and the search results page compete for the same query.
 a live image), `documents`, `forms` and `form-submissions`, `redirects`, `feature-flags`,
 `audit-log` (actor, action, collection, docId, before, after, ip hashed, userAgent, createdAt, no
 update or delete access), `import-jobs` and `import-job-rows`, `feed-configs`,
-`plans` / `subscriptions` / `invoices`, `verification-decisions`, `consent-records`
-(purpose, policyVersion, grantedAt, withdrawnAt, evidence, ip hashed).
+`verification-decisions`, `consent-records` (purpose, policyVersion, grantedAt, withdrawnAt,
+evidence, ip hashed).
+
+### `plans`, `subscriptions`, `invoices` (PayFast)
+```
+plans:         name, slug, monthlyPrice, listingLimit, branchLimit, userLimit,
+               microsite theming allowance, featureFlags[], isPublic, sortOrder
+
+subscriptions: dealer -> dealers (one active at a time)
+               plan -> plans
+               payfastToken            the tokenisation token, encrypted at rest
+               payfastSubscriptionId
+               status: pending | active | past_due | paused | cancelled | expired
+               currentPeriodStart, currentPeriodEnd, cancelAtPeriodEnd
+               lastItnAt, lastItnSignature
+               events[] { type, raw (json), receivedAt }   append only
+
+invoices:      subscription -> subscriptions, dealer -> dealers, amount, vatAmount,
+               periodStart, periodEnd, status, payfastPaymentId, pdf -> documents
+```
+
+Subscription state changes only on a verified PayFast ITN webhook, never on the customer landing on
+a success page. Every ITN is signature-checked, confirmed server to server, and stored raw in
+`events` before anything is acted on, so a disputed charge can be reconstructed from what PayFast
+actually sent rather than from what we concluded.
+
+`payfastToken` is encrypted with a field-level key. It is a payment instrument, and it is treated
+like one.
 
 ## Globals
 
