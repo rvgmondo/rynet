@@ -1,9 +1,36 @@
+# Dependencies
 node_modules/
+
+# Build output. Not committed: this project builds locally and ships the build inside a
+# deploy bundle, rather than through git. MotoHubSA committed dist/ because its host could
+# not build at all and pulled straight from the repo; that is not how this one deploys.
 .next/
-.pgdata/
-vendor/
+deploy/
+*.tsbuildinfo
+
+# The database. One file, and it holds every dealership's stock.
+*.db
+*.db-shm
+*.db-wal
+
+# Uploaded media. Runtime data, not source. Production media lives on Cloudflare R2.
+media/
+
+# Environment. Never commit real secrets.
 .env
 .env.local
 !.env.example
-*.tsbuildinfo
+
+# Portable Node 22, so local matches the cPanel host. Roughly 90MB, so it is fetched rather
+# than tracked. See README for how to restore it.
+vendor/
+
+# Test output
+test-results/
+playwright-report/
+.playwright/
+
+# Misc
 .DS_Store
+*.pem
+npm-debug.log*
