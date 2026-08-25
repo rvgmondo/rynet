@@ -5,6 +5,7 @@ import { postgresAdapter } from "@payloadcms/db-postgres";
 import { sqliteAdapter } from "@payloadcms/db-sqlite";
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import { s3Storage } from "@payloadcms/storage-s3";
 import { buildConfig } from "payload";
 import sharp from "sharp";
 
@@ -24,6 +25,43 @@ const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
 const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
+
+/**
+ * Media storage.
+ *
+ * Local disk unless the R2 credentials are present, then Cloudflare R2 through the S3
+ * adapter. A switch rather than a code change, because the two have different right answers
+ * at different points and the changeover should not need a deploy of new code.
+ *
+ * Local disk is correct while the platform has no photography: it is one fewer service and
+ * the whole site state is then two things, `rynet.db` and `media/`.
+ *
+ * It stops being correct the moment real stock arrives. Twenty photos per listing across a
+ * few hundred vehicles is tens of thousands of small files, and shared hosting caps inodes
+ * long before it caps disk. Set the R2 variables before the first dealer uploads, not after
+ * the account hits its file limit.
+ */
+const r2Configured = Boolean(
+  process.env.R2_BUCKET && process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY,
+);
+
+const storagePlugins = r2Configured
+  ? [
+      s3Storage({
+        collections: { media: true },
+        bucket: process.env.R2_BUCKET ?? "",
+        config: {
+          endpoint: process.env.R2_ENDPOINT,
+          // R2 ignores the region but the S3 client insists on one.
+          region: "auto",
+          credentials: {
+            accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "",
+            secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
+          },
+        },
+      }),
+    ]
+  : [];
 
 export default buildConfig({
   admin: {
@@ -107,6 +145,8 @@ export default buildConfig({
   // Re-encodes every upload, which strips EXIF including the GPS coordinates a dealer's
   // phone writes into every photo of every car on their forecourt.
   sharp,
+
+  plugins: [...storagePlugins],
 
   telemetry: false,
 });

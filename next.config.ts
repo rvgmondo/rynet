@@ -96,7 +96,15 @@ const nextConfig: NextConfig = {
         headers: [...sharedHeaders, { key: "Content-Security-Policy", value: cspFor("admin") }],
       },
       {
-        source: "/:path*",
+        /**
+         * Everything EXCEPT /admin.
+         *
+         * The negative lookahead is load-bearing. With a plain `/:path*` here, both rules
+         * match an admin request and the second one wins, so `/admin` was served the public
+         * policy with no `unsafe-eval` and the Payload admin died on a CSP error. It looked
+         * fine in every check that did not actually read the response headers on that route.
+         */
+        source: "/((?!admin).*)",
         headers: [...sharedHeaders, { key: "Content-Security-Policy", value: cspFor("public") }],
       },
     ];

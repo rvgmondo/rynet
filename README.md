@@ -4,10 +4,10 @@ A South African vehicle marketplace where **only verified, registered dealership
 the agency that sells services to those dealerships. One Next.js application, one database, one
 auth system, two front doors.
 
-- **Rynet Showroom** at `/` — the marketplace. Consumer facing.
-- **Rynet Digital** at `/digital` — the agency. Dealer principal facing.
-- **Dealer portal** at `/portal` — scoped to one dealership.
-- **Admin** at `/admin` — Payload, platform staff only.
+- **Rynet Showroom** at `/`, the marketplace. Consumer facing.
+- **Rynet Digital** at `/digital`, the agency. Dealer principal facing.
+- **Dealer portal** at `/portal`, scoped to one dealership.
+- **Admin** at `/admin`, Payload, platform staff only.
 
 Start with [docs/PLAN.md](docs/PLAN.md), which indexes everything else.
 
@@ -75,6 +75,9 @@ it is flagged as demonstration content and labelled as such in the interface. Se
 | `npm run seed` | Demonstration dealerships and stock |
 | `npm run seed:admin` | The first platform admin |
 | `npm run generate:types` | Regenerate `src/payload-types.ts` after a collection change |
+| `npm run db:migrate` | Apply schema migrations. Run on the host after any deploy that changed the schema |
+| `npm run db:migrate:create` | Create a migration after changing a collection |
+| `npm run deploy:build` | Build the cPanel bundle into `deploy/` |
 
 ## How it is put together
 
@@ -125,4 +128,6 @@ cPanel, Setup Node.js App, started by `server.cjs`. **The build never runs on th
 with Turbopack needs far more memory than CloudLinux allows. Build locally, ship the prebuilt
 `.next` in the deploy bundle, and run only `npm install` on the host.
 
-Full steps in `docs/DEPLOYMENT.md` once Phase 1 is signed off.
+Build the bundle with `npm run deploy:build -- --url https://rynet.co.za`, then follow
+[DEPLOY-CPANEL.md](DEPLOY-CPANEL.md). That doc also lists the five things that broke the first
+time the bundle was tested on a clean directory, so you do not get to discover them yourself.

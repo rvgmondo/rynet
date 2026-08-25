@@ -23,8 +23,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "prepare": "husky",
-    "seed:admin": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env src/seed/create-admin.ts"
+    "prepare": "node scripts/prepare.mjs",
+    "seed:admin": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file=.env src/seed/create-admin.ts",
+    "db:migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
+    "db:migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
+    "db:migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",
+    "deploy:build": "node scripts/build-deploy.mjs"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.88.0",

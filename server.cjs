@@ -18,10 +18,23 @@ process.env.NEXT_TELEMETRY_DISABLED = process.env.NEXT_TELEMETRY_DISABLED || "1"
 
 const { createServer } = require("node:http");
 const next = require("next");
+const { linkRuntimeDeps } = require("./scripts/link-runtime-deps.cjs");
 
 // Makes relative paths resolve to the app root, in particular the SQLite `file:./rynet.db`,
 // no matter which working directory the host starts this process in.
 process.chdir(__dirname);
+
+// Turbopack externalises sharp, the SQLite client and a few others, and links them into
+// .next/node_modules using absolute build-machine paths. Those are meaningless here, and
+// they would point at Windows binaries besides. Recreating them against this host's own
+// node_modules is idempotent, costs milliseconds, and removes a deploy step that would
+// otherwise have to be remembered. See scripts/link-runtime-deps.cjs for the detail.
+const links = linkRuntimeDeps(__dirname, (m) => console.log(m));
+if (links.created > 0) console.log(`Linked ${links.created} runtime package(s).`);
+if (links.failed.length > 0) {
+  console.error("Could not link runtime packages:", links.failed.join("; "));
+  console.error("Run `npm install --omit=dev` in the app root, then Restart.");
+}
 
 const port = process.env.PORT || 3000;
 const app = next({ dev: false, dir: __dirname });

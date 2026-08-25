@@ -34,3 +34,7 @@ playwright-report/
 .DS_Store
 *.pem
 npm-debug.log*
+
+# Deploy artefacts. Rebuilt by `npm run deploy:build`, never committed: the bundle is
+# 17MB of build output and PROD-ENV.txt holds a real secret.
+deploy/
