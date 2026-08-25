@@ -206,7 +206,7 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {vehicles.map((vehicle) => (
-                <li key={vehicle.publicRef}>
+                <li key={vehicle.publicRef} className="flex">
                   <VehicleCard vehicle={vehicle} />
                 </li>
               ))}

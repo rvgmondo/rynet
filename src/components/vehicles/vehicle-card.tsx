@@ -58,7 +58,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardData }) {
     .join(" ");
 
   return (
-    <article className="group relative flex flex-col rounded-lg border border-line bg-surface transition-shadow duration-[var(--duration-element)] ease-[var(--rn-ease-out)] hover:shadow-(--rn-shadow-2) focus-within:shadow-(--rn-shadow-2)">
+    <article className="group relative flex w-full flex-col rounded-lg border border-line bg-surface transition-shadow duration-[var(--duration-element)] ease-[var(--rn-ease-out)] hover:shadow-(--rn-shadow-2) focus-within:shadow-(--rn-shadow-2)">
       <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
         <span className="rounded-full bg-surface-sunken px-2.5 py-1 text-2xs font-semibold uppercase tracking-[var(--tracking-wide)] text-ink-secondary">
           {CONDITION_LABEL[vehicle.condition]}
@@ -69,18 +69,15 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardData }) {
             {drop}
           </span>
         ) : null}
-        {vehicle.isDemonstration ? (
-          <span
-            className="ml-auto rounded-full border border-line-interactive px-2.5 py-1 text-2xs font-semibold text-ink-muted"
-            title="Seeded example stock, not a real vehicle for sale"
-          >
-            Demonstration
-          </span>
-        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col p-4 pt-3">
-        <h3 className="text-base leading-snug">
+        {/*
+          Clamped to two lines with a matching min-height. Vehicle names run from
+          "Suzuki Swift 1.2 GL" to "Toyota Hilux 2.8 GD-6 Legend RS Double Cab 4x4 AT", and
+          letting that decide the card height leaves every row ragged.
+        */}
+        <h3 className="line-clamp-2 min-h-[2.6em] text-base leading-snug">
           <Link
             href={vehicleUrl(vehicle)}
             className="after:absolute after:inset-0 after:content-[''] hover:text-accent"
@@ -89,30 +86,58 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardData }) {
           </Link>
         </h3>
 
-        <p className="mt-2 font-display text-xl font-extrabold tabular">
-          {formatRand(vehicle.price)}
-        </p>
-        {vehicle.previousPrice ? (
-          <p className="mt-0.5 text-xs text-ink-muted">
-            <span className="line-through tabular">{formatRand(vehicle.previousPrice)}</span>
-            <span className="sr-only"> was the previous price</span>
-          </p>
-        ) : null}
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-2">
+          <p className="font-display text-xl font-extrabold tabular">{formatRand(vehicle.price)}</p>
+          {vehicle.previousPrice ? (
+            <p className="text-xs text-ink-muted">
+              <span className="line-through tabular">{formatRand(vehicle.previousPrice)}</span>
+              <span className="sr-only"> was the previous price</span>
+            </p>
+          ) : null}
+        </div>
 
-        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-secondary">
+        {/*
+          A two-column grid rather than a wrapping flex row. Flex-wrap dropped whichever
+          item happened not to fit onto a line of its own, so one card would show "Bakkie"
+          orphaned under three other specs while its neighbour showed all four inline. A
+          grid puts the same spec in the same place on every card.
+        */}
+        <ul className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-ink-secondary">
           <li className="inline-flex items-center gap-1.5">
-            <Gauge aria-hidden="true" className="size-3.5 text-ink-muted" />
+            <Gauge aria-hidden="true" className="size-3.5 shrink-0 text-ink-muted" />
             <span className="tabular">{formatKm(vehicle.mileageKm)}</span>
           </li>
-          {vehicle.transmissionName ? <li>{vehicle.transmissionName}</li> : null}
-          {vehicle.fuelName ? <li>{vehicle.fuelName}</li> : null}
-          {vehicle.bodyName ? <li>{vehicle.bodyName}</li> : null}
+          {vehicle.bodyName ? <li className="truncate">{vehicle.bodyName}</li> : null}
+          {vehicle.transmissionName ? (
+            <li className="truncate">{vehicle.transmissionName}</li>
+          ) : null}
+          {vehicle.fuelName ? <li className="truncate">{vehicle.fuelName}</li> : null}
         </ul>
 
         <div className="mt-auto flex flex-col gap-1 pt-4 text-xs text-ink-muted">
-          <span className="inline-flex items-center gap-1.5">
+          {/*
+            `min-w-0` on the name is load-bearing. A flex item defaults to `min-width: auto`,
+            which means it refuses to shrink below its content, so `truncate` never engages
+            and the row pushes the card 6px past the viewport at 320px.
+          */}
+          <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <BadgeCheck aria-hidden="true" className="size-3.5 shrink-0 text-accent" />
-            <span className="truncate">{vehicle.dealerName}</span>
+            <span className="min-w-0 flex-1 truncate">{vehicle.dealerName}</span>
+            {/*
+              This sits with the dealership rather than in the badge row above, for two
+              reasons. It is a statement about the listing and the business, not about the
+              vehicle's condition, so it belongs beside the name it qualifies. And in the
+              badge row it wrapped onto a second line whenever a price-drop badge was also
+              present, leaving one card in every few rows taller than its neighbours.
+            */}
+            {vehicle.isDemonstration ? (
+              <span
+                className="shrink-0 rounded-full border border-line-interactive px-1.5 text-2xs font-semibold"
+                title="Seeded example listing. Not a real business and not a real vehicle for sale."
+              >
+                Demonstration
+              </span>
+            ) : null}
           </span>
           {vehicle.cityName ? (
             <span className="inline-flex items-center gap-1.5">
