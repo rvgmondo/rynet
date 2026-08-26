@@ -1,0 +1,69 @@
+---
+# cPanel Git Version Control deployment.
+#
+# Runs when you click "Deploy HEAD Commit" in cPanel, or on a push if you wire the webhook.
+# cPanel clones the repository into ~/repositories/rynet and runs these tasks from there.
+#
+# IMPORTANT: this tracks the `deploy` branch, not `main`.
+#
+# `main` holds source and no build output. The cPanel host cannot build: Next 16 with
+# Turbopack needs far more memory than a shared CloudLinux account allows, and it gets
+# killed rather than erroring usefully. So GitHub Actions builds on every push to main and
+# force-pushes the result, source plus a prebuilt `.next`, to `deploy`. That is the branch
+# cPanel checks out.
+#
+# THREE THINGS ARE NEVER COPIED, because they are live data and the repository has no
+# business owning them:
+#
+#   rynet.db   the database. Every dealership, every listing, every lead.
+#   media/     uploaded photography.
+#   .env       if one exists. Environment lives in Setup Node.js App, not on disk.
+#
+# The copy is deliberately file-by-file rather than a wholesale `cp -R .`, so adding
+# something to the repository cannot silently start overwriting live state.
+
+deployment:
+  tasks:
+    - export APP=/home/rynetco/rynet
+
+    # Build output and application source.
+    - /bin/rm -rf $APP/.next
+    - /bin/cp -R .next $APP/
+    - /bin/rm -rf $APP/src
+    - /bin/cp -R src $APP/
+    - /bin/rm -rf $APP/scripts
+    - /bin/cp -R scripts $APP/
+    - /bin/test -d public && /bin/cp -R public $APP/ || true
+
+    # Entry point and configuration.
+    - /bin/cp server.cjs $APP/
+    - /bin/cp package.json $APP/
+    - /bin/cp package-lock.json $APP/
+    - /bin/cp next.config.ts $APP/
+    - /bin/cp tsconfig.json $APP/
+    - /bin/cp postcss.config.mjs $APP/
+
+    # The uploads directory must exist and be writable before the first admin upload.
+    # `-p` so an existing one with live photos in it is left exactly alone.
+    - /bin/mkdir -p $APP/media
+
+    # Windows-authored archives carry no Unix permission bits, and a git checkout can
+    # arrive with the execute bit set on things that should not have it. Normalise.
+    - /bin/find $APP -type d -not -path "*/node_modules/*" -exec chmod 755 {} \;
+    - /bin/find $APP -type f -not -path "*/node_modules/*" -exec chmod 644 {} \;
+
+    # A marker, so the running app can be traced back to a commit. Read it at
+    # /home/rynetco/rynet/DEPLOYED.txt when something looks wrong.
+    - /bin/date -u "+%Y-%m-%d %H:%M UTC" > $APP/DEPLOYED.txt
+    - /usr/bin/git rev-parse --short HEAD >> $APP/DEPLOYED.txt
+
+    # NOT DONE AUTOMATICALLY, on purpose:
+    #
+    #   npm install       only needed when dependencies changed, takes minutes, and a
+    #                     half-finished one leaves the app unable to start.
+    #   npx payload migrate  only needed when the schema changed, and it writes to the live
+    #                     database. That should be a decision, not a side effect.
+    #   Restart           cPanel has no deployment hook for it. Click Restart on the
+    #                     Setup Node.js App screen.
+    #
+    # The order after a deploy is: npm install (if needed), migrate (if needed), Restart.
