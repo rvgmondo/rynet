@@ -88,8 +88,6 @@ const include = [
   "server.cjs",
   // server.cjs requires the runtime linker from here.
   "scripts/link-runtime-deps.cjs",
-  // npm runs prepare on every install, including the host's. It must exist there.
-  "scripts/prepare.mjs",
   "package.json",
   "package-lock.json",
   "next.config.ts",
