@@ -128,6 +128,7 @@ cPanel, Setup Node.js App, started by `server.cjs`. **The build never runs on th
 with Turbopack needs far more memory than CloudLinux allows. Build locally, ship the prebuilt
 `.next` in the deploy bundle, and run only `npm install` on the host.
 
-Build the bundle with `npm run deploy:build -- --url https://rynet.co.za`, then follow
+Two ways to deploy. Day to day use [DEPLOY-GIT.md](DEPLOY-GIT.md): push to main, GitHub Actions
+builds, cPanel pulls the deploy branch. For a manual upload, build the bundle with `npm run deploy:build -- --url https://rynet.co.za`, then follow
 [DEPLOY-CPANEL.md](DEPLOY-CPANEL.md). That doc also lists the five things that broke the first
 time the bundle was tested on a clean directory, so you do not get to discover them yourself.
