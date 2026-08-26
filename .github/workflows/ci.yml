@@ -69,6 +69,7 @@ jobs:
           PAYLOAD_SECRET: ci-only-not-a-real-secret-value-000000
           NEXT_PUBLIC_SERVER_URL: http://localhost:3100
         run: |
+          npx payload migrate
           npm run seed:admin
           npm run seed
       - name: Build
