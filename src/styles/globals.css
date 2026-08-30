@@ -124,6 +124,23 @@
     outline: none;
   }
 
+  /*
+   * An inline link inside running text is underlined, always.
+   *
+   * axe flagged this as a serious violation: a link distinguished only by colour is
+   * invisible to a reader with a colour vision deficiency. Standalone links in navigation,
+   * cards and buttons are exempt, because their position and context already mark them
+   * out, which is what the :not() list is for.
+   */
+  p a:not([class*="button"]),
+  li a:not([class*="flex"]):not([class*="button"]),
+  dd a,
+  span a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+  }
+
   ::selection {
     background-color: var(--rn-accent-solid);
     color: var(--rn-text-on-accent);

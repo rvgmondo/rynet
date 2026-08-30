@@ -2,6 +2,15 @@ import Link from "next/link";
 
 import { RynetMark } from "@/components/brand/rynet-mark";
 
+/*
+ * Only routes that exist.
+ *
+ * The footer previously listed nineteen destinations and thirteen of them were 404s. A
+ * footer is where people go when the nav has not helped, so it is the worst place to send
+ * them nowhere. Each of these returns when its page is built:
+ * /finance-calculator, /value-my-car, /guides, /reviews, /news, /about, /digital,
+ * /sign-in, /dealer-login.
+ */
 const COLUMNS = [
   {
     heading: "Buy a car",
@@ -11,7 +20,7 @@ const COLUMNS = [
       { href: "/cars/demo", label: "Demo models" },
       { href: "/cars/body/bakkie", label: "Bakkies" },
       { href: "/cars/body/suv", label: "SUVs" },
-      { href: "/finance-calculator", label: "Finance calculator" },
+      { href: "/cars/body/hatchback", label: "Hatchbacks" },
     ],
   },
   {
@@ -19,26 +28,16 @@ const COLUMNS = [
     links: [
       { href: "/dealers", label: "Find a dealership" },
       { href: "/how-verification-works", label: "How verification works" },
-      { href: "/dealer-login", label: "Dealer login" },
-      { href: "/digital", label: "Rynet Digital, for dealers" },
-    ],
-  },
-  {
-    heading: "Advice",
-    links: [
-      { href: "/guides", label: "Buying guides" },
-      { href: "/reviews", label: "Reviews" },
-      { href: "/news", label: "News" },
-      { href: "/value-my-car", label: "What is my car worth" },
+      { href: "/contact", label: "List your stock" },
     ],
   },
   {
     heading: "Rynet",
     links: [
-      { href: "/about", label: "About us" },
       { href: "/contact", label: "Contact" },
       { href: "/accessibility", label: "Accessibility" },
       { href: "/privacy", label: "Privacy and POPIA" },
+      { href: "/cookies", label: "Cookies" },
       { href: "/terms", label: "Terms of use" },
     ],
   },
@@ -48,7 +47,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-[var(--section-base)] border-t border-line bg-surface-sunken">
       <div className="container-page py-[var(--section-tight)]">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div className="max-w-xs">
             <div className="flex items-center gap-2.5">
               <RynetMark className="h-8 w-auto" />

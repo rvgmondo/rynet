@@ -33,6 +33,9 @@ export default defineConfig({
     ? undefined
     : {
         command: "npm run start -- --port 3100",
+        // The whole suite shares one visitor hash, so the production limit of five would
+        // lock the run out partway through. Raised here only, never in the shipped default.
+        env: { ENQUIRY_RATE_LIMIT: "1000" },
         url: "http://localhost:3100",
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,

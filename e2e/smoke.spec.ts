@@ -213,15 +213,20 @@ test.describe("mobile navigation", () => {
     await page.keyboard.press("Enter");
     await expect(menu).toHaveAttribute("open", "");
 
-    // Every navigation destination is now reachable on a phone. Scoped to the header,
-    // because the footer carries its own links with overlapping names and an unscoped
-    // locator matches both.
+    /*
+     * Every destination in the desktop nav is reachable on a phone too. Read from the DOM
+     * rather than hardcoded, so trimming or adding a nav item cannot leave this asserting
+     * on a list that no longer exists. It did exactly that once, when routes that 404ed
+     * were removed and this kept looking for them.
+     *
+     * Scoped to the header, because the footer carries links with overlapping names.
+     */
     const headerNav = page.getByRole("banner").getByRole("navigation", { name: "Menu" });
-    for (const label of ["Find a car", "Dealerships", "Finance", "Sell to a dealer", "Advice"]) {
-      await expect(headerNav.getByRole("link", { name: label, exact: true })).toBeVisible();
+    const labels = await headerNav.getByRole("link").allTextContents();
+    expect(labels.length, "the mobile menu should list the navigation").toBeGreaterThan(2);
+    for (const label of labels) {
+      await expect(headerNav.getByRole("link", { name: label.trim(), exact: true })).toBeVisible();
     }
-    // And so is signing in, which the desktop header shows and the mobile one used to hide.
-    await expect(headerNav.getByRole("link", { name: "Sign in", exact: true })).toBeVisible();
 
     // Open at the narrowest supported width, still no sideways scroll.
     const overflow = await page.evaluate(

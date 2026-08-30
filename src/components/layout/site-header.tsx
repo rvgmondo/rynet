@@ -3,14 +3,18 @@ import Link from "next/link";
 
 import { RynetMark } from "@/components/brand/rynet-mark";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { Button } from "@/components/ui/button";
 
+/*
+ * Only routes that exist. A nav item pointing at a 404 reads as an abandoned site rather
+ * than an early one, and there is no version of that which helps.
+ *
+ * Removed until built: /finance-calculator, /value-my-car, /guides, /sign-in,
+ * /dealer-login. Each goes back the moment its page is real.
+ */
 const NAV = [
   { href: "/cars", label: "Find a car" },
   { href: "/dealers", label: "Dealerships" },
-  { href: "/finance-calculator", label: "Finance" },
-  { href: "/value-my-car", label: "Sell to a dealer" },
-  { href: "/guides", label: "Advice" },
+  { href: "/how-verification-works", label: "How we verify" },
 ] as const;
 
 /**
@@ -28,9 +32,8 @@ const NAV = [
  * `sticky` needs care under WCAG 2.2 SC 2.4.11: a focused element must not end up hidden
  * behind it. The header is 4rem, and `scroll-margin-top` on headings accounts for it.
  *
- * "Sell to a dealer" is deliberate wording. It goes to the trade-in valuation, which routes
- * to a dealership. There is no private listing flow anywhere on this platform and no label
- * should imply one.
+ * There is no sign-in or dealer login yet, so neither is linked. They return with the
+ * accounts and the portal.
  */
 export function SiteHeader() {
   return (
@@ -67,14 +70,6 @@ export function SiteHeader() {
           <div className="hidden lg:block">
             <ThemeToggle />
           </div>
-          <Button asChild variant="ghost" size="sm" className="hidden lg:inline-flex">
-            <Link href="/sign-in">Sign in</Link>
-          </Button>
-          {/* Deliberately separate from the buyer sign-in, per the brief. A dealer
-              principal must never have to work out which door is theirs. */}
-          <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
-            <Link href="/dealer-login">Dealer login</Link>
-          </Button>
 
           {/*
             Mobile menu. `details`/`summary` rather than a button plus state, so it opens
@@ -108,22 +103,6 @@ export function SiteHeader() {
                       </Link>
                     </li>
                   ))}
-                  <li>
-                    <Link
-                      href="/sign-in"
-                      className="flex min-h-12 items-center border-b border-line text-base font-medium hover:text-accent"
-                    >
-                      Sign in
-                    </Link>
-                  </li>
-                  <li className="sm:hidden">
-                    <Link
-                      href="/dealer-login"
-                      className="flex min-h-12 items-center border-b border-line text-base font-medium hover:text-accent"
-                    >
-                      Dealer login
-                    </Link>
-                  </li>
                 </ul>
                 <div className="flex items-center justify-between gap-4 py-4">
                   <span className="text-sm text-ink-secondary">Colour theme</span>
