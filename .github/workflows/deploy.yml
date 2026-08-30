@@ -55,7 +55,10 @@ jobs:
           # A build id Cloudflare has not seen, so it re-fetches the new asset URLs rather
           # than serving a chunk from the previous build.
           NEXT_DEPLOYMENT_ID: ${{ github.sha }}
-          # Payload reads the config at build time. Neither value reaches the output.
+          # Payload reads the config at build time. Neither value reaches the output, and
+          # nothing queries this: every database-backed route renders on demand. Left in
+          # place deliberately, so that if a page ever starts prerendering a query the
+          # build fails HERE rather than shipping a snapshot of the stock.
           PAYLOAD_SECRET: build-time-only-not-a-real-secret
           DATABASE_URI: file:./build.db
         run: npm run build

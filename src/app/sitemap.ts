@@ -28,6 +28,18 @@ const SITE = process.env.NEXT_PUBLIC_SERVER_URL || "https://rynet.co.za";
  * the shape. The threshold is written here so it is noticed rather than discovered.
  */
 
+/**
+ * Generated per request rather than at build.
+ *
+ * A sitemap frozen at build time tells Google about the stock we had when we last deployed,
+ * which on a marketplace is worse than not having one: it submits URLs for vehicles that
+ * have sold and omits everything listed since. It also cannot be built where there is no
+ * database, which broke the deploy pipeline.
+ *
+ * Crawlers fetch this rarely, so the cost of generating it live is not a concern.
+ */
+export const dynamic = "force-dynamic";
+
 const MINIMUM_STOCK_TO_LIST = 3;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

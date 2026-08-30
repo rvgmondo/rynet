@@ -7,6 +7,16 @@ import { getPayload } from "payload";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { relName } from "@/lib/relations";
 
+/**
+ * Rendered on demand, not prerendered.
+ *
+ * This reads the dealership list from the database. Prerendering it would freeze that list
+ * at build time, so a newly verified dealership would not appear until the next deploy, and
+ * it would fail the build outright anywhere there is no database, which is exactly what
+ * happened in CI.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Verified dealerships",
   description:
