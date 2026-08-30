@@ -1,200 +1,142 @@
 # PRODUCTION READINESS
 
-An honest audit of what stands between the current build and a site that can face the public.
-
-Written 26 August 2026, against commit `a3801de`.
-
----
-
-## The short version
-
-**The bundle deploys. The site is not ready to be public.**
-
-Three pages exist: the home page, `/cars`, and the Payload admin. Everything else the site links
-to is a 404, including the vehicle detail page, which every one of the 311 result cards points at.
-A visitor who clicks any car gets a Next.js error page.
-
-That is not a criticism of the work so far. Phase 1 was foundation, and the search page was pulled
-forward so there was something to look at. But "deployable" and "live" are different things, and
-the gap is worth being precise about rather than discovering it with a dealer principal watching.
-
-There is also no `robots.txt`, no sitemap, no favicon, no cookie consent, no privacy policy, and no
-way for a buyer to contact a dealership. That last one matters most commercially: the platform
-currently cannot generate a single lead, which is the entire product.
+Updated 26 August 2026. The first version of this document said the site deployed but was not
+ready to be public. Most of what it listed is now done.
 
 ---
 
-## P0: the site is visibly broken without these
+## Where it stands
 
-Roughly a week of work. Nothing below this line should go public first.
+**The marketplace works end to end.** A buyer can search 311 vehicles, filter and sort, open a
+listing, read the full specification, see a finance estimate with the cost of credit, and send an
+enquiry that reaches the selling dealership with a POPIA consent record attached.
 
-### 1. The vehicle detail page
+Every link in the header and footer resolves. A test walks all of them on every build and fails if
+one 404s, which is what stops the seventeen dead links coming back.
 
-`/vehicles/[make]/[model]/[year]-[variant]-[ref]`
-
-**Every vehicle card links here and it does not exist.** 311 listings, 311 dead links. This is the
-single most damaging gap and the most valuable page on the platform: it is where a buyer decides,
-where the enquiry happens, and where the `Vehicle` and `Offer` structured data lives.
-
-Needs: gallery (placeholder treatment until photography exists), sticky price and action rail,
-full spec table, finance estimate with the disclaimer, dealer card with the verified badge,
-similar vehicles, breadcrumbs, and the JSON-LD.
-
-### 2. Seventeen routes linked from the header and footer that 404
-
-```
-/dealers                    /guides            /about
-/dealers/[slug]             /reviews           /contact
-/finance-calculator         /news              /accessibility
-/value-my-car               /digital           /privacy
-/sign-in                    /terms             /how-verification-works
-/dealer-login               /cars/new  /cars/demo  /cars/body/[type]
-```
-
-Two honest options: build them, or remove the links until they exist. Shipping a navigation where
-two thirds of the items 404 reads as abandoned, not as early.
-
-`/how-verification-works` is the one I would not cut. The entire product argument is "only verified
-dealerships", and a badge that links nowhere is decoration.
-
-### 3. Nothing tells a search engine anything
-
-No `robots.txt`. No `sitemap.xml`. No canonical tags. No Open Graph image. The SEO architecture is
-designed in `docs/SITEMAP.md` and none of it is implemented. Launching without this is not
-neutral: Google will crawl the query-string URLs, index the thin ones, and the facet strategy
-becomes harder to fix later than to do now.
-
-### 4. No favicon, no app icons, no social image
-
-`brand/favicon.png` is 468 KB, roughly two hundred times what a favicon should weigh. Needs a
-proper generated set, and an Open Graph image, or every share looks broken.
-
-### 5. No 404 page and no error boundary
-
-A visitor who mistypes a URL, or hits a listing that has sold, gets Next's default. Both need
-designing, and the 404 in particular should offer a search box rather than an apology.
-
-### 6. Confirm the domain before building again
-
-`NEXT_PUBLIC_SERVER_URL` is inlined at build time. The current bundle is built for
-`https://rynet.co.za`. If the site is going anywhere else first, even briefly, it needs rebuilding
-for that origin. This is the easiest thing on the list to get wrong.
+**What is still missing is scope, not soundness:** buyer accounts, the dealer portal, the agency
+site, and vehicle photography. None of those stop the site being public. Two things below do.
 
 ---
 
-## P1: required before real traffic, not just before dealers
+## Fixed since the first audit
 
-### 7. The site cannot generate a lead
+| Was | Now |
+|---|---|
+| Three pages existed; all 311 cards linked to a 404 | Vehicle detail page, with gallery, spec, finance, dealer card, similar vehicles, structured data |
+| The platform could not generate a lead | Enquiry flow writing a lead plus an append-only consent record, with rate limiting, a honeypot and a timing check |
+| Seventeen linked routes 404ed | Facet pages, dealer directory and microsites, verification, privacy, terms, cookies, accessibility, contact. Nav trimmed to what exists, enforced by a test |
+| Nothing told a search engine anything | robots.txt, sitemap, canonicals, Car/Offer/AutoDealer/LocalBusiness/BreadcrumbList JSON-LD |
+| 468KB favicon, no app icon | Generated at build from the mark |
+| Next's default 404 and error page | A 404 with a search box, and an error boundary that says what to do |
+| No unit tests | 95, including 25 on the finance calculator |
+| No backups | `scripts/backup.sh` plus a runbook, using a consistent SQLite snapshot |
 
-There is no enquiry form, no test drive request, no phone reveal, no WhatsApp link, no callback.
-The `leads` and `consent-records` collections exist and nothing writes to them.
+### Three bugs worth remembering
 
-This is the commercial heart of the product and it is entirely absent. A marketplace that cannot
-pass an enquiry to a dealership has no reason to exist.
+Each would have been invisible in production until someone complained.
 
-### 8. Legal pages, and they are not optional
+**Every enquiry was being silently discarded.** The timing check reads an `elapsedMs` field that
+was computed during render, so it was fixed at roughly zero for the life of the dialog. Every real
+person failed the two-second bot check, the form reported success, and nothing was written. A
+failure that looks exactly like it worked.
 
-POPIA requires a privacy notice, a lawful basis for processing, and a working data subject request
-route. None exist. Neither do terms of use or a cookie policy.
+**Before that, the form was not a server action at all.** The action module exported a Zod schema,
+and a `"use server"` file may export nothing but async functions. Next never created the action
+reference, so the form fell back to a plain HTML POST.
 
-I can write plain-language drafts marked "requires legal review". They must not go live as final
-without a South African attorney reading them. Listed in `docs/CONTENT-NEEDED.md`.
-
-### 9. Cookie consent that actually gates
-
-POPIA requires non-essential scripts to be blocked *before* consent, not covered by a banner over a
-page that already loaded them. Currently there is no analytics at all, which is technically
-compliant and practically useless. Adding Plausible is the plan; it collects no personal data and
-needs no banner, which is most of why it was chosen.
-
-### 10. No rate limiting, no bot protection
-
-The moment a public form exists it will be found. Turnstile, a honeypot, a timing check and rate
-limiting on submission all need to be in place before the form is, not after.
-
-### 11. Email is not configured
-
-`SMTP_HOST` is blank, so Payload logs to the console. No enquiry notification reaches anyone. Needs
-a cPanel mailbox plus SPF, DKIM and DMARC on the domain, or every notification lands in spam.
-
-### 12. No backups, and no restore drill
-
-The entire platform is one file, `rynet.db`. There is no cron copying it anywhere, and no restore
-has ever been attempted. A backup you have never restored is not a backup. Do this before there is
-data worth losing, not after.
-
-### 13. No structured data
-
-`Vehicle`, `Offer`, `AutoDealer`, `BreadcrumbList`, `Organization`. Designed in `docs/SITEMAP.md`,
-implemented nowhere. This is most of the SEO value of a marketplace.
+**Inline links were distinguished by colour alone**, which axe rates serious: invisible to a reader
+with a colour vision deficiency. Now a base rule, so the next inline link cannot reintroduce it.
 
 ---
 
-## P2: before dealers are onboarded
+## Still blocking a public launch
 
-- **Dealer microsites** at `/dealers/[slug]`. Twelve dealerships in the database with no page.
-- **The dealer portal.** Currently a dealer has no way in at all. `/dealer-login` 404s.
-- **Consumer accounts.** Save, saved searches, alerts. The `buyers` collection exists, unused.
-- **The rest of search.** Fuel, transmission and province facets show no counts. No radius search,
-  no map, no typeahead, no saved state. `/cars` is one page of what Section 6 describes.
-- **Photography and R2.** Cards are spec-led because there are no images. Set the `R2_*` variables
-  before the first upload, not after the account hits its inode ceiling.
-- **The agency site.** `/digital` is linked from the footer and does not exist. It is the smallest
-  phase and the only one that earns on its own.
+Two items, both small, both outside the code.
 
----
+### 1. Email is not configured
 
-## P3: the quality bars the brief set, currently unmet
+`SMTP_HOST` is blank, so Payload logs enquiries to the console and sends nothing. The lead is
+written and the buyer is told the dealership has their details, and no notification goes anywhere.
 
-- **Lighthouse CI is not wired.** Deliberately absent rather than passing vacuously, but the
-  budgets in Section 13 are unenforced.
-- **The adversarial dealer-isolation tests do not exist.** The access control is written and
-  commented as testable, and it is not yet tested. This is the one I would least like to be wrong
-  about, because the failure mode is one dealership reading another's leads.
-- **Seven documents are missing:** `SEO.md`, `SECURITY.md`, `THREAT-MODEL.md`, `ACCESSIBILITY.md`,
-  `DEPLOYMENT.md`, `RUNBOOK.md`, `CMS-GUIDE.md`, `SEO-LAUNCH-CHECKLIST.md`. The threat model was
-  supposed to come before the build, and did not.
-- **No unit tests.** `npm test` runs zero. The finance calculator in particular was promised
-  exhaustive tests and has none, because the calculator does not exist yet either.
+Needs a cPanel mailbox, then SPF, DKIM and DMARC on `rynet.co.za` or every notification lands in
+spam. **This is the one that would embarrass you fastest**, because the site tells a buyer their
+enquiry has been passed on.
+
+### 2. No restore has ever been done
+
+The backup script exists and is not scheduled, and nothing has been restored from it. A backup you
+have never restored is not a backup. The drill is in `docs/RUNBOOK.md` and takes about twenty
+minutes. Do it before there is data worth losing.
 
 ---
 
-## What I would actually do
+## Should be done in the first week
 
-**Do not put this in front of a dealer principal yet.** One click on any car and the demonstration
-is over.
+**Cloudflare and R2.** Everything currently serves from the cPanel box with no CDN, and uploads
+would go to local disk. Fine with no photography. It stops being fine the moment real stock
+arrives: twenty photos per listing across a few hundred vehicles is tens of thousands of files, and
+shared hosting caps inodes long before disk. Setting the `R2_*` variables switches it with no code
+change and no rebuild.
 
-Shortest credible path, in order:
+**Turnstile.** The honeypot, timing check and rate limiting are in place. Turnstile is deliberately
+not stubbed in, because a challenge that always passes is worse than none. It goes in when the site
+is behind Cloudflare.
 
-1. **Vehicle detail page.** Turns 311 dead links into the best page on the site.
-2. **Enquiry form, with consent, rate limiting and Turnstile.** Makes it a marketplace rather than
-   a catalogue.
-3. **The seventeen missing routes**, at minimum as real pages rather than 404s. `/dealers`,
-   `/how-verification-works` and the legal set are the ones that carry weight.
-4. **robots.txt, sitemap, canonicals, structured data, favicon.** A day, and it compounds from the
-   moment the site is indexable.
-5. **Backups and a restore drill.** Before there is anything worth losing.
+**Legal review.** Privacy, terms and the finance disclaimer all carry a visible "requires legal
+review" banner and must not lose it until a South African attorney has read them. The finance
+disclaimer matters most: the calculator sits beside a price, and a figure that reads as a quotation
+rather than an estimate is a National Credit Act problem.
 
-That is the point at which the site is genuinely live rather than merely deployed. Everything in P2
-follows naturally from having real dealers to build it against.
+**Register the Information Officer** with the Information Regulator. For a company that is the
+managing director by default unless someone else is formally designated. The privacy notice names
+the role and cannot be accurate until this is done.
+
+**The two host questions**, one support ticket: is the home directory on local disk or NFS
+(SQLite's file locking is unsafe on NFS), and does Passenger run one Node process or several (it
+changes how the rate limiter and the counter flush behave).
 
 ---
 
-## What is genuinely solid already
+## Known gaps, honestly
 
-Worth saying, because the list above is long:
+**The adversarial dealer-isolation tests still do not exist.** The predicates underneath are
+covered by 25 unit tests, including an impostor case that hands a buyer document every privileged
+role and asserts nothing opens. What is missing is the test that authenticates as dealer A over
+HTTP and tries to read dealer B's leads. The access control is written to make that impossible and
+it has not been proven. It is the gap I would close first after launch.
 
-- The data model is complete and the access control is correct, including the separation that makes
-  private sellers structurally impossible rather than merely forbidden.
-- The token system is contrast-verified in CI, with 62 pairs passing in both themes.
-- The search page is properly server rendered with URL-carried state, working facet counts, sorting
-  and pagination, and it is fast.
-- 26 Playwright tests pass on desktop and mobile, with zero axe violations across three templates
-  and no horizontal overflow from 320px to 1920px.
-- The deploy path is verified end to end on a clean extract, and the five things that broke are
-  fixed and written down.
-- The seed is 311 believable vehicles across twelve dealerships, all labelled as demonstration
-  content, with nothing fabricated that pretends to be real.
+**No manual screen reader testing.** Automated axe checks catch roughly a third of accessibility
+problems and pass on every template. A full NVDA and VoiceOver pass has not happened. The
+accessibility statement says so rather than claiming conformance nobody has checked.
 
-The foundation is sound. What is missing is most of the product on top of it, which is exactly
-where a Phase 1 sign-off should leave things.
+**Lighthouse is not wired into CI.** Deliberately absent rather than passing vacuously. The budgets
+in the brief are unenforced.
+
+**View and lead counters are not flushed.** The fields exist and nothing increments them, which is
+correct for now: writing per page view on SQLite would be a write lock on the busiest page. The
+cron flush is not built.
+
+**Search is one page of what the brief describes.** No radius search, no map, no typeahead, no
+saved searches. Fuel, transmission and province facets show no counts.
+
+**Seven documents from the brief are still missing:** `SEO.md`, `SECURITY.md`, `THREAT-MODEL.md`,
+`ACCESSIBILITY.md`, `DEPLOYMENT.md`, `CMS-GUIDE.md`, `SEO-LAUNCH-CHECKLIST.md`. The threat model
+was meant to precede the build and did not.
+
+---
+
+## Evidence
+
+Everything below is checked on every push, and a failure blocks the deploy branch.
+
+- **95 unit tests.** Access control 25, finance 25, contrast 15, formatting 16, slugs 14.
+- **50 end-to-end tests** across desktop and mobile.
+- **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
+  vehicle page and the enquiry dialog.
+- **No horizontal overflow** at 320, 375, 768, 1024, 1440 or 1920.
+- **62 contrast pairs** passing in both themes, computed from the tokens rather than eyeballed.
+- **Theme correct in all three states**, including with JavaScript disabled.
+- **No VIN anywhere in a public response**, asserted rather than assumed.
+- **Every link in the header and footer resolves.**
+- **The sitemap lists nothing robots.txt blocks.**
