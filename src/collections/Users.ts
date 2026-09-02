@@ -22,9 +22,10 @@ import {
  * a consumer account is a different collection entirely, with no role field and no dealer
  * field, so there is no path by which a private individual becomes a seller.
  *
- * Two-factor is mandatory for platform admins and dealer principals. It is enforced at
- * sign-in rather than offered as a setting, because an optional control on the account that
- * can approve dealers and change prices is not a control.
+ * Two-factor is NOT implemented. `twoFactorEnabled` exists as a field and nothing reads it,
+ * so the earlier claim here that it was "enforced at sign-in" was false. It is the largest
+ * known gap in docs/THREAT-MODEL.md and it has to close before anyone outside the founder
+ * holds a platform admin or dealer principal account.
  */
 export const Users: CollectionConfig = {
   slug: "users",

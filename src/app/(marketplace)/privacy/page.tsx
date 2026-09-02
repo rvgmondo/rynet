@@ -134,15 +134,21 @@ export default function PrivacyPage() {
 
       <h2>Security</h2>
       <p>
-        Everything travels over HTTPS. Passwords are hashed with argon2id and are not recoverable,
-        by us or by anyone else. Sensitive fields, including a vehicle&apos;s full VIN, are
-        encrypted at rest and never returned to a public request. Access to the systems holding
-        personal information is limited to staff who need it, with two-factor authentication
-        required on privileged accounts.
+        Everything travels over HTTPS. Passwords are stored as a salted PBKDF2-HMAC-SHA256 hash and
+        are not recoverable, by us or by anyone else. Sensitive fields, including a vehicle&apos;s
+        full VIN, are never returned to a public request and never to a dealership other than the
+        one selling the vehicle. Access to the systems holding personal information is limited to
+        staff who need it.
       </p>
       <p>
-        Dealership data is isolated: a dealership can only ever read its own leads and stock,
-        enforced in the query rather than in the interface.
+        Dealership data is isolated: a dealership can only ever read its own leads and stock. That
+        is enforced in the database query rather than in the interface, and it is tested on every
+        change by a suite that signs in as one dealership and tries to reach another.
+      </p>
+      <p>
+        <strong>What we have not done yet.</strong> Two-factor authentication is not available on
+        any account. Personal information is not encrypted at rest beyond the protection the server
+        itself provides. We would rather tell you that than describe a control we have not built.
       </p>
 
       <h2>If something goes wrong</h2>

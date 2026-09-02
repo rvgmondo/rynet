@@ -30,15 +30,15 @@ site, and vehicle photography. None of those stop the site being public. Two thi
 | 468KB favicon, no app icon | Generated at build from the mark |
 | Next's default 404 and error page | A 404 with a search box, and an error boundary that says what to do |
 | No unit tests | 103, including 25 on the finance calculator |
-| Isolation was asserted, never proven | 32 adversarial tests over HTTP, which found four real holes |
+| Isolation was asserted, never proven | 34 adversarial tests over HTTP, which found six real problems |
 | No backups | `scripts/backup.sh` plus a runbook, using a consistent SQLite snapshot |
 
 ### The isolation suite, and what it found
 
 The gap this document listed first is closed. `e2e/isolation.spec.ts` signs in as a real dealer
 over real HTTP and tries, by every route the REST API offers, to read and write another
-dealership's data: 32 tests covering leads, stock, staff, dealership records, consent records
-and the anonymous baseline.
+dealership's data: 34 tests covering leads, stock, VINs, staff, dealership records, consent
+records and the anonymous baseline.
 
 It follows three rules, each because the obvious version of the test passes while proving nothing.
 It goes over HTTP rather than through the local API, which has different defaults and an
@@ -74,6 +74,27 @@ Those fields were marked `admin.readOnly`, which greys a field out on the screen
 nothing to a PATCH, and `accreditations` carried a note in its description saying to add one only
 once the certificate had been seen. A note in a description is guidance for whoever is looking at
 the form. It is not a control. All four are platform staff only now, with tests.
+
+**A third finding, and the worst one in real terms: any dealership could read every VIN on the
+platform.** The field's read rule was `isPlatformStaff(user) || isDealerStaff(user)`, and
+`isDealerStaff` is true for every dealer account there is. Every dealership can read every live
+listing, so any dealership could ask for a competitor's stock and get the VINs with it, in bulk, in
+one query. A VIN is what you need to clone a car's identity or put a finance application on one.
+
+The public path was closed the whole time, which is exactly why the existing "no VIN in a public
+response" test passed while this was wide open. That test was also weaker than it looked: the seed
+leaves the VIN column empty, so it was asserting against a field that held nothing. It now plants a
+VIN first, and there are two more tests either side of the line, because a rule that hides a field
+from everyone is a deletion rather than access control.
+
+**And the privacy notice was describing controls that do not exist.** Published and public, it
+stated as fact that passwords were hashed with argon2id, that sensitive fields including the VIN
+were encrypted at rest, and that two-factor authentication was required on privileged accounts.
+Passwords are hashed with PBKDF2-HMAC-SHA256, nothing is encrypted at rest, and two-factor is not
+implemented at all: the field exists and nothing reads it. Under POPIA a security claim in a privacy
+notice is a representation about safeguards, so this was a compliance problem as well as an accuracy
+one. All three are corrected, and the notice now names what is missing instead of staying quiet
+about it.
 
 Worth noting how close this came to looking fixed when it was not. The fix appeared to fail twice
 because a Next server left running from before the rebuild was still bound to the port, and
@@ -163,9 +184,10 @@ cron flush is not built.
 **Search is one page of what the brief describes.** No radius search, no map, no typeahead, no
 saved searches. Fuel, transmission and province facets show no counts.
 
-**Seven documents from the brief are still missing:** `SEO.md`, `SECURITY.md`, `THREAT-MODEL.md`,
-`ACCESSIBILITY.md`, `DEPLOYMENT.md`, `CMS-GUIDE.md`, `SEO-LAUNCH-CHECKLIST.md`. The threat model
-was meant to precede the build and did not.
+**Five documents from the brief are still missing:** `SEO.md`, `ACCESSIBILITY.md`,
+`DEPLOYMENT.md`, `CMS-GUIDE.md`, `SEO-LAUNCH-CHECKLIST.md`. `SECURITY.md` and `THREAT-MODEL.md`
+now exist. The threat model was meant to precede the build and did not, and it says so: had one
+existed, at least two of the six problems above would have been obvious on paper.
 
 ---
 
@@ -174,7 +196,7 @@ was meant to precede the build and did not.
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
 - **103 unit tests.** Access control 33, finance 25, contrast 15, formatting 16, slugs 14.
-- **82 end-to-end tests** across desktop and mobile, 32 of them adversarial.
+- **84 end-to-end tests** across desktop and mobile, 34 of them adversarial.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
   vehicle page and the enquiry dialog.
 - **No horizontal overflow** at 320, 375, 768, 1024, 1440 or 1920.
@@ -185,4 +207,5 @@ Everything below is checked on every push, and a failure blocks the deploy branc
 - **A dealership cannot read or write another dealership's leads, stock or staff**, proven over
   HTTP rather than argued from the source.
 - **A dealership cannot verify itself, rate itself, or claim an accreditation**, same.
+- **No VIN reaches the public or another dealership**, asserted against a row that has one.
 - **The sitemap lists nothing robots.txt blocks.**

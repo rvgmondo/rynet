@@ -3,6 +3,7 @@ import type { CollectionConfig, Where } from "payload";
 import {
   canManageDealer,
   dealerIdOf,
+  fieldReadableByOwningDealer,
   isDealerStaff,
   isPlatformAdmin,
   isPlatformStaff,
@@ -408,14 +409,21 @@ export const Vehicles: CollectionConfig = {
               name: "vin",
               type: "text",
               access: {
-                // Never leaves the server for a public request. The listing page shows the
-                // last six characters to the owning dealer only, and the Vehicle JSON-LD
-                // omits vehicleIdentificationNumber entirely.
-                read: ({ req }) => isPlatformStaff(req.user) || isDealerStaff(req.user),
+                /**
+                 * Platform staff and the OWNING dealership. Not any dealership.
+                 *
+                 * This previously read `isDealerStaff`, which is true for every dealer
+                 * account on the platform, and every dealership can read every live
+                 * listing. So any dealership could ask for a competitor's stock and get the
+                 * VINs with it, which is what you need to clone a car or put a finance
+                 * application on one. The public path was closed the whole time, which is
+                 * why the anonymous VIN test passed while this was open.
+                 */
+                read: fieldReadableByOwningDealer("dealer"),
               },
               admin: {
                 description:
-                  "Stored encrypted, never returned to a public query and never published in structured data.",
+                  "Not encrypted at rest. Protected by access control: never returned to a public query, never to another dealership, and never published in structured data.",
               },
             },
             { name: "stockNumber", type: "text", index: true },

@@ -157,6 +157,30 @@ export function scopedToOwnDealer(dealerField = "dealer"): Access {
   };
 }
 
+/**
+ * Field-level read for something only the owning dealership should see.
+ *
+ * `scopedToOwnDealer` filters which ROWS come back. This filters which FIELDS come back on a
+ * row the caller is already allowed to read, which is a different question and was being
+ * answered wrongly: the VIN was open to any dealer staff, and every dealership can read
+ * every live listing, so any dealership could harvest the whole platform's VINs. A VIN is
+ * what you need to clone a car or put a finance application on one.
+ */
+export function fieldReadableByOwningDealer(dealerPath = "dealer"): FieldAccess {
+  return ({ req, doc }) => {
+    if (isPlatformStaff(req.user)) return true;
+
+    const own = dealerIdOf(req.user);
+    if (!own) return false;
+
+    const value = (doc as Record<string, unknown> | undefined)?.[dealerPath];
+    const ownerId = value && typeof value === "object" ? (value as { id: unknown }).id : value;
+    if (ownerId === null || ownerId === undefined) return false;
+
+    return String(ownerId) === String(own);
+  };
+}
+
 /** Write scoping. Sales agents are excluded; they work leads, not stock configuration. */
 export function writableByOwnDealer(dealerField = "dealer"): Access {
   return ({ req }) => {

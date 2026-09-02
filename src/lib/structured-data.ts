@@ -9,9 +9,10 @@ const SITE = process.env.NEXT_PUBLIC_SERVER_URL || "https://rynet.co.za";
  * Two rules govern everything here, and both are in the brief for good reason.
  *
  * **The VIN is never published.** Schema.org has a `vehicleIdentificationNumber` field and
- * it is deliberately absent. The VIN is encrypted at rest, excluded from every public read,
- * and putting it in a script tag would undo all of that. A VIN scraped off a listing is
- * what makes cloning a vehicle's identity possible.
+ * it is deliberately absent. The VIN is excluded from every public read and from every read
+ * by a dealership that does not own the listing, and putting it in a script tag would undo
+ * all of that. A VIN scraped off a listing is what makes cloning a vehicle's identity
+ * possible.
  *
  * **Never mark up a rating that has not been earned.** `aggregateRating` is emitted only
  * where a dealership has a real, computed score. Seeded demonstration dealerships have

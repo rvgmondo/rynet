@@ -41,6 +41,10 @@ import { DEALER_B_SLUG, FIXTURE_PASSWORD, FIXTURES } from "../src/seed/fixture-a
  */
 test.describe.configure({ mode: "default" });
 
+/** Seventeen characters, no I, O or Q, so they read as real VINs rather than placeholders. */
+const VIN_A = "AAVZZZ1KZAU000001";
+const VIN_B = "AAVZZZ1KZAU000002";
+
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@rynet.co.za";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "ChangeMe123!";
 
@@ -130,6 +134,17 @@ test.beforeAll(async ({ playwright, baseURL }) => {
   vehicleBId = await stockOf(dealerBId);
   expect(vehicleAId, "dealer A has no stock to test against").toBeTruthy();
   expect(vehicleBId, "dealer B has no stock to test against").toBeTruthy();
+
+  // The seed leaves VINs empty, so the original "no VIN in a public response" test was
+  // passing against a column that held nothing. Planted here, as the admin, so every VIN
+  // assertion below is made against a row that actually has one.
+  for (const [id, vin] of [
+    [vehicleAId, VIN_A],
+    [vehicleBId, VIN_B],
+  ] as const) {
+    const res = await request.patch(`/api/vehicles/${id}`, { ...as(admin), data: { vin } });
+    expect(res.status(), `could not plant a VIN on vehicle ${id}`).toBe(200);
+  }
 
   await request.dispose();
 });
@@ -261,6 +276,41 @@ test.describe("dealer A against dealer B's stock", () => {
     expect(idOf(after.dealer), "stock must not be able to walk between dealerships").toBe(
       dealerAId,
     );
+  });
+
+  /**
+   * Found by extending the anonymous VIN test to an authenticated dealership.
+   *
+   * The field read was `isDealerStaff`, which is true for every dealer account on the
+   * platform, and every dealership can read every live listing. So any dealership could ask
+   * for a competitor's stock and get the VINs with it. The public path was closed the whole
+   * time, which is exactly why the anonymous test passed while this was wide open.
+   *
+   * A VIN is what you need to clone a car's identity or put a finance application on one.
+   */
+  test("dealer A cannot read the VIN on dealer B's stock", async ({ request }) => {
+    const res = await request.get(`/api/vehicles/${vehicleBId}?depth=0`, as(ownerA));
+    expect(res.status(), "dealer A can read the listing itself, which is correct").toBe(200);
+
+    const body = await res.text();
+    expect(body, "a competitor's VIN was returned").not.toContain(VIN_B);
+
+    // And in bulk, which is how it would actually be harvested.
+    const list = await request.get(
+      `/api/vehicles?where[dealer][equals]=${dealerBId}&limit=50&depth=0`,
+      as(ownerA),
+    );
+    expect(await list.text(), "a competitor's VIN was returned in a list").not.toContain(VIN_B);
+  });
+
+  test("dealer A can read the VIN on its own stock", async ({ request }) => {
+    // The other half. A rule that hides the field from everyone is not access control, it
+    // is a deletion, and the owning dealership genuinely needs this.
+    const res = await request.get(`/api/vehicles/${vehicleAId}?depth=0`, as(ownerA));
+    expect(res.status()).toBe(200);
+
+    const doc = await res.json();
+    expect(doc.vin, "a dealership cannot see the VIN on its own listing").toBe(VIN_A);
   });
 
   test("creating a vehicle under dealer B creates it under dealer A", async ({ request }) => {
@@ -609,13 +659,16 @@ test.describe("anonymous requests", () => {
   test("no VIN is returned by the public API", async ({ request }) => {
     const res = await request.get(`/api/vehicles/${vehicleAId}?depth=1`);
     expect(res.status()).toBe(200);
-    expect((await res.text()).toLowerCase(), "a VIN reached an anonymous response").not.toContain(
-      '"vin"',
-    );
+
+    const body = await res.text();
+    expect(body.toLowerCase(), "a VIN reached an anonymous response").not.toContain('"vin"');
+    expect(body, "the VIN value reached an anonymous response").not.toContain(VIN_A);
 
     // And the list endpoint, which is the one that returns hundreds at a time.
     const list = await request.get("/api/vehicles?limit=50&depth=1");
-    expect((await list.text()).toLowerCase()).not.toContain('"vin"');
+    const listBody = await list.text();
+    expect(listBody.toLowerCase()).not.toContain('"vin"');
+    expect(listBody).not.toContain(VIN_A);
   });
 
   test("unverified dealerships are invisible", async ({ request }) => {
