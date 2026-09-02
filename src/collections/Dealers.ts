@@ -1,4 +1,4 @@
-import type { CollectionConfig, Where } from "payload";
+import type { CollectionConfig, FieldAccess, Where } from "payload";
 
 import {
   canManageDealer,
@@ -9,6 +9,14 @@ import {
 } from "@/access/roles";
 import { contrastRatio } from "@/lib/contrast";
 import { slugify } from "@/lib/slug";
+
+/**
+ * Fields a dealership may never write about itself.
+ *
+ * Every one of these is a figure Rynet publishes as its own assessment. Platform staff can
+ * still correct them by hand, which is what makes a bad import fixable.
+ */
+const computedByThePlatform: FieldAccess = ({ req }) => isPlatformStaff(req.user);
 
 /**
  * Dealerships. The only entity on the platform that may own stock.
@@ -97,9 +105,22 @@ export const Dealers: CollectionConfig = {
               type: "relationship",
               relationTo: "accreditations",
               hasMany: true,
+              /**
+               * Platform staff only, and not because of a policy in a description field.
+               *
+               * /how-verification-works tells the public, as a statement of fact, that where
+               * a dealership displays RMI, NADA, MIWA or SAMBRA membership we have seen the
+               * certificate. A dealership able to write this field makes that sentence
+               * false, and it was writable: a note in `admin.description` is guidance for
+               * the person looking at the screen, not a control on the API.
+               */
+              access: {
+                create: ({ req }) => isPlatformStaff(req.user),
+                update: ({ req }) => isPlatformStaff(req.user),
+              },
               admin: {
                 description:
-                  "Only add an accreditation once the certificate has been seen. This is a trust claim.",
+                  "Added by Rynet once the certificate has been seen. A dealership cannot set this.",
               },
             },
           ],
@@ -278,10 +299,20 @@ export const Dealers: CollectionConfig = {
               access: { update: ({ req }) => isPlatformStaff(req.user) },
               admin: { description: "Set from the plan. Overridable per dealership by staff." },
             },
+            /**
+             * The three computed figures, closed at the API rather than only in the interface.
+             *
+             * `admin.readOnly` greys a field out on the screen and does nothing whatsoever to
+             * a PATCH. All three were writable by a dealer principal, so a dealership could
+             * award itself five stars from four hundred reviews it had never received, which
+             * is the exact thing the brief forbids and the worst available lie on a platform
+             * that sells trust.
+             */
             {
               name: "listingCount",
               type: "number",
               defaultValue: 0,
+              access: { update: computedByThePlatform },
               admin: {
                 readOnly: true,
                 position: "sidebar",
@@ -291,6 +322,7 @@ export const Dealers: CollectionConfig = {
             {
               name: "reviewScore",
               type: "number",
+              access: { update: computedByThePlatform },
               admin: {
                 readOnly: true,
                 position: "sidebar",
@@ -302,6 +334,7 @@ export const Dealers: CollectionConfig = {
               name: "reviewCount",
               type: "number",
               defaultValue: 0,
+              access: { update: computedByThePlatform },
               admin: { readOnly: true, position: "sidebar" },
             },
             {

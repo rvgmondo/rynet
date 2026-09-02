@@ -30,15 +30,15 @@ site, and vehicle photography. None of those stop the site being public. Two thi
 | 468KB favicon, no app icon | Generated at build from the mark |
 | Next's default 404 and error page | A 404 with a search box, and an error boundary that says what to do |
 | No unit tests | 103, including 25 on the finance calculator |
-| Isolation was asserted, never proven | 28 adversarial tests over HTTP, which found an intra-dealership escalation |
+| Isolation was asserted, never proven | 32 adversarial tests over HTTP, which found four real holes |
 | No backups | `scripts/backup.sh` plus a runbook, using a consistent SQLite snapshot |
 
 ### The isolation suite, and what it found
 
 The gap this document listed first is closed. `e2e/isolation.spec.ts` signs in as a real dealer
 over real HTTP and tries, by every route the REST API offers, to read and write another
-dealership's data: 28 tests covering leads, stock, staff, consent records and the anonymous
-baseline.
+dealership's data: 32 tests covering leads, stock, staff, dealership records, consent records
+and the anonymous baseline.
 
 It follows three rules, each because the obvious version of the test passes while proving nothing.
 It goes over HTTP rather than through the local API, which has different defaults and an
@@ -61,6 +61,19 @@ was true, and why unit tests on the predicates could never have caught it. It is
 you may grant a role no higher than your own, you may not touch anyone standing above you, and
 nobody changes their own role at all. Inviting a colleague is a management act, so a sales agent
 cannot mint an account either.
+
+**A second pass on the same bug class found three more.** The pattern is a privileged field
+writable from inside the tenant, so the audit went looking for other fields where Rynet publishes
+its own assessment of a dealership. A dealer principal could write `reviewScore`, `reviewCount`,
+`listingCount` and `accreditations` on its own record. That is not a data breach. It is worse for
+this product: it means a dealership could award itself five stars from four hundred reviews it
+never received, and claim RMI membership on a site whose verification page tells the public, as a
+statement of fact, that we have seen the certificate.
+
+Those fields were marked `admin.readOnly`, which greys a field out on the screen and does exactly
+nothing to a PATCH, and `accreditations` carried a note in its description saying to add one only
+once the certificate had been seen. A note in a description is guidance for whoever is looking at
+the form. It is not a control. All four are platform staff only now, with tests.
 
 Worth noting how close this came to looking fixed when it was not. The fix appeared to fail twice
 because a Next server left running from before the rebuild was still bound to the port, and
@@ -161,7 +174,7 @@ was meant to precede the build and did not.
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
 - **103 unit tests.** Access control 33, finance 25, contrast 15, formatting 16, slugs 14.
-- **78 end-to-end tests** across desktop and mobile, 28 of them adversarial.
+- **82 end-to-end tests** across desktop and mobile, 32 of them adversarial.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
   vehicle page and the enquiry dialog.
 - **No horizontal overflow** at 320, 375, 768, 1024, 1440 or 1920.
@@ -171,4 +184,5 @@ Everything below is checked on every push, and a failure blocks the deploy branc
 - **Every link in the header and footer resolves.**
 - **A dealership cannot read or write another dealership's leads, stock or staff**, proven over
   HTTP rather than argued from the source.
+- **A dealership cannot verify itself, rate itself, or claim an accreditation**, same.
 - **The sitemap lists nothing robots.txt blocks.**

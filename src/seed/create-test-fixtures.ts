@@ -26,6 +26,10 @@ import { getPayload } from "payload";
 
 import { DEALER_A_SLUG, DEALER_B_SLUG, FIXTURE_PASSWORD, FIXTURES } from "./fixture-accounts";
 
+/** As seeded in ./data/dealers.ts. Restated so a failed run can be undone. */
+const DEALER_A_ACCREDITATIONS = ["RMI member", "NADA member"] as const;
+const DEALER_B_ACCREDITATIONS = ["RMI member", "MIWA accredited"] as const;
+
 if (process.env.NODE_ENV === "production") {
   process.stderr.write(
     "Refusing to create test fixtures in production.\n" +
@@ -146,6 +150,36 @@ async function main() {
 
   const leadA = await upsertLead(FIXTURES.leadNameA, dealerA.id);
   const leadB = await upsertLead(FIXTURES.leadNameB, dealerB.id);
+
+  // The suite attacks the trust fields, so it has to be able to put them back. Left to
+  // drift, a single failing run would leave a dealership wearing a five star rating it was
+  // never given, which is the exact lie the tests exist to prevent.
+  const accreditationIds = async (names: readonly string[]) => {
+    const found = await payload.find({
+      collection: "accreditations",
+      where: { name: { in: [...names] } },
+      limit: 20,
+      depth: 0,
+    });
+    return found.docs.map((doc) => doc.id);
+  };
+
+  for (const [dealer, badges] of [
+    [dealerA, DEALER_A_ACCREDITATIONS],
+    [dealerB, DEALER_B_ACCREDITATIONS],
+  ] as const) {
+    await payload.update({
+      collection: "dealers",
+      id: dealer.id,
+      data: {
+        verificationStatus: "verified",
+        reviewScore: null,
+        reviewCount: 0,
+        listingCount: 0,
+        accreditations: await accreditationIds(badges),
+      },
+    });
+  }
 
   process.stdout.write(
     [

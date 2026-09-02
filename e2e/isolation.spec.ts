@@ -475,6 +475,86 @@ test.describe("privilege escalation", () => {
 });
 
 // ---------------------------------------------------------------------------------------
+// A dealership cannot write Rynet's own assessment of it.
+// ---------------------------------------------------------------------------------------
+
+test.describe("a dealership cannot award itself trust", () => {
+  test("it cannot verify itself", async ({ request }) => {
+    const res = await request.patch(`/api/dealers/${dealerAId}`, {
+      ...as(ownerA),
+      data: { verificationStatus: "verified", legalName: "Highveld Motor Group (Pty) Ltd" },
+    });
+    expect([200, 400, 403]).toContain(res.status());
+
+    // Verified already, so the meaningful half is the reverse: a suspension must stick.
+    await request.patch(`/api/dealers/${dealerBId}`, {
+      ...as(admin),
+      data: { verificationStatus: "suspended" },
+    });
+    const selfLift = await request.patch(`/api/dealers/${dealerBId}`, {
+      ...as(ownerB),
+      data: { verificationStatus: "verified" },
+    });
+    expect([200, 400, 403]).toContain(selfLift.status());
+
+    const after = await (await request.get(`/api/dealers/${dealerBId}?depth=0`, as(admin))).json();
+    expect(after.verificationStatus, "a dealership lifted its own suspension").toBe("suspended");
+
+    await request.patch(`/api/dealers/${dealerBId}`, {
+      ...as(admin),
+      data: { verificationStatus: "verified" },
+    });
+  });
+
+  test("it cannot award itself a rating it has not collected", async ({ request }) => {
+    const before = await (await request.get(`/api/dealers/${dealerAId}?depth=0`, as(admin))).json();
+
+    const res = await request.patch(`/api/dealers/${dealerAId}`, {
+      ...as(ownerA),
+      data: { reviewScore: 5, reviewCount: 412, listingCount: 9999 },
+    });
+    expect([200, 400, 403]).toContain(res.status());
+
+    const after = await (await request.get(`/api/dealers/${dealerAId}?depth=0`, as(admin))).json();
+    expect(after.reviewScore, "a dealership wrote its own rating").toBe(before.reviewScore ?? null);
+    expect(after.reviewCount, "a dealership wrote its own review count").toBe(before.reviewCount);
+    expect(after.listingCount, "a dealership wrote its own stock count").toBe(before.listingCount);
+  });
+
+  test("it cannot claim an accreditation nobody has checked", async ({ request }) => {
+    // /how-verification-works tells the public that where a dealership displays RMI, NADA,
+    // MIWA or SAMBRA membership, we have seen the certificate. This is that sentence.
+    const before = await (await request.get(`/api/dealers/${dealerBId}?depth=0`, as(admin))).json();
+
+    const accreditations = await (await request.get("/api/accreditations?limit=5&depth=0")).json();
+    const claim = accreditations.docs.map((a: { id: number }) => a.id);
+    expect(claim.length, "no accreditations are seeded to attempt a claim with").toBeGreaterThan(0);
+
+    const res = await request.patch(`/api/dealers/${dealerBId}`, {
+      ...as(ownerB),
+      data: { accreditations: claim },
+    });
+    expect([200, 400, 403]).toContain(res.status());
+
+    const after = await (await request.get(`/api/dealers/${dealerBId}?depth=0`, as(admin))).json();
+    expect(after.accreditations ?? [], "a dealership awarded itself a trust badge").toEqual(
+      before.accreditations ?? [],
+    );
+  });
+
+  test("it cannot edit another dealership at all", async ({ request }) => {
+    const res = await request.patch(`/api/dealers/${dealerBId}`, {
+      ...as(ownerA),
+      data: { tradingName: "Owned by dealer A" },
+    });
+    expect([403, 404], `expected a refusal, got ${res.status()}`).toContain(res.status());
+
+    const after = await (await request.get(`/api/dealers/${dealerBId}?depth=0`, as(admin))).json();
+    expect(after.tradingName).not.toBe("Owned by dealer A");
+  });
+});
+
+// ---------------------------------------------------------------------------------------
 // Consent records are evidence, and evidence that can be edited is not evidence.
 // ---------------------------------------------------------------------------------------
 
