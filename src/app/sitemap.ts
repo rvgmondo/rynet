@@ -2,6 +2,7 @@ import config from "@payload-config";
 import type { MetadataRoute } from "next";
 import { getPayload } from "payload";
 
+import { SERVICES } from "@/content/agency/services";
 import { vehicleUrl } from "@/lib/urls";
 
 const SITE = process.env.NEXT_PUBLIC_SERVER_URL || "https://rynet.co.za";
@@ -55,6 +56,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/privacy`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE}/terms`, changeFrequency: "yearly", priority: 0.3 },
     { url: `${SITE}/cookies`, changeFrequency: "yearly", priority: 0.3 },
+
+    // Rynet Digital. Listed from the same content module the pages render from, so a new
+    // service page cannot exist without appearing here.
+    { url: `${SITE}/digital`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${SITE}/digital/services`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${SITE}/digital/pricing`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE}/digital/process`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE}/digital/about`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE}/digital/contact`, changeFrequency: "monthly", priority: 0.6 },
+    ...SERVICES.map((service) => ({
+      url: `${SITE}/digital/services/${service.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
   ];
 
   // ------------------------------------------------------------------ vehicles

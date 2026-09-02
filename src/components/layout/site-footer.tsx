@@ -8,7 +8,7 @@ import { RynetMark } from "@/components/brand/rynet-mark";
  * The footer previously listed nineteen destinations and thirteen of them were 404s. A
  * footer is where people go when the nav has not helped, so it is the worst place to send
  * them nowhere. Each of these returns when its page is built:
- * /finance-calculator, /value-my-car, /guides, /reviews, /news, /about, /digital,
+ * /finance-calculator, /value-my-car, /guides, /reviews, /news, /about,
  * /sign-in, /dealer-login.
  */
 const COLUMNS = [
@@ -35,6 +35,7 @@ const COLUMNS = [
     heading: "Rynet",
     links: [
       { href: "/contact", label: "Contact" },
+      { href: "/digital", label: "Rynet Digital, for dealerships" },
       { href: "/accessibility", label: "Accessibility" },
       { href: "/privacy", label: "Privacy and POPIA" },
       { href: "/cookies", label: "Cookies" },

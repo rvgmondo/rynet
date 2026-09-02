@@ -183,6 +183,80 @@ export function organisationJsonLd() {
   };
 }
 
+/**
+ * Rynet Digital as a `ProfessionalService`.
+ *
+ * A separate node from `organisationJsonLd`, which describes the marketplace. They are one
+ * company and two products, and collapsing them would tell Google that a vehicle
+ * marketplace also sells advertising services, which is confusing rather than helpful.
+ *
+ * `areaServed` is South Africa and `audience` is car dealerships, because that restriction
+ * is the actual proposition rather than a limitation to hide.
+ */
+export function agencyJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    name: "Rynet Digital",
+    url: `${SITE}/digital`,
+    description:
+      "Websites, stock feeds, paid media, local search, photography, lead routing and reporting for South African car dealerships.",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Pretoria",
+      addressRegion: "Gauteng",
+      addressCountry: "ZA",
+    },
+    areaServed: { "@type": "Country", name: "South Africa" },
+    audience: { "@type": "BusinessAudience", name: "Car dealerships" },
+    parentOrganization: { "@type": "Organization", name: "Rynet", url: SITE },
+  };
+}
+
+/**
+ * One service.
+ *
+ * No `offers` and no price, deliberately. Pricing is not published yet, and emitting an
+ * `Offer` with an invented number would put a figure into a search result that nobody at
+ * Rynet has agreed to charge.
+ */
+export function serviceJsonLd(service: { name: string; description: string; path: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: service.name,
+    description: service.description,
+    url: abs(service.path),
+    serviceType: service.name,
+    provider: {
+      "@type": "ProfessionalService",
+      name: "Rynet Digital",
+      url: `${SITE}/digital`,
+    },
+    areaServed: { "@type": "Country", name: "South Africa" },
+    audience: { "@type": "BusinessAudience", name: "Car dealerships" },
+  };
+}
+
+/**
+ * A set of questions and answers.
+ *
+ * Only ever emitted where the questions are genuinely on the page. `FAQPage` markup that
+ * does not match visible content is a manual action waiting to happen, and it is also just
+ * dishonest.
+ */
+export function faqJsonLd(items: readonly { question: string; answer: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
+  };
+}
+
 export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",

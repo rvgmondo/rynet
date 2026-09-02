@@ -89,20 +89,51 @@ there now, so nothing was invented.
 **Needed:** either real dealer photography, or a decision on what a listing with no photo looks
 like, since some dealers will always upload late.
 
-## 7. Editorial and agency content
+## 7. Rynet Digital has no prices
 
-Not started. When it does start:
+`src/content/agency/pricing.ts`. Every band's `from` is `null`, and the pricing page renders an
+honest paragraph in place of the numbers: that we are new, have not done enough dealership work to
+quote a range we would stand behind, and would rather say so than print a figure we invented.
+
+**Needed from Ruben:** a real starting figure for each of the four bands, excluding VAT. Set
+`from` on the band and the page renders it. Nothing else changes, and the honest paragraph
+disappears on its own.
+
+Do not put a guess in that field to make the page look finished. A guessed price gets planned
+around and then revised, and the revision is the thing the dealer remembers.
+
+## 8. Rynet Digital has no clients
+
+Which is why the agency site has no logo wall, no testimonials, no case studies and no metrics.
+The home page says so in as many words, under the heading "We have not done this for you yet", and
+there is an end-to-end test asserting that heading is on the page. The temptation to add
+"trusted by 40 dealerships" arrives the week before launch, when nobody is rereading the brief.
+
+The proof used instead is Rynet Showroom itself, which is real, on the same domain, and something
+a dealer principal can open and judge in ten seconds.
+
+**When there is real client work:**
 
 - **Case studies** carry a `metricsVerified` flag in the content model. An unverified case study
   renders its narrative and hides its numbers. It never renders an invented metric.
 - **Testimonials** need real named people who have agreed to be quoted.
-- **Team and about** need real people.
+- `/digital/work` goes into the agency navigation, which is where it was deliberately left out.
 
-## 8. Decisions still open
+## 9. Rynet Digital has no team page
+
+There is no page of headshots because there is not yet a team to photograph, and a stock
+photograph of people in a meeting room is not an answer to "who will I deal with". The about page
+says that instead.
+
+**Needed:** real names and faces when there are any.
+
+## 10. Decisions still open
 
 Tracked in full in `docs/QUESTIONS.md`. The ones that block content rather than code:
 
 - Dealer verification checklist: exactly what we check and record.
-- Whether the agency publishes prices or runs a qualification path.
+- What the four agency price bands actually start at. Decided in shape: a three step
+  qualification path, with the figure given on the call rather than published, until there is
+  delivery history to quote from.
 - Whether reviews are collected by us, imported from Google, or omitted from v1.
 - Whether the trade-in estimator uses a licensed valuation source or produces a range and hands off.

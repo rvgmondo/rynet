@@ -14,8 +14,21 @@ enquiry that reaches the selling dealership with a POPIA consent record attached
 Every link in the header and footer resolves. A test walks all of them on every build and fails if
 one 404s, which is what stops the seventeen dead links coming back.
 
-**What is still missing is scope, not soundness:** buyer accounts, the dealer portal, the agency
-site, and vehicle photography. None of those stop the site being public. Two things below do.
+**The agency site is built.** `/digital` was an empty directory that 404ed. It is now twelve
+routes: home, a services index, seven service pages from one template, how we price, how we work,
+about, and a three step qualification form that writes a lead and a POPIA consent record. Its own
+header, footer and metadata, because a dealer principal reading about stock feeds should not be
+offered a bakkie search.
+
+It has no logo wall, no testimonials, no case studies and no metrics, because Rynet Digital has no
+clients. The home page says that in as many words and a test asserts the sentence is still there.
+The proof used instead is Rynet Showroom, which a dealer can open and judge. Pricing publishes no
+figures for the same reason, and the bands render real numbers the moment
+`src/content/agency/pricing.ts` has them.
+
+**What is still missing is scope, not soundness:** buyer accounts, the dealer portal, agency case
+studies, insights and resources, and vehicle photography. None of those stop the site being
+public. Two things below do.
 
 ---
 
@@ -101,6 +114,23 @@ because a Next server left running from before the rebuild was still bound to th
 Playwright's `reuseExistingServer` adopted it and tested the previous build. `reuseExistingServer`
 is now off even locally, so a stray process is a loud "address already in use" rather than a quiet
 wrong answer.
+
+### Two more, from building the agency form
+
+Both in the same component, both invisible on screen, both found only because a test reopened the
+page and checked what had actually been stored.
+
+**A component defined inside another component remounts everything below it on every render.**
+`Field` was declared in the form's body, so every state change gave React a new function identity,
+a different component type, and a full unmount and remount. Every uncontrolled input inside it went
+blank. It looked like the draft persistence was broken and it was component identity.
+
+**Clicking "Continue" submitted the form.** React reconciled the Continue button and the Send it
+button as the same element in the same position, reused the DOM node, and changed only its `type`
+from "button" to "submit". Setting state in the click handler flipped that attribute while the
+browser was still processing the click, so it performed the default action and submitted. The
+action then failed validation and React reset the form, wiping the first two steps on the way to
+the third. The screen looked completely normal throughout. Distinct React keys fix it.
 
 ### Three bugs worth remembering
 
@@ -196,14 +226,16 @@ existed, at least two of the six problems above would have been obvious on paper
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
 - **103 unit tests.** Access control 33, finance 25, contrast 15, formatting 16, slugs 14.
-- **84 end-to-end tests** across desktop and mobile, 34 of them adversarial.
+- **134 end-to-end tests** across desktop and mobile, 34 of them adversarial and 25 on the
+  agency site.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
-  vehicle page and the enquiry dialog.
+  vehicle page, the enquiry dialog, and all seven agency templates.
 - **No horizontal overflow** at 320, 375, 768, 1024, 1440 or 1920.
 - **62 contrast pairs** passing in both themes, computed from the tokens rather than eyeballed.
 - **Theme correct in all three states**, including with JavaScript disabled.
 - **No VIN anywhere in a public response**, asserted rather than assumed.
-- **Every link in the header and footer resolves.**
+- **Every link in the header and footer resolves**, on both front doors.
+- **No rating, review or invented metric is emitted anywhere on the agency site.**
 - **A dealership cannot read or write another dealership's leads, stock or staff**, proven over
   HTTP rather than argued from the source.
 - **A dealership cannot verify itself, rate itself, or claim an accreditation**, same.
