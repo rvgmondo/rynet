@@ -1,7 +1,12 @@
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, Where } from "payload";
 
 import {
+  canGrantDealerRole,
+  canManageDealer,
+  DEALER_ROLE_RANK,
   dealerIdOf,
+  dealerRankOf,
+  hasRole,
   isDealerStaff,
   isPlatformAdmin,
   isPlatformStaff,
@@ -47,30 +52,76 @@ export const Users: CollectionConfig = {
       if (!dealer) return false;
       return { dealer: { equals: dealer } };
     },
-    create: ({ req }) => isPlatformAdmin(req.user) || isDealerStaff(req.user),
+    // Inviting a colleague is a management act. A sales agent working leads has no reason
+    // to be able to mint an account, and every reason not to.
+    create: ({ req }) => isPlatformAdmin(req.user) || canManageDealer(req.user),
+
+    /**
+     * Who a dealer user may edit, expressed as a rank ladder rather than "anyone in my
+     * dealership".
+     *
+     * The looser version let a sales agent edit the principal's record, and changing
+     * somebody's email address is an account takeover with a password reset on the end of
+     * it. So: a principal edits the whole team, a manager edits sales agents and themselves,
+     * a sales agent edits only themselves.
+     */
     update: ({ req }) => {
       if (isPlatformAdmin(req.user)) return true;
+
       const dealer = dealerIdOf(req.user);
       if (!dealer) return false;
-      return { dealer: { equals: dealer } };
+
+      const self = req.user?.id;
+      const wholeTeam: Where = { dealer: { equals: dealer } };
+
+      if (isPlatformStaff(req.user)) return wholeTeam;
+      if (hasRole(req.user, "dealer_owner")) return wholeTeam;
+
+      if (hasRole(req.user, "dealer_manager")) {
+        const teamBelow: Where = {
+          and: [
+            wholeTeam,
+            { or: [{ id: { equals: self } }, { role: { equals: "dealer_sales" } }] },
+          ],
+        };
+        return teamBelow;
+      }
+
+      const selfOnly: Where = { id: { equals: self } };
+      return selfOnly;
     },
     delete: ({ req }) => isPlatformAdmin(req.user),
     admin: ({ req }) => isPlatformStaff(req.user),
   },
   hooks: {
     beforeValidate: [
-      ({ data, req, operation }) => {
+      ({ data, req, operation, originalDoc }) => {
         if (!data) return data;
 
-        // A dealer user can only ever create another user inside their own dealership.
-        // The dealer field is overwritten rather than validated, so a crafted request body
-        // cannot plant a colleague inside a competitor's account.
         if (isDealerStaff(req.user)) {
+          // A dealer user can only ever write inside their own dealership. The field is
+          // overwritten rather than validated, so a crafted request body cannot plant a
+          // colleague inside a competitor's account.
           data.dealer = dealerIdOf(req.user);
 
-          // And they cannot mint a platform role for themselves or anyone else.
-          const allowed = ["dealer_owner", "dealer_manager", "dealer_sales"];
-          if (!allowed.includes(data.role)) data.role = "dealer_sales";
+          const currentRole = typeof originalDoc?.role === "string" ? originalDoc.role : undefined;
+          const isSelf =
+            operation === "update" && String(originalDoc?.id) === String(req.user?.id ?? "");
+
+          if (isSelf) {
+            // Nobody at a dealership changes their own role, principal included. The way
+            // out of a role is someone else moving you, which is the only version of this
+            // that leaves a trail worth reading.
+            data.role = currentRole ?? "dealer_sales";
+          } else if (currentRole && dealerRankOf(req.user) < (DEALER_ROLE_RANK[currentRole] ?? 0)) {
+            // Editing someone senior to you. You do not get to demote them on the way past.
+            data.role = currentRole;
+          } else if (!canGrantDealerRole(req.user, data.role)) {
+            // Anything else out of reach, a platform role above all, lands on the floor
+            // rather than being rejected: this runs on every write, and a hard error here
+            // would break an unrelated field update that happened to carry a role along.
+            data.role = currentRole ?? "dealer_sales";
+          }
         }
 
         if (operation === "create" && !data.status) data.status = "invited";
@@ -90,7 +141,9 @@ export const Users: CollectionConfig = {
       // beforeValidate clamp above as a second line.
       access: {
         create: ({ req }) => isStaffUser(req.user),
-        update: ({ req }) => isPlatformAdmin(req.user) || isDealerStaff(req.user),
+        // The hook above clamps what a dealership may grant. This narrows who may send the
+        // field at all, so a sales agent's request never reaches the clamp in the first place.
+        update: ({ req }) => isPlatformAdmin(req.user) || canManageDealer(req.user),
       },
     },
     {

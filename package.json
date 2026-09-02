@@ -25,6 +25,7 @@
     "test:e2e": "playwright test",
     "prepare": "node -e \"try{require('husky')()}catch(e){}\"",
     "seed:admin": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env src/seed/create-admin.ts",
+    "seed:fixtures": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env src/seed/create-test-fixtures.ts",
     "db:migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "db:migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
     "db:migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",

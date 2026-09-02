@@ -1,6 +1,6 @@
 # PRODUCTION READINESS
 
-Updated 26 August 2026. The first version of this document said the site deployed but was not
+Updated 2 September 2026. The first version of this document said the site deployed but was not
 ready to be public. Most of what it listed is now done.
 
 ---
@@ -29,8 +29,44 @@ site, and vehicle photography. None of those stop the site being public. Two thi
 | Nothing told a search engine anything | robots.txt, sitemap, canonicals, Car/Offer/AutoDealer/LocalBusiness/BreadcrumbList JSON-LD |
 | 468KB favicon, no app icon | Generated at build from the mark |
 | Next's default 404 and error page | A 404 with a search box, and an error boundary that says what to do |
-| No unit tests | 95, including 25 on the finance calculator |
+| No unit tests | 103, including 25 on the finance calculator |
+| Isolation was asserted, never proven | 28 adversarial tests over HTTP, which found an intra-dealership escalation |
 | No backups | `scripts/backup.sh` plus a runbook, using a consistent SQLite snapshot |
+
+### The isolation suite, and what it found
+
+The gap this document listed first is closed. `e2e/isolation.spec.ts` signs in as a real dealer
+over real HTTP and tries, by every route the REST API offers, to read and write another
+dealership's data: 28 tests covering leads, stock, staff, consent records and the anonymous
+baseline.
+
+It follows three rules, each because the obvious version of the test passes while proving nothing.
+It goes over HTTP rather than through the local API, which has different defaults and an
+`overrideAccess` flag. Every refused write is checked twice, because an unhappy status code means
+the response was unhappy, not that nothing happened, so each attempt is followed by a read as a
+platform admin asserting the row is unchanged. And it fails rather than skips when its fixtures
+are missing: a security test that skips itself still reports green.
+
+**It found a real hole on the first run.** Every check on the boundary *between* dealerships held.
+The boundary *inside* one did not exist. Any dealer role could write the role field on any
+colleague, so a sales agent could:
+
+- PATCH its own record to `dealer_owner`, gaining the right to delete stock and manage the team;
+- demote the actual dealer principal to sales agent;
+- change the principal's email address, which is an account takeover with a password reset on the
+  end of it.
+
+None of that crosses a dealership boundary, which is exactly why every scoping test passed while it
+was true, and why unit tests on the predicates could never have caught it. It is now a rank ladder:
+you may grant a role no higher than your own, you may not touch anyone standing above you, and
+nobody changes their own role at all. Inviting a colleague is a management act, so a sales agent
+cannot mint an account either.
+
+Worth noting how close this came to looking fixed when it was not. The fix appeared to fail twice
+because a Next server left running from before the rebuild was still bound to the port, and
+Playwright's `reuseExistingServer` adopted it and tested the previous build. `reuseExistingServer`
+is now off even locally, so a stray process is a loud "address already in use" rather than a quiet
+wrong answer.
 
 ### Three bugs worth remembering
 
@@ -100,12 +136,6 @@ changes how the rate limiter and the counter flush behave).
 
 ## Known gaps, honestly
 
-**The adversarial dealer-isolation tests still do not exist.** The predicates underneath are
-covered by 25 unit tests, including an impostor case that hands a buyer document every privileged
-role and asserts nothing opens. What is missing is the test that authenticates as dealer A over
-HTTP and tries to read dealer B's leads. The access control is written to make that impossible and
-it has not been proven. It is the gap I would close first after launch.
-
 **No manual screen reader testing.** Automated axe checks catch roughly a third of accessibility
 problems and pass on every template. A full NVDA and VoiceOver pass has not happened. The
 accessibility statement says so rather than claiming conformance nobody has checked.
@@ -130,8 +160,8 @@ was meant to precede the build and did not.
 
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
-- **95 unit tests.** Access control 25, finance 25, contrast 15, formatting 16, slugs 14.
-- **50 end-to-end tests** across desktop and mobile.
+- **103 unit tests.** Access control 33, finance 25, contrast 15, formatting 16, slugs 14.
+- **78 end-to-end tests** across desktop and mobile, 28 of them adversarial.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
   vehicle page and the enquiry dialog.
 - **No horizontal overflow** at 320, 375, 768, 1024, 1440 or 1920.
@@ -139,4 +169,6 @@ Everything below is checked on every push, and a failure blocks the deploy branc
 - **Theme correct in all three states**, including with JavaScript disabled.
 - **No VIN anywhere in a public response**, asserted rather than assumed.
 - **Every link in the header and footer resolves.**
+- **A dealership cannot read or write another dealership's leads, stock or staff**, proven over
+  HTTP rather than argued from the source.
 - **The sitemap lists nothing robots.txt blocks.**

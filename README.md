@@ -74,6 +74,7 @@ it is flagged as demonstration content and labelled as such in the interface. Se
 | `npm run test:e2e` | Playwright, including axe on every template |
 | `npm run seed` | Demonstration dealerships and stock |
 | `npm run seed:admin` | The first platform admin |
+| `npm run seed:fixtures` | Accounts the adversarial isolation suite signs in as. Refuses to run in production |
 | `npm run generate:types` | Regenerate `src/payload-types.ts` after a collection change |
 | `npm run db:migrate` | Apply schema migrations. Run on the host after any deploy that changed the schema |
 | `npm run db:migrate:create` | Create a migration after changing a collection |

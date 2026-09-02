@@ -26,7 +26,15 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     // Most South African traffic to a car marketplace is mobile. Testing only desktop
     // would be testing the minority case.
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    //
+    // The isolation suite is excluded: it never opens a page. It is HTTP against the REST
+    // API, so running it again at a phone viewport proves nothing and doubles the sign-ins
+    // against accounts that lock after eight attempts.
+    {
+      name: "mobile",
+      use: { ...devices["Pixel 7"] },
+      testIgnore: /isolation\.spec\.ts/,
+    },
   ],
 
   webServer: process.env.E2E_BASE_URL
@@ -37,7 +45,19 @@ export default defineConfig({
         // lock the run out partway through. Raised here only, never in the shipped default.
         env: { ENQUIRY_RATE_LIMIT: "1000" },
         url: "http://localhost:3100",
-        reuseExistingServer: !process.env.CI,
+        /**
+         * Never reuse, not even locally.
+         *
+         * Reuse cost this project two debugging sessions. A server left running from before
+         * a rebuild answers on the port, Playwright adopts it, and the whole suite tests the
+         * previous build while reporting on the current one. The isolation suite made that
+         * spectacular: an access control fix looked like it had failed, twice, because the
+         * process serving the requests predated it.
+         *
+         * With reuse off, a leftover server is a loud "address already in use" instead of a
+         * quiet wrong answer. Kill the stray process; do not trust the green tick.
+         */
+        reuseExistingServer: false,
         timeout: 180_000,
       },
 });

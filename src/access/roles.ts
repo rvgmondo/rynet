@@ -75,6 +75,48 @@ export const isDealerStaff = (user: unknown): boolean => hasRole(user, ...DEALER
 export const canManageDealer = (user: unknown): boolean =>
   hasRole(user, "dealer_owner", "dealer_manager");
 
+/**
+ * Seniority inside one dealership.
+ *
+ * Scoping every query to the right dealership is only half of the isolation problem. The
+ * other half is inside the dealership, and it was missing: any dealer role could write the
+ * role field on any colleague, so a sales agent could promote itself to principal and demote
+ * the actual principal on the way past. That never crossed a dealership boundary, which is
+ * why the scoping tests did not see it, and it still hands a junior account the right to
+ * delete stock and lock out the owner.
+ *
+ * The rule is a rank ladder: you may grant a role no higher than your own, and you may not
+ * touch anyone standing above you.
+ */
+export const DEALER_ROLE_RANK: Readonly<Record<string, number>> = {
+  dealer_sales: 1,
+  dealer_manager: 2,
+  dealer_owner: 3,
+};
+
+/** 0 for anyone who is not dealer staff, which makes every comparison below fail closed. */
+export function dealerRankOf(user: unknown): number {
+  if (!isStaffUser(user)) return 0;
+  return DEALER_ROLE_RANK[user.role as string] ?? 0;
+}
+
+/**
+ * May this actor put a colleague into this role?
+ *
+ * Platform roles are never grantable from inside a dealership, and neither is a rank above
+ * the actor's own. A principal can appoint another principal; a manager cannot.
+ */
+export function canGrantDealerRole(actor: unknown, role: unknown): boolean {
+  // Handing out roles is a management act in the first place. A sales agent is at rank 1
+  // and so would otherwise pass the comparison below for another rank 1 role, which is
+  // still an unauthorised write to a colleague's record.
+  if (!canManageDealer(actor)) return false;
+
+  const target = DEALER_ROLE_RANK[role as string];
+  if (!target) return false;
+  return target <= dealerRankOf(actor);
+}
+
 /** Normalises the dealer relationship, which Payload hands back as an id or a document. */
 export function dealerIdOf(user: unknown): number | string | null {
   if (!isStaffUser(user)) return null;

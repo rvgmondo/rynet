@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canGrantDealerRole,
   canManageDealer,
   dealerIdOf,
+  dealerRankOf,
   hasRole,
   isDealerStaff,
   isPlatformAdmin,
@@ -20,9 +22,9 @@ import {
  * worth caring about are a buyer gaining any staff capability, and a dealership seeing
  * another dealership's rows.
  *
- * The full adversarial suite, which authenticates as dealer A over HTTP and tries to read
- * and mutate dealer B, is still owed and is tracked in docs/PRODUCTION-READINESS.md. This
- * covers the layer underneath it.
+ * The adversarial suite in e2e/isolation.spec.ts authenticates as dealer A over HTTP and
+ * tries to read and mutate dealer B. This covers the layer underneath it, where the cases
+ * are cheap enough to enumerate exhaustively.
  */
 
 const staff = (role: string, dealer?: number | { id: number }) => ({
@@ -195,5 +197,76 @@ describe("the boundary that matters most", () => {
       expect(scopedToOwnDealer("dealer")(req(impostor))).toBe(false);
       expect(writableByOwnDealer("dealer")(req(impostor))).toBe(false);
     }
+  });
+});
+
+/**
+ * The rank ladder inside a dealership.
+ *
+ * Added after the adversarial suite found that a sales agent could PATCH its own record to
+ * `dealer_owner` and then demote the actual principal. Nothing crossed a dealership
+ * boundary, which is exactly why the scoping tests never saw it, and it still handed a
+ * junior account the right to delete stock and lock the owner out.
+ */
+describe("dealerRankOf", () => {
+  it("ranks the three dealer roles in order", () => {
+    expect(dealerRankOf(staff("dealer_sales", 1))).toBe(1);
+    expect(dealerRankOf(staff("dealer_manager", 1))).toBe(2);
+    expect(dealerRankOf(staff("dealer_owner", 1))).toBe(3);
+  });
+
+  it("gives everyone else a rank of zero, so every comparison fails closed", () => {
+    expect(dealerRankOf(staff("platform_admin"))).toBe(0);
+    expect(dealerRankOf(staff("analyst"))).toBe(0);
+    expect(dealerRankOf(null)).toBe(0);
+    expect(dealerRankOf({ id: 1, collection: "buyers", role: "dealer_owner" })).toBe(0);
+  });
+});
+
+describe("canGrantDealerRole", () => {
+  it("lets a principal appoint anyone in the dealership, including another principal", () => {
+    const owner = staff("dealer_owner", 1);
+    expect(canGrantDealerRole(owner, "dealer_owner")).toBe(true);
+    expect(canGrantDealerRole(owner, "dealer_manager")).toBe(true);
+    expect(canGrantDealerRole(owner, "dealer_sales")).toBe(true);
+  });
+
+  it("stops a manager appointing a principal", () => {
+    const manager = staff("dealer_manager", 1);
+    expect(canGrantDealerRole(manager, "dealer_owner")).toBe(false);
+    expect(canGrantDealerRole(manager, "dealer_manager")).toBe(true);
+    expect(canGrantDealerRole(manager, "dealer_sales")).toBe(true);
+  });
+
+  it("stops a sales agent granting anything at all", () => {
+    const sales = staff("dealer_sales", 1);
+    for (const role of ["dealer_owner", "dealer_manager", "dealer_sales"]) {
+      expect(canGrantDealerRole(sales, role)).toBe(false);
+    }
+  });
+
+  it("never grants a platform role from inside a dealership", () => {
+    for (const actor of ["dealer_owner", "dealer_manager", "dealer_sales"]) {
+      for (const role of [
+        "platform_admin",
+        "platform_editor",
+        "agency_account_manager",
+        "analyst",
+      ]) {
+        expect(canGrantDealerRole(staff(actor, 1), role)).toBe(false);
+      }
+    }
+  });
+
+  it("refuses anything that is not a role at all", () => {
+    const owner = staff("dealer_owner", 1);
+    for (const value of [undefined, null, "", "admin", "DEALER_OWNER", 3, {}]) {
+      expect(canGrantDealerRole(owner, value)).toBe(false);
+    }
+  });
+
+  it("a buyer document holding a dealer role grants nothing", () => {
+    const impostor = { id: 9, collection: "buyers", role: "dealer_owner", dealer: 1 };
+    expect(canGrantDealerRole(impostor, "dealer_sales")).toBe(false);
   });
 });
