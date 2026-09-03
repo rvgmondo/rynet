@@ -29,8 +29,16 @@ cPanel Git Version Control pulls `deploy`
 you click Restart
 ```
 
-`main` holds source and no build output, so its history stays readable. `deploy` is an artefact:
-rebuilt as a fresh orphan commit every time, so it never grows by a full build per push.
+`main` holds source and no build output, so its history stays readable. `deploy` carries one
+commit per build, each on top of the last.
+
+**That "on top of the last" is not a detail.** cPanel's Update from Remote pulls with `--ff-only`,
+and a fast-forward onto a commit with no shared ancestor is impossible. The deploy branch used to
+be force-pushed as a fresh orphan every build, so the button worked exactly once, on the initial
+clone, and after that either errored or silently redeployed the day-one build while `DEPLOYED.txt`
+recorded that stale commit as though it were current. That is fixed, and the cost is size: the
+branch grows by roughly the size of `.next` per deploy. When it gets unwieldy, delete the branch on
+GitHub, let the next build recreate it, and re-clone on the host.
 
 **The host cannot build.** Next 16 with Turbopack needs far more memory than a shared CloudLinux
 account allows, and it gets killed rather than erroring usefully. That constraint is what shapes
@@ -136,7 +144,15 @@ The seed takes a few minutes and is memory-hungry. Uploading the prepared file i
    If it fails, nothing reaches the server. That is the point.
 3. **cPanel, Git Version Control, Manage:** click **Update from Remote**, then
    **Deploy HEAD Commit**.
-4. **Restart** on the Setup Node.js App screen.
+4. The deploy touches `tmp/restart.txt`, which is how Passenger is told to reload, so a manual
+   **Restart** on the Setup Node.js App screen should not be needed. Click it anyway if the site
+   is still serving the old build.
+
+**If the deploy refuses**, read the message. `.cpanel.yml` now checks that the checkout actually
+carries a build before it writes anything, so the usual cause is that the checked-out branch is
+`main` rather than `deploy`. It stops before touching the live site, which is the point: the
+previous version of that file deleted the running build first and only then discovered it had
+nothing to replace it with, and cPanel reported success while the site returned 500 to everything.
 
 Check `~/rynet/DEPLOYED.txt` afterwards. It carries the timestamp and the commit, so you can always
 tell exactly what is running.
@@ -186,8 +202,17 @@ it an origin.
 
 ## Rolling back
 
-The `deploy` branch is replaced wholesale each build, so there is no history there to roll back to.
-Roll back on `main` instead and let it rebuild:
+Two ways, and the fast one is on the host.
+
+**In seconds, on the host.** Each deploy keeps exactly one previous build beside the live one:
+
+```bash
+cd ~/rynet && mv .next .next.bad && mv .next.previous .next && touch tmp/restart.txt
+```
+
+Do the same for `src.previous` and `scripts.previous` if the bad deploy changed them.
+
+**Properly, through the pipeline.** Roll back on `main` and let it rebuild:
 
 ```bash
 git revert <bad-commit>

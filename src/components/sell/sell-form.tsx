@@ -94,6 +94,10 @@ export function SellForm({ provinces }: { provinces: readonly { slug: string; na
           that buy this kind of car. They contact you directly, and any offer is between you and
           them. Rynet does not buy cars and takes no cut.
         </p>
+        <p className="measure mx-auto mt-3 text-sm text-ink-secondary">
+          We are new and still signing dealerships, so there may not be one near you yet. If we
+          cannot place your car we will email you and say so.
+        </p>
         <p className="measure mx-auto mt-3 text-sm text-ink-muted">
           Changed your mind? Email privacy@rynet.co.za and we will stop passing it on.
         </p>

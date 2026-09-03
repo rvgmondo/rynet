@@ -72,6 +72,29 @@ test.describe("the hard rule survives this page", () => {
     await expect(page.getByRole("heading", { name: /We do not value your car/i })).toBeVisible();
   });
 
+  /**
+   * Added after a POPIA and copy audit found the page promising something the platform cannot
+   * currently do. Rynet has not signed a single dealership, so "they come back to you with
+   * offers" was a promise with nobody behind it. The agency site had the same problem and
+   * solves it the same way: say so in the first thing the reader sees.
+   */
+  test("it admits there may be no dealership yet", async ({ page }) => {
+    await page.goto(PATH);
+    await expect(page.getByText(/We are new, so read this first/i)).toBeVisible();
+    await expect(page.getByText(/may not yet be one in your province/i)).toBeVisible();
+  });
+
+  test("the section 18 notice is on the page, not only behind a link", async ({ page }) => {
+    await page.goto(PATH);
+    const notice = page.getByRole("region", { name: /What happens to your details/i });
+    await expect(notice).toBeVisible();
+
+    // The two items most often left out, and the two a data subject actually needs.
+    await expect(notice).toContainText(/Pretoria/i);
+    await expect(notice).toContainText(/enquiries@inforegulator.org.za/i);
+    await expect(notice).toContainText(/voluntary/i);
+  });
+
   test("no forbidden private-listing route reaches the navigation", async ({ page }) => {
     await page.goto(PATH);
     const hrefs = await page
@@ -140,7 +163,7 @@ test.describe("the form", () => {
     // The server refuses anything submitted within four seconds of the form rendering.
     await page.waitForTimeout(4200);
     await page.getByRole("button", { name: "Send it to dealerships" }).click();
-    await expect(page.getByRole("status")).toContainText(/Dealerships will come back to you/i, {
+    await expect(page.getByRole("status")).toContainText(/We will pass it to dealerships/i, {
       timeout: 15000,
     });
 
