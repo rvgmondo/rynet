@@ -1,0 +1,16 @@
+{
+  "node": {
+    "60e82d5d1db46f213af71ad1b7c868e5b721c40787": {
+      "workers": {
+        "app/(agency)/digital/contact/page": {
+          "moduleId": 114474,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "submitAgencyEnquiry",
+      "filename": "src/app/actions/agency-enquiry.ts"
+    }
+  },
+  "edge": {}
+}

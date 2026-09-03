@@ -1,0 +1,16 @@
+{
+  "node": {
+    "6085c1a95755bd4b1c1c4f44bc55f394808f14cc0e": {
+      "workers": {
+        "app/(marketplace)/vehicles/[make]/[model]/[slug]/page": {
+          "moduleId": 80500,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "submitEnquiry",
+      "filename": "src/app/actions/enquiry.ts"
+    }
+  },
+  "edge": {}
+}

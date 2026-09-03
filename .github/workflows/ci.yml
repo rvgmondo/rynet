@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A red build blocks merge. That is the point of every job below.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Node 22, because that is what the cPanel host offers. Pinning the current LTS (24) here
+  # would mean CI passing on a runtime production does not have.
+  NODE_VERSION: "22"
+
+jobs:
+  quality:
+    name: Typecheck, lint and tokens
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Contrast report
+        # Regenerates docs/contrast-report.md and exits non-zero on any failing pair, so a
+        # token change that breaks contrast fails here rather than in a design review.
+        run: npm run contrast
+      - name: Contrast report is committed and current
+        run: git diff --exit-code docs/contrast-report.md
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  e2e:
+    name: End to end, axe and responsive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Seed a database to test against
+        # The suite asserts on real stock: facet counts, price sorting, pagination. Running
+        # it against an empty database would pass while proving nothing.
+        #
+        # seed:fixtures adds the two dealer accounts and the buyer that the isolation suite
+        # signs in as. It refuses to run when NODE_ENV is production.
+        env:
+          DATABASE_URI: file:./rynet.db
+          PAYLOAD_SECRET: ci-only-not-a-real-secret-value-000000
+          NEXT_PUBLIC_SERVER_URL: http://localhost:3100
+        run: |
+          npx payload migrate
+          npm run seed:admin
+          npm run seed
+          npm run seed:fixtures
+      - name: Build
+        env:
+          DATABASE_URI: file:./rynet.db
+          PAYLOAD_SECRET: ci-only-not-a-real-secret-value-000000
+          NEXT_PUBLIC_SERVER_URL: http://localhost:3100
+        run: npm run build
+      - name: Run Playwright
+        env:
+          DATABASE_URI: file:./rynet.db
+          PAYLOAD_SECRET: ci-only-not-a-real-secret-value-000000
+          NEXT_PUBLIC_SERVER_URL: http://localhost:3100
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+  # Lighthouse budgets are not wired yet and this job is deliberately absent rather than
+  # present and passing vacuously. It lands in Phase 3 alongside the templates it measures,
+  # because a budget on a page that does not exist proves nothing. See docs/DELIVERY-PLAN.md.

@@ -1,0 +1,364 @@
+{
+  "version": 3,
+  "pages404": true,
+  "appType": "app",
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "priority": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self), payment=(), browsing-topics=()"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' https:; font-src 'self' data:; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube-nocookie.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za; frame-ancestors 'none'; upgrade-insecure-requests"
+        }
+      ],
+      "regex": "^/admin(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
+    },
+    {
+      "source": "/((?!admin).*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self), payment=(), browsing-topics=()"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Permitted-Cross-Domain-Policies",
+          "value": "none"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' https:; font-src 'self' data:; worker-src 'self' blob:; frame-src 'self' https://www.google.com https://maps.google.com https://www.youtube-nocookie.com; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://www.payfast.co.za https://sandbox.payfast.co.za; frame-ancestors 'none'; upgrade-insecure-requests"
+        }
+      ],
+      "regex": "^(?:/((?!admin).*))(?:/)?$"
+    },
+    {
+      "headers": [
+        {
+          "key": "Accept-CH",
+          "value": "Sec-CH-Prefers-Color-Scheme"
+        },
+        {
+          "key": "Vary",
+          "value": "Sec-CH-Prefers-Color-Scheme"
+        },
+        {
+          "key": "Critical-CH",
+          "value": "Sec-CH-Prefers-Color-Scheme"
+        }
+      ],
+      "source": "/:path*",
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
+    }
+  ],
+  "onMatchHeaders": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "rsc",
+          "value": "1"
+        }
+      ],
+      "headers": [
+        {
+          "key": "x-nextjs-deployment-id",
+          "value": "a1277040cc877348e8d42dbcaf0f888424b36944"
+        }
+      ],
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
+    },
+    {
+      "source": "/_next/data/(.*)",
+      "headers": [
+        {
+          "key": "x-nextjs-deployment-id",
+          "value": "a1277040cc877348e8d42dbcaf0f888424b36944"
+        }
+      ],
+      "regex": "^/_next/data(?:/(.*))(?:/)?$"
+    }
+  ],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/admin/[[...segments]]",
+      "regex": "^/admin(?:/(.+?))?(?:/)?$",
+      "routeKeys": {
+        "nxtPsegments": "nxtPsegments"
+      },
+      "namedRegex": "^/admin(?:/(?<nxtPsegments>.+?))?(?:/)?$"
+    },
+    {
+      "page": "/api/[...slug]",
+      "regex": "^/api/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/(?<nxtPslug>.+?)(?:/)?$"
+    },
+    {
+      "page": "/cars/[...facets]",
+      "regex": "^/cars/(.+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPfacets": "nxtPfacets"
+      },
+      "namedRegex": "^/cars/(?<nxtPfacets>.+?)(?:/)?$"
+    },
+    {
+      "page": "/dealers/[slug]",
+      "regex": "^/dealers/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/dealers/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/digital/services/[slug]",
+      "regex": "^/digital/services/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/digital/services/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/vehicles/[make]/[model]/[slug]",
+      "regex": "^/vehicles/([^/]+?)/([^/]+?)/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPmake": "nxtPmake",
+        "nxtPmodel": "nxtPmodel",
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/vehicles/(?<nxtPmake>[^/]+?)/(?<nxtPmodel>[^/]+?)/(?<nxtPslug>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_global-error",
+      "regex": "^/_global\\-error(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_global\\-error(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/accessibility",
+      "regex": "^/accessibility(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/accessibility(?:/)?$"
+    },
+    {
+      "page": "/api/graphql",
+      "regex": "^/api/graphql(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/graphql(?:/)?$"
+    },
+    {
+      "page": "/api/track/phone-reveal",
+      "regex": "^/api/track/phone\\-reveal(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/track/phone\\-reveal(?:/)?$"
+    },
+    {
+      "page": "/apple-icon",
+      "regex": "^/apple\\-icon(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/apple\\-icon(?:/)?$"
+    },
+    {
+      "page": "/cars",
+      "regex": "^/cars(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cars(?:/)?$"
+    },
+    {
+      "page": "/contact",
+      "regex": "^/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/contact(?:/)?$"
+    },
+    {
+      "page": "/cookies",
+      "regex": "^/cookies(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/cookies(?:/)?$"
+    },
+    {
+      "page": "/dealers",
+      "regex": "^/dealers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/dealers(?:/)?$"
+    },
+    {
+      "page": "/digital",
+      "regex": "^/digital(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/digital(?:/)?$"
+    },
+    {
+      "page": "/digital/about",
+      "regex": "^/digital/about(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/digital/about(?:/)?$"
+    },
+    {
+      "page": "/digital/contact",
+      "regex": "^/digital/contact(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/digital/contact(?:/)?$"
+    },
+    {
+      "page": "/digital/pricing",
+      "regex": "^/digital/pricing(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/digital/pricing(?:/)?$"
+    },
+    {
+      "page": "/digital/process",
+      "regex": "^/digital/process(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/digital/process(?:/)?$"
+    },
+    {
+      "page": "/digital/services",
+      "regex": "^/digital/services(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/digital/services(?:/)?$"
+    },
+    {
+      "page": "/how-verification-works",
+      "regex": "^/how\\-verification\\-works(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/how\\-verification\\-works(?:/)?$"
+    },
+    {
+      "page": "/icon",
+      "regex": "^/icon(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/icon(?:/)?$"
+    },
+    {
+      "page": "/privacy",
+      "regex": "^/privacy(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/privacy(?:/)?$"
+    },
+    {
+      "page": "/robots.txt",
+      "regex": "^/robots\\.txt(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/robots\\.txt(?:/)?$"
+    },
+    {
+      "page": "/sell-to-a-dealer",
+      "regex": "^/sell\\-to\\-a\\-dealer(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sell\\-to\\-a\\-dealer(?:/)?$"
+    },
+    {
+      "page": "/sitemap.xml",
+      "regex": "^/sitemap\\.xml(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/sitemap\\.xml(?:/)?$"
+    },
+    {
+      "page": "/terms",
+      "regex": "^/terms(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/terms(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments",
+    "clientParamParsing": false,
+    "dynamicRSCPrerender": false
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  },
+  "deploymentId": "a1277040cc877348e8d42dbcaf0f888424b36944"
+}

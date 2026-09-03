@@ -1,0 +1,32 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(agency)/layout,_N_T_/(agency)/digital/layout,_N_T_/(agency)/digital/page,_N_T_/digital"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KGFnZW5jeSk/digital",
+    "/!KGFnZW5jeSk/digital/__PAGE__"
+  ],
+  "prefetchHints": {
+    "hints": 64,
+    "slots": {
+      "children": {
+        "hints": 96,
+        "slots": {
+          "children": {
+            "hints": 32,
+            "slots": {
+              "children": {
+                "hints": 128,
+                "slots": null
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "link": "@aws-sdk/client-s3-ecbef8e33fd0b8f0",
+    "package": "@aws-sdk/client-s3"
+  },
+  {
+    "link": "@libsql/client-6da938047d5fc1cd",
+    "package": "@libsql/client"
+  },
+  {
+    "link": "drizzle-kit-e722632bd56cd1a1",
+    "package": "drizzle-kit"
+  },
+  {
+    "link": "graphql-ebe9eae78fe680ac",
+    "package": "graphql"
+  },
+  {
+    "link": "pg-587764f78a6c7a9c",
+    "package": "pg"
+  },
+  {
+    "link": "pino-28069d5257187539",
+    "package": "pino"
+  },
+  {
+    "link": "pino-pretty-c8f40b43d4a6ea57",
+    "package": "pino-pretty"
+  },
+  {
+    "link": "sharp-20c6a5da84e2135f",
+    "package": "sharp"
+  }
+]

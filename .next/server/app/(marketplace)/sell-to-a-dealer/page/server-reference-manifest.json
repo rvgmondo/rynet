@@ -1,0 +1,16 @@
+{
+  "node": {
+    "60f8b697b1f892d1b7b193bfc1b0f465fab6938294": {
+      "workers": {
+        "app/(marketplace)/sell-to-a-dealer/page": {
+          "moduleId": 442012,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "submitSellToDealer",
+      "filename": "src/app/actions/sell-to-dealer.ts"
+    }
+  },
+  "edge": {}
+}

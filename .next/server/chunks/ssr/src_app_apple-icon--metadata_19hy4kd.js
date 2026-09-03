@@ -1,0 +1,3 @@
+module.exports=[839870,a=>{"use strict";a.i(907997),a.i(599475);var b=a.i(352425);let c={contentType:"image/png",size:{width:180,height:180}};async function d(a){let{__metadata_id__:d,...e}=await a.params,f=(0,b.fillMetadataSegment)("/",e,"apple-icon",!1);return[function(a){let b={alt:a.alt,type:a.contentType||"image/png",url:f+"?cf3e2ece793a84b9"},{size:c}=a;return c&&(b.sizes=`${c.width}x${c.height}`),b}(c)]}a.s(["default",0,d],839870)},588311,function(a){a.n(a.i(839870))}];
+
+//# sourceMappingURL=src_app_apple-icon--metadata_19hy4kd.js.map

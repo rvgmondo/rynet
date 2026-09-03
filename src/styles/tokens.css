@@ -1,0 +1,304 @@
+/*
+ * RYNET DESIGN TOKENS
+ *
+ * Every colour, size, radius, duration and z-index in the platform comes from here.
+ * An arbitrary hex value in a component is a review rejection, not a shortcut.
+ *
+ * The colour ramps are anchored on the three brand values and were computed rather than
+ * picked: neutral runs white to #B1B4BB (brand silver, at 400) to #001123 (brand navy, at
+ * 900), and red-500 is the brand red with the ramp built around it. Every semantic pair
+ * below is verified by scripts/contrast-report.ts, which CI runs on every pull request.
+ *
+ * Three findings from that work drive how the brand is allowed to be used:
+ *
+ *   1. Brand red on white is 4.60:1. That clears AA body text by 0.10, which is too thin
+ *      to build on, so link and inline accent text uses red-600 (5.47).
+ *   2. Brand red on brand navy is 4.13:1 and FAILS. Dark-theme accent text lightens to
+ *      red-300 (7.75). Never navy text on red.
+ *   3. Brand silver on white is 2.08:1 and fails everything, including the 3:1 minimum for
+ *      an interactive boundary. Silver is a dark-theme text colour and a light-theme
+ *      DECORATIVE rule only. It is never body text, placeholder text or an input border
+ *      on a light ground.
+ */
+
+:root {
+  /* ---------------------------------------------------------------- palette */
+  /* Neutral: cool blue-grey, anchored on brand silver (400) and brand navy (900). */
+  --rn-neutral-0: #ffffff;
+  --rn-neutral-25: #f8f8f9;
+  --rn-neutral-50: #f2f2f3;
+  --rn-neutral-100: #e7e8ea;
+  --rn-neutral-200: #d4d5d9;
+  --rn-neutral-300: #c2c4ca;
+  --rn-neutral-400: #b1b4bb; /* BRAND silver */
+  --rn-neutral-500: #80858d;
+  --rn-neutral-600: #5e656e;
+  --rn-neutral-700: #414952;
+  --rn-neutral-800: #262f39;
+  --rn-neutral-900: #001123; /* BRAND navy */
+  --rn-neutral-950: #000b16;
+
+  /* Red: brand red is 500. Darker for light-theme text, lighter for dark-theme text. */
+  --rn-red-50: #fdf0f1;
+  --rn-red-100: #fbdee0;
+  --rn-red-200: #f7bdc2;
+  --rn-red-300: #f0878e;
+  --rn-red-400: #e9505b;
+  --rn-red-500: #e32432; /* BRAND red */
+  --rn-red-600: #cc2231;
+  --rn-red-700: #aa1f2e;
+  --rn-red-800: #841c2c;
+  --rn-red-900: #5f1929;
+
+  /* Status. Tuned per theme below, because no single value passes on both grounds. */
+  --rn-green-600: #0f7a3d;
+  --rn-green-300: #4fcb86;
+  --rn-amber-700: #8a5a00;
+  --rn-amber-300: #f0b44a;
+  --rn-blue-600: #0b5fa5;
+  --rn-blue-300: #66b6f2;
+
+  /* ------------------------------------------------------- semantic (light) */
+  --rn-surface: var(--rn-neutral-0);
+  --rn-surface-raised: var(--rn-neutral-25);
+  --rn-surface-sunken: var(--rn-neutral-50);
+  --rn-surface-inverse: var(--rn-neutral-900);
+
+  --rn-text-primary: #0c1721; /* 18.10 on surface */
+  --rn-text-secondary: var(--rn-neutral-700); /*  9.13 */
+  --rn-text-muted: var(--rn-neutral-600); /*  5.89 */
+  --rn-text-inverse: var(--rn-neutral-50);
+  --rn-text-on-accent: var(--rn-neutral-0);
+
+  --rn-accent: var(--rn-red-600); /*  5.47 as text on surface */
+  --rn-accent-hover: var(--rn-red-700); /*  7.13 */
+  --rn-accent-solid: var(--rn-red-600); /* white on it: 5.47 */
+  --rn-accent-solid-hover: var(--rn-red-700);
+  --rn-accent-subtle: var(--rn-red-50);
+
+  /*
+   * Two border tokens on purpose. WCAG 2.2 SC 1.4.11 requires 3:1 only where a boundary is
+   * the SOLE indicator of a control. Collapsing these into one either makes every hairline
+   * too dark or leaves real input borders failing.
+   */
+  --rn-border-subtle: var(--rn-neutral-200); /* decorative: dividers, card edges */
+  --rn-border-interactive: var(--rn-neutral-500); /* 3.71: inputs, unfilled controls */
+  --rn-border-strong: var(--rn-neutral-700);
+
+  --rn-success: var(--rn-green-600);
+  --rn-warning: var(--rn-amber-700);
+  --rn-danger: var(--rn-red-700);
+  --rn-info: var(--rn-blue-600);
+  --rn-success-subtle: #e8f5ed;
+  --rn-warning-subtle: #fbf2e0;
+  --rn-danger-subtle: var(--rn-red-50);
+  --rn-info-subtle: #e7f1fa;
+
+  --rn-focus-ring: var(--rn-red-600);
+  --rn-focus-offset: var(--rn-neutral-0);
+  /* For a ring drawn on an inverse panel, where the ground is the other theme's. */
+  --rn-focus-ring-inverse: var(--rn-red-300);
+  --rn-focus-offset-inverse: var(--rn-neutral-900);
+
+  /* Elevation: ambient plus direct, tuned for a light ground. */
+  --rn-shadow-1: 0 1px 2px rgb(0 17 35 / 0.06);
+  --rn-shadow-2: 0 1px 2px rgb(0 17 35 / 0.05), 0 4px 12px -4px rgb(0 17 35 / 0.1);
+  --rn-shadow-3: 0 2px 4px rgb(0 17 35 / 0.05), 0 12px 28px -8px rgb(0 17 35 / 0.14);
+  --rn-shadow-4: 0 4px 8px rgb(0 17 35 / 0.06), 0 24px 56px -16px rgb(0 17 35 / 0.2);
+
+  color-scheme: light;
+}
+
+/* -------------------------------------------------------------- dark theme */
+/*
+ * Three states, not two. An explicit choice stamps data-theme on the root; the default
+ * "system" setting stamps nothing, so only prefers-color-scheme separates the two. Both
+ * blocks below redefine ONLY tokens, never component rules, so a colour can never end up
+ * defined solely inside a media query.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --rn-surface: var(--rn-neutral-900);
+    --rn-surface-raised: #0e1e2f;
+    --rn-surface-sunken: var(--rn-neutral-950);
+    --rn-surface-inverse: var(--rn-neutral-0);
+
+    --rn-text-primary: var(--rn-neutral-50); /* 17.00 on surface */
+    --rn-text-secondary: var(--rn-neutral-300); /* 10.90 */
+    --rn-text-muted: var(--rn-neutral-400); /*  9.16 */
+    --rn-text-inverse: #0c1721;
+    --rn-text-on-accent: var(--rn-neutral-0);
+
+    --rn-accent: var(--rn-red-300); /*  7.75 as text on surface */
+    --rn-accent-hover: var(--rn-red-200); /* 11.78 */
+    --rn-accent-solid: var(--rn-red-500); /* white on it: 4.60 */
+    --rn-accent-solid-hover: var(--rn-red-600); /* white on it: 5.47 */
+    --rn-accent-subtle: #12202e;
+
+    --rn-border-subtle: #273544;
+    --rn-border-interactive: var(--rn-neutral-500); /* 5.12 base, 4.54 raised */
+    --rn-border-strong: var(--rn-neutral-400); /* brand silver, 9.16 on navy */
+
+    --rn-success: var(--rn-green-300);
+    --rn-warning: var(--rn-amber-300);
+    --rn-danger: var(--rn-red-300);
+    --rn-info: var(--rn-blue-300);
+    --rn-success-subtle: #0d2419;
+    --rn-warning-subtle: #241d0c;
+    --rn-danger-subtle: #26141a;
+    --rn-info-subtle: #0c1d2b;
+
+    --rn-focus-ring: var(--rn-red-300);
+    --rn-focus-offset: var(--rn-neutral-900);
+    --rn-focus-ring-inverse: var(--rn-red-600);
+    --rn-focus-offset-inverse: var(--rn-neutral-0);
+
+    /* A dark theme separates surfaces with light, not with darker shadow. */
+    --rn-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+    --rn-shadow-2: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.6);
+    --rn-shadow-3: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 28px -8px rgb(0 0 0 / 0.7);
+    --rn-shadow-4: 0 4px 8px rgb(0 0 0 / 0.4), 0 24px 56px -16px rgb(0 0 0 / 0.8);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --rn-surface: var(--rn-neutral-900);
+  --rn-surface-raised: #0e1e2f;
+  --rn-surface-sunken: var(--rn-neutral-950);
+  --rn-surface-inverse: var(--rn-neutral-0);
+
+  --rn-text-primary: var(--rn-neutral-50);
+  --rn-text-secondary: var(--rn-neutral-300);
+  --rn-text-muted: var(--rn-neutral-400);
+  --rn-text-inverse: #0c1721;
+  --rn-text-on-accent: var(--rn-neutral-0);
+
+  --rn-accent: var(--rn-red-300);
+  --rn-accent-hover: var(--rn-red-200);
+  --rn-accent-solid: var(--rn-red-500);
+  --rn-accent-solid-hover: var(--rn-red-600); /* white on it: 5.47 */
+  --rn-accent-subtle: #12202e;
+
+  --rn-border-subtle: #273544;
+  --rn-border-interactive: var(--rn-neutral-500);
+  --rn-border-strong: var(--rn-neutral-500);
+
+  --rn-success: var(--rn-green-300);
+  --rn-warning: var(--rn-amber-300);
+  --rn-danger: var(--rn-red-300);
+  --rn-info: var(--rn-blue-300);
+  --rn-success-subtle: #0d2419;
+  --rn-warning-subtle: #241d0c;
+  --rn-danger-subtle: #26141a;
+  --rn-info-subtle: #0c1d2b;
+
+  --rn-focus-ring: var(--rn-red-300);
+  --rn-focus-offset: var(--rn-neutral-900);
+  --rn-focus-ring-inverse: var(--rn-red-600);
+  --rn-focus-offset-inverse: var(--rn-neutral-0);
+
+  --rn-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+  --rn-shadow-2: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.6);
+  --rn-shadow-3: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 28px -8px rgb(0 0 0 / 0.7);
+  --rn-shadow-4: 0 4px 8px rgb(0 0 0 / 0.4), 0 24px 56px -16px rgb(0 0 0 / 0.8);
+
+  color-scheme: dark;
+}
+
+/* --------------------------------------------------------- non-colour tokens */
+:root {
+  /*
+   * Type. Montserrat is the logo's voice and carries display. Inter carries interface,
+   * body and every numeral, because this platform is mostly prices, mileage, kilowatts
+   * and rates, and Inter has real tabular figures. Poppins is reserved for the agency
+   * site's large marketing type and is not loaded on marketplace routes.
+   */
+  --rn-font-display: var(--font-montserrat), "Montserrat", system-ui, sans-serif;
+  --rn-font-body: var(--font-inter), "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rn-font-marketing: var(--font-poppins), "Poppins", var(--rn-font-body);
+  --rn-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /*
+   * Fluid scale. The marketplace runs a 1.2 ratio and the agency 1.25; both read from the
+   * same steps, and the agency layer overrides the clamp maximums.
+   */
+  --rn-text-2xs: clamp(0.694rem, 0.68rem + 0.07vw, 0.72rem);
+  --rn-text-xs: clamp(0.833rem, 0.81rem + 0.11vw, 0.875rem);
+  --rn-text-sm: clamp(0.926rem, 0.9rem + 0.13vw, 0.95rem);
+  --rn-text-base: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  --rn-text-lg: clamp(1.2rem, 1.14rem + 0.3vw, 1.3rem);
+  --rn-text-xl: clamp(1.44rem, 1.34rem + 0.5vw, 1.6rem);
+  --rn-text-2xl: clamp(1.728rem, 1.56rem + 0.84vw, 2rem);
+  --rn-text-3xl: clamp(2.074rem, 1.8rem + 1.37vw, 2.5rem);
+  --rn-text-4xl: clamp(2.488rem, 2.06rem + 2.14vw, 3.15rem);
+  --rn-text-5xl: clamp(2.986rem, 2.34rem + 3.23vw, 3.94rem);
+
+  /* Line height is a token per step, not one global multiplier. */
+  --leading-tight: 1.08;
+  --leading-snug: 1.22;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.62;
+
+  --tracking-tight: -0.022em;
+  --tracking-tighter: -0.032em;
+  --tracking-wide: 0.06em;
+  --tracking-widest: 0.16em;
+
+  /* Spacing: 4px base. */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Section rhythm is its own scale, so the agency can breathe without the
+     marketplace inheriting it. */
+  --section-tight: clamp(2.5rem, 5vw, 4rem);
+  --section-base: clamp(3.5rem, 7vw, 6rem);
+  --section-loose: clamp(4.5rem, 10vw, 9rem);
+
+  --container-max: 82.5rem;
+  --container-pad: clamp(1rem, 4vw, 2.5rem);
+  --measure: 65ch;
+
+  --rn-radius-sm: 4px;
+  --rn-radius-md: 8px;
+  --rn-radius-lg: 12px;
+  --rn-radius-xl: 16px;
+  --rn-radius-full: 9999px;
+
+  /*
+   * Motion. Three durations, three easings. A one-off timing in a component is a review
+   * rejection. Everything animates transform and opacity only.
+   */
+  --duration-micro: 120ms;
+  --duration-element: 240ms;
+  --duration-page: 480ms;
+  --rn-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --rn-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --rn-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --stagger: 50ms;
+
+  --z-base: 0;
+  --z-raised: 10;
+  --z-sticky: 100;
+  --z-header: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-popover: 500;
+  --z-toast: 600;
+  --z-tooltip: 700;
+
+  /* Anything touchable is at least this, per WCAG 2.2 SC 2.5.8. */
+  --target-min: 44px;
+}

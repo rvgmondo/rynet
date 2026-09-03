@@ -1,0 +1,130 @@
+name: Build deploy branch
+
+# The cPanel host cannot build. Next 16 with Turbopack needs far more memory than a shared
+# CloudLinux account allows, and it gets killed rather than erroring usefully.
+#
+# So this builds on every push to main and force-pushes the result, source plus a prebuilt
+# .next, to a `deploy` branch. cPanel's Git Version Control tracks `deploy`, pulls it, and
+# runs .cpanel.yml.
+#
+# main  = source, no build output, readable history
+# deploy = what actually runs, rebuilt from scratch every time, history is disposable
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      serverUrl:
+        description: "Origin to bake into the build (no trailing slash)"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-branch
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and publish to deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          # Matches the cPanel host. Node 24 is the current LTS and is not offered there,
+          # so building on it would be building for a runtime production does not have.
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          NODE_ENV: production
+          # NEXT_PUBLIC_SERVER_URL is inlined at build time, so it has to be right HERE and
+          # cannot be corrected by an environment variable on the server. Set the repository
+          # variable SITE_URL to change it.
+          NEXT_PUBLIC_SERVER_URL: ${{ inputs.serverUrl || vars.SITE_URL || 'https://rynet.co.za' }}
+          # A build id Cloudflare has not seen, so it re-fetches the new asset URLs rather
+          # than serving a chunk from the previous build.
+          NEXT_DEPLOYMENT_ID: ${{ github.sha }}
+          # Payload reads the config at build time. Neither value reaches the output, and
+          # nothing queries this: every database-backed route renders on demand. Left in
+          # place deliberately, so that if a page ever starts prerendering a query the
+          # build fails HERE rather than shipping a snapshot of the stock.
+          PAYLOAD_SECRET: build-time-only-not-a-real-secret
+          DATABASE_URI: file:./build.db
+        run: npm run build
+
+      - name: Record Turbopack's external package links
+        # Turbopack symlinks sharp, the SQLite client and six others into .next/node_modules
+        # by ABSOLUTE path. Those are meaningless on the host, so the names are recorded and
+        # server.cjs recreates them there against the host's own node_modules.
+        run: |
+          node -e "
+          const fs=require('fs'), path=require('path');
+          const dir='.next/node_modules';
+          const out=[];
+          const walk=(d,p='')=>{ if(!fs.existsSync(d)) return;
+            for(const e of fs.readdirSync(d,{withFileTypes:true})){
+              const full=path.join(d,e.name), rel=p?p+'/'+e.name:e.name;
+              if(fs.lstatSync(full).isSymbolicLink()){
+                const t=path.resolve(path.dirname(full), fs.readlinkSync(full));
+                out.push({link:rel, package:path.relative(path.resolve('node_modules'),t).split(path.sep).join('/')});
+              } else if(e.isDirectory()) walk(full, rel);
+            }};
+          walk(dir);
+          fs.writeFileSync('.next/runtime-links.json', JSON.stringify(out,null,2));
+          console.log('recorded', out.length, 'runtime links');
+          "
+
+      - name: Strip what the host must never receive
+        run: |
+          # Build cache and dev artefacts: hundreds of megabytes, useless on a host that
+          # never builds. The symlinks: absolute paths to this runner's node_modules.
+          rm -rf .next/cache .next/dev .next/node_modules
+          # A build-time database, if one was created. The live one is on the server and the
+          # repository has no business carrying a copy.
+          rm -f build.db build.db-shm build.db-wal rynet.db
+
+      - name: Publish the deploy branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # An orphan branch every time. The deploy branch is an artefact, not history: it
+          # would otherwise grow by a full build on every push and become unclonable.
+          git checkout --orphan deploy-tmp
+
+          # .next is gitignored on main, deliberately. Force it in here, because it is the
+          # entire point of this branch.
+          git add -A -f .next
+          git add -A
+
+          git commit -q -m "build: ${{ github.sha }}
+
+          Built from main by GitHub Actions. Do not commit here by hand; this branch is
+          replaced wholesale on every push to main.
+
+          Source commit: ${{ github.sha }}
+          Built for:     ${{ inputs.serverUrl || vars.SITE_URL || 'https://rynet.co.za' }}"
+
+          git push -f origin deploy-tmp:deploy
+
+      - name: Summary
+        run: |
+          echo "### Deploy branch updated" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Built for \`${{ inputs.serverUrl || vars.SITE_URL || 'https://rynet.co.za' }}\` from \`${{ github.sha }}\`." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "In cPanel: **Git Version Control**, then **Update from Remote**, then **Deploy HEAD Commit**." >> $GITHUB_STEP_SUMMARY
+          echo "Then **Restart** on the Setup Node.js App screen." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run \`npm install --omit=dev\` first only if dependencies changed, and \`npx payload migrate\` first only if the schema changed." >> $GITHUB_STEP_SUMMARY

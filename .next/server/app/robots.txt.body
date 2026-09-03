@@ -1,0 +1,33 @@
+User-Agent: *
+Allow: /
+Disallow: /admin
+Disallow: /portal
+Disallow: /account
+Disallow: /api/
+Disallow: /cars?
+Disallow: /*?sort=
+Disallow: /*&sort=
+Disallow: /*?page=
+Disallow: /*&page=
+Disallow: /*?minPrice=
+Disallow: /*&minPrice=
+Disallow: /*?maxPrice=
+Disallow: /*&maxPrice=
+Disallow: /*?make=
+Disallow: /*&make=
+Disallow: /*?body=
+Disallow: /*?fuel=
+Disallow: /*?transmission=
+Disallow: /*?province=
+Disallow: /compare?
+
+User-Agent: AhrefsBot
+User-Agent: SemrushBot
+User-Agent: DotBot
+User-Agent: MJ12bot
+User-Agent: DataForSeoBot
+User-Agent: Barkrowler
+Disallow: /
+
+Host: https://rynet.co.za
+Sitemap: https://rynet.co.za/sitemap.xml
