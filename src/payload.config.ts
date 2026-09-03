@@ -121,9 +121,20 @@ export default buildConfig({
     ? postgresAdapter({ pool: { connectionString: process.env.DATABASE_URI || "" } })
     : sqliteAdapter({
         client: { url: process.env.DATABASE_URI || "file:./rynet.db" },
-        // Schema changes are applied deliberately rather than pushed automatically. The
-        // live database is one file holding every dealership's stock.
-        push: process.env.NODE_ENV !== "production",
+        /**
+         * Schema changes are applied deliberately rather than pushed automatically. The live
+         * database is one file holding every dealership's stock.
+         *
+         * `CI` is in the condition because CI runs `payload migrate` and then seeds. With
+         * push still on, Payload compares the migrated schema against the generated one and
+         * tries to apply the difference, which failed with "index leads_type_idx already
+         * exists" the first time a migration added a column. Two mechanisms writing the same
+         * schema is the bug; CI uses migrations, the same as production, so push has no
+         * business running there.
+         *
+         * Local development keeps push, which is what makes iterating on a collection quick.
+         */
+        push: process.env.NODE_ENV !== "production" && process.env.CI !== "true",
       }),
 
   email: process.env.SMTP_HOST
