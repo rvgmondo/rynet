@@ -149,6 +149,12 @@ one leaves the app unable to start, so it should not happen as a side effect of 
 **`npx payload migrate`**, only when the schema changed. It writes to the live database. That
 should always be a decision.
 
+One trap worth knowing before you need it: if the database was ever created by Payload in dev
+mode rather than by a migration, `payload migrate` stops and asks "data loss will occur, would
+you like to proceed?" and waits for an answer. In a script or a deploy hook there is nobody to
+answer, so it hangs rather than failing. Run it by hand, in the terminal, where you can see the
+question.
+
 Both from `~/rynet`, inside the virtual environment. Use `npx` rather than `npm run`: on this host
 npm runs lifecycle scripts from the virtualenv's lib directory rather than your app root, so
 anything with a relative path in it looks in the wrong place. That is what broke the first install.

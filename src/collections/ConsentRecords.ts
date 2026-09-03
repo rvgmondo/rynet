@@ -40,6 +40,10 @@ export const ConsentRecords: CollectionConfig = {
         { value: "dealer_marketing", label: "Marketing communication from the dealership" },
         { value: "alerts", label: "Saved search alerts" },
         { value: "finance", label: "Passing details to a finance provider" },
+        {
+          value: "trade_in",
+          label: "Passing details to several dealerships for a trade-in or sale offer",
+        },
       ],
     },
     { name: "subjectEmail", type: "email", index: true },

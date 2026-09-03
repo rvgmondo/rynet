@@ -127,7 +127,29 @@ says that instead.
 
 **Needed:** real names and faces when there are any.
 
-## 10. Decisions still open
+## 10. The sell-to-a-dealer page has no valuation and unreviewed consent copy
+
+`/sell-to-a-dealer` deliberately shows no estimated value, because Rynet holds no vehicle
+valuation licence and any figure would be invented. An end-to-end test fails the build if a rand
+figure appears anywhere on that page, so this cannot drift back in by accident.
+
+**Needed, if we ever want to show a guide price:** a licensed source. TransUnion and Lightstone
+both sell one. Until then the page says plainly that we do not value cars, which is honest and
+also the better answer, because a wrong estimate on that page is a number somebody plans around.
+
+**Requires legal review:** the multi-recipient consent wording, drafted against POPIA section 18
+and not reviewed by an attorney. It is stored verbatim on every consent record, and a test
+compares the stored evidence against the exact words on screen, so a change to one without the
+other fails the build. The same review should cover the settlement explanation and the "what to
+have ready" list, neither of which is legal advice and both of which a seller will treat as if it
+were.
+
+**Also unbuilt:** the distribution itself. The lead is written with no dealer and the page
+promises it goes to no more than five verified dealerships in the seller's province. Nothing
+sends it yet, because no dealerships are signed. That promise cannot go live before the routing
+does.
+
+## 11. Decisions still open
 
 Tracked in full in `docs/QUESTIONS.md`. The ones that block content rather than code:
 

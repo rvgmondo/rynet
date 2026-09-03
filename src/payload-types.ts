@@ -271,7 +271,7 @@ export interface Vehicle {
    */
   monthlyEstimate?: number | null;
   /**
-   * Stored encrypted, never returned to a public query and never published in structured data.
+   * Not encrypted at rest. Protected by access control: never returned to a public query, never to another dealership, and never published in structured data.
    */
   vin?: string | null;
   stockNumber?: string | null;
@@ -351,7 +351,7 @@ export interface Dealer {
   group?: (number | null) | DealerGroup;
   franchises?: (number | Franchise)[] | null;
   /**
-   * Only add an accreditation once the certificate has been seen. This is a trust claim.
+   * Added by Rynet once the certificate has been seen. A dealership cannot set this.
    */
   accreditations?: (number | Accreditation)[] | null;
   /**
@@ -1123,6 +1123,25 @@ export interface Lead {
   email?: string | null;
   phone?: string | null;
   message?: string | null;
+  /**
+   * The seller's vehicle. Only present on a trade-in lead.
+   */
+  tradeIn?: {
+    make?: string | null;
+    model?: string | null;
+    modelYear?: number | null;
+    mileageKm?: number | null;
+    transmission?: ('manual' | 'automatic') | null;
+    condition?: ('excellent' | 'good' | 'fair' | 'poor') | null;
+    serviceHistory?: ('full' | 'partial' | 'none') | null;
+    /**
+     * Outstanding finance. A seller cannot pass title while a bank holds it, so this changes what happens next rather than only the price.
+     */
+    finance?: ('none' | 'outstanding' | 'unsure') | null;
+    province?: (number | null) | Province;
+    city?: string | null;
+    notes?: string | null;
+  };
   status: 'new' | 'contacted' | 'qualified' | 'appointment_set' | 'sold' | 'lost';
   lostReason?: string | null;
   assignedTo?: (number | null) | User;
@@ -1213,7 +1232,7 @@ export interface User {
  */
 export interface ConsentRecord {
   id: number;
-  purpose: 'enquiry' | 'marketing' | 'dealer_marketing' | 'alerts' | 'finance';
+  purpose: 'enquiry' | 'marketing' | 'dealer_marketing' | 'alerts' | 'finance' | 'trade_in';
   subjectEmail?: string | null;
   subjectPhone?: string | null;
   /**
@@ -1667,6 +1686,21 @@ export interface LeadsSelect<T extends boolean = true> {
   email?: T;
   phone?: T;
   message?: T;
+  tradeIn?:
+    | T
+    | {
+        make?: T;
+        model?: T;
+        modelYear?: T;
+        mileageKm?: T;
+        transmission?: T;
+        condition?: T;
+        serviceHistory?: T;
+        finance?: T;
+        province?: T;
+        city?: T;
+        notes?: T;
+      };
   status?: T;
   lostReason?: T;
   assignedTo?: T;

@@ -70,6 +70,90 @@ export const Leads: CollectionConfig = {
       ],
     },
     { name: "message", type: "textarea" },
+
+    /**
+     * The car a private individual wants to sell.
+     *
+     * Its own group rather than a paragraph in `message`, because these are the fields a
+     * dealer actually prices against, and a dealer cannot filter a text blob for "bakkies
+     * under 120 000km in Gauteng". They are the product of a trade-in lead, not a note on it.
+     *
+     * Make and model are free text on purpose. The taxonomy covers what dealerships stock,
+     * and a seller's car may be something nobody on the platform lists. A relationship here
+     * would make the form reject a real car, which is the worst possible failure for a page
+     * whose whole job is to accept one.
+     *
+     * There is deliberately NO estimated value field. Rynet does not value cars: no licensed
+     * valuation source is integrated, and printing a number we invented is exactly what the
+     * brief forbids. Dealerships make the offers.
+     */
+    {
+      name: "tradeIn",
+      type: "group",
+      admin: {
+        condition: (data) => data?.type === "trade_in",
+        description: "The seller's vehicle. Only present on a trade-in lead.",
+      },
+      fields: [
+        {
+          type: "row",
+          fields: [
+            { name: "make", type: "text" },
+            { name: "model", type: "text" },
+            { name: "modelYear", type: "number" },
+          ],
+        },
+        {
+          type: "row",
+          fields: [
+            { name: "mileageKm", type: "number" },
+            {
+              name: "transmission",
+              type: "select",
+              options: [
+                { value: "manual", label: "Manual" },
+                { value: "automatic", label: "Automatic" },
+              ],
+            },
+          ],
+        },
+        {
+          name: "condition",
+          type: "select",
+          options: [
+            { value: "excellent", label: "Excellent, nothing needs doing" },
+            { value: "good", label: "Good, a few marks" },
+            { value: "fair", label: "Fair, needs some work" },
+            { value: "poor", label: "Poor, or not running" },
+          ],
+        },
+        {
+          name: "serviceHistory",
+          type: "select",
+          options: [
+            { value: "full", label: "Full, with the book" },
+            { value: "partial", label: "Partial" },
+            { value: "none", label: "None" },
+          ],
+        },
+        {
+          name: "finance",
+          type: "select",
+          admin: {
+            description:
+              "Outstanding finance. A seller cannot pass title while a bank holds it, so this changes what happens next rather than only the price.",
+          },
+          options: [
+            { value: "none", label: "Paid off" },
+            { value: "outstanding", label: "Still on finance" },
+            { value: "unsure", label: "Not sure" },
+          ],
+        },
+        { name: "province", type: "relationship", relationTo: "provinces" },
+        { name: "city", type: "text" },
+        { name: "notes", type: "textarea" },
+      ],
+    },
     {
       name: "status",
       type: "select",

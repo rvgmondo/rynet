@@ -28,6 +28,7 @@ const COLUMNS = [
     links: [
       { href: "/dealers", label: "Find a dealership" },
       { href: "/how-verification-works", label: "How verification works" },
+      { href: "/sell-to-a-dealer", label: "Sell your car to a dealership" },
       { href: "/contact", label: "List your stock" },
     ],
   },

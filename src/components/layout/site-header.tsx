@@ -13,6 +13,9 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
  */
 const NAV = [
   { href: "/cars", label: "Find a car" },
+  // "Sell to a dealer", never "sell your car". A private individual cannot list here and the
+  // navigation must not hint otherwise. The route is on the safe side of the hard-rule test.
+  { href: "/sell-to-a-dealer", label: "Sell to a dealer" },
   { href: "/dealers", label: "Dealerships" },
   { href: "/how-verification-works", label: "How we verify" },
 ] as const;
