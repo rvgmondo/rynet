@@ -8,7 +8,12 @@ name: Build deploy branch
 # runs .cpanel.yml.
 #
 # main  = source, no build output, readable history
-# deploy = what actually runs, rebuilt from scratch every time, history is disposable
+# deploy = what actually runs, one commit per build, ON TOP of the previous one
+#
+# The deploy branch keeps real history because cPanel pulls it with --ff-only and cannot
+# follow a force-pushed orphan. The cost is repository size: every commit carries a full
+# build, so the branch grows by roughly the size of .next per deploy. When that becomes a
+# problem, delete the branch and let the next build recreate it, then re-clone on the host.
 
 on:
   push:
@@ -99,24 +104,45 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # An orphan branch every time. The deploy branch is an artefact, not history: it
-          # would otherwise grow by a full build on every push and become unclonable.
-          git checkout --orphan deploy-tmp
+          # The deploy branch must keep REAL HISTORY.
+          #
+          # This used to publish a fresh orphan commit and force-push it. cPanel's "Update
+          # from Remote" pulls with --ff-only, and a fast-forward onto a commit with no common
+          # ancestor is impossible by definition, so the button worked exactly once: on the
+          # initial clone. Every deploy after that either errored, or silently redeployed the
+          # day-one build while DEPLOYED.txt recorded that stale commit as if it were current.
+          #
+          # So: build a commit whose parent is the current deploy tip and push it normally.
+          # commit-tree rather than a checkout, because the build output is sitting in this
+          # working tree and switching branches would throw it away.
+          git fetch origin deploy --depth=1 || true
 
-          # .next is gitignored on main, deliberately. Force it in here, because it is the
-          # entire point of this branch.
+          # .next is gitignored on main, deliberately. Force it in here: it is the entire
+          # point of this branch.
           git add -A -f .next
           git add -A
 
-          git commit -q -m "build: ${{ github.sha }}
+          TREE=$(git write-tree)
+          PARENT=$(git rev-parse --verify -q origin/deploy || true)
 
-          Built from main by GitHub Actions. Do not commit here by hand; this branch is
-          replaced wholesale on every push to main.
+          MESSAGE="build: ${{ github.sha }}
+
+          Built from main by GitHub Actions. Do not commit here by hand.
 
           Source commit: ${{ github.sha }}
           Built for:     ${{ inputs.serverUrl || vars.SITE_URL || 'https://rynet.co.za' }}"
 
-          git push -f origin deploy-tmp:deploy
+          if [ -n "$PARENT" ]; then
+            COMMIT=$(git commit-tree "$TREE" -p "$PARENT" -m "$MESSAGE")
+          else
+            echo "No deploy branch yet. Creating the first commit on it."
+            COMMIT=$(git commit-tree "$TREE" -m "$MESSAGE")
+          fi
+
+          # A plain push, not a force. If this is ever rejected, the branch has diverged and
+          # somebody should look at why rather than have a workflow quietly overwrite it.
+          git push origin "$COMMIT:refs/heads/deploy"
+          echo "Published $COMMIT to deploy${PARENT:+ (parent $PARENT)}"
 
       - name: Summary
         run: |

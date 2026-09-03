@@ -1,69 +1,128 @@
 ---
 # cPanel Git Version Control deployment.
 #
-# Runs when you click "Deploy HEAD Commit" in cPanel, or on a push if you wire the webhook.
-# cPanel clones the repository into ~/repositories/rynet and runs these tasks from there.
+# Runs when you click "Deploy HEAD Commit". cPanel concatenates every task below into ONE
+# bash script and runs it from the repository checkout in ~/repositories/rynet.
 #
-# IMPORTANT: this tracks the `deploy` branch, not `main`.
+# THIS FILE USED TO BE ABLE TO DESTROY THE LIVE SITE IN ONE CLICK. It opened with an
+# unconditional `rm -rf $APP/.next` followed by a `cp` of a directory that does not exist on
+# every branch except `deploy`. Deploying from `main` therefore deleted the running build and
+# had nothing to replace it with. There was no `set -e`, so the remaining twenty tasks ran
+# anyway, and the last of them rewrote DEPLOYED.txt with a fresh timestamp. cPanel reports the
+# status of the LAST command in the script, so the interface said the deploy succeeded while
+# the site returned 500 to every request.
 #
-# `main` holds source and no build output. The cPanel host cannot build: Next 16 with
-# Turbopack needs far more memory than a shared CloudLinux account allows, and it gets
-# killed rather than erroring usefully. So GitHub Actions builds on every push to main and
-# force-pushes the result, source plus a prebuilt `.next`, to `deploy`. That is the branch
-# cPanel checks out.
+# Four rules now, and none of them is optional.
 #
-# THREE THINGS ARE NEVER COPIED, because they are live data and the repository has no
-# business owning them:
+#   1. `set -e`. Any failure stops the deploy instead of half-finishing it.
+#   2. REFUSE BEFORE TOUCHING ANYTHING. If this checkout carries no build, the deploy exits
+#      before the first write. Deploying from the wrong branch is now a no-op with a clear
+#      message rather than an outage.
+#   3. STAGE, THEN SWAP. The new build is copied in beside the old one and put in place with
+#      a rename. The live directory is never deleted before its replacement is ready and
+#      verified.
+#   4. The marker is written LAST, so it can only ever describe a deploy that finished.
+#
+# THREE THINGS ARE NEVER COPIED, because they are live data and the repository has no business
+# owning them:
 #
 #   rynet.db   the database. Every dealership, every listing, every lead.
 #   media/     uploaded photography.
 #   .env       if one exists. Environment lives in Setup Node.js App, not on disk.
-#
-# The copy is deliberately file-by-file rather than a wholesale `cp -R .`, so adding
-# something to the repository cannot silently start overwriting live state.
 
 deployment:
   tasks:
+    # Rule 1. Without this, every guard below is decorative: a failing task would print an
+    # error and the next one would run regardless.
+    - set -e
     - export APP=/home/rynetco/rynet
+    - export SRC=$PWD
+    - echo "Deploying from $SRC to $APP"
 
-    # Build output and application source.
-    - /bin/rm -rf $APP/.next
-    - /bin/cp -R .next $APP/
-    - /bin/rm -rf $APP/src
-    - /bin/cp -R src $APP/
-    - /bin/rm -rf $APP/scripts
-    - /bin/cp -R scripts $APP/
-    - /bin/test -d public && /bin/cp -R public $APP/ || true
-
-    # Entry point and configuration.
-    - /bin/cp server.cjs $APP/
-    - /bin/cp package.json $APP/
-    - /bin/cp package-lock.json $APP/
-    - /bin/cp next.config.ts $APP/
-    - /bin/cp tsconfig.json $APP/
-    - /bin/cp postcss.config.mjs $APP/
-
-    # The uploads directory must exist and be writable before the first admin upload.
-    # `-p` so an existing one with live photos in it is left exactly alone.
-    - /bin/mkdir -p $APP/media
-
-    # Windows-authored archives carry no Unix permission bits, and a git checkout can
-    # arrive with the execute bit set on things that should not have it. Normalise.
-    - /bin/find $APP -type d -not -path "*/node_modules/*" -exec chmod 755 {} \;
-    - /bin/find $APP -type f -not -path "*/node_modules/*" -exec chmod 644 {} \;
-
-    # A marker, so the running app can be traced back to a commit. Read it at
-    # /home/rynetco/rynet/DEPLOYED.txt when something looks wrong.
-    - /bin/date -u "+%Y-%m-%d %H:%M UTC" > $APP/DEPLOYED.txt
-    - /usr/bin/git rev-parse --short HEAD >> $APP/DEPLOYED.txt
-
-    # NOT DONE AUTOMATICALLY, on purpose:
+    # ---------------------------------------------------------------- rule 2: refuse early
     #
-    #   npm install       only needed when dependencies changed, takes minutes, and a
-    #                     half-finished one leaves the app unable to start.
-    #   npx payload migrate  only needed when the schema changed, and it writes to the live
-    #                     database. That should be a decision, not a side effect.
-    #   Restart           cPanel has no deployment hook for it. Click Restart on the
-    #                     Setup Node.js App screen.
+    # `main` does not carry .next: it is gitignored, deliberately, so the source history stays
+    # readable. Only the `deploy` branch has a build in it. If someone switches the checked-out
+    # branch, or a build lands incomplete, this stops here and the running site is untouched.
+    - 'test -s "$SRC/.next/BUILD_ID" || { echo "REFUSING: this checkout has no .next/BUILD_ID. You are almost certainly on the main branch. Switch to deploy and try again. Nothing has been changed."; exit 1; }'
+    - 'test -s "$SRC/.next/runtime-links.json" || { echo "REFUSING: .next/runtime-links.json is missing, so sharp and the SQLite client would not resolve at runtime. Nothing has been changed."; exit 1; }'
+    - 'test -s "$SRC/server.cjs" || { echo "REFUSING: server.cjs is missing from this checkout. Nothing has been changed."; exit 1; }'
+    - 'test -d "$SRC/src" || { echo "REFUSING: src/ is missing from this checkout. Nothing has been changed."; exit 1; }'
+    - 'test -d "$SRC/scripts" || { echo "REFUSING: scripts/ is missing, and server.cjs requires scripts/link-runtime-deps.cjs at boot. Nothing has been changed."; exit 1; }'
+    - echo "Checkout carries a build. Proceeding."
+
+    - mkdir -p "$APP"
+
+    # -------------------------------------------------------------- rule 3: stage, then swap
     #
-    # The order after a deploy is: npm install (if needed), migrate (if needed), Restart.
+    # The build is ~90MB across roughly 1100 files. Copying that directly over the live
+    # directory leaves the site serving a half-replaced build for the length of the copy, and
+    # deleting first leaves it serving nothing at all. Staging beside it and renaming closes
+    # the window to two rename calls.
+    - rm -rf "$APP/.next.incoming" "$APP/src.incoming" "$APP/scripts.incoming"
+    - cp -R "$SRC/.next" "$APP/.next.incoming"
+    - cp -R "$SRC/src" "$APP/src.incoming"
+    - cp -R "$SRC/scripts" "$APP/scripts.incoming"
+
+    # The copy itself can fail silently on a full disk or an inode limit, both of which are
+    # real on shared hosting. Verify what landed rather than what was sent.
+    - 'test -s "$APP/.next.incoming/BUILD_ID" || { echo "REFUSING: the staged build is incomplete, most likely disk or inode quota. The live site has NOT been touched."; exit 1; }'
+    - 'test -s "$APP/scripts.incoming/link-runtime-deps.cjs" || { echo "REFUSING: staged scripts are incomplete. The live site has NOT been touched."; exit 1; }'
+
+    # Keep exactly one previous build, so a bad deploy can be undone by hand in seconds:
+    #   mv ~/rynet/.next ~/rynet/.next.bad && mv ~/rynet/.next.previous ~/rynet/.next
+    - rm -rf "$APP/.next.previous" "$APP/src.previous" "$APP/scripts.previous"
+    - 'test -d "$APP/.next" && mv "$APP/.next" "$APP/.next.previous" || true'
+    - 'test -d "$APP/src" && mv "$APP/src" "$APP/src.previous" || true'
+    - 'test -d "$APP/scripts" && mv "$APP/scripts" "$APP/scripts.previous" || true'
+    - mv "$APP/.next.incoming" "$APP/.next"
+    - mv "$APP/src.incoming" "$APP/src"
+    - mv "$APP/scripts.incoming" "$APP/scripts"
+
+    # Small files. No staging needed, and a partial write here cannot leave the app unbootable
+    # the way a half-copied .next can.
+    - cp "$SRC/server.cjs" "$APP/"
+    - cp "$SRC/package.json" "$APP/"
+    - cp "$SRC/package-lock.json" "$APP/"
+    - cp "$SRC/next.config.ts" "$APP/"
+    - cp "$SRC/tsconfig.json" "$APP/"
+    - cp "$SRC/postcss.config.mjs" "$APP/"
+    - 'test -d "$SRC/public" && cp -R "$SRC/public" "$APP/" || true'
+
+    # The uploads directory must exist and be writable before the first admin upload. `-p` so
+    # an existing one with live photos in it is left exactly alone.
+    - mkdir -p "$APP/media"
+
+    # A git checkout can arrive with the execute bit set on things that should not have it.
+    # Pruned: node_modules is 74 000 files and re-permissioning it every deploy is minutes of
+    # pointless work that the LVE limiter can kill halfway through, and the .previous copies
+    # are about to be someone's rollback.
+    - find "$APP" -maxdepth 1 -mindepth 1 -name node_modules -prune -o -name "*.previous" -prune -o -type d -print0 | xargs -0 -r chmod 755
+    - find "$APP/.next" "$APP/src" "$APP/scripts" -type d -exec chmod 755 {} +
+    - find "$APP/.next" "$APP/src" "$APP/scripts" -type f -exec chmod 644 {} +
+
+    # ------------------------------------------------------------- rule 4: the marker is last
+    #
+    # `set -e` means this line is only reached when everything above it succeeded, so
+    # DEPLOYED.txt can no longer describe a deploy that did not happen. It is also the last
+    # command, which is what cPanel reports on, so the interface now tells the truth too.
+    - date -u "+%Y-%m-%d %H:%M UTC" > "$APP/DEPLOYED.txt"
+    - git rev-parse --short HEAD >> "$APP/DEPLOYED.txt"
+    - git rev-parse --abbrev-ref HEAD >> "$APP/DEPLOYED.txt"
+    - cat "$APP/.next/BUILD_ID" >> "$APP/DEPLOYED.txt"
+
+    # Passenger reloads when this file's timestamp changes, so the deploy no longer depends on
+    # somebody remembering to click Restart. Harmless if the host ignores it; click Restart on
+    # the Setup Node.js App screen as well if the site does not pick the new build up.
+    - mkdir -p "$APP/tmp"
+    - touch "$APP/tmp/restart.txt"
+    - echo "Deployed. See $APP/DEPLOYED.txt"
+
+    # STILL NOT DONE AUTOMATICALLY, on purpose:
+    #
+    #   npm install --omit=dev   only needed when dependencies changed, takes minutes, and a
+    #                            half-finished one leaves the app unable to start.
+    #   npx payload migrate      only needed when the schema changed, and it writes to the live
+    #                            database. That should be a decision, not a side effect. It
+    #                            also prompts for confirmation on a database that was ever
+    #                            created in dev mode, and would hang here waiting for an answer.

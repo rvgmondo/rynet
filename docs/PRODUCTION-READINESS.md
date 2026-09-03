@@ -132,6 +132,43 @@ browser was still processing the click, so it performed the default action and s
 action then failed validation and React reset the form, wiping the first two steps on the way to
 the third. The screen looked completely normal throughout. Distinct React keys fix it.
 
+### The deploy pipeline was two defects away from an outage
+
+Both were found by auditing it after a real failure, and both had been live for a week.
+
+**One click could have destroyed the site.** `.cpanel.yml` opened with an unconditional
+`rm -rf $APP/.next` followed by a copy of a directory that only exists on the `deploy` branch. The
+checkout had ended up on `main`, where `.next` is gitignored. There was no `set -e`, so the
+remaining twenty tasks would have run anyway, and the last of them rewrote `DEPLOYED.txt` with a
+fresh timestamp. cPanel reports the exit status of the last command in the script, so the interface
+would have said the deploy succeeded while every request returned 500.
+
+It now refuses before writing anything if the checkout carries no build, stages the new build
+beside the live one and swaps by rename, keeps the previous build for a one-line rollback, and
+writes the marker last so it can only ever describe a deploy that finished. Tested against five
+scenarios: wrong branch, correct branch, a repeat deploy, a first-ever deploy, and a staged copy
+that lands incomplete.
+
+**The documented flow could never have worked twice.** GitHub Actions force-pushed the deploy
+branch as a fresh orphan commit every build. cPanel's Update from Remote pulls with `--ff-only`,
+which cannot follow a commit with no shared ancestor, so the button worked on the initial clone and
+after that either errored or silently redeployed the day-one build. The workflow now builds a
+commit whose parent is the current deploy tip, verified with a local simulation of three
+consecutive builds and a host-side `git pull --ff-only` that fast-forwards to the latest.
+
+### The sell page promised something the platform cannot do
+
+Caught by a POPIA and copy audit an hour after it shipped. Rynet has not signed a single
+dealership, and the page said offers would come back. That is the same failure the agency site was
+built to avoid, and it was missed here because the page was written from the mechanism rather than
+from the launch state. It now carries a notice saying we are new, may not have a buyer in your
+province, and will tell you rather than sit on your details. A test asserts that notice is still
+there.
+
+The same audit added the POPIA section 18 notice to the page itself. Section 18(2)(a) requires the
+data subject to be told who is collecting, why, whether it is voluntary, who receives it and how to
+complain **before** the information is collected, which a privacy-policy link does not satisfy.
+
 ### Three bugs worth remembering
 
 Each would have been invisible in production until someone complained.

@@ -102,7 +102,7 @@ export async function submitSellToDealer(
 
   const succeeded: SellToDealerState = {
     status: "success",
-    message: "Sent. Dealerships will come back to you directly.",
+    message: "Sent. We will pass it to dealerships that buy this kind of car.",
   };
 
   if (data.hp && data.hp.length > 0) return succeeded;
