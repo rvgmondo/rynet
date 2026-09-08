@@ -1,0 +1,24 @@
+# Line endings.
+#
+# This repository is written on Windows and runs on Linux. Most of the time git's autocrlf
+# handles that invisibly, and the one place it does not is a shell script: bash on the host
+# reads a trailing carriage return as part of the command and fails with things like
+# `$'\r': command not found`, which sends you looking at the wrong thing entirely.
+#
+# scripts/host-deploy.sh installs the application. It is not a place to find that out.
+
+* text=auto
+
+*.sh text eol=lf
+.cpanel.yml text eol=lf
+*.cjs text eol=lf
+*.mjs text eol=lf
+
+# Binary, so git never tries to normalise them.
+*.png binary
+*.jpg binary
+*.webp binary
+*.avif binary
+*.woff2 binary
+*.db binary
+*.tar.gz binary
