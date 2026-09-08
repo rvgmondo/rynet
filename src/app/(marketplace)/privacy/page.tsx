@@ -147,8 +147,8 @@ export default function PrivacyPage() {
       </p>
       <p>
         Two-factor authentication is available on every staff and dealership account, using a code
-        from an authenticator app. Accounts that can read leads or change prices will be required
-        to use it.
+        from an authenticator app. Accounts that can read leads or change prices will be required to
+        use it.
       </p>
       <p>
         <strong>What we have not done yet.</strong> Two-factor is not compulsory yet, so an account
