@@ -103,6 +103,26 @@ async function main() {
     dealer: dealerB.id,
   });
 
+  const twoFactorUser = await upsertUser(FIXTURES.twoFactor, {
+    name: "Fixture Two Factor",
+    role: "dealer_sales",
+    dealer: dealerA.id,
+  });
+
+  // Reset the second factor every run. The suite that uses this account enrols it, and a run
+  // that fails partway would otherwise leave a secret behind that the next run cannot produce
+  // codes for, which looks like the gate is broken when it is working perfectly.
+  await payload.update({
+    collection: "users",
+    id: twoFactorUser.id,
+    data: {
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+      twoFactorConfirmedAt: null,
+      twoFactorRecoveryCodes: [],
+    },
+  });
+
   const existingBuyer = await payload.find({
     collection: "buyers",
     where: { email: { equals: FIXTURES.buyer } },

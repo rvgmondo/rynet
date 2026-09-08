@@ -1,5 +1,4 @@
 import type { CollectionConfig, Where } from "payload";
-
 import {
   canGrantDealerRole,
   canManageDealer,
@@ -14,6 +13,7 @@ import {
   ROLE_LABELS,
   ROLES,
 } from "@/access/roles";
+import { enforceSecondFactor } from "@/access/two-factor";
 
 /**
  * Staff and dealer staff.
@@ -22,10 +22,10 @@ import {
  * a consumer account is a different collection entirely, with no role field and no dealer
  * field, so there is no path by which a private individual becomes a seller.
  *
- * Two-factor is NOT implemented. `twoFactorEnabled` exists as a field and nothing reads it,
- * so the earlier claim here that it was "enforced at sign-in" was false. It is the largest
- * known gap in docs/THREAT-MODEL.md and it has to close before anyone outside the founder
- * holds a platform admin or dealer principal account.
+ * Two-factor is enforced in `beforeLogin`, which runs after Payload has checked the password
+ * and before it signs a token, so a refusal there means no session was ever issued. See
+ * src/access/two-factor.ts, including why the rollout is in two stages: forcing it before
+ * anyone has enrolled locks the founder out of his own live site.
  */
 export const Users: CollectionConfig = {
   slug: "users",
@@ -95,6 +95,11 @@ export const Users: CollectionConfig = {
     admin: ({ req }) => isPlatformStaff(req.user),
   },
   hooks: {
+    /**
+     * Runs after the password has been verified and before the token is signed, so a throw
+     * here refuses the session rather than revoking one that was already handed out.
+     */
+    beforeLogin: [enforceSecondFactor],
     beforeValidate: [
       ({ data, req, operation, originalDoc }) => {
         if (!data) return data;
@@ -179,15 +184,59 @@ export const Users: CollectionConfig = {
         { value: "suspended", label: "Suspended" },
       ],
     },
+    /**
+     * Two-factor state.
+     *
+     * All three are written only by src/app/actions/two-factor.ts through the local API with
+     * `overrideAccess`, and closed to every request that arrives over HTTP. A field whose
+     * access rule is `false` is not readable by a platform admin either, which is deliberate:
+     * an admin who can read a colleague's TOTP secret can generate that colleague's codes, and
+     * then the second factor proves nothing about who is at the keyboard.
+     */
     {
       name: "twoFactorEnabled",
       type: "checkbox",
       defaultValue: false,
+      access: {
+        create: () => false,
+        update: () => false,
+      },
       admin: {
         description:
-          "Mandatory for platform admins and dealer principals. Enforced at sign-in, not here.",
+          "Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.",
         readOnly: true,
+        position: "sidebar",
       },
+    },
+    {
+      name: "twoFactorSecret",
+      type: "text",
+      hidden: true,
+      access: {
+        read: () => false,
+        create: () => false,
+        update: () => false,
+      },
+    },
+    {
+      name: "twoFactorRecoveryCodes",
+      type: "array",
+      hidden: true,
+      access: {
+        read: () => false,
+        create: () => false,
+        update: () => false,
+      },
+      fields: [{ name: "hash", type: "text" }],
+    },
+    {
+      name: "twoFactorConfirmedAt",
+      type: "date",
+      access: {
+        create: () => false,
+        update: () => false,
+      },
+      admin: { readOnly: true, position: "sidebar" },
     },
     {
       name: "lastLoginAt",

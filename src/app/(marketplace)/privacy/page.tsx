@@ -146,9 +146,15 @@ export default function PrivacyPage() {
         change by a suite that signs in as one dealership and tries to reach another.
       </p>
       <p>
-        <strong>What we have not done yet.</strong> Two-factor authentication is not available on
-        any account. Personal information is not encrypted at rest beyond the protection the server
-        itself provides. We would rather tell you that than describe a control we have not built.
+        Two-factor authentication is available on every staff and dealership account, using a code
+        from an authenticator app. Accounts that can read leads or change prices will be required
+        to use it.
+      </p>
+      <p>
+        <strong>What we have not done yet.</strong> Two-factor is not compulsory yet, so an account
+        that has not switched it on is protected by its password alone. Personal information is not
+        encrypted at rest beyond the protection the server itself provides. We would rather tell you
+        that than describe a control we have not built.
       </p>
 
       <h2>If something goes wrong</h2>

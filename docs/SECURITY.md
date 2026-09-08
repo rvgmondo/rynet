@@ -74,15 +74,39 @@ sensitive field readable, from inside the tenant. Run through this before mergin
 | Lockout | 8 failed attempts, 15 minutes | 10 attempts, 10 minutes |
 | Cookie | `SameSite=Lax`, `Secure` in production | same |
 | API keys | Off | Off |
+| Two-factor | TOTP, opt-in now, enforceable per role | Not offered |
 | Reaches the Payload admin | Platform staff only | Never |
 
 Hashing is Payload's default. 25 000 iterations is below current OWASP guidance for
 PBKDF2-HMAC-SHA256 and raising it requires supplying a custom auth strategy. It is recorded as an
 accepted risk in the threat model rather than quietly ignored.
 
-**Two-factor is not implemented.** The `twoFactorEnabled` field exists and nothing reads it. Until
-that changes, nobody outside the founder should hold a platform admin or a dealer principal
-account. This is the largest known gap in the platform.
+**Two-factor is implemented**, as TOTP against an authenticator app, enforced in `beforeLogin`,
+which runs after the password check and before the token is signed. A refusal there means no
+session was issued.
+
+The rollout is in two stages, because switching it on before anybody has enrolled locks the
+founder out of a live site:
+
+1. **Now.** Anyone who has enrolled must present a code. Nobody is forced to.
+2. **Once the privileged accounts have enrolled.** Set `RYNET_REQUIRE_2FA=true` and restart.
+   `platform_admin`, `platform_editor` and `dealer_owner` then cannot sign in without it.
+
+The secret and the recovery-code hashes are denied to every HTTP caller including a platform
+admin. That is deliberate: an admin who can read a colleague's secret can generate that
+colleague's codes, and the second factor then proves nothing about who is at the keyboard. They
+are written only by the enrolment flow, acting on the account in the session cookie.
+
+Recovery codes are ten single-use codes, shown once, stored as HMAC-SHA256 hashes peppered with
+`PAYLOAD_SECRET`. If those are gone too, a platform admin has to clear the second factor by hand.
+That is deliberately a conversation with a person: an automated reset is a way around the whole
+thing.
+
+The TOTP implementation is `src/lib/totp.ts`, written rather than installed, because it is eighty
+lines of arithmetic over `node:crypto` and the RFCs publish vectors that prove it correct. A
+dependency in the authentication path costs more than it saves. Fifty-one unit tests run every
+published RFC 4226 and RFC 6238 vector; sixteen end-to-end tests drive the real enrolment page and
+then attack the login endpoint.
 
 ---
 
@@ -153,6 +177,8 @@ Every item runs on every push and a failure blocks the deploy branch.
 | A private individual cannot list a vehicle | Anonymous and authenticated buyer, asserting 403 specifically |
 | A sales agent cannot escalate inside their own dealership | 6 tests |
 | A dealership cannot verify, rate or accredit itself | 4 tests |
+| A password alone will not sign in an enrolled account | 16 end-to-end tests against the login endpoint |
+| TOTP agrees with every published RFC vector | 51 unit tests |
 | No VIN reaches the public, or another dealership | 3 tests, against a row that actually has a VIN |
 | Consent records cannot be edited or deleted by anyone | 2 tests, including as a platform admin |
 | The access predicates fail closed for a forged user | 33 unit tests, including a buyer document carrying every privileged role |
@@ -182,7 +208,12 @@ Recovery procedures are in [RUNBOOK.md](RUNBOOK.md).
 
 Listed so they are decisions rather than surprises.
 
-- **Two-factor authentication is not implemented.** The biggest one.
+- **Two-factor is not compulsory yet.** It works and it is enforced for anyone who has
+  enrolled, but `RYNET_REQUIRE_2FA` is off until the privileged accounts have set it up. Turning
+  it on before that would lock those accounts out.
+- **No QR code on the enrolment page.** The setup key is typed in instead, which every
+  authenticator app supports. Rendering a QR needs a Reed-Solomon encoder, which means a
+  dependency and an `npm install` on a host that cannot build.
 - **The rate limiter is in process memory.** If Passenger runs several workers the effective limit
   multiplies. Unconfirmed, and one of the two open host questions.
 - **No Turnstile.** Deliberately not stubbed in: a challenge that always passes is worse than none.

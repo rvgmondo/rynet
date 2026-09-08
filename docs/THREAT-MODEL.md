@@ -168,9 +168,19 @@ Eight failed attempts locks a staff account for fifteen
 minutes. Staff tokens expire after eight hours, buyer tokens after thirty days. Cookies are
 `SameSite=Lax` and `Secure` in production, and CSRF has an origin allowlist.
 
-**Not done:** two-factor is described as mandatory for platform admins and dealer principals in the
-collection and is not enforced anywhere yet. The `twoFactorEnabled` field exists and nothing reads
-it. This is the largest known gap in this document.
+**Two-factor is now implemented**, closing what this document called its largest gap. TOTP against
+an authenticator app, enforced in `beforeLogin`, which runs after the password check and before
+the token is signed, so a refusal issues no session. Ten single-use recovery codes, shown once and
+stored as peppered hashes.
+
+The secret is denied to every HTTP caller including a platform admin, because an admin who can
+read a colleague's secret can generate that colleague's codes and the factor then proves nothing
+about who is at the keyboard.
+
+**Residual risk, and it is the deliberate kind:** `RYNET_REQUIRE_2FA` is off, so an account that
+has not enrolled still signs in on a password alone. Turning it on before the privileged accounts
+have enrolled would lock them out of a live site, so stage two waits on stage one actually being
+done. Until then the control exists and is not yet compulsory.
 
 ### T10. Supply chain
 
@@ -208,7 +218,7 @@ Written down so they are decisions rather than oversights.
 
 | Risk | Why it is accepted | What would change it |
 |---|---|---|
-| No two-factor enforcement | Nobody but the founder has an account yet | The first external platform admin or dealer principal |
+| Two-factor not yet compulsory | It is built and enforced for anyone enrolled, but forcing it before the privileged accounts have enrolled locks them out | The founder enrolling, then `RYNET_REQUIRE_2FA=true` |
 | In-process rate limiting | One Passenger worker is likely, and unconfirmed | The host answering, or any evidence of multi-worker |
 | SQLite | The host's Postgres is version 10, which Payload rejects | `SQLITE_BUSY` under normal load, roughly 25 active dealers, or p95 search above 300ms |
 | No WAF | No Cloudflare yet | First week |
