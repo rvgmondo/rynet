@@ -266,6 +266,35 @@ cannot build. Worth adding the next time something else forces a dependency chan
 
 ---
 
+## Deployment, finally
+
+cPanel's Git Version Control has been taken out of the deploy path. It was the wrong tool and
+three sessions went into proving it rather than accepting it: it pulls with `--ff-only` and the
+deploy branch carries a build that gets rewritten, the checked-out branch kept reverting to
+`main` which has no build in it by design, and even when it worked it was two buttons and a
+Restart and remembering to check the branch first.
+
+The host now runs `~/deploy-rynet.sh` from cron every five minutes. It does `git fetch` and
+`git reset --hard origin/deploy`, which cares about neither fast-forwards nor which branch was
+checked out, then calls `scripts/host-deploy.sh` from inside the build it just pulled. So the
+deploy logic ships with the app and can be fixed by pushing; the only file that lives on the host
+is six lines and never changes.
+
+`scripts/host-deploy.sh` refuses before writing anything if the checkout has no build in it,
+stages beside the live application and swaps by rename, keeps the previous build for a one-rename
+rollback, restarts Passenger through `tmp/restart.txt`, then checks the site actually answers and
+rolls itself back if it does not.
+
+Tested rather than reasoned about, in eight scenarios: a checkout with no build in it, a first
+ever deploy, a normal upgrade, the same commit twice, `--force`, a build that will not boot, a
+rollback with a database and a photograph on disk, and a copy that runs out of inodes half way.
+The database and the media survive the last three, which is the property that actually matters.
+
+`.cpanel.yml` is now one line calling the same script, so the button is harmless if anybody
+clicks it.
+
+---
+
 ## Known gaps, honestly
 
 **No manual screen reader testing.** Automated axe checks catch roughly a third of accessibility
