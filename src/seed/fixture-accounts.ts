@@ -21,6 +21,12 @@ export const FIXTURES = {
   ownerB: "owner-b@rynet.test",
   /** A consumer account. The one that must never be able to list a vehicle. */
   buyer: "buyer@rynet.test",
+  /**
+   * Its own account for the two-factor suite, which enrols and unenrols as it runs.
+   * Sharing one with the isolation suite would mean whichever ran second signed in against
+   * a second factor it did not know about.
+   */
+  twoFactor: "twofactor@rynet.test",
   /** Distinctive enough that a test can assert on the string and mean it. */
   leadNameA: "Isolation Fixture Lead A",
   leadNameB: "Isolation Fixture Lead B",

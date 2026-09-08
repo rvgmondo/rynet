@@ -123,7 +123,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "dc5543968881dfe845cb45660b0fc2ac419593ef"
+          "value": "f143e5f55bdfced04e41d19ad0ca2db023351877"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -133,7 +133,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "dc5543968881dfe845cb45660b0fc2ac419593ef"
+          "value": "f143e5f55bdfced04e41d19ad0ca2db023351877"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -220,6 +220,12 @@
       "regex": "^/accessibility(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/accessibility(?:/)?$"
+    },
+    {
+      "page": "/account/two-factor",
+      "regex": "^/account/two\\-factor(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/account/two\\-factor(?:/)?$"
     },
     {
       "page": "/api/graphql",
@@ -360,5 +366,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "dc5543968881dfe845cb45660b0fc2ac419593ef"
+  "deploymentId": "f143e5f55bdfced04e41d19ad0ca2db023351877"
 }

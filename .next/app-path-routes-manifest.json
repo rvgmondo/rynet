@@ -7,6 +7,7 @@
   "/(agency)/digital/services/[slug]/page": "/digital/services/[slug]",
   "/(agency)/digital/services/page": "/digital/services",
   "/(marketplace)/accessibility/page": "/accessibility",
+  "/(marketplace)/account/two-factor/page": "/account/two-factor",
   "/(marketplace)/cars/[...facets]/page": "/cars/[...facets]",
   "/(marketplace)/cars/page": "/cars",
   "/(marketplace)/contact/page": "/contact",

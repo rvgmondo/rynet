@@ -1201,9 +1201,17 @@ export interface User {
   phone?: string | null;
   status: 'active' | 'invited' | 'suspended';
   /**
-   * Mandatory for platform admins and dealer principals. Enforced at sign-in, not here.
+   * Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.
    */
   twoFactorEnabled?: boolean | null;
+  twoFactorSecret?: string | null;
+  twoFactorRecoveryCodes?:
+    | {
+        hash?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  twoFactorConfirmedAt?: string | null;
   lastLoginAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -2045,6 +2053,14 @@ export interface UsersSelect<T extends boolean = true> {
   phone?: T;
   status?: T;
   twoFactorEnabled?: T;
+  twoFactorSecret?: T;
+  twoFactorRecoveryCodes?:
+    | T
+    | {
+        hash?: T;
+        id?: T;
+      };
+  twoFactorConfirmedAt?: T;
   lastLoginAt?: T;
   updatedAt?: T;
   createdAt?: T;

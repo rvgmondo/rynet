@@ -7,6 +7,7 @@
   "/(agency)/digital/services/[slug]/page": "app/(agency)/digital/services/[slug]/page.js",
   "/(agency)/digital/services/page": "app/(agency)/digital/services/page.js",
   "/(marketplace)/accessibility/page": "app/(marketplace)/accessibility/page.js",
+  "/(marketplace)/account/two-factor/page": "app/(marketplace)/account/two-factor/page.js",
   "/(marketplace)/cars/[...facets]/page": "app/(marketplace)/cars/[...facets]/page.js",
   "/(marketplace)/cars/page": "app/(marketplace)/cars/page.js",
   "/(marketplace)/contact/page": "app/(marketplace)/contact/page.js",

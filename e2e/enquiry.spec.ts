@@ -211,14 +211,29 @@ test.describe("the pages the navigation points at", () => {
     "/contact",
   ];
 
-  test("every one of them exists", async ({ page }) => {
-    for (const route of ROUTES) {
-      const response = await page.goto(route);
-      expect(response?.status(), `${route} should not be a 404`).toBe(200);
+  /*
+   * Both of these fetch rather than navigate, and fetch in parallel.
+   *
+   * They used to drive a full browser navigation per link, which renders and hydrates a whole
+   * page to read one status code. As the navigation grew that became about twenty renders in
+   * series, and with eight workers contending for one Node process and one SQLite file it
+   * crossed the thirty second timeout and failed as though a link were dead. It was not: every
+   * page answers in under 200ms when the server is not being hammered.
+   *
+   * A link checker's contract is the status code, so that is what it checks. Whether the pages
+   * render correctly is the axe and responsive suites' job, on the templates that matter.
+   */
+  test("every one of them exists", async ({ request }) => {
+    const results = await Promise.all(
+      ROUTES.map(async (route) => ({ route, status: (await request.get(route)).status() })),
+    );
+
+    for (const { route, status } of results) {
+      expect(status, `${route} should not be a 404`).toBe(200);
     }
   });
 
-  test("nothing in the header or footer leads to a 404", async ({ page }) => {
+  test("nothing in the header or footer leads to a 404", async ({ page, request }) => {
     // The audit found seventeen dead links. This is what stops them coming back.
     await page.goto("/");
     const hrefs = await page
@@ -232,9 +247,12 @@ test.describe("the pages the navigation points at", () => {
     const unique = [...new Set(hrefs)];
     expect(unique.length).toBeGreaterThan(5);
 
-    for (const href of unique) {
-      const response = await page.goto(href);
-      expect(response?.status(), `${href} is linked from the chrome and 404s`).toBe(200);
+    const results = await Promise.all(
+      unique.map(async (href) => ({ href, status: (await request.get(href)).status() })),
+    );
+
+    for (const { href, status } of results) {
+      expect(status, `${href} is linked from the chrome and 404s`).toBe(200);
     }
   });
 });

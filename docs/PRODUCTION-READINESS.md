@@ -235,6 +235,37 @@ changes how the rate limiter and the counter flush behave).
 
 ---
 
+## Two-factor authentication
+
+The gap `SECURITY.md` and `THREAT-MODEL.md` both called the largest is closed. TOTP against an
+authenticator app, enrolment at `/account/two-factor`, ten single-use recovery codes, and
+enforcement in `beforeLogin`, which runs after the password check and before the token is signed.
+A refusal there means no session was ever issued, which is why the tests assert on the token
+rather than on what a screen said.
+
+`src/lib/totp.ts` is written rather than installed. It is eighty lines of arithmetic over
+`node:crypto`, and the RFCs publish vectors that prove an implementation correct, so a dependency
+in the authentication path would cost more than it saved. Fifty-one unit tests run every published
+RFC 4226 and RFC 6238 vector.
+
+**One bug found by the tests, and it would have been invisible.** Confirming enrolment called
+`revalidatePath`, which re-rendered the page into its "two-factor is on" branch. That branch does
+not render the recovery codes, so the codes came back from the action and were never shown.
+Somebody would have switched on a second factor and never been given the way back in if they lost
+the phone. The success screen is now an early return that renders before any server state can
+replace it.
+
+**Rollout is in two stages, deliberately.** Right now anyone who has enrolled must present a code
+and nobody is forced to enrol. Once the privileged accounts have enrolled, `RYNET_REQUIRE_2FA=true`
+makes it compulsory for `platform_admin`, `platform_editor` and `dealer_owner`. Doing that first
+would lock the founder out of his own live site.
+
+**Not done: a QR code.** The setup key is typed in, which every authenticator app supports.
+Rendering a QR needs a Reed-Solomon encoder, so a dependency, so an `npm install` on a host that
+cannot build. Worth adding the next time something else forces a dependency change.
+
+---
+
 ## Known gaps, honestly
 
 **No manual screen reader testing.** Automated axe checks catch roughly a third of accessibility
@@ -262,15 +293,17 @@ existed, at least two of the six problems above would have been obvious on paper
 
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
-- **103 unit tests.** Access control 33, finance 25, contrast 15, formatting 16, slugs 14.
-- **134 end-to-end tests** across desktop and mobile, 34 of them adversarial and 25 on the
-  agency site.
+- **154 unit tests.** TOTP 51, access control 33, finance 25, formatting 16, contrast 15, slugs 14.
+- **176 end-to-end tests** across desktop and mobile: 34 adversarial, 25 on the agency site,
+  16 on two-factor.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
   vehicle page, the enquiry dialog, and all seven agency templates.
 - **No horizontal overflow** at 320, 375, 768, 1024, 1440 or 1920.
 - **62 contrast pairs** passing in both themes, computed from the tokens rather than eyeballed.
 - **Theme correct in all three states**, including with JavaScript disabled.
 - **No VIN anywhere in a public response**, asserted rather than assumed.
+- **A password alone will not sign in an account that has enrolled in two-factor**, asserted on
+  the token rather than the screen.
 - **Every link in the header and footer resolves**, on both front doors.
 - **No rating, review or invented metric is emitted anywhere on the agency site.**
 - **A dealership cannot read or write another dealership's leads, stock or staff**, proven over

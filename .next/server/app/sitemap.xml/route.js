@@ -1,5 +1,5 @@
 var R=require("../../chunks/[turbopack]_runtime.js")("server/app/sitemap.xml/route.js")
-R.c("server/chunks/[root-of-the-server]__18jfqf-._.js")
+R.c("server/chunks/[root-of-the-server]__1k4t45d._.js")
 R.c("server/chunks/_0j53ocp._.js")
 R.c("server/chunks/_1fz3vzt._.js")
 R.c("server/chunks/[root-of-the-server]__15bjnu5._.js")
