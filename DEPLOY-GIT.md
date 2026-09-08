@@ -1,10 +1,33 @@
-# Deploying by git pull
+# Deploying
 
-The push-and-pull workflow. Set this up once, then every deploy is: push to `main`, wait for the
-build, click two buttons in cPanel, Restart.
+Push to `main`. That is the whole thing.
 
-For the manual upload route, see [DEPLOY-CPANEL.md](DEPLOY-CPANEL.md). You still want to read its
-troubleshooting section, because the same things go wrong either way.
+GitHub Actions builds, publishes the result to the `deploy` branch, and a cron job on the host
+picks it up within five minutes, installs it atomically, restarts the app, checks the site
+answers, and rolls itself back if it does not.
+
+For the manual upload route, and for the host troubleshooting that applies either way, see
+[DEPLOY-CPANEL.md](DEPLOY-CPANEL.md).
+
+---
+
+## Do not use cPanel's Git Version Control button
+
+It is the wrong tool for this and it cost several sessions to be sure of that. Three separate
+reasons, none fixable from inside cPanel:
+
+- **It pulls with `--ff-only`.** The `deploy` branch carries a full build. Any history rewrite,
+  and there have been several, makes a fast-forward impossible, and the button then either
+  errors or silently redeploys whatever it already had.
+- **The checked-out branch keeps reverting to `main`.** `main` has no build in it, deliberately,
+  so deploying from there does nothing useful and once took the site down.
+- **It is a ritual, not a deploy.** Update from Remote, then Deploy HEAD Commit, then Restart,
+  and check the branch first.
+
+`git reset --hard` cares about none of that. So the host stops asking cPanel.
+
+The button is left wired up and harmless: `.cpanel.yml` now calls the same script, which refuses
+before writing anything if the checkout has no build in it.
 
 ---
 
@@ -17,60 +40,51 @@ you push to main
 GitHub Actions builds  (Node 22, same as the host)
         |
         v
-force-pushes source + prebuilt .next to the `deploy` branch
+commits source + prebuilt .next to the `deploy` branch
         |
         v
-cPanel Git Version Control pulls `deploy`
+cron on the host, every five minutes:
+   git fetch && git reset --hard origin/deploy
+   scripts/host-deploy.sh
         |
         v
-.cpanel.yml copies files into ~/rynet
-        |
-        v
-you click Restart
+   refuse if there is no build in the checkout
+   stage beside the live app, swap by rename, keep the previous build
+   touch tmp/restart.txt
+   check the site answers, roll back if it does not
 ```
 
-`main` holds source and no build output, so its history stays readable. `deploy` carries one
-commit per build, each on top of the last.
-
-**That "on top of the last" is not a detail.** cPanel's Update from Remote pulls with `--ff-only`,
-and a fast-forward onto a commit with no shared ancestor is impossible. The deploy branch used to
-be force-pushed as a fresh orphan every build, so the button worked exactly once, on the initial
-clone, and after that either errored or silently redeployed the day-one build while `DEPLOYED.txt`
-recorded that stale commit as though it were current. That is fixed, and the cost is size: the
-branch grows by roughly the size of `.next` per deploy. When it gets unwieldy, delete the branch on
-GitHub, let the next build recreate it, and re-clone on the host.
-
 **The host cannot build.** Next 16 with Turbopack needs far more memory than a shared CloudLinux
-account allows, and it gets killed rather than erroring usefully. That constraint is what shapes
-all of this.
+account allows, and it gets killed rather than erroring usefully. That constraint shapes all of
+this.
 
 ---
 
 ## One-time setup
 
-### 1. Give cPanel read access to the private repository
+You only do this once. Steps 1 and 2 are already done if you have deployed before.
 
-The repository is private, so cPanel needs credentials. Two routes fail on this class of host and
-it is worth knowing why before you try them:
+### 1. Give the host read access to the private repository
+
+Two routes fail on this class of host and it is worth knowing why before trying them:
 
 - **SSH deploy keys do not work.** cPanel's Manage SSH Keys offers only RSA and DSA, and GitHub
-  rejects RSA SHA-1 signatures. You get `Permission denied (publickey)` no matter how correctly the
-  key is installed.
+  rejects RSA SHA-1 signatures. You get `Permission denied (publickey)` however correctly the key
+  is installed.
 - **Credentials in the clone URL are blocked.** cPanel refuses `https://user:token@github.com/...`
   with "The clone URL cannot include a password".
 
 **What works:** a fine-grained personal access token, read-only, scoped to this one repository,
-supplied through a `~/.netrc` file so the clone URL stays clean.
+supplied through `~/.netrc` so the clone URL stays clean.
 
-Create the token at **github.com, Settings, Developer settings, Personal access tokens,
-Fine-grained tokens**:
+github.com, Settings, Developer settings, Personal access tokens, Fine-grained tokens:
 
 - Repository access: **Only select repositories**, then `rvgmondo/rynet`
 - Permissions: **Contents: Read-only**. Nothing else.
-- Expiry: set a real one and put a reminder in your calendar. A deploy that suddenly fails to
+- Expiry: set a real one and put a reminder in your calendar. A deploy that suddenly cannot
   authenticate is almost always a lapsed token.
 
-Then, in the cPanel terminal:
+Then in the cPanel terminal:
 
 ```bash
 printf 'machine github.com\nlogin rvgmondo\npassword YOUR_TOKEN_HERE\n' > ~/.netrc
@@ -79,148 +93,155 @@ chmod 600 ~/.netrc
 
 `chmod 600` matters. Git ignores a `.netrc` that other users can read.
 
-### 2. Create the repository in cPanel
+### 2. Have the repository on disk
 
-**cPanel, Git Version Control, Create**:
-
-| Field | Value |
-|---|---|
-| Clone a Repository | On |
-| Clone URL | `https://github.com/rvgmondo/rynet.git` |
-| Repository Path | `/home/rynetco/repositories/rynet` |
-| Repository Name | `rynet` |
-
-Save. It clones `main` by default.
-
-### 3. Switch it to the deploy branch
-
-`main` has no `.next` in it, so deploying `main` would put source on the server with nothing to
-run. In the cPanel terminal:
+If cPanel already cloned it, it is at `~/repositories/rynet` and there is nothing to do. If not:
 
 ```bash
-cd ~/repositories/rynet
-git fetch origin deploy
-git checkout deploy
+git clone https://github.com/rvgmondo/rynet.git ~/repositories/rynet
 ```
 
-Confirm you are on the right branch and that the build is actually there:
+### 3. Write the bootstrap script
+
+This is the only file that lives on the host and never changes. Everything it calls ships with
+the build, so deploy logic can be fixed by pushing.
 
 ```bash
-git branch --show-current   # deploy
-ls .next/BUILD_ID           # exists
+cat > ~/deploy-rynet.sh <<'EOF'
+#!/bin/bash
+# Pulls the latest build and installs it. Safe to run at any time, from any branch state.
+set -euo pipefail
+REPO="$HOME/repositories/rynet"
+cd "$REPO"
+git fetch --quiet origin deploy
+git reset --hard --quiet origin/deploy
+exec bash "$REPO/scripts/host-deploy.sh" "$@"
+EOF
+chmod +x ~/deploy-rynet.sh
 ```
 
-### 4. Make sure the app root is set up
+`reset --hard` is what makes this immune to everything above: it does not care which branch was
+checked out or whether the history was rewritten.
 
-The application itself lives at `~/rynet`, separate from the repository checkout. If you already
-did the manual deploy, it is there. If not:
+### 4. Run it once, by hand, and watch it
 
 ```bash
-mkdir -p ~/rynet/media
+~/deploy-rynet.sh
 ```
 
-`~/rynet` needs `rynet.db` before the site can serve anything. Upload the seeded one from
-`deploy/rynet-deploy.tar.gz`, or create it on the host:
+It prints what it is doing. It should end with `https://rynet.co.za answered 200`.
 
-```bash
-cd ~/rynet && npx payload migrate && npm run seed:admin && npm run seed
+### 5. Put it on cron
+
+cPanel, Advanced, **Cron Jobs**. Every five minutes:
+
+```
+*/5 * * * * /bin/bash /home/rynetco/deploy-rynet.sh >> /home/rynetco/deploy.log 2>&1
 ```
 
-The seed takes a few minutes and is memory-hungry. Uploading the prepared file is easier.
+It exits in well under a second when the commit has not changed, so this is cheap. Set the cron
+email to yours and you will hear about a failed deploy without watching for it.
+
+That is the last time you touch the host for a deploy.
 
 ---
 
 ## Every deploy after that
 
-1. **Push to `main`.** From your PC:
-   ```bash
-   git push
-   ```
-2. **Wait for the build.** Roughly 90 seconds. Watch it at
-   github.com/rvgmondo/rynet/actions, or:
-   ```bash
-   gh run watch
-   ```
-   If it fails, nothing reaches the server. That is the point.
-3. **cPanel, Git Version Control, Manage:** click **Update from Remote**, then
-   **Deploy HEAD Commit**.
-4. The deploy touches `tmp/restart.txt`, which is how Passenger is told to reload, so a manual
-   **Restart** on the Setup Node.js App screen should not be needed. Click it anyway if the site
-   is still serving the old build.
+```bash
+git push
+```
 
-**If the deploy refuses**, read the message. `.cpanel.yml` now checks that the checkout actually
-carries a build before it writes anything, so the usual cause is that the checked-out branch is
-`main` rather than `deploy`. It stops before touching the live site, which is the point: the
-previous version of that file deleted the running build first and only then discovered it had
-nothing to replace it with, and cPanel reported success while the site returned 500 to everything.
+Wait roughly five minutes. Check `~/deploy.log`, or `~/rynet/DEPLOYED.txt`, which carries the
+timestamp, the commit and the build id.
 
-Check `~/rynet/DEPLOYED.txt` afterwards. It carries the timestamp and the commit, so you can always
-tell exactly what is running.
-
-### Two steps that are deliberately not automatic
+### The two steps that are still deliberately manual
 
 **`npm install --omit=dev`**, only when dependencies changed. It takes minutes and a half-finished
-one leaves the app unable to start, so it should not happen as a side effect of a content deploy.
+one leaves the app unable to start, so it must not happen as a side effect of a content deploy.
 
-**`npx payload migrate`**, only when the schema changed. It writes to the live database. That
-should always be a decision.
+**`npx payload migrate`**, only when the schema changed. It writes to the live database, so it
+should be a decision. It also asks a confirmation question on a database that was ever created in
+dev mode, which means it would hang forever inside a cron job.
 
-One trap worth knowing before you need it: if the database was ever created by Payload in dev
-mode rather than by a migration, `payload migrate` stops and asks "data loss will occur, would
-you like to proceed?" and waits for an answer. In a script or a deploy hook there is nobody to
-answer, so it hangs rather than failing. Run it by hand, in the terminal, where you can see the
-question.
+Both from `~/rynet`, inside the virtual environment:
 
-Both from `~/rynet`, inside the virtual environment. Use `npx` rather than `npm run`: on this host
-npm runs lifecycle scripts from the virtualenv's lib directory rather than your app root, so
-anything with a relative path in it looks in the wrong place. That is what broke the first install.
+```bash
+source $(ls -d ~/nodevenv/rynet/*/bin/activate | sort -V | tail -1)
+cd ~/rynet && npm install --omit=dev     # only if dependencies changed
+cd ~/rynet && npx payload migrate        # only if the schema changed
+```
+
+Use `npx` rather than `npm run`: on this host npm runs lifecycle scripts from the virtualenv's lib
+directory rather than your app root, so anything with a relative path looks in the wrong place.
+That is what broke the first install.
 
 ---
 
-## What never gets overwritten
+## When something goes wrong
 
-`.cpanel.yml` copies file by file rather than `cp -R .`, so adding something to the repository
-cannot silently start overwriting live state. Three things are never touched:
+**The deploy refuses.** Read the message. "No `.next/BUILD_ID` in the checkout" means the
+repository is not on the `deploy` branch, which `~/deploy-rynet.sh` fixes by itself. Nothing was
+written.
 
-| Path | Why |
-|---|---|
-| `rynet.db` | The database. Every dealership, listing and lead. |
-| `media/` | Uploaded photography. |
-| `.env` | If one exists. Environment belongs in Setup Node.js App. |
+**The deploy rolled itself back.** The new build did not answer, so the previous one is live again
+and the failed one is in `~/rynet/.next.failed`. Nothing is lost. The usual cause is a dependency
+change that needs `npm install --omit=dev`, or a schema change that needs a migration.
 
-## Changing the domain
-
-`NEXT_PUBLIC_SERVER_URL` is inlined at build time, so it has to be right when GitHub Actions
-builds, and cannot be corrected on the server afterwards.
-
-Set a repository variable rather than editing the workflow: **github.com/rvgmondo/rynet, Settings,
-Secrets and variables, Actions, Variables**, add `SITE_URL` with the origin, no trailing slash.
-The next build picks it up.
-
-To rebuild without pushing a code change: **Actions, Build deploy branch, Run workflow**, and give
-it an origin.
-
-## Rolling back
-
-Two ways, and the fast one is on the host.
-
-**In seconds, on the host.** Each deploy keeps exactly one previous build beside the live one:
+**Roll back by hand**, in seconds:
 
 ```bash
-cd ~/rynet && mv .next .next.bad && mv .next.previous .next && touch tmp/restart.txt
+cd ~/rynet && rm -rf .next.bad && mv .next .next.bad && mv .next.previous .next
+touch tmp/restart.txt
 ```
 
 Do the same for `src.previous` and `scripts.previous` if the bad deploy changed them.
 
-**Properly, through the pipeline.** Roll back on `main` and let it rebuild:
+**Roll back properly**, through the pipeline. Revert on `main` and let it rebuild:
 
 ```bash
 git revert <bad-commit>
 git push
 ```
 
-Then Update from Remote, Deploy HEAD Commit, Restart. A revert is safer than a reset here, because
-the deploy branch is derived from whatever `main` currently says.
+A revert is safer than a reset here, because the deploy branch is derived from whatever `main`
+currently says. **A rollback does not undo a migration.** If the bad deploy included a schema
+change, restore `rynet.db` from backup as well, which is the argument for having one.
 
-**A rollback does not undo a migration.** If the bad deploy included a schema change, restore
-`rynet.db` from backup as well. Which is the argument for having one.
+---
+
+## What is never overwritten
+
+The install copies named paths rather than the whole tree, so adding something to the repository
+cannot silently start overwriting live state.
+
+| Path | Why |
+|---|---|
+| `rynet.db` | The database. Every dealership, listing and lead. |
+| `media/` | Uploaded photography. |
+| `.env` | If one exists. Environment belongs in Setup Node.js App. |
+| `node_modules/` | Installed on the host, with the host's own native binaries. |
+
+Proven rather than asserted: the install script's test matrix includes a rollback and a failed
+copy, and checks the database and a photograph are still there afterwards.
+
+---
+
+## Changing the domain
+
+`NEXT_PUBLIC_SERVER_URL` is inlined at build time, so it has to be right when GitHub Actions
+builds and cannot be corrected on the server afterwards.
+
+Set a repository variable rather than editing the workflow: github.com/rvgmondo/rynet, Settings,
+Secrets and variables, Actions, Variables, add `SITE_URL` with the origin and no trailing slash.
+The next build picks it up.
+
+To rebuild without pushing a code change: Actions, Build deploy branch, Run workflow.
+
+---
+
+## About the `deploy` branch growing
+
+Every build commits a full `.next`, so the branch grows by roughly the size of a build per push.
+When it becomes a nuisance, delete the branch on GitHub, let the next build recreate it, and the
+host will pick it up on its own: `reset --hard` does not need the history to line up.
