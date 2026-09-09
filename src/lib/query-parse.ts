@@ -148,7 +148,7 @@ function phrasesFor(term: Term): string[] {
 
 export function parseQuery(raw: string | undefined | null, taxonomies: Taxonomies): ParsedQuery {
   const result: ParsedQuery = { matched: [], unmatched: [] };
-  if (!raw || !raw.trim()) return result;
+  if (!raw?.trim()) return result;
 
   const price = extractPrice(normalise(raw));
   result.minPrice = price.minPrice;

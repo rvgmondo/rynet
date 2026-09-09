@@ -47,7 +47,7 @@ export function FinancePanel({ price, defaults }: { price: number; defaults: Fin
   }
 
   return (
-    <section aria-labelledby="finance-heading" className="rounded-lg border border-line p-5">
+    <section aria-labelledby="finance-heading" className="border-t-2 border-ink pt-6">
       <h2 id="finance-heading" className="text-2xl">
         What it might cost a month
       </h2>
@@ -56,7 +56,7 @@ export function FinancePanel({ price, defaults }: { price: number; defaults: Fin
       </p>
 
       <div className="mt-5 grid gap-5 sm:grid-cols-2">
-        <div className="rounded-md bg-surface-sunken p-4">
+        <div className="bg-surface-sunken p-4">
           <p className="text-xs font-medium uppercase tracking-[var(--tracking-wide)] text-ink-muted">
             Estimated instalment
           </p>
@@ -70,7 +70,7 @@ export function FinancePanel({ price, defaults }: { price: number; defaults: Fin
           Same visual weight as the instalment, deliberately. Putting the cost of credit in
           a footnote is how a monthly figure gets to look like the whole story.
         */}
-        <div className="rounded-md bg-surface-sunken p-4">
+        <div className="bg-surface-sunken p-4">
           <p className="text-xs font-medium uppercase tracking-[var(--tracking-wide)] text-ink-muted">
             Total cost of the credit
           </p>

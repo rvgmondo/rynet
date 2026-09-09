@@ -1,5 +1,18 @@
 # DESIGN SYSTEM (proposal, Phase 0)
 
+> **Superseded in part, September 2026.** Direction A "Forecourt" shipped first and the
+> client's verdict on it was that the site looked cheap. He was right, and the diagnosis was
+> specific: with no vehicle photography, every element had to declare itself with a thin grey
+> border, and three hundred thin grey borders is what cheap looks like.
+>
+> The direction now in the build is **STOCKLIST**, written up in
+> [DESIGN-STOCKLIST.md](DESIGN-STOCKLIST.md), and that document is the authority on colour,
+> type, the vehicle card, the home page, the search page and motion. Read it first.
+>
+> This document is still worth keeping for two things it settles that STOCKLIST does not
+> revisit: what the logo decides about how red, silver and navy may be used, and the
+> reasoning behind the three border tokens and the per-pair contrast thresholds.
+
 ## 1. What the logo already decides
 
 The mark is a tachometer arc sweeping from silver into red, with the needle forming the crossbar of
