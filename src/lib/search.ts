@@ -59,6 +59,9 @@ export async function resolveSlug(collection: string, slug?: string): Promise<nu
 
 export function toCard(doc: Vehicle): VehicleCardData {
   const branch = populated(doc.branch);
+  // The paint colour fills the card's image area while there is no photography, so it travels
+  // with every card rather than being fetched again per listing.
+  const colour = doc.exteriorColour;
   return {
     publicRef: doc.publicRef ?? "",
     modelYear: doc.modelYear,
@@ -79,6 +82,8 @@ export function toCard(doc: Vehicle): VehicleCardData {
     cityName: branch ? relName(branch.city) : null,
     provinceName: branch ? relName(branch.province) : null,
     isDemonstration: Boolean(doc.isDemonstration),
+    colourName: relName(colour),
+    colourSwatch: colour && typeof colour === "object" ? (colour.swatch ?? null) : null,
   };
 }
 

@@ -1,6 +1,7 @@
 import { BadgeCheck, Gauge, MapPin, TrendingDown } from "lucide-react";
 import Link from "next/link";
 
+import { ColourPlate } from "@/components/vehicles/colour-plate";
 import { formatKm, formatRand, priceDrop } from "@/lib/format";
 import { vehicleUrl } from "@/lib/urls";
 
@@ -24,6 +25,9 @@ export type VehicleCardData = {
   cityName: string | null;
   provinceName: string | null;
   isDemonstration: boolean;
+  /** The car's real paint colour, which is what fills the image area until there are photos. */
+  colourName: string | null;
+  colourSwatch: string | null;
 };
 
 const CONDITION_LABEL: Record<VehicleCardData["condition"], string> = {
@@ -51,24 +55,46 @@ const CONDITION_LABEL: Record<VehicleCardData["condition"], string> = {
  *    the demonstration badge carries the word. Section 10's rule, and also the only way this
  *    palette works given the brand is built on one strong red.
  */
-export function VehicleCard({ vehicle }: { vehicle: VehicleCardData }) {
+export function VehicleCard({
+  vehicle,
+  index = 0,
+}: {
+  vehicle: VehicleCardData;
+  /** Position in the grid, so the mileage needles sweep up as a staggered wave. */
+  index?: number;
+}) {
   const drop = priceDrop(vehicle.price, vehicle.previousPrice);
   const title = [vehicle.modelYear, vehicle.makeName, vehicle.modelName, vehicle.variantName]
     .filter(Boolean)
     .join(" ");
 
   return (
-    <article className="group relative flex w-full flex-col rounded-lg border border-line bg-surface transition-shadow duration-[var(--duration-element)] ease-[var(--rn-ease-out)] hover:shadow-(--rn-shadow-2) focus-within:shadow-(--rn-shadow-2)">
-      <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
-        <span className="rounded-full bg-surface-sunken px-2.5 py-1 text-2xs font-semibold uppercase tracking-[var(--tracking-wide)] text-ink-secondary">
-          {CONDITION_LABEL[vehicle.condition]}
-        </span>
-        {drop ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-success-subtle px-2.5 py-1 text-2xs font-semibold text-success">
-            <TrendingDown aria-hidden="true" className="size-3" />
-            {drop}
+    <article className="group relative flex w-full flex-col overflow-hidden rounded-lg border border-line bg-surface transition-shadow duration-[var(--duration-element)] ease-[var(--rn-ease-out)] hover:shadow-(--rn-shadow-2) focus-within:shadow-(--rn-shadow-2)">
+      {/*
+        The car's real paint colour, with the manufacturer's name for it and a tachometer arc
+        reading its actual mileage. There is no photography yet, and this is neither a grey
+        placeholder nor a stock photo of a different car. See colour-plate.tsx.
+      */}
+      <div className="relative">
+        <ColourPlate
+          publicRef={vehicle.publicRef}
+          mileageKm={vehicle.mileageKm}
+          colourSwatch={vehicle.colourSwatch}
+          colourName={vehicle.colourName}
+          index={index}
+        />
+
+        <div className="absolute left-3 top-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-surface/90 px-2.5 py-1 text-2xs font-semibold uppercase tracking-[var(--tracking-wide)] text-ink backdrop-blur-sm">
+            {CONDITION_LABEL[vehicle.condition]}
           </span>
-        ) : null}
+          {drop ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-success-subtle px-2.5 py-1 text-2xs font-semibold text-success">
+              <TrendingDown aria-hidden="true" className="size-3" />
+              {drop}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col p-4 pt-3">

@@ -50,9 +50,9 @@ export function ResultsGrid({
   return (
     <>
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {vehicles.map((vehicle) => (
+        {vehicles.map((vehicle, index) => (
           <li key={vehicle.publicRef} className="flex">
-            <VehicleCard vehicle={vehicle} />
+            <VehicleCard vehicle={vehicle} index={index} />
           </li>
         ))}
       </ul>

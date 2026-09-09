@@ -7,7 +7,7 @@ import { Pagination } from "@/components/vehicles/pagination";
 import { ResultsHeader } from "@/components/vehicles/results-header";
 import { VehicleCard, type VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { formatRand } from "@/lib/format";
-import { populated, relName, relSlug } from "@/lib/relations";
+import { toCard } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "Cars for sale from verified dealerships",
@@ -116,31 +116,9 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
     depth: 2,
   });
 
-  const vehicles: VehicleCardData[] = results.docs.map((doc) => {
-    const branch = populated(doc.branch);
-
-    return {
-      publicRef: doc.publicRef ?? "",
-      modelYear: doc.modelYear,
-      makeName: relName(doc.make) ?? "",
-      makeSlug: relSlug(doc.make),
-      modelName: relName(doc.model) ?? "",
-      modelSlug: relSlug(doc.model),
-      variantName: relName(doc.variant),
-      price: doc.price,
-      previousPrice: doc.previousPrice ?? null,
-      mileageKm: doc.mileageKm,
-      transmissionName: relName(doc.transmission),
-      fuelName: relName(doc.fuelType),
-      bodyName: relName(doc.bodyType),
-      condition: doc.condition,
-      dealerName: populated(doc.dealer)?.tradingName ?? "",
-      dealerSlug: populated(doc.dealer)?.slug ?? "",
-      cityName: branch ? relName(branch.city) : null,
-      provinceName: branch ? relName(branch.province) : null,
-      isDemonstration: Boolean(doc.isDemonstration),
-    };
-  });
+  // The shared mapper. This page used to carry a verbatim copy of it, which is how the
+  // paint colour reached the card in one place and not the other two.
+  const vehicles: VehicleCardData[] = results.docs.map(toCard);
 
   /**
    * Page links carry every current filter. Without this, clicking page 2 drops the
