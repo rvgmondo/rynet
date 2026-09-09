@@ -1,0 +1,3 @@
+module.exports=[604268,a=>{"use strict";a.i(907997),a.i(599475);var b=a.i(352425);let c={alt:"Rynet Showroom. Verified dealerships only, no private sellers.",contentType:"image/png",size:{width:1200,height:630}};async function d(a){let{__metadata_id__:d,...e}=await a.params,f=(0,b.fillMetadataSegment)("/(marketplace)",e,"opengraph-image",!1);return[function(a){let b={alt:a.alt,type:a.contentType||"image/png",url:f+"?aab9c29797a9d801"},{size:c}=a;return c&&(b.width=c.width,b.height=c.height),b}(c)]}a.s(["default",0,d],604268)},369354,function(a){a.n(a.i(604268))}];
+
+//# sourceMappingURL=src_app_%28marketplace%29_opengraph-image--metadata_0j3k93b.js.map

@@ -1,4 +1,4 @@
-import { MessageCircle, ShieldCheck, TrendingDown } from "lucide-react";
+import { MessageCircle, TrendingDown } from "lucide-react";
 
 import { EnquiryDialog } from "@/components/vehicles/enquiry-dialog";
 import { PhoneReveal } from "@/components/vehicles/phone-reveal";
@@ -64,14 +64,13 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
       )}
 
       {verified ? (
-        <p className="mt-4 flex items-start gap-2 border-y border-line py-3 text-xs text-ink-secondary">
-          <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent" />
-          <span>
-            Sold by a dealership we have verified.{" "}
-            <a href="/how-verification-works" className="font-semibold text-accent hover:underline">
-              What that means
-            </a>
-          </span>
+        <p className="mt-4 border-y border-line py-3 text-xs text-ink-secondary">
+          {/* No shield glyph. The one red object in this viewport is the enquiry button,
+              which is the action; a red icon three lines above it competes with that. */}
+          Sold by a dealership we have verified.{" "}
+          <a href="/how-verification-works" className="font-semibold underline">
+            What that means
+          </a>
         </p>
       ) : null}
 

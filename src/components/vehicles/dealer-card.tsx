@@ -1,4 +1,4 @@
-import { BadgeCheck, Clock, MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 
 import { relName } from "@/lib/relations";
@@ -46,12 +46,17 @@ export function DealerCard({ dealer, branch }: { dealer: Dealer | null; branch: 
         </Link>
       </h2>
 
+      {/*
+        The word in a ruled box, matching every listing card, rather than a red glyph.
+        A BadgeCheck next to a dealer name is what every template ships and it persuades
+        nobody; the claim is checkable because a dealership cannot publish stock until all
+        three checks pass, and this links to what those are.
+      */}
       {verified ? (
         <Link
           href="/how-verification-works"
-          className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:underline"
+          className="rn-label mt-3 inline-block border border-current px-1.5 py-1 hover:bg-ink hover:text-ink-inverse"
         >
-          <BadgeCheck aria-hidden="true" className="size-4" />
           Verified dealership
         </Link>
       ) : null}

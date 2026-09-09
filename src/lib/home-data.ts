@@ -32,6 +32,16 @@ export type HomeData = {
   totalLive: number;
   dealershipCount: number;
   /**
+   * The same two counts with the seeded demonstration data taken out.
+   *
+   * These are the only figures the page is allowed to shout. `totalLive` counts everything
+   * that renders, which today is 311 listings from 12 dealerships that do not exist, and
+   * putting that number at poster scale would be exactly the fabricated statistic the brief
+   * forbids. See the numbers band in the home page.
+   */
+  realLive: number;
+  realDealershipCount: number;
+  /**
    * How many of the live listings are seeded demonstration stock.
    *
    * The home page states this out loud rather than shouting a headline count that is not
@@ -82,22 +92,35 @@ async function readHomeData(featuredLimit: number): Promise<HomeData> {
 
   const featured = spreadAcrossDealers(recent.docs.map(toCard), featuredLimit);
 
-  const [bodyDocs, provinceDocs, colourDocs, total, demonstration, dealers] = await Promise.all([
-    payload.find({
-      collection: "body-types",
-      where: { isActive: { equals: true } },
-      limit: 30,
-      depth: 0,
-    }),
-    payload.find({ collection: "provinces", limit: 20, depth: 0, sort: "name" }),
-    payload.find({ collection: "colours", limit: 60, depth: 0, sort: "name" }),
-    payload.count({ collection: "vehicles", where: live }),
-    payload.count({
-      collection: "vehicles",
-      where: { and: [live, { isDemonstration: { equals: true } }] },
-    }),
-    payload.count({ collection: "dealers", where: { verificationStatus: { equals: "verified" } } }),
-  ]);
+  const [bodyDocs, provinceDocs, colourDocs, total, demonstration, dealers, realDealers] =
+    await Promise.all([
+      payload.find({
+        collection: "body-types",
+        where: { isActive: { equals: true } },
+        limit: 30,
+        depth: 0,
+      }),
+      payload.find({ collection: "provinces", limit: 20, depth: 0, sort: "name" }),
+      payload.find({ collection: "colours", limit: 60, depth: 0, sort: "name" }),
+      payload.count({ collection: "vehicles", where: live }),
+      payload.count({
+        collection: "vehicles",
+        where: { and: [live, { isDemonstration: { equals: true } }] },
+      }),
+      payload.count({
+        collection: "dealers",
+        where: { verificationStatus: { equals: "verified" } },
+      }),
+      payload.count({
+        collection: "dealers",
+        where: {
+          and: [
+            { verificationStatus: { equals: "verified" } },
+            { isDemonstration: { not_equals: true } },
+          ],
+        },
+      }),
+    ]);
 
   // Counted rather than assumed. A browse tile promising SUVs and landing on an empty result
   // is worse than not offering the tile, and the counts are the reason to click.
@@ -164,6 +187,8 @@ async function readHomeData(featuredLimit: number): Promise<HomeData> {
     totalLive: total.totalDocs,
     dealershipCount: dealers.totalDocs,
     demonstrationCount: demonstration.totalDocs,
+    realLive: total.totalDocs - demonstration.totalDocs,
+    realDealershipCount: realDealers.totalDocs,
   };
 }
 

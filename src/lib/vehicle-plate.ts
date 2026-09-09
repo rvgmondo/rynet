@@ -254,16 +254,25 @@ export function plateFor(vehicle: {
   colourFamily?: string | null;
   colourName?: string | null;
 }): Plate {
-  // Only a listing that carries BOTH a name and a usable swatch draws a real paint colour.
-  // Half a record is not a fact, and primer says so honestly.
+  /*
+   * The FIELD needs a swatch. The LABEL only needs a name. They are separate questions and
+   * conflating them threw away real information.
+   *
+   * `swatch` is optional on the colours taxonomy by design, so a dealership that adds
+   * "Cosmic Bronze Metallic" without a hex has recorded a true fact about the car. The old
+   * rule demanded both and fell back to primer with no label at all, so the plate said
+   * "Colour not supplied" about a car whose colour had been supplied. Now the field is
+   * primer, because there is no hue to draw, and the manufacturer's name is still printed,
+   * because it is still true.
+   */
   const name = vehicle.colourName?.trim() || null;
   const raw = normaliseSwatch(vehicle.colourSwatch);
-  const isPrimer = !name || !vehicle.colourSwatch || raw === FALLBACK_SWATCH;
+  const isPrimer = !vehicle.colourSwatch || raw === FALLBACK_SWATCH;
 
   return {
     field: isPrimer ? primerField("light") : plateField(raw, vehicle.colourFamily, "light"),
     fieldDark: isPrimer ? primerField("dark") : plateField(raw, vehicle.colourFamily, "dark"),
-    colourName: isPrimer ? null : name,
+    colourName: name,
     isPrimer,
     sweep: sweepFor(vehicle.mileageKm),
     grain: grainFor(vehicle.publicRef || raw),

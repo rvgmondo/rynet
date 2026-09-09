@@ -62,7 +62,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 58950,
+      "htmlSize": 60690,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -122,7 +122,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 59812,
+      "htmlSize": 61552,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -150,7 +150,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 54098,
+      "htmlSize": 56893,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -542,7 +542,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 67395,
+      "htmlSize": 69135,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -598,11 +598,43 @@
         "x-next-revalidate-tag-token"
       ]
     },
+    "/opengraph-image-nkrg6m": {
+      "initialHeaders": {
+        "cache-control": "public, max-age=0, must-revalidate",
+        "content-type": "image/png",
+        "x-next-cache-tags": "_N_T_/layout,_N_T_/(marketplace)/layout,_N_T_/(marketplace)/opengraph-image-nkrg6m/layout,_N_T_/(marketplace)/opengraph-image-nkrg6m/route,_N_T_/opengraph-image-nkrg6m"
+      },
+      "routeType": "route",
+      "response": "complete",
+      "compute": "static",
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/opengraph-image-nkrg6m",
+      "dataRoute": null,
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/privacy": {
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 65737,
+      "htmlSize": 67477,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -662,7 +694,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 58769,
+      "htmlSize": 60509,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -722,8 +754,8 @@
   },
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "c71cdbdd27644ab1bb6f1228dfe5d179",
-    "previewModeSigningKey": "e18cd8ea530f44f5f400010668d984d9eb862cef440432166eb34cc2cdfb6a76",
-    "previewModeEncryptionKey": "063e86abe92f1cd5967792554d6679f6b8774b0811763d95072788e3c237f2fa"
+    "previewModeId": "9bb6a2b8107bb7e7bebe67bcdba75142",
+    "previewModeSigningKey": "91164bf6e98c11da9d8fb4979383dd56cc916d7f8c5c11c509e3f656a4429f32",
+    "previewModeEncryptionKey": "3b4a2539f9e4bda46bdb9e22f159c2ff3d93c7b77f1d23251fe2b10885fc25f8"
   }
 }

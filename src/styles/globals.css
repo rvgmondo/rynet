@@ -351,7 +351,18 @@
   font-size: 0.58em;
   font-weight: 400;
   color: var(--card-muted, var(--rn-ink-muted));
-  margin-inline-end: 0.12em;
+}
+
+/*
+ * A real space, tightened rather than removed.
+ *
+ * The house format is "R 249 900" and that space has to survive into the text content, so a
+ * copied price and an announced price are both right. Setting it back with a margin instead
+ * looked identical and produced "R584 000" everywhere it mattered.
+ */
+.rn-rand-gap {
+  font-size: 0.58em;
+  letter-spacing: -0.28em;
 }
 
 /* Running prose, and the only place Newsreader is allowed. */
@@ -620,6 +631,16 @@
 
 .rn-plate {
   position: relative;
+  /*
+   * A floor, then the ratio.
+   *
+   * Nothing inside the plate contributes height: the arc is an absolutely positioned SVG and
+   * the furniture is an absolutely positioned band. So in an engine without `aspect-ratio`
+   * the whole imagery system collapsed to nothing and the results page became a list of
+   * prices with no plates at all. The min-height is a floor that keeps it visible, and the
+   * ratio wins wherever it is supported, which is everywhere current.
+   */
+  min-height: 10rem;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   /*
@@ -803,6 +824,8 @@
 
 .rn-plate--thumb {
   animation: none;
+  /* Deliberately small, so it opts out of the floor the card-size plate needs. */
+  min-height: 0;
 }
 
 /*

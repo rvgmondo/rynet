@@ -54,28 +54,53 @@ test.describe("the vehicle page", () => {
     expect(html).not.toMatch(/vehicleIdentificationNumber/i);
   });
 
-  test("emits Car and Offer structured data with a ZAR price", async ({ page }) => {
-    // A hard navigation on purpose. Clicking through from the results is a soft navigation,
-    // and React does not re-insert the script tag into the client DOM on one. What matters
-    // for structured data is the SERVER response, which is what a crawler asks for, so the
-    // test asks for it the same way.
+  test("publishes no structured data for a listing that is not a real car", async ({ page }) => {
+    /*
+     * The inverse of the test this replaces, and the replacement is the point.
+     *
+     * This used to assert that a vehicle page emits a Car with an Offer, a ZAR price and an
+     * AutoDealer seller. It did, for all 311 seeded listings, every one of which describes a
+     * car that does not exist sold by a business that does not exist, on a page that says so
+     * in its own copy. A structured data block is a machine-readable assertion that
+     * something is real, so that was a fabricated listing published to the one reader who
+     * cannot see the disclaimer.
+     *
+     * A hard navigation on purpose. Clicking through from the results is a soft navigation
+     * and React does not re-insert a script tag on one. What matters for structured data is
+     * the SERVER response, which is what a crawler asks for, so the test asks the same way.
+     */
     await openFirstListing(page);
     await page.reload();
-    // `allTextContents()` returns empty strings for script elements, because Playwright
-    // treats them as having no rendered text. Reading textContent directly is the way.
+
     const blocks = await page.evaluate(() =>
       [...document.querySelectorAll('script[type="application/ld+json"]')].map(
         (s) => s.textContent ?? "",
       ),
     );
-    const car = blocks.map((b) => JSON.parse(b)).find((b) => b["@type"] === "Car");
+    const parsed = blocks.map((b) => JSON.parse(b));
 
-    expect(car).toBeTruthy();
-    expect(car.offers.priceCurrency).toBe("ZAR");
-    expect(car.offers.seller["@type"]).toBe("AutoDealer");
-    expect(car.mileageFromOdometer.unitCode).toBe("KMT");
-    // A rating that has not been collected must never be marked up.
-    expect(car.offers.seller.aggregateRating).toBeUndefined();
+    const demonstration = await page
+      .getByText(/Demonstration listing/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
+
+    const car = parsed.find((b) => b["@type"] === "Car");
+
+    if (demonstration) {
+      expect(car, "a demonstration listing published a Car offer to search engines").toBeFalsy();
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    } else {
+      expect(car).toBeTruthy();
+      expect(car.offers.priceCurrency).toBe("ZAR");
+      expect(car.offers.seller["@type"]).toBe("AutoDealer");
+      expect(car.mileageFromOdometer.unitCode).toBe("KMT");
+      // A rating that has not been collected must never be marked up.
+      expect(car.offers.seller.aggregateRating).toBeUndefined();
+    }
+
+    // Whatever the listing is, navigation markup is always honest and always present.
+    expect(parsed.find((b) => b["@type"] === "BreadcrumbList")).toBeTruthy();
   });
 
   test("has no axe violations", async ({ page }) => {
@@ -268,15 +293,39 @@ test.describe("crawlability", () => {
     expect(body).toMatch(/Disallow.*sort=/);
   });
 
-  test("the sitemap lists real vehicles and no blocked URLs", async ({ request }) => {
+  test("the sitemap offers nothing that is blocked, and nothing that is not real", async ({
+    request,
+  }) => {
     const response = await request.get("/sitemap.xml");
     expect(response.status()).toBe(200);
     const body = await response.text();
 
-    expect(body).toMatch(/<loc>[^<]*\/vehicles\//);
-    expect(body).toMatch(/<loc>[^<]*\/dealers\//);
+    // The pages that are always real and always worth crawling.
+    expect(body).toMatch(/<loc>[^<]*\/cars<\/loc>/);
+    expect(body).toMatch(/<loc>[^<]*\/how-verification-works/);
+
     // Submitting a URL that robots.txt blocks is a contradiction Google reports as an error.
     expect(body).not.toMatch(/<loc>[^<]*\?/);
     expect(body).not.toMatch(/<loc>[^<]*\/admin/);
+
+    /*
+     * Every listing and dealership in the sitemap must be one that exists.
+     *
+     * A sitemap is a request to index, and the seed carries 311 listings and 12 dealerships
+     * that are not real. Each vehicle URL here is fetched and checked for the noindex the
+     * demonstration pages carry: offering a page for indexing while telling the crawler not
+     * to index it is the contradiction this guards against.
+     */
+    const listed = [...body.matchAll(/<loc>([^<]*\/(?:vehicles|dealers)\/[^<]*)<\/loc>/g)].map(
+      (m) => m[1] as string,
+    );
+
+    for (const url of listed.slice(0, 12)) {
+      const page = await request.get(new URL(url).pathname);
+      const html = await page.text();
+      expect(html, `${url} is in the sitemap and marked noindex`).not.toMatch(
+        /<meta name="robots" content="noindex/,
+      );
+    }
   });
 });

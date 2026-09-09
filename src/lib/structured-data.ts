@@ -26,8 +26,28 @@ const abs = (path: string) => `${SITE}${path}`;
 const productionDate = (year: number | null | undefined) =>
   typeof year === "number" ? `${year}-01-01` : undefined;
 
+/**
+ * Demonstration records are never published to a search engine.
+ *
+ * The seed carries 311 listings and 12 dealerships that do not exist, complete with street
+ * addresses, telephone numbers and trading hours, and every one of those pages says so in
+ * its own copy. Emitting schema.org for them says the opposite to the only reader that
+ * cannot see the disclaimer: Google would index fabricated South African car dealerships as
+ * Local Businesses and fabricated cars as live Offers with prices and stock availability.
+ *
+ * The client's brief forbids fabricating a business, a statistic or a listing. A structured
+ * data block is a machine-readable assertion that something is real, so this is the same
+ * rule, enforced where nobody would otherwise look.
+ */
+export function isDemonstrationRecord(record: { isDemonstration?: boolean | null } | null) {
+  return Boolean(record?.isDemonstration);
+}
+
 export function vehicleJsonLd(vehicle: Vehicle, canonicalPath: string) {
   const dealer = populated(vehicle.dealer);
+
+  // See isDemonstrationRecord. Null means the page renders no script tag at all.
+  if (isDemonstrationRecord(vehicle) || isDemonstrationRecord(dealer)) return null;
   const branch = populated(vehicle.branch);
   const city = branch ? relName(branch.city) : null;
   const province = branch ? relName(branch.province) : null;
@@ -263,13 +283,14 @@ export function websiteJsonLd() {
     "@type": "WebSite",
     name: "Rynet Showroom",
     url: SITE,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE}/cars?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    /*
+     * No SearchAction.
+     *
+     * It pointed at /cars?q={search_term_string}, and robots.txt disallows /cars? outright,
+     * so the markup invited Google to use a URL the same site tells it not to fetch. The
+     * honest options were to open that path to crawlers, which would expose every filter
+     * combination as a duplicate, or to drop the action. A sitelinks search box is a nicety;
+     * a contradiction between the markup and robots.txt is a reported error.
+     */
   };
 }

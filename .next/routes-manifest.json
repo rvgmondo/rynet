@@ -123,7 +123,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "cae32979521dd1fca56223aaeb0e8be0b7879af8"
+          "value": "31a14c2163b5c7f6755d552bd99e181158f8c7c2"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -133,7 +133,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "cae32979521dd1fca56223aaeb0e8be0b7879af8"
+          "value": "31a14c2163b5c7f6755d552bd99e181158f8c7c2"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -318,6 +318,12 @@
       "namedRegex": "^/icon(?:/)?$"
     },
     {
+      "page": "/opengraph-image-nkrg6m",
+      "regex": "^/opengraph\\-image\\-nkrg6m(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/opengraph\\-image\\-nkrg6m(?:/)?$"
+    },
+    {
       "page": "/privacy",
       "regex": "^/privacy(?:/)?$",
       "routeKeys": {},
@@ -366,5 +372,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "cae32979521dd1fca56223aaeb0e8be0b7879af8"
+  "deploymentId": "31a14c2163b5c7f6755d552bd99e181158f8c7c2"
 }

@@ -15,6 +15,7 @@
   "/(marketplace)/dealers/[slug]/page": "/dealers/[slug]",
   "/(marketplace)/dealers/page": "/dealers",
   "/(marketplace)/how-verification-works/page": "/how-verification-works",
+  "/(marketplace)/opengraph-image-nkrg6m/route": "/opengraph-image-nkrg6m",
   "/(marketplace)/page": "/",
   "/(marketplace)/privacy/page": "/privacy",
   "/(marketplace)/sell-to-a-dealer/page": "/sell-to-a-dealer",

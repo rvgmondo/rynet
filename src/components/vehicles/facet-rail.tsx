@@ -50,22 +50,82 @@ export async function FacetRail({ active }: { active: Active }) {
    *
    * Each dimension is counted against the filtered set MINUS its own filter, which is the
    * standard facet semantics: ticking "Toyota" must not collapse the make list to Toyota
-   * alone. At this volume a query per option is instant. The single-round-trip CTE
-   * described in docs/ARCHITECTURE.md replaces this when the index table lands.
+   * alone. Every OTHER active filter does apply, and that is the part that was missing.
+   *
+   * Only `make` was being carried, so on a filtered result set the rail offered options that
+   * lead nowhere with numbers that were plainly larger than the result count above them. On
+   * "Bakkie, Diesel" it still advertised every hatchback in the catalogue. A facet count
+   * that does not agree with what clicking it produces is worse than no count, because the
+   * count is the whole reason to trust the rail.
+   *
+   * At this volume a query per option is instant. The single-round-trip CTE described in
+   * docs/ARCHITECTURE.md replaces this when the index table lands.
    */
+  const slugToId = async (collection: string, slug?: string) => {
+    if (!slug) return undefined;
+    const found = await payload.find({
+      collection: collection as never,
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: 0,
+    });
+    return (found.docs[0] as { id: number } | undefined)?.id;
+  };
+
+  // Resolved once, not once per option. There are five dimensions and up to a hundred
+  // options, so doing this inside the loop was a hundred redundant lookups per render.
+  const [activeMakeId, activeBodyId, activeFuelId, activeTransmissionId, activeProvinceId] =
+    await Promise.all([
+      slugToId("makes", active.make),
+      slugToId("body-types", active.body),
+      slugToId("fuel-types", active.fuel),
+      slugToId("transmissions", active.transmission),
+      slugToId("provinces", active.province),
+    ]);
+
+  const activeBranchIds = activeProvinceId
+    ? (
+        await payload.find({
+          collection: "branches",
+          where: { province: { equals: activeProvinceId } },
+          limit: 500,
+          depth: 0,
+        })
+      ).docs.map((b) => b.id)
+    : undefined;
+
+  const min = Number(active.minPrice) || undefined;
+  const max = Number(active.maxPrice) || undefined;
+
   const countFor = async (field: string, id: number, exclude: keyof Active): Promise<number> => {
-    const where: Record<string, unknown> = { status: { equals: "live" }, [field]: { equals: id } };
-    // Other active filters still apply; this dimension's own does not.
-    if (active.make && exclude !== "make") {
-      const m = await payload.find({
-        collection: "makes",
-        where: { slug: { equals: active.make } },
-        limit: 1,
-        depth: 0,
-      });
-      if (m.docs[0]) where.make = { equals: m.docs[0].id };
+    const clauses: Record<string, unknown>[] = [
+      { status: { equals: "live" } },
+      { [field]: { equals: id } },
+    ];
+
+    if (activeMakeId && exclude !== "make") clauses.push({ make: { equals: activeMakeId } });
+    if (activeBodyId && exclude !== "body") clauses.push({ bodyType: { equals: activeBodyId } });
+    if (activeFuelId && exclude !== "fuel") clauses.push({ fuelType: { equals: activeFuelId } });
+    if (activeTransmissionId && exclude !== "transmission") {
+      clauses.push({ transmission: { equals: activeTransmissionId } });
     }
-    const result = await payload.count({ collection: "vehicles", where: where as never });
+    if (activeBranchIds && exclude !== "province") {
+      // A province with no branches means no stock, and an empty `in` matches everything.
+      clauses.push({ branch: { in: activeBranchIds.length > 0 ? activeBranchIds : [-1] } });
+    }
+    if (min || max) {
+      clauses.push({
+        price: {
+          ...(min ? { greater_than_equal: min } : {}),
+          ...(max ? { less_than_equal: max } : {}),
+        },
+      });
+    }
+
+    const result = await payload.count({
+      collection: "vehicles",
+      where: { and: clauses } as never,
+    });
     return result.totalDocs;
   };
 
@@ -88,6 +148,54 @@ export async function FacetRail({ active }: { active: Active }) {
     withCounts(fuels.docs as never, "fuelType", "fuel"),
     withCounts(transmissions.docs as never, "transmission", "transmission"),
   ]);
+
+  /*
+   * Province counts, which go through the branch and so cannot use `countFor`.
+   *
+   * They used to render as -1, the "not counted" sentinel, so the one dimension a South
+   * African buyer filters by first was the only one with no numbers beside it.
+   */
+  const provinceOptions = await Promise.all(
+    (provinces.docs as never as { id: number; name: string; slug: string }[]).map(
+      async (province) => {
+        const branches = await payload.find({
+          collection: "branches",
+          where: { province: { equals: province.id } },
+          limit: 500,
+          depth: 0,
+        });
+        const ids = branches.docs.map((b) => b.id);
+        if (ids.length === 0) return { label: province.name, value: province.slug, count: 0 };
+
+        const counted = await payload.count({
+          collection: "vehicles",
+          where: {
+            and: [
+              { status: { equals: "live" } },
+              { branch: { in: ids } },
+              // Every other active filter applies. This dimension's own does not.
+              ...(activeMakeId ? [{ make: { equals: activeMakeId } }] : []),
+              ...(activeBodyId ? [{ bodyType: { equals: activeBodyId } }] : []),
+              ...(activeFuelId ? [{ fuelType: { equals: activeFuelId } }] : []),
+              ...(activeTransmissionId ? [{ transmission: { equals: activeTransmissionId } }] : []),
+              ...(min || max
+                ? [
+                    {
+                      price: {
+                        ...(min ? { greater_than_equal: min } : {}),
+                        ...(max ? { less_than_equal: max } : {}),
+                      },
+                    },
+                  ]
+                : []),
+            ],
+          } as never,
+        });
+
+        return { label: province.name, value: province.slug, count: counted.totalDocs };
+      },
+    ),
+  );
 
   return (
     <aside
@@ -141,11 +249,7 @@ export async function FacetRail({ active }: { active: Active }) {
         <FacetGroup
           legend="Province"
           name="province"
-          options={(provinces.docs as never as { name: string; slug: string }[]).map((p) => ({
-            label: p.name,
-            value: p.slug,
-            count: -1,
-          }))}
+          options={provinceOptions}
           active={active.province}
         />
 

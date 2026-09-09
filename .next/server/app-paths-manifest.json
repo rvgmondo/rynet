@@ -15,6 +15,7 @@
   "/(marketplace)/dealers/[slug]/page": "app/(marketplace)/dealers/[slug]/page.js",
   "/(marketplace)/dealers/page": "app/(marketplace)/dealers/page.js",
   "/(marketplace)/how-verification-works/page": "app/(marketplace)/how-verification-works/page.js",
+  "/(marketplace)/opengraph-image-nkrg6m/route": "app/(marketplace)/opengraph-image-nkrg6m/route.js",
   "/(marketplace)/page": "app/(marketplace)/page.js",
   "/(marketplace)/privacy/page": "app/(marketplace)/privacy/page.js",
   "/(marketplace)/sell-to-a-dealer/page": "app/(marketplace)/sell-to-a-dealer/page.js",

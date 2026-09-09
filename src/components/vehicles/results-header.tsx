@@ -32,6 +32,8 @@ export function ResultsHeader({
   query,
   understood = [],
   ignored = [],
+  demonstrationCount = 0,
+  filters = [],
 }: {
   total: number;
   page: number;
@@ -44,6 +46,10 @@ export function ResultsHeader({
   understood?: string[];
   /** The parts that did not. Shown, never swallowed. */
   ignored?: string[];
+  /** How many of these results are seeded example stock rather than cars for sale. */
+  demonstrationCount?: number;
+  /** Everything the buyer arrived with, so sorting does not throw their filters away. */
+  filters?: { key: string; value: string }[];
 }) {
   return (
     <div className="mb-6">
@@ -77,6 +83,15 @@ export function ResultsHeader({
         </a>
 
         <form method="get" action="/cars" className="flex items-end gap-3">
+          {/*
+            A GET form submits only its own controls. Without these, choosing a sort order
+            discarded the search term and every ticked facet and dropped the buyer back into
+            the full catalogue, which is the same bug the facet rail had.
+          */}
+          {filters.map((filter) => (
+            <input key={filter.key} type="hidden" name={filter.key} value={filter.value} />
+          ))}
+
           <div>
             <label htmlFor="sort" className="rn-label block text-ink-muted">
               Sort by
@@ -126,6 +141,28 @@ export function ResultsHeader({
       ) : null}
 
       <hr className="rn-rule mt-6" />
+
+      {/*
+        Said once, at the top, where a person reads before they scroll.
+        ---------------------------------------------------------------
+        Every listing here is currently seeded example stock, and until this line existed the
+        only sign of that on a results page was a hairline under a dealer name. A page headed
+        "311 cars from verified dealerships" with nothing to correct it is a fabricated claim,
+        whatever the individual cards do. It disappears on its own once real stock outnumbers
+        the seed.
+      */}
+      {demonstrationCount > 0 ? (
+        <p className="mt-3 border-y border-line py-3 text-sm text-ink-secondary">
+          <strong className="font-semibold text-ink">
+            {demonstrationCount === total ? "Every listing here is an example." : null}
+            {demonstrationCount !== total
+              ? `${demonstrationCount} of these listings are examples.`
+              : null}
+          </strong>{" "}
+          They were seeded to build and test the platform. The cars are not for sale and the
+          dealerships are not real businesses. Every one is marked on its own card.
+        </p>
+      ) : null}
 
       <p className="rn-label rn-label--light mt-3 text-ink-muted">
         Colour fields are each car's own recorded paint, set to one tone. Not photographs.

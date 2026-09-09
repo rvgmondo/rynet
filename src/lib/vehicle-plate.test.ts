@@ -247,20 +247,31 @@ describe("plateFor", () => {
     expect(contrastRatio(PLATE_INK, plate.fieldDark)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it("draws primer rather than inventing a colour", () => {
-    // "Unknown" on a gallery label is worse than no label, and a swatch with no name is
-    // half a record rather than a fact about the car.
-    for (const missing of [
-      { colourName: null, colourSwatch: "#2C5C8A" },
-      { colourName: "   ", colourSwatch: "#2C5C8A" },
-      { colourName: "Aegean Blue", colourSwatch: null },
-      {},
-    ]) {
+  it("draws primer when there is no hue to draw", () => {
+    // The FIELD needs a swatch. Without one there is nothing to derive a hue from, so the
+    // plate is an unpainted panel whether or not the colour has a name.
+    for (const missing of [{ colourName: "Cosmic Bronze Metallic" }, { colourSwatch: null }, {}]) {
       const plate = plateFor(missing);
       expect(plate.isPrimer, JSON.stringify(missing)).toBe(true);
-      expect(plate.colourName).toBeNull();
       expect(plate.field).toBe(primerField("light"));
     }
+  });
+
+  it("still prints the manufacturer's name when only the swatch is missing", () => {
+    /*
+     * `swatch` is optional on the colours taxonomy, so a dealership recording "Cosmic Bronze
+     * Metallic" with no hex has told the truth about the car. Demanding both and falling back
+     * to "Colour not supplied" said the colour was unknown when it had been supplied.
+     */
+    const plate = plateFor({ colourName: "Cosmic Bronze Metallic" });
+    expect(plate.colourName).toBe("Cosmic Bronze Metallic");
+    expect(plate.isPrimer).toBe(true);
+  });
+
+  it("prints no label rather than an invented one", () => {
+    // "Unknown" on a gallery label is worse than no label.
+    expect(plateFor({ colourName: null, colourSwatch: "#2C5C8A" }).colourName).toBeNull();
+    expect(plateFor({ colourName: "   ", colourSwatch: "#2C5C8A" }).colourName).toBeNull();
   });
 
   it("survives a listing with nothing useful on it", () => {

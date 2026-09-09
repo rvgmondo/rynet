@@ -84,9 +84,21 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
         publicRef: vehicle.publicRef ?? "",
       }),
     },
-    // A sold listing keeps its URL and its ranking for the window, but it should not be
-    // pulled into new results as if it were available.
-    robots: sold ? { index: false, follow: true } : { index: true, follow: true },
+    /*
+     * Two reasons to withhold a page from the index, and neither is a reason to stop
+     * crawling it.
+     *
+     * A SOLD listing keeps its URL and its ranking for the ninety day window, but it should
+     * not be pulled into new results as if it were available.
+     *
+     * A DEMONSTRATION listing describes a car that does not exist, sold by a business that
+     * does not exist. The page says so in its own copy; this says the same thing to the
+     * reader that cannot see the copy.
+     */
+    robots:
+      sold || vehicle.isDemonstration
+        ? { index: false, follow: true }
+        : { index: true, follow: true },
   };
 }
 
@@ -135,13 +147,21 @@ export default async function VehiclePage({ params }: { params: Params }) {
         deliberately absent: the VIN is encrypted at rest and never leaves the server for a
         public request, so it cannot be published here either.
       */}
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and the payload is serialised by us from typed data rather than taken from input.
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(vehicleJsonLd(vehicle, canonical)),
-        }}
-      />
+      {/*
+        No script tag at all for a demonstration listing. vehicleJsonLd returns null for
+        those, and rendering `null` into JSON would publish the string "null" as structured
+        data, which is worse than publishing nothing.
+      */}
+      {(() => {
+        const jsonLd = vehicleJsonLd(vehicle, canonical);
+        return jsonLd ? (
+          <script
+            type="application/ld+json"
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and the payload is serialised by us from typed data rather than taken from input.
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        ) : null;
+      })()}
 
       <div className="container-page py-6">
         <Breadcrumbs
