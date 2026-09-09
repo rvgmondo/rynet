@@ -142,6 +142,19 @@ cPanel, Advanced, **Cron Jobs**. Every five minutes:
 It exits in well under a second when the commit has not changed, so this is cheap. Set the cron
 email to yours and you will hear about a failed deploy without watching for it.
 
+### 6. The trade-in distribution job
+
+Sellers who submit at `/sell-to-a-dealer` are told their details go to up to five verified
+dealerships. This is what does it. Add a second cron job, every fifteen minutes:
+
+```
+*/15 * * * * cd /home/rynetco/rynet && /bin/bash -lc 'source $(ls -d ~/nodevenv/rynet/*/bin/activate | sort -V | tail -1) && npx tsx src/jobs/distribute-trade-ins.ts' >> /home/rynetco/trade-ins.log 2>&1
+```
+
+It is idempotent: a lead that has already been sent somewhere is skipped, so running it twice
+sends nothing twice. Run it by hand first, with `--dry-run` on the end, to see what it would do
+without writing anything.
+
 That is the last time you touch the host for a deploy.
 
 ---

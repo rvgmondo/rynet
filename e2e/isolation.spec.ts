@@ -65,6 +65,7 @@ let dealerAId: number;
 let dealerBId: number;
 let leadAId: number;
 let leadBId: number;
+let tradeInLeadId: number;
 let vehicleAId: number;
 let vehicleBId: number;
 
@@ -120,8 +121,10 @@ test.beforeAll(async ({ playwright, baseURL }) => {
   const leads = await (await request.get("/api/leads?limit=500&depth=0", as(admin))).json();
   leadAId = leads.docs.find((d: { name: string }) => d.name === FIXTURES.leadNameA)?.id;
   leadBId = leads.docs.find((d: { name: string }) => d.name === FIXTURES.leadNameB)?.id;
+  tradeInLeadId = leads.docs.find((d: { name: string }) => d.name === FIXTURES.tradeInLeadName)?.id;
   expect(leadAId, "fixture lead A is missing, run npm run seed:fixtures").toBeTruthy();
   expect(leadBId, "fixture lead B is missing, run npm run seed:fixtures").toBeTruthy();
+  expect(tradeInLeadId, "the trade-in fixture is missing, run npm run seed:fixtures").toBeTruthy();
 
   const stockOf = async (dealer: number) => {
     const res = await request.get(
@@ -163,8 +166,15 @@ test.describe("dealer A against dealer B's leads", () => {
       0,
     );
 
+    // Every lead is either owned by dealer A, or a trade-in that was disclosed to it. Those
+    // are the only two ways in, and a lead that is neither is a leak.
     for (const lead of body.docs) {
-      expect(idOf(lead.dealer), `lead ${lead.id} belongs to another dealership`).toBe(dealerAId);
+      const owned = idOf(lead.dealer) === dealerAId;
+      const disclosed = (lead.disclosedTo ?? []).map(idOf).includes(dealerAId);
+      expect(
+        owned || disclosed,
+        `lead ${lead.id} is neither owned by nor disclosed to this dealership`,
+      ).toBe(true);
     }
     expect(body.docs.map((d: { id: number }) => d.id)).not.toContain(leadBId);
   });
@@ -209,7 +219,11 @@ test.describe("dealer A against dealer B's leads", () => {
     expect(res.status()).toBe(200);
 
     const body = await res.json();
-    for (const lead of body.docs) expect(idOf(lead.dealer)).toBe(dealerAId);
+    for (const lead of body.docs) {
+      const owned = idOf(lead.dealer) === dealerAId;
+      const disclosed = (lead.disclosedTo ?? []).map(idOf).includes(dealerAId);
+      expect(owned || disclosed, `lead ${lead.id} reached a sales agent it should not`).toBe(true);
+    }
     expect(body.docs.map((d: { id: number }) => d.id)).not.toContain(leadBId);
   });
 
@@ -226,6 +240,83 @@ test.describe("dealer A against dealer B's leads", () => {
 
     const after = await request.get(`/api/leads/${leadAId}?depth=0`, as(admin));
     expect(after.status(), "the lead must still exist").toBe(200);
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// A trade-in belongs to nobody and is shown to the few it was disclosed to.
+// ---------------------------------------------------------------------------------------
+
+test.describe("a trade-in disclosed to dealer A", () => {
+  /**
+   * These leads break the rule every other lead follows. A trade-in has no `dealer`, because it
+   * belongs to Rynet while it is offered around, and up to five dealerships can see it. That is
+   * a second way into the most sensitive table on the platform, so it gets its own tests
+   * rather than being assumed to fall out of the existing ones.
+   */
+  test("is readable by the dealership it was disclosed to", async ({ request }) => {
+    const res = await request.get(`/api/leads/${tradeInLeadId}?depth=0`, as(ownerA));
+    expect(res.status(), "the disclosure did not grant access").toBe(200);
+
+    const lead = await res.json();
+    expect(lead.name).toBe(FIXTURES.tradeInLeadName);
+    expect(lead.dealer, "a trade-in belongs to Rynet, not to a dealership").toBeFalsy();
+  });
+
+  test("is invisible to a dealership it was not disclosed to", async ({ request }) => {
+    const byId = await request.get(`/api/leads/${tradeInLeadId}?depth=0`, as(ownerB));
+    expect([403, 404], `expected a refusal, got ${byId.status()}`).toContain(byId.status());
+    expect(await byId.text()).not.toContain(FIXTURES.tradeInLeadName);
+
+    // And it must not turn up in a listing either, which is the route somebody would actually
+    // take rather than guessing an id.
+    const list = await (await request.get("/api/leads?limit=500&depth=0", as(ownerB))).json();
+    expect(list.docs.map((d: { id: number }) => d.id)).not.toContain(tradeInLeadId);
+  });
+
+  test("cannot be reached by naming the disclosure in a query", async ({ request }) => {
+    const res = await request.get(
+      `/api/leads?where[disclosedTo][in]=${dealerAId}&limit=500&depth=0`,
+      as(ownerB),
+    );
+    expect(res.status()).toBe(200);
+
+    const body = await res.json();
+    expect(body.docs, "asking for dealer A's disclosures must not widen the scope").toEqual([]);
+  });
+
+  test("cannot be edited by a dealership that only had it disclosed", async ({ request }) => {
+    // Five dealerships can see one of these. If any of them could mark it sold or rewrite the
+    // seller's number, they would be editing each other's view of the same record.
+    const res = await request.patch(`/api/leads/${tradeInLeadId}`, {
+      ...as(ownerA),
+      data: { status: "lost", name: "Owned by dealer A" },
+    });
+    expect([403, 404], `expected a refusal, got ${res.status()}`).toContain(res.status());
+
+    const after = await (
+      await request.get(`/api/leads/${tradeInLeadId}?depth=0`, as(admin))
+    ).json();
+    expect(after.name).toBe(FIXTURES.tradeInLeadName);
+    expect(after.status).toBe("new");
+  });
+
+  test("cannot be disclosed to yourself", async ({ request }) => {
+    // The obvious attack once disclosure grants access: write yourself into the list.
+    const res = await request.patch(`/api/leads/${tradeInLeadId}`, {
+      ...as(ownerB),
+      data: { disclosures: [{ dealer: dealerBId, disclosedAt: new Date().toISOString() }] },
+    });
+    expect([403, 404], `expected a refusal, got ${res.status()}`).toContain(res.status());
+
+    const after = await (
+      await request.get(`/api/leads/${tradeInLeadId}?depth=1`, as(admin))
+    ).json();
+    const disclosed = (after.disclosures ?? []).map((d: { dealer: unknown }) => idOf(d.dealer));
+    expect(disclosed, "a dealership wrote itself into the disclosure list").not.toContain(
+      dealerBId,
+    );
+    expect(disclosed).toEqual([dealerAId]);
   });
 });
 

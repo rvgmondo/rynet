@@ -59,6 +59,9 @@ sensitive field readable, from inside the tenant. Run through this before mergin
       the form. Move it into `access`.
 - [ ] **Can a lower rank inside a dealership reach it?** Sales agent, manager, principal. Check the
       ladder in `roles.ts`.
+- [ ] **Does anything grant access other than owning the row?** `leads.disclosedTo` does: a
+      trade-in has no dealer and up to five dealerships can read it. A second route into a table
+      needs its own tests rather than being assumed to fall out of the first one's.
 - [ ] **Add the case to `e2e/isolation.spec.ts`.** The suite only covers what someone added to it.
 - [ ] **Would a refused write be verified twice?** Assert the status, then read the row back as a
       platform admin. A refusal that did not actually refuse looks identical from the response.
@@ -177,6 +180,7 @@ Every item runs on every push and a failure blocks the deploy branch.
 | A private individual cannot list a vehicle | Anonymous and authenticated buyer, asserting 403 specifically |
 | A sales agent cannot escalate inside their own dealership | 6 tests |
 | A dealership cannot verify, rate or accredit itself | 4 tests |
+| A trade-in is visible only to the dealerships it was disclosed to, and none of them can write itself in | 5 tests |
 | A password alone will not sign in an enrolled account | 16 end-to-end tests against the login endpoint |
 | TOTP agrees with every published RFC vector | 51 unit tests |
 | No VIN reaches the public, or another dealership | 3 tests, against a row that actually has a VIN |

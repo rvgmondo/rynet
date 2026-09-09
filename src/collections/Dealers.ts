@@ -175,6 +175,43 @@ export const Dealers: CollectionConfig = {
             },
           ],
         },
+        /**
+         * Trade-ins.
+         *
+         * A dealership decides for itself whether it wants private sellers' details and which
+         * makes it will look at, so these are writable by the dealership rather than by Rynet.
+         * That is the opposite of `accreditations` or `verificationStatus`, which are Rynet's
+         * assessment and platform staff only.
+         *
+         * `acceptsTradeIns` defaults to FALSE and that default is the important part. It gates
+         * whether a stranger's name and phone number are sent to this business at all, and
+         * nobody should receive personal information because a checkbox happened to start on.
+         */
+        {
+          label: "Trade-ins",
+          fields: [
+            {
+              name: "acceptsTradeIns",
+              type: "checkbox",
+              defaultValue: false,
+              admin: {
+                description:
+                  "Receive private sellers who want to sell a car, from /sell-to-a-dealer. Their name and number are sent to you, so this stays off until the dealership asks for it.",
+              },
+            },
+            {
+              name: "buysMakes",
+              type: "relationship",
+              relationTo: "makes",
+              hasMany: true,
+              admin: {
+                condition: (data) => Boolean(data?.acceptsTradeIns),
+                description:
+                  "Leave empty to be offered anything. Naming makes here means you are only sent those, which is fewer leads but less of your time wasted.",
+              },
+            },
+          ],
+        },
         {
           label: "Contact",
           fields: [

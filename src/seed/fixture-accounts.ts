@@ -28,8 +28,10 @@ export const FIXTURES = {
    */
   twoFactor: "twofactor@rynet.test",
   /** Distinctive enough that a test can assert on the string and mean it. */
+  /** A trade-in disclosed to dealer A only. Dealer B must never see it. */
   leadNameA: "Isolation Fixture Lead A",
   leadNameB: "Isolation Fixture Lead B",
+  tradeInLeadName: "Isolation Fixture Trade In A",
 } as const;
 
 export const DEALER_A_SLUG = "highveld-motor-group";

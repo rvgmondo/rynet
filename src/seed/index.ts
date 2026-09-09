@@ -288,7 +288,25 @@ async function main() {
       depth: 0,
     });
     if (existing.docs[0]) {
-      log(`  ${dealer.tradingName}: already seeded, skipping`);
+      /**
+       * Reconcile the trade-in settings rather than skipping outright.
+       *
+       * These were added after the demonstration dealerships already existed, and a seed that
+       * only ever creates leaves an old database permanently different from a fresh clone.
+       * That difference is exactly the kind that makes a feature look broken on one machine
+       * and fine on another. Everything else is left alone: this is not a re-seed.
+       */
+      await payload.update({
+        collection: "dealers",
+        id: existing.docs[0].id,
+        data: {
+          acceptsTradeIns: dealer.acceptsTradeIns ?? false,
+          buysMakes: (dealer.buysMakes ?? [])
+            .map((m) => makeIds.get(m))
+            .filter((id): id is number => id !== undefined),
+        },
+      });
+      log(`  ${dealer.tradingName}: already seeded, trade-in settings reconciled`);
       continue;
     }
 
@@ -311,6 +329,16 @@ async function main() {
           .filter((id): id is number => id !== undefined),
         accreditations: dealer.accreditations
           .map((a) => accreditationIds.get(a))
+          .filter((id): id is number => id !== undefined),
+        /**
+         * A deliberate mix, so the distribution job has something real to sort out rather
+         * than twelve identical dealerships. Two do not want trade-ins at all, which is the
+         * case most likely to be got wrong: a dealership that never opted in must never be
+         * sent a stranger's phone number.
+         */
+        acceptsTradeIns: dealer.acceptsTradeIns ?? false,
+        buysMakes: (dealer.buysMakes ?? [])
+          .map((m) => makeIds.get(m))
           .filter((id): id is number => id !== undefined),
         principal: {
           name: dealer.principalName,

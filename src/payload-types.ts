@@ -371,6 +371,14 @@ export interface Dealer {
    * Internal. Never shown to the dealership or the public.
    */
   verificationNotes?: string | null;
+  /**
+   * Receive private sellers who want to sell a car, from /sell-to-a-dealer. Their name and number are sent to you, so this stays off until the dealership asks for it.
+   */
+  acceptsTradeIns?: boolean | null;
+  /**
+   * Leave empty to be offered anything. Naming makes here means you are only sent those, which is fewer leads but less of your time wasted.
+   */
+  buysMakes?: (number | Make)[] | null;
   principal?: {
     name?: string | null;
     email?: string | null;
@@ -1172,6 +1180,24 @@ export interface Lead {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Every dealership this seller's details were sent to, and when.
+   */
+  disclosures?:
+    | {
+        dealer: number | Dealer;
+        disclosedAt: string;
+        /**
+         * Set when the seller withdraws consent. The row stays: it is the record that the disclosure happened.
+         */
+        withdrawnAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Derived from the disclosures above.
+   */
+  disclosedTo?: (number | Dealer)[] | null;
   isDemonstration?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -1574,6 +1600,8 @@ export interface DealersSelect<T extends boolean = true> {
   vatNumber?: T;
   motorTradeNumber?: T;
   verificationNotes?: T;
+  acceptsTradeIns?: T;
+  buysMakes?: T;
   principal?:
     | T
     | {
@@ -1732,6 +1760,15 @@ export interface LeadsSelect<T extends boolean = true> {
         createdAt?: T;
         id?: T;
       };
+  disclosures?:
+    | T
+    | {
+        dealer?: T;
+        disclosedAt?: T;
+        withdrawnAt?: T;
+        id?: T;
+      };
+  disclosedTo?: T;
   isDemonstration?: T;
   updatedAt?: T;
   createdAt?: T;

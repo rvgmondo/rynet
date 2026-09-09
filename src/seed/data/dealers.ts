@@ -42,6 +42,15 @@ export type DealerSeed = {
   plan: string;
   principalName: string;
   branches: BranchSeed[];
+  /**
+   * Whether this dealership wants private sellers sent to it from /sell-to-a-dealer, and
+   * which makes it will look at. An empty `buysMakes` means anything.
+   *
+   * Two of the twelve are left off on purpose. A dealership that never opted in must never
+   * receive a stranger's name and phone number, and that is the case a test needs to cover.
+   */
+  acceptsTradeIns?: boolean;
+  buysMakes?: string[];
   /** Which makes this dealership stocks. Drives the generated inventory. */
   stockMakes: string[];
   /**
@@ -63,6 +72,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Highveld Motor Group",
     legalName: "Highveld Motor Group (Pty) Ltd",
     slug: "highveld-motor-group",
+    acceptsTradeIns: true,
+    buysMakes: ["Toyota", "Volkswagen"],
     foundedYear: 2004,
     about:
       "A three-branch group across Pretoria and Centurion, trading mainly in Toyota and Volkswagen. Most of the stock is one-owner and comes in on trade against new units, so the service history is usually complete and the books are usually there.",
@@ -102,6 +113,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Cape Peninsula Auto",
     legalName: "Cape Peninsula Auto (Pty) Ltd",
     slug: "cape-peninsula-auto",
+    acceptsTradeIns: true,
+    buysMakes: [],
     foundedYear: 2011,
     about:
       "Independent used-car dealership in Bellville, buying and selling across the Peninsula. Strong on hatchbacks and small SUVs, which is what moves in this market. Everything goes over a pit before it goes on the floor.",
@@ -131,6 +144,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Durban Bakkie Centre",
     legalName: "Durban Bakkie Centre CC",
     slug: "durban-bakkie-centre",
+    acceptsTradeIns: true,
+    buysMakes: ["Toyota", "Ford", "Isuzu"],
     foundedYear: 1998,
     about:
       "Bakkies, and not much else. Double cabs, single cabs, 4x2 and 4x4, mostly ex-fleet and ex-farm. If it has a load bin they will look at it, and they will tell you straight whether it has worked hard.",
@@ -160,6 +175,7 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Sandton Prestige Cars",
     legalName: "Sandton Prestige Cars (Pty) Ltd",
     slug: "sandton-prestige-cars",
+    acceptsTradeIns: false,
     foundedYear: 2015,
     about:
       "German premium, mostly under five years old and under 80 000km. Low volume, high spec. Every car comes with the full service history and a report from an independent workshop, and they will send you both before you drive out.",
@@ -189,6 +205,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Garden Route Motors",
     legalName: "Garden Route Motors (Pty) Ltd",
     slug: "garden-route-motors",
+    acceptsTradeIns: true,
+    buysMakes: [],
     foundedYear: 2008,
     about:
       "George-based, serving the Garden Route from Mossel Bay to Plettenberg Bay. Family owned, two branches, and they will deliver anywhere in the Western Cape on their own truck rather than putting your car on a transporter.",
@@ -217,6 +235,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "East Rand Value Cars",
     legalName: "East Rand Value Cars CC",
     slug: "east-rand-value-cars",
+    acceptsTradeIns: true,
+    buysMakes: [],
     foundedYear: 2013,
     about:
       "Entry-level and first-car stock on the East Rand. Nothing over R 350 000, most of it under R 250 000, and they work with the banks on affordability rather than pushing you into a balloon you cannot carry.",
@@ -257,6 +277,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Bay Auto Traders",
     legalName: "Bay Auto Traders (Pty) Ltd",
     slug: "bay-auto-traders",
+    acceptsTradeIns: true,
+    buysMakes: [],
     foundedYear: 2006,
     about:
       "Gqeberha independent with a workshop on site. Mixed stock, family cars and bakkies, and they do their own reconditioning rather than sending it out, which is why their turnaround on a trade-in is a week rather than a month.",
@@ -285,6 +307,7 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Umhlanga Auto Boutique",
     legalName: "Umhlanga Auto Boutique (Pty) Ltd",
     slug: "umhlanga-auto-boutique",
+    acceptsTradeIns: false,
     foundedYear: 2018,
     about:
       "Small, curated floor in Umhlanga Ridge. Around twenty units at a time, chosen rather than bought at auction. Appointment-based viewing, which suits the stock and suits the buyer who does not want to spend a Saturday on a forecourt.",
@@ -313,6 +336,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Free State Family Cars",
     legalName: "Free State Family Cars CC",
     slug: "free-state-family-cars",
+    acceptsTradeIns: true,
+    buysMakes: [],
     foundedYear: 2001,
     about:
       "Bloemfontein dealership trading across the Free State and Northern Cape. Seven-seaters, bakkies and anything that will do 300km of gravel without complaining. They know what the farm roads do to a vehicle and they price accordingly.",
@@ -342,6 +367,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Lowveld Vehicle Sales",
     legalName: "Lowveld Vehicle Sales (Pty) Ltd",
     slug: "lowveld-vehicle-sales",
+    acceptsTradeIns: true,
+    buysMakes: ["Toyota"],
     foundedYear: 2010,
     about:
       "Mbombela-based, serving the Lowveld and the Kruger gateway towns. Heavy on 4x4 and towing-capable stock, because that is what the area buys. Tow bars fitted and rated on site.",
@@ -371,6 +398,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Platinum Belt Motors",
     legalName: "Platinum Belt Motors (Pty) Ltd",
     slug: "platinum-belt-motors",
+    acceptsTradeIns: true,
+    buysMakes: [],
     foundedYear: 2014,
     about:
       "Rustenburg dealership working mainly with mine employees, so they understand payroll deduction and the paperwork that goes with it. Mixed stock, strong on double cabs and reliable commuters.",
@@ -399,6 +428,8 @@ export const DEALERS: DealerSeed[] = [
     tradingName: "Winelands Auto",
     legalName: "Winelands Auto (Pty) Ltd",
     slug: "winelands-auto",
+    acceptsTradeIns: true,
+    buysMakes: ["Volkswagen", "Audi"],
     foundedYear: 2009,
     about:
       "Paarl and Stellenbosch, trading mostly in low-mileage local cars. A lot of their stock comes from one-owner sales in the area, so the histories are clean and traceable, and they will show you the previous owner's service invoices.",

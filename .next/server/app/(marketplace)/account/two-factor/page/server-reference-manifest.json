@@ -1,6 +1,6 @@
 {
   "node": {
-    "00300c23bb8ab4b3307db55678a2dfc8d6407279ac": {
+    "00780bfae6d556f499fb076fca6e234986770ee50e": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -11,7 +11,7 @@
       "exportedName": "readTwoFactorStatus",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "60309ce21c63e72d57dcb8b58599b4c489642b1703": {
+    "603e5cc271d0f93b1c845eb045852dfdd7bd5b2238": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -22,7 +22,7 @@
       "exportedName": "regenerateRecoveryCodes",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "606d7a52a9ae8fc231263ba43d4540eef10b48abfe": {
+    "608980422a3f5554274a761532f90c71f9ba9124f7": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -30,10 +30,10 @@
           "codeHash": null
         }
       },
-      "exportedName": "disableTwoFactor",
+      "exportedName": "confirmTwoFactorSetup",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "60a4ff92d5314422d7f18895472fc02de07ad6ca1c": {
+    "60c1688caf0e5a93b79dcf38049a2e16f75ce170e9": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -44,7 +44,7 @@
       "exportedName": "beginTwoFactorSetup",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "60ec5b732b73b76bf467b77233f7dcf464f94cd4be": {
+    "60f0a83c96f2e75bdc1080a92fb3fe9694afcd9776": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -52,7 +52,7 @@
           "codeHash": null
         }
       },
-      "exportedName": "confirmTwoFactorSetup",
+      "exportedName": "disableTwoFactor",
       "filename": "src/app/actions/two-factor.ts"
     }
   },

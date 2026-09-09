@@ -171,6 +171,48 @@ async function main() {
   const leadA = await upsertLead(FIXTURES.leadNameA, dealerA.id);
   const leadB = await upsertLead(FIXTURES.leadNameB, dealerB.id);
 
+  /**
+   * A trade-in that belongs to nobody and has been disclosed to dealer A.
+   *
+   * This is the shape the distribution job produces: `dealer` is empty, because the lead
+   * belongs to Rynet while it is offered around, and `disclosures` says who was told. Dealer A
+   * must be able to read it and dealer B must not, which is a different rule from every other
+   * lead on the platform and therefore worth its own fixture.
+   */
+  const existingTradeIn = await payload.find({
+    collection: "leads",
+    where: { name: { equals: FIXTURES.tradeInLeadName } },
+    limit: 1,
+    depth: 0,
+  });
+
+  const tradeInLead =
+    existingTradeIn.docs[0] ??
+    (await payload.create({
+      collection: "leads",
+      data: {
+        type: "trade_in",
+        name: FIXTURES.tradeInLeadName,
+        email: "trade.in.fixture@rynet.test",
+        phone: "086 000 0000",
+        message: "Fixture for the isolation suite. Not a real seller.",
+        status: "new",
+        isDemonstration: true,
+        tradeIn: { make: "Toyota", model: "Hilux", modelYear: 2019, mileageKm: 120000 },
+      },
+    }));
+
+  // Reconciled every run, so a suite that failed halfway cannot leave it disclosed to the
+  // wrong dealership and turn a real isolation failure into an unreproducible one.
+  await payload.update({
+    collection: "leads",
+    id: tradeInLead.id,
+    data: {
+      dealer: null,
+      disclosures: [{ dealer: dealerA.id, disclosedAt: new Date().toISOString() }],
+    },
+  });
+
   // The suite attacks the trust fields, so it has to be able to put them back. Left to
   // drift, a single failing run would leave a dealership wearing a five star rating it was
   // never given, which is the exact lie the tests exist to prevent.
@@ -206,6 +248,7 @@ async function main() {
       "Isolation fixtures ready.",
       `  Dealer A: ${dealerA.tradingName} (id ${dealerA.id}), lead ${leadA.id}`,
       `  Dealer B: ${dealerB.tradingName} (id ${dealerB.id}), lead ${leadB.id}`,
+      `  Trade-in disclosed to dealer A only: lead ${tradeInLead.id}`,
       `  Accounts: ${FIXTURES.ownerA}, ${FIXTURES.salesA}, ${FIXTURES.ownerB}, ${FIXTURES.buyer}`,
       "",
     ].join("\n"),
