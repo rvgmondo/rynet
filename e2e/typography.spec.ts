@@ -11,15 +11,21 @@ import { expect, test } from "@playwright/test";
 
 test.describe("the numerals every price depends on", () => {
   test("tabular figures survive the font subset", async ({ page }) => {
-    await page.goto("/cars");
+    await page.goto("/cars", { waitUntil: "networkidle" });
 
     /*
-     * Read the family off a real price, and assert it IS the display face.
+     * Read the family off a real price, and prove the REAL face is what loaded.
      *
-     * Measuring a font stack that has silently fallen back is how this check passes on a
-     * warm cache and fails on a cold one: the metric-matched fallback has proportional
-     * digits, so the probe reports a three pixel difference and the failure looks like a
-     * lost OpenType feature when it is really a font that had not arrived yet.
+     * Measuring a stack that has silently fallen back is how this check passes on a warm
+     * cache and fails on a cold one: the metric-matched fallback has proportional digits, so
+     * the probe reports a three pixel difference and the failure looks like a lost OpenType
+     * feature when it is really a font that had not arrived yet.
+     *
+     * Note `document.fonts.ready` and NOT `document.fonts.load`. A next/font stack is
+     * `__Archivo_hash, __Archivo_Fallback_hash, "Archivo", system-ui, sans-serif`, and
+     * `load()` rejects with a NetworkError as soon as one family in the list has no face to
+     * fetch, which three of those never will. `ready` settles instead of throwing, and
+     * `check()` then answers the question that actually matters.
      */
     const family = await page
       .locator(".rn-figure")
@@ -27,10 +33,16 @@ test.describe("the numerals every price depends on", () => {
       .evaluate((el) => getComputedStyle(el).fontFamily);
     expect(family, "prices are not set in the display face").toMatch(/Archivo/i);
 
-    await page.evaluate(async (stack) => {
-      await document.fonts.load(`800 40px ${stack}`);
+    const loaded = await page.evaluate(async (stack) => {
       await document.fonts.ready;
+      const first = (stack.split(",")[0] ?? stack).trim().replace(/^["']|["']$/g, "");
+      return { first, available: document.fonts.check(`800 40px "${first}"`) };
     }, family);
+
+    expect(
+      loaded.available,
+      `the real ${loaded.first} face never loaded, so any measurement here would be of the metric-matched fallback rather than of the shipped font`,
+    ).toBe(true);
 
     /*
      * South African prices group thousands with a space, "R 249 900", so with proportional
