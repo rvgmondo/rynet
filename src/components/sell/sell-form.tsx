@@ -86,7 +86,7 @@ export function SellForm({ provinces }: { provinces: readonly { slug: string; na
 
   if (state.status === "success") {
     return (
-      <div role="status" className="rounded-lg bg-success-subtle p-8 text-center">
+      <div role="status" className="border-y-2 border-ink py-10 text-center">
         <CheckCircle2 aria-hidden="true" className="mx-auto size-9 text-success" />
         <p className="mt-4 font-display text-lg font-bold">{state.message}</p>
         <p className="measure mx-auto mt-3 text-sm text-ink-secondary">
@@ -106,17 +106,13 @@ export function SellForm({ provinces }: { provinces: readonly { slug: string; na
   }
 
   return (
-    <form
-      {...form.formProps}
-      action={formAction}
-      className="rounded-lg border border-line p-6 sm:p-8"
-    >
+    <form {...form.formProps} action={formAction} className="border-t-2 border-ink pt-8">
       {form.restored ? <RestoredNotice onStartAgain={form.startAgain} /> : null}
 
       <StepProgress step={form.step} steps={STEPS} />
 
       {state.status === "error" ? (
-        <p role="alert" className="mb-6 rounded-md bg-danger-subtle p-4 text-sm text-ink">
+        <p role="alert" className="mb-6 border-l-2 border-danger ps-4 text-sm text-ink">
           {state.message}
         </p>
       ) : null}
@@ -253,7 +249,7 @@ export function SellForm({ provinces }: { provinces: readonly { slug: string; na
             name="notes"
             rows={3}
             aria-describedby="notes-hint"
-            className="mt-1 w-full rounded-md border border-line-interactive bg-surface p-3 text-sm"
+            className="mt-2 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 py-2 text-base font-medium"
           />
         </Field>
       </fieldset>

@@ -51,7 +51,7 @@ export function AgencyHeader() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:bg-surface-sunken hover:text-ink"
+                  className="rn-label flex min-h-11 items-center px-3 text-ink-muted transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
                 >
                   {item.label}
                 </Link>
@@ -67,14 +67,19 @@ export function AgencyHeader() {
 
           <Link
             href="/digital/contact"
-            className="hidden min-h-11 items-center rounded-md bg-accent-solid px-4 text-sm font-semibold text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover sm:inline-flex"
+            /*
+              Ruled, not filled. The hero carries the one red call to action on this page,
+              and a second red block in the masthead directly above it spends the colour
+              twice on the same request.
+            */
+            className="rn-label hidden min-h-11 items-center border border-line-interactive px-4 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse sm:inline-flex"
           >
             Book a call
           </Link>
 
           <details className="group lg:hidden">
             <summary
-              className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center rounded-md text-ink-secondary hover:bg-surface-sunken hover:text-ink [&::-webkit-details-marker]:hidden"
+              className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center border border-line-interactive text-ink-secondary hover:bg-ink hover:text-ink-inverse [&::-webkit-details-marker]:hidden"
               aria-label="Menu"
             >
               <Menu aria-hidden="true" className="size-5 group-open:hidden" />
@@ -90,7 +95,7 @@ export function AgencyHeader() {
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="flex min-h-11 items-center rounded-md px-3 font-medium text-ink-secondary hover:bg-surface-sunken hover:text-ink"
+                      className="flex min-h-11 items-center border-b border-line px-3 font-medium text-ink-secondary hover:text-accent"
                     >
                       {item.label}
                     </Link>
@@ -99,7 +104,7 @@ export function AgencyHeader() {
                 <li>
                   <Link
                     href="/digital/contact"
-                    className="mt-2 flex min-h-11 items-center justify-center rounded-md bg-accent-solid px-4 font-semibold text-ink-on-accent hover:bg-accent-solid-hover"
+                    className="rn-label mt-2 flex min-h-11 items-center justify-center bg-accent-solid px-4 text-ink-on-accent hover:bg-accent-solid-hover"
                   >
                     Book a call
                   </Link>
@@ -107,7 +112,7 @@ export function AgencyHeader() {
                 <li className="mt-2 border-t border-line pt-2">
                   <Link
                     href="/"
-                    className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm text-ink-secondary hover:bg-surface-sunken hover:text-ink"
+                    className="flex min-h-11 items-center gap-2 px-3 text-sm text-ink-secondary hover:text-accent"
                   >
                     <ArrowLeft aria-hidden="true" className="size-4" />
                     Rynet Showroom, buy a car

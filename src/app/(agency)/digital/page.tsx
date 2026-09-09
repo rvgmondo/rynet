@@ -32,9 +32,9 @@ export default function AgencyHomePage() {
     <>
       <section className="border-b border-line bg-surface-sunken">
         <div className="container-page py-[var(--section-base)]">
-          <p className="font-display text-2xs font-bold uppercase tracking-[var(--tracking-widest)] text-accent">
-            Rynet Digital
-          </p>
+          {/* Muted, not red. The one filled red object above this fold is the call to
+              action; a red eyebrow above it competes with the thing it is meant to point at. */}
+          <p className="rn-label text-ink-muted">Rynet Digital</p>
           <h1 className="measure mt-4 text-4xl leading-[1.1] md:text-5xl">
             More test drives. More sales.
           </h1>
@@ -47,14 +47,14 @@ export default function AgencyHomePage() {
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               href="/digital/contact"
-              className="inline-flex min-h-11 items-center gap-2 rounded-md bg-accent-solid px-6 font-semibold text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover"
+              className="rn-label inline-flex min-h-12 items-center gap-2 bg-accent-solid px-6 text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover"
             >
               Book a call
               <ArrowRight aria-hidden="true" className="size-4" />
             </Link>
             <Link
               href="/digital/services"
-              className="inline-flex min-h-11 items-center rounded-md border-2 border-line-interactive px-6 font-semibold transition-colors duration-[var(--duration-micro)] hover:bg-surface-raised"
+              className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
             >
               What we do
             </Link>
@@ -110,7 +110,7 @@ export default function AgencyHomePage() {
                 body: "Structured data for vehicles and dealerships, canonical URLs, and a crawl policy so filter permutations do not dilute the pages that matter.",
               },
             ].map((item) => (
-              <li key={item.title} className="rounded-lg border border-line p-5">
+              <li key={item.title} className="border-t-2 border-ink pt-5">
                 <h3 className="text-base">{item.title}</h3>
                 <p className="mt-2 text-sm text-ink-secondary">{item.body}</p>
               </li>
@@ -135,7 +135,7 @@ export default function AgencyHomePage() {
           <ul className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {SERVICES.map(({ slug, Icon, name, summary }) => (
               <li key={slug}>
-                <article className="group relative flex h-full flex-col rounded-lg border border-line bg-surface p-6 transition-shadow duration-[var(--duration-element)] hover:shadow-(--rn-shadow-2)">
+                <article className="rn-card h-full p-6">
                   <Icon aria-hidden="true" className="size-6 text-accent" />
                   <h3 className="mt-4 text-lg leading-snug">
                     <Link
