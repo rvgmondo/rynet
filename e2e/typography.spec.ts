@@ -14,12 +14,30 @@ test.describe("the numerals every price depends on", () => {
     await page.goto("/cars");
 
     /*
-     * Font subsetting pipelines strip OpenType features silently. South African prices group
-     * thousands with a space, "R 249 900", so with proportional figures the digit widths
-     * jitter card to card and a column of twenty-four prices never aligns, at exactly the
-     * moment the grid is meant to read expensive.
+     * Read the family off a real price, and assert it IS the display face.
+     *
+     * Measuring a font stack that has silently fallen back is how this check passes on a
+     * warm cache and fails on a cold one: the metric-matched fallback has proportional
+     * digits, so the probe reports a three pixel difference and the failure looks like a
+     * lost OpenType feature when it is really a font that had not arrived yet.
      */
-    const widths = await page.evaluate(() => {
+    const family = await page
+      .locator(".rn-figure")
+      .first()
+      .evaluate((el) => getComputedStyle(el).fontFamily);
+    expect(family, "prices are not set in the display face").toMatch(/Archivo/i);
+
+    await page.evaluate(async (stack) => {
+      await document.fonts.load(`800 40px ${stack}`);
+      await document.fonts.ready;
+    }, family);
+
+    /*
+     * South African prices group thousands with a space, "R 249 900", so with proportional
+     * figures the digit widths jitter card to card and a column of twenty-four prices never
+     * aligns, at exactly the moment the grid is meant to read expensive.
+     */
+    const widths = await page.evaluate((stack) => {
       const probe = (text: string) => {
         const el = document.createElement("span");
         el.className = "tabular";
@@ -29,7 +47,7 @@ test.describe("the numerals every price depends on", () => {
          * exists to prove, and the test would then fail against a perfectly good font.
          */
         el.style.cssText =
-          "font-family:var(--rn-font-display);font-weight:800;font-size:40px;line-height:1;" +
+          `font-family:${stack};font-weight:800;font-size:40px;line-height:1;` +
           "font-variant-numeric:tabular-nums;font-variation-settings:'wdth' 118;" +
           "position:absolute;visibility:hidden;white-space:pre";
         el.textContent = text;
@@ -39,7 +57,7 @@ test.describe("the numerals every price depends on", () => {
         return width;
       };
       return { ones: probe("111"), zeros: probe("000"), eights: probe("888") };
-    });
+    }, family);
 
     expect(Math.abs(widths.ones - widths.zeros)).toBeLessThan(0.5);
     expect(Math.abs(widths.ones - widths.eights)).toBeLessThan(0.5);

@@ -21,10 +21,19 @@ import { getHomeData } from "@/lib/home-data";
  * throttled mid-tier Android.
  */
 
-// The counts are real and they move as dealerships publish, so the page is rebuilt on a
-// short cycle rather than at build time. Long enough to be free under load, short enough
-// that a dealership sees their own stock on the front page the same morning.
-export const revalidate = 60;
+/*
+ * Rendered on demand, never at build time.
+ *
+ * `revalidate` was the obvious-looking way to say "recompute these counts every minute",
+ * and it broke the deploy: it opts the route into static generation, so Next tried to
+ * prerender the home page during `next build`, where there is no database, and the build
+ * died with "no such table: vehicles". The counts are live data from a database that only
+ * exists at runtime, so the PAGE has to be dynamic.
+ *
+ * The one minute cache still exists, it just lives on the data instead of the route. See
+ * getHomeData, which is wrapped in unstable_cache.
+ */
+export const dynamic = "force-dynamic";
 
 /** The mega counter never shouts a number that would be better not shouted. */
 const COUNTER_FLOOR = 150;

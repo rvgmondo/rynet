@@ -1,4 +1,5 @@
 import config from "@payload-config";
+import { unstable_cache } from "next/cache";
 import { getPayload, type Where } from "payload";
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { toCard } from "@/lib/search";
@@ -65,7 +66,7 @@ function spreadAcrossDealers(cards: VehicleCardData[], limit: number, perDealer 
   return chosen;
 }
 
-export async function getHomeData(featuredLimit = 8): Promise<HomeData> {
+async function readHomeData(featuredLimit: number): Promise<HomeData> {
   const payload = await getPayload({ config });
 
   const live = { status: { equals: "live" } } as const;
@@ -165,3 +166,18 @@ export async function getHomeData(featuredLimit = 8): Promise<HomeData> {
     demonstrationCount: demonstration.totalDocs,
   };
 }
+
+/**
+ * The cache, and it belongs on the data rather than on the route.
+ *
+ * This function issues roughly one count query per body type, per province and per colour,
+ * plus a branch lookup per province, which is fine once a minute and wasteful on every
+ * request to the most requested page on the site. Caching the DATA keeps the page itself
+ * dynamic, which it has to be: a route with `revalidate` on it is prerendered during
+ * `next build`, where this database does not exist, and that failed the deploy outright.
+ */
+export const getHomeData = (featuredLimit = 8): Promise<HomeData> =>
+  unstable_cache(() => readHomeData(featuredLimit), ["home-data", String(featuredLimit)], {
+    revalidate: 60,
+    tags: ["vehicles"],
+  })();
