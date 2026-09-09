@@ -1,6 +1,6 @@
 import config from "@payload-config";
 import type { Metadata } from "next";
-import { getPayload } from "payload";
+import { getPayload, type Where } from "payload";
 
 import { FacetRail } from "@/components/vehicles/facet-rail";
 import { ResultsGrid } from "@/components/vehicles/results-grid";
@@ -127,19 +127,69 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
       resolve("colours", colourSlug),
     ]);
 
-  // Location filters through the branch, so it needs the branch ids first.
+  /*
+   * Location filters through the branch, and a city that has no branches widens to its
+   * province rather than answering nothing.
+   *
+   * Searching "Cape Town", "Durban" or "Johannesburg" returned zero cars, because no
+   * dealership has a branch registered in any of those three: they are in Bellville,
+   * Pinetown, Umhlanga, Sandton, Boksburg and Benoni. To a buyer those ARE Cape Town, Durban
+   * and Johannesburg, so answering "nothing" to the three biggest cities in the country,
+   * while holding 78 cars in the Western Cape, is a search that is technically right and
+   * practically broken.
+   *
+   * So it widens by one step, to the province the city is in, and the results header says
+   * so. Widening silently would be worse than not widening: a buyer who asked for Cape Town
+   * and is shown George needs to be told.
+   */
   let branchIds: number[] | undefined;
+  let widened: { from: string; to: string } | null = null;
+
   if (provinceId || cityId) {
-    const branches = await payload.find({
-      collection: "branches",
-      where: cityId ? { city: { equals: cityId } } : { province: { equals: provinceId } },
-      limit: 500,
-      depth: 0,
-    });
-    branchIds = branches.docs.map((b) => b.id);
+    const branchesIn = async (clause: Where) => {
+      const found = await payload.find({
+        collection: "branches",
+        where: clause,
+        limit: 500,
+        depth: 0,
+      });
+      return found.docs.map((b) => b.id);
+    };
+
+    if (cityId) {
+      branchIds = await branchesIn({ city: { equals: cityId } });
+
+      const stocked =
+        branchIds.length > 0 &&
+        (
+          await payload.count({
+            collection: "vehicles",
+            where: {
+              and: [{ status: { equals: "live" } }, { branch: { in: branchIds } }],
+            } as never,
+          })
+        ).totalDocs > 0;
+
+      if (!stocked) {
+        const city = await payload.findByID({ collection: "cities", id: cityId, depth: 1 });
+        const province = city?.province;
+        const provinceDoc = typeof province === "object" && province ? province : null;
+
+        if (provinceDoc) {
+          const wider = await branchesIn({ province: { equals: provinceDoc.id } });
+          if (wider.length > 0) {
+            branchIds = wider;
+            widened = { from: city.name, to: provinceDoc.name };
+          }
+        }
+      }
+    } else {
+      branchIds = await branchesIn({ province: { equals: provinceId } });
+    }
+
     // A location with no branches means no stock, and an empty `in` clause would otherwise
     // match everything rather than nothing.
-    if (branchIds.length === 0) branchIds = [-1];
+    if (!branchIds || branchIds.length === 0) branchIds = [-1];
   }
 
   const where: Record<string, unknown> = { status: { equals: "live" } };
@@ -268,6 +318,7 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
             ignored={parsed.unmatched}
             demonstrationCount={demonstration.totalDocs}
             filters={carried}
+            widened={widened}
           />
 
           <ResultsGrid
