@@ -1,4 +1,4 @@
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, Where } from "payload";
 
 import { dealerIdOf, isDealerStaff, isPlatformAdmin, isPlatformStaff } from "@/access/roles";
 
@@ -24,14 +24,34 @@ export const Leads: CollectionConfig = {
     group: "Leads",
   },
   access: {
+    /**
+     * A dealership sees the leads it owns, plus the trade-ins that were disclosed to it.
+     *
+     * A trade-in lead has no `dealer`: it belongs to Rynet while it is offered around, and the
+     * seller was told it goes to up to five dealerships. `disclosedTo` is the list of those
+     * five, so it is both the access rule and, with the `disclosures` array beside it, the
+     * answer to "who has my details" that POPIA section 23 entitles the seller to ask for.
+     */
     read: ({ req }) => {
       if (isPlatformStaff(req.user)) return true;
       const own = dealerIdOf(req.user);
-      return own ? { dealer: { equals: own } } : false;
+      if (!own) return false;
+
+      // Annotated, because TypeScript widens the inferred union of the two branches into
+      // something that no longer satisfies `Where`.
+      const ownedOrDisclosed: Where = {
+        or: [{ dealer: { equals: own } }, { disclosedTo: { in: [own] } }],
+      };
+      return ownedOrDisclosed;
     },
     // Anyone can submit an enquiry. Rate limiting, Turnstile, a honeypot and a timing check
     // sit in front of the route handler rather than here.
     create: () => true,
+    /**
+     * Deliberately NOT widened to disclosed trade-ins. Five dealerships can see one of those,
+     * and letting any of them mark it "sold" or rewrite the seller's number would be five
+     * businesses editing each other's view of the same record.
+     */
     update: ({ req }) => {
       if (isPlatformStaff(req.user)) return true;
       if (!isDealerStaff(req.user)) return false;
@@ -39,6 +59,25 @@ export const Leads: CollectionConfig = {
       return own ? { dealer: { equals: own } } : false;
     },
     delete: () => false,
+  },
+  hooks: {
+    beforeChange: [
+      ({ data }) => {
+        // `disclosedTo` exists only so the read rule has something it can query. Deriving it
+        // here means the two can never disagree, whatever wrote the disclosures.
+        if (!data) return data;
+        if (Array.isArray(data.disclosures)) {
+          data.disclosedTo = data.disclosures
+            .map((entry: { dealer?: unknown }) =>
+              typeof entry?.dealer === "object" && entry.dealer !== null
+                ? (entry.dealer as { id?: unknown }).id
+                : entry?.dealer,
+            )
+            .filter((id: unknown) => id !== null && id !== undefined);
+        }
+        return data;
+      },
+    ],
   },
   fields: [
     {
@@ -209,6 +248,62 @@ export const Leads: CollectionConfig = {
         { name: "author", type: "relationship", relationTo: "users" },
         { name: "createdAt", type: "date" },
       ],
+    },
+    /**
+     * Who this lead has been passed to, and when.
+     *
+     * Only ever populated on a trade-in, where the seller consented to their details going to
+     * up to five dealerships. POPIA section 23(1)(b) gives a data subject the right to know
+     * the identity of everyone who has had access to their information, and a boolean or a
+     * count cannot answer that. This can.
+     *
+     * Append only in practice: the distribution job adds rows and nothing removes them, because
+     * a disclosure that happened does not stop having happened when the relationship ends.
+     */
+    {
+      name: "disclosures",
+      type: "array",
+      access: {
+        create: ({ req }) => isPlatformStaff(req.user),
+        update: ({ req }) => isPlatformStaff(req.user),
+      },
+      admin: {
+        condition: (data) => data?.type === "trade_in",
+        description: "Every dealership this seller's details were sent to, and when.",
+      },
+      fields: [
+        { name: "dealer", type: "relationship", relationTo: "dealers", required: true },
+        { name: "disclosedAt", type: "date", required: true },
+        {
+          name: "withdrawnAt",
+          type: "date",
+          admin: {
+            description:
+              "Set when the seller withdraws consent. The row stays: it is the record that the disclosure happened.",
+          },
+        },
+      ],
+    },
+    /**
+     * The same dealerships, flattened, so access control can query them.
+     *
+     * COMPUTED, never written by hand. A Payload `Where` cannot join into an array's
+     * relationship, and the read rule needs a plain `in` to work at all. Keeping this in a
+     * hook rather than asking callers to maintain both is what stops the access list and the
+     * disclosure record drifting apart, which is the kind of drift nobody notices until a
+     * dealership can see something it should not.
+     */
+    {
+      name: "disclosedTo",
+      type: "relationship",
+      relationTo: "dealers",
+      hasMany: true,
+      index: true,
+      access: {
+        create: ({ req }) => isPlatformStaff(req.user),
+        update: ({ req }) => isPlatformStaff(req.user),
+      },
+      admin: { readOnly: true, description: "Derived from the disclosures above." },
     },
     {
       name: "isDemonstration",

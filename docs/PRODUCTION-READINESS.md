@@ -295,6 +295,42 @@ clicks it.
 
 ---
 
+## Trade-ins are distributed, and the seller can be told who has their details
+
+`/sell-to-a-dealer` told sellers their car went to "verified dealerships in my province that buy
+this kind of vehicle, no more than five", stored those words verbatim as consent evidence, and
+then nothing sent them anywhere. A promise in a consent record that the code does not keep is
+worse than no promise, because the record is evidence of exactly what you undertook to do.
+
+Every clause of that sentence is now a rule in `src/lib/trade-in-matching.ts`, with a test each:
+verified only, in the seller's province, buying that make, and never more than five. The cap
+cannot be raised by passing a bigger limit, because it is a commitment to the seller rather than
+a tuning knob.
+
+**A dealership must opt in.** `acceptsTradeIns` defaults to false and the dealership sets it
+itself. Nobody receives a stranger's name and phone number because a checkbox happened to start
+on, and no dealership is sent leads it never asked for.
+
+**Fairness is deliberate.** Selection prefers the dealerships that have had the fewest recently.
+Without that the same two in Gauteng take every lead, everyone else concludes the feature does
+nothing, and the seller hears from a smaller pool than they were promised.
+
+**POPIA section 23(1)(b)** gives a data subject the right to know who has had access to their
+information. A count could not answer that. Every disclosure is now a row carrying the dealership
+and the timestamp, and `disclosedTo` is derived from those rows by a hook so the access list and
+the audit record cannot drift apart.
+
+That derived field is a second route into the most sensitive table on the platform, so it has
+five adversarial tests of its own: the dealership it was disclosed to can read it, one it was not
+cannot, naming the disclosure in a query does not widen the scope, a dealership that only had it
+disclosed cannot edit it, and no dealership can write itself into the list.
+
+**Still missing, and SMTP is why:** nobody is emailed. The dealership sees the lead when it next
+looks, and a seller whose car could not be placed is not yet told, which the page promises. Both
+light up when there is a mailbox to send from.
+
+---
+
 ## Known gaps, honestly
 
 **No manual screen reader testing.** Automated axe checks catch roughly a third of accessibility
@@ -322,8 +358,9 @@ existed, at least two of the six problems above would have been obvious on paper
 
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
-- **154 unit tests.** TOTP 51, access control 33, finance 25, formatting 16, contrast 15, slugs 14.
-- **176 end-to-end tests** across desktop and mobile: 34 adversarial, 25 on the agency site,
+- **172 unit tests.** TOTP 51, access control 33, finance 25, trade-in matching 18,
+  formatting 16, contrast 15, slugs 14.
+- **181 end-to-end tests** across desktop and mobile: 39 adversarial, 25 on the agency site,
   16 on two-factor.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
   vehicle page, the enquiry dialog, and all seven agency templates.

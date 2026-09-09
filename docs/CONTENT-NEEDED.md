@@ -144,10 +144,10 @@ other fails the build. The same review should cover the settlement explanation a
 have ready" list, neither of which is legal advice and both of which a seller will treat as if it
 were.
 
-**Also unbuilt:** the distribution itself. The lead is written with no dealer and the page
-promises it goes to no more than five verified dealerships in the seller's province. Nothing
-sends it yet, because no dealerships are signed. That promise cannot go live before the routing
-does.
+**The distribution is built** (`src/jobs/distribute-trade-ins.ts`, run from cron). What is still
+missing is the notification: SMTP is not configured, so a matched dealership sees the lead when it
+next looks rather than being emailed, and a seller whose car could not be placed anywhere is not
+told, which this page promises they will be. Both need a mailbox before they are true.
 
 ## 11. Decisions still open
 
