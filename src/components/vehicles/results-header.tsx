@@ -34,6 +34,7 @@ export function ResultsHeader({
   ignored = [],
   demonstrationCount = 0,
   filters = [],
+  widened = null,
 }: {
   total: number;
   page: number;
@@ -50,6 +51,8 @@ export function ResultsHeader({
   demonstrationCount?: number;
   /** Everything the buyer arrived with, so sorting does not throw their filters away. */
   filters?: { key: string; value: string }[];
+  /** Set when a city had no stock and the search widened to its province. */
+  widened?: { from: string; to: string } | null;
 }) {
   return (
     <div className="mb-6">
@@ -119,6 +122,28 @@ export function ResultsHeader({
           </button>
         </form>
       </div>
+
+      {widened ? (
+        /*
+         * A widened search says so.
+         *
+         * Nothing is registered in Cape Town, Durban or Johannesburg, because the branches
+         * are in Bellville, Pinetown and Sandton, so a search for the three biggest cities
+         * in the country returned nothing while the province held dozens of cars. It widens
+         * by one step now, and telling the buyer is the whole point: showing George to
+         * somebody who asked for Cape Town without a word would be worse than showing
+         * nothing.
+         */
+        <p className="mt-4 border-y border-line py-3 text-sm text-ink-secondary">
+          <strong className="font-semibold text-ink">
+            No dealership has stock in {widened.from}.
+          </strong>{" "}
+          {/* "across Western Cape" rather than "in the Western Cape": four of the nine
+              provinces take a definite article and five do not, and phrasing around it is
+              cheaper and reads better than a table of exceptions. */}
+          These are the cars across {widened.to}.
+        </p>
+      ) : null}
 
       {query ? (
         /*
