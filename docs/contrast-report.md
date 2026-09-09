@@ -13,73 +13,95 @@ border tokens rather than one.
 
 | Pair | Foreground | Background | Ratio | Required | Result |
 |---|---|---|---:|---:|---|
-| Body text on surface | `#f2f2f3` | `#001123` | 17.00 | 4.5 | pass |
-| Body text on raised surface | `#f2f2f3` | `#0e1e2f` | 15.07 | 4.5 | pass |
-| Body text on sunken surface | `#f2f2f3` | `#000b16` | 17.72 | 4.5 | pass |
-| Secondary text on surface | `#c2c4ca` | `#001123` | 10.90 | 4.5 | pass |
-| Secondary text on raised surface | `#c2c4ca` | `#0e1e2f` | 9.67 | 4.5 | pass |
-| Muted text on surface | `#b1b4bb` | `#001123` | 9.16 | 4.5 | pass |
-| Muted text on raised surface | `#b1b4bb` | `#0e1e2f` | 8.12 | 4.5 | pass |
-| Muted text on sunken surface | `#b1b4bb` | `#000b16` | 9.55 | 4.5 | pass |
-| Inverse text on inverse surface | `#0c1721` | `#ffffff` | 18.10 | 4.5 | pass |
-| Accent link on surface | `#f0878e` | `#001123` | 7.75 | 4.5 | pass |
-| Accent link hover on surface | `#f7bdc2` | `#001123` | 11.78 | 4.5 | pass |
-| Accent link on raised surface | `#f0878e` | `#0e1e2f` | 6.87 | 4.5 | pass |
-| Accent link on subtle accent | `#f0878e` | `#12202e` | 6.73 | 4.5 | pass |
-| Label on solid accent button | `#ffffff` | `#e32432` | 4.60 | 4.5 | pass |
-| Label on solid accent button, hover | `#ffffff` | `#cc2231` | 5.47 | 4.5 | pass |
-| Success on surface | `#4fcb86` | `#001123` | 9.25 | 4.5 | pass |
-| Warning on surface | `#f0b44a` | `#001123` | 10.26 | 4.5 | pass |
-| Danger on surface | `#f0878e` | `#001123` | 7.75 | 4.5 | pass |
-| Info on surface | `#66b6f2` | `#001123` | 8.64 | 4.5 | pass |
-| Success on subtle success | `#4fcb86` | `#0d2419` | 7.96 | 4.5 | pass |
-| Warning on subtle warning | `#f0b44a` | `#241d0c` | 9.02 | 4.5 | pass |
-| Danger on subtle danger | `#f0878e` | `#26141a` | 7.15 | 4.5 | pass |
-| Info on subtle info | `#66b6f2` | `#0c1d2b` | 7.78 | 4.5 | pass |
-| Input border on surface | `#80858d` | `#001123` | 5.12 | 3.0 | pass |
-| Input border on raised surface | `#80858d` | `#0e1e2f` | 4.54 | 3.0 | pass |
-| Strong border on surface | `#b1b4bb` | `#001123` | 9.16 | 3.0 | pass |
-| Focus ring on surface | `#f0878e` | `#001123` | 7.75 | 3.0 | pass |
-| Inverse focus ring on inverse surface | `#cc2231` | `#ffffff` | 5.47 | 3.0 | pass |
-| Focus ring on solid accent | `#f0878e` | `#e32432` | 1.88 | n/a | pass |
-| Subtle divider on surface | `#273544` | `#001123` | 1.52 | n/a | pass |
-| Subtle divider on raised surface | `#273544` | `#0e1e2f` | 1.35 | n/a | pass |
+| Body text on surface | `#0a1017` | `#ededea` | 16.28 | 4.5 | pass |
+| Body text on raised surface | `#0a1017` | `#f7f7f5` | 17.81 | 4.5 | pass |
+| Body text on sunken surface | `#0a1017` | `#e2e2de` | 14.71 | 4.5 | pass |
+| Secondary text on surface | `#232a33` | `#ededea` | 12.34 | 4.5 | pass |
+| Secondary text on raised surface | `#232a33` | `#f7f7f5` | 13.50 | 4.5 | pass |
+| Muted text on surface | `#545e6a` | `#ededea` | 5.62 | 4.5 | pass |
+| Muted text on raised surface | `#545e6a` | `#f7f7f5` | 6.14 | 4.5 | pass |
+| Muted text on sunken surface | `#545e6a` | `#e2e2de` | 5.07 | 4.5 | pass |
+| Inverse text on inverse surface | `#ededea` | `#0a1017` | 16.28 | 4.5 | pass |
+| Accent link on surface | `#b81b29` | `#ededea` | 5.55 | 4.5 | pass |
+| Accent link hover on surface | `#93131f` | `#ededea` | 7.61 | 4.5 | pass |
+| Accent link on raised surface | `#b81b29` | `#f7f7f5` | 6.07 | 4.5 | pass |
+| Accent link on subtle accent | `#b81b29` | `#f2e2e3` | 5.19 | 4.5 | pass |
+| Label on solid accent button | `#ffffff` | `#cc2231` | 5.47 | 4.5 | pass |
+| Label on solid accent button, hover | `#ffffff` | `#aa1f2e` | 7.13 | 4.5 | pass |
+| Success on surface | `#0f7a3d` | `#ededea` | 4.62 | 4.5 | pass |
+| Warning on surface | `#7d5100` | `#ededea` | 5.87 | 4.5 | pass |
+| Danger on surface | `#b81b29` | `#ededea` | 5.55 | 4.5 | pass |
+| Info on surface | `#0b5fa5` | `#ededea` | 5.60 | 4.5 | pass |
+| Success on subtle success | `#0f7a3d` | `#e0efe6` | 4.56 | 4.5 | pass |
+| Warning on subtle warning | `#7d5100` | `#f4ecda` | 5.86 | 4.5 | pass |
+| Danger on subtle danger | `#b81b29` | `#f2e2e3` | 5.19 | 4.5 | pass |
+| Info on subtle info | `#0b5fa5` | `#e0ebf4` | 5.43 | 4.5 | pass |
+| Input border on surface | `#69727e` | `#ededea` | 4.15 | 3.0 | pass |
+| Input border on raised surface | `#69727e` | `#f7f7f5` | 4.54 | 3.0 | pass |
+| Strong border on surface | `#69727e` | `#ededea` | 4.15 | 3.0 | pass |
+| Focus ring on surface | `#b81b29` | `#ededea` | 5.55 | 3.0 | pass |
+| Inverse focus ring on inverse surface | `#f4626b` | `#0a1017` | 6.19 | 3.0 | pass |
+| Focus ring on solid accent | `#b81b29` | `#cc2231` | 1.19 | n/a | pass |
+| Subtle divider on surface | `#a2a29a` | `#ededea` | 2.19 | n/a | pass |
+| Subtle divider on raised surface | `#a2a29a` | `#f7f7f5` | 2.40 | n/a | pass |
+| Muted text on a flipped card | `#9ba3ad` | `#0a1017` | 7.49 | 4.5 | pass |
+| Accent text on a flipped card | `#f4626b` | `#0a1017` | 6.19 | 4.5 | pass |
+| Interactive boundary on sunken surface | `#69727e` | `#e2e2de` | 3.75 | 3.0 | pass |
+| Strong hairline on surface | `#a2a29a` | `#ededea` | 2.19 | n/a | pass |
+| Brand silver on the ink band | `#b1b4bb` | `#0a1017` | 9.20 | n/a | pass |
+| Brand red as a graphic mark | `#e32432` | `#ededea` | 3.92 | n/a | pass |
+| Plate ink on the worst of all 360 hues (H 163) | `#EDEDEA` | `#03563A` | 7.47 | 4.5 | pass |
+| Plate ink on the lightest neutral plate | `#EDEDEA` | `#595E63` | 5.58 | 4.5 | pass |
+| Plate ink on the darkest neutral plate | `#EDEDEA` | `#25292E` | 12.47 | 4.5 | pass |
+| Plate ink on primer, where no colour was recorded | `#EDEDEA` | `#484848` | 7.80 | 4.5 | pass |
+| Plate ink on the worst seeded swatch (Glacier White) | `#EDEDEA` | `#595D62` | 5.65 | 4.5 | pass |
 
 ## Dark theme
 
 | Pair | Foreground | Background | Ratio | Required | Result |
 |---|---|---|---:|---:|---|
-| Body text on surface | `#f2f2f3` | `#001123` | 17.00 | 4.5 | pass |
-| Body text on raised surface | `#f2f2f3` | `#0e1e2f` | 15.07 | 4.5 | pass |
-| Body text on sunken surface | `#f2f2f3` | `#000b16` | 17.72 | 4.5 | pass |
-| Secondary text on surface | `#c2c4ca` | `#001123` | 10.90 | 4.5 | pass |
-| Secondary text on raised surface | `#c2c4ca` | `#0e1e2f` | 9.67 | 4.5 | pass |
-| Muted text on surface | `#b1b4bb` | `#001123` | 9.16 | 4.5 | pass |
-| Muted text on raised surface | `#b1b4bb` | `#0e1e2f` | 8.12 | 4.5 | pass |
-| Muted text on sunken surface | `#b1b4bb` | `#000b16` | 9.55 | 4.5 | pass |
-| Inverse text on inverse surface | `#0c1721` | `#ffffff` | 18.10 | 4.5 | pass |
-| Accent link on surface | `#f0878e` | `#001123` | 7.75 | 4.5 | pass |
-| Accent link hover on surface | `#f7bdc2` | `#001123` | 11.78 | 4.5 | pass |
-| Accent link on raised surface | `#f0878e` | `#0e1e2f` | 6.87 | 4.5 | pass |
-| Accent link on subtle accent | `#f0878e` | `#12202e` | 6.73 | 4.5 | pass |
-| Label on solid accent button | `#ffffff` | `#e32432` | 4.60 | 4.5 | pass |
-| Label on solid accent button, hover | `#ffffff` | `#cc2231` | 5.47 | 4.5 | pass |
-| Success on surface | `#4fcb86` | `#001123` | 9.25 | 4.5 | pass |
-| Warning on surface | `#f0b44a` | `#001123` | 10.26 | 4.5 | pass |
-| Danger on surface | `#f0878e` | `#001123` | 7.75 | 4.5 | pass |
-| Info on surface | `#66b6f2` | `#001123` | 8.64 | 4.5 | pass |
-| Success on subtle success | `#4fcb86` | `#0d2419` | 7.96 | 4.5 | pass |
-| Warning on subtle warning | `#f0b44a` | `#241d0c` | 9.02 | 4.5 | pass |
-| Danger on subtle danger | `#f0878e` | `#26141a` | 7.15 | 4.5 | pass |
-| Info on subtle info | `#66b6f2` | `#0c1d2b` | 7.78 | 4.5 | pass |
-| Input border on surface | `#80858d` | `#001123` | 5.12 | 3.0 | pass |
-| Input border on raised surface | `#80858d` | `#0e1e2f` | 4.54 | 3.0 | pass |
-| Strong border on surface | `#80858d` | `#001123` | 5.12 | 3.0 | pass |
-| Focus ring on surface | `#f0878e` | `#001123` | 7.75 | 3.0 | pass |
-| Inverse focus ring on inverse surface | `#cc2231` | `#ffffff` | 5.47 | 3.0 | pass |
-| Focus ring on solid accent | `#f0878e` | `#e32432` | 1.88 | n/a | pass |
-| Subtle divider on surface | `#273544` | `#001123` | 1.52 | n/a | pass |
-| Subtle divider on raised surface | `#273544` | `#0e1e2f` | 1.35 | n/a | pass |
+| Body text on surface | `#f7f7f5` | `#080d14` | 18.16 | 4.5 | pass |
+| Body text on raised surface | `#f7f7f5` | `#121821` | 16.61 | 4.5 | pass |
+| Body text on sunken surface | `#f7f7f5` | `#05080d` | 18.70 | 4.5 | pass |
+| Secondary text on surface | `#e3e3df` | `#080d14` | 15.14 | 4.5 | pass |
+| Secondary text on raised surface | `#e3e3df` | `#121821` | 13.85 | 4.5 | pass |
+| Muted text on surface | `#99a0a9` | `#080d14` | 7.38 | 4.5 | pass |
+| Muted text on raised surface | `#99a0a9` | `#121821` | 6.75 | 4.5 | pass |
+| Muted text on sunken surface | `#99a0a9` | `#05080d` | 7.60 | 4.5 | pass |
+| Inverse text on inverse surface | `#080d14` | `#f7f7f5` | 18.16 | 4.5 | pass |
+| Accent link on surface | `#f4626b` | `#080d14` | 6.31 | 4.5 | pass |
+| Accent link hover on surface | `#f89aa0` | `#080d14` | 9.39 | 4.5 | pass |
+| Accent link on raised surface | `#f4626b` | `#121821` | 5.78 | 4.5 | pass |
+| Accent link on subtle accent | `#f4626b` | `#1c1013` | 6.01 | 4.5 | pass |
+| Label on solid accent button | `#ffffff` | `#cc2231` | 5.47 | 4.5 | pass |
+| Label on solid accent button, hover | `#ffffff` | `#aa1f2e` | 7.13 | 4.5 | pass |
+| Success on surface | `#4fcb86` | `#080d14` | 9.48 | 4.5 | pass |
+| Warning on surface | `#f0b44a` | `#080d14` | 10.51 | 4.5 | pass |
+| Danger on surface | `#f4626b` | `#080d14` | 6.31 | 4.5 | pass |
+| Info on surface | `#66b6f2` | `#080d14` | 8.85 | 4.5 | pass |
+| Success on subtle success | `#4fcb86` | `#0a1f14` | 8.38 | 4.5 | pass |
+| Warning on subtle warning | `#f0b44a` | `#1f1808` | 9.50 | 4.5 | pass |
+| Danger on subtle danger | `#f4626b` | `#1c1013` | 6.01 | 4.5 | pass |
+| Info on subtle info | `#66b6f2` | `#081724` | 8.23 | 4.5 | pass |
+| Input border on surface | `#7d8691` | `#080d14` | 5.28 | 3.0 | pass |
+| Input border on raised surface | `#7d8691` | `#121821` | 4.83 | 3.0 | pass |
+| Strong border on surface | `#7d8691` | `#080d14` | 5.28 | 3.0 | pass |
+| Focus ring on surface | `#f4626b` | `#080d14` | 6.31 | 3.0 | pass |
+| Inverse focus ring on inverse surface | `#b81b29` | `#f7f7f5` | 6.07 | 3.0 | pass |
+| Focus ring on solid accent | `#f4626b` | `#cc2231` | 1.77 | n/a | pass |
+| Subtle divider on surface | `#262d37` | `#080d14` | 1.40 | n/a | pass |
+| Subtle divider on raised surface | `#262d37` | `#121821` | 1.28 | n/a | pass |
+| Muted text on a flipped card | `#545e6a` | `#f7f7f5` | 6.14 | 4.5 | pass |
+| Accent text on a flipped card | `#b81b29` | `#f7f7f5` | 6.07 | 4.5 | pass |
+| Interactive boundary on sunken surface | `#7d8691` | `#05080d` | 5.44 | 3.0 | pass |
+| Strong hairline on surface | `#3b434f` | `#080d14` | 1.95 | n/a | pass |
+| Brand silver on the ink band | `#b1b4bb` | `#f7f7f5` | 1.94 | n/a | pass |
+| Brand red as a graphic mark | `#e32432` | `#080d14` | 4.23 | n/a | pass |
+| Plate ink on the worst of all 360 hues (H 159) | `#EDEDEA` | `#1E6141` | 6.30 | 4.5 | pass |
+| Plate ink on the lightest neutral plate | `#EDEDEA` | `#5F6469` | 5.10 | 4.5 | pass |
+| Plate ink on the darkest neutral plate | `#EDEDEA` | `#2F3338` | 10.84 | 4.5 | pass |
+| Plate ink on primer, where no colour was recorded | `#EDEDEA` | `#525252` | 6.66 | 4.5 | pass |
+| Plate ink on the worst seeded swatch (Glacier White) | `#EDEDEA` | `#5E6368` | 5.17 | 4.5 | pass |
 
 ### Notes
 
@@ -88,6 +110,12 @@ border tokens rather than one.
 - **Inverse focus ring on inverse surface.** An inverse panel carries the other theme's ground, so it needs the other theme's ring. One ring token cannot serve both.
 - **Focus ring on solid accent.** The ring sits on the surface-coloured offset, not directly on the button. Recorded for visibility.
 - **Subtle divider on surface.** Decorative only. Never the sole indicator of a control, so no minimum applies.
+- **Muted text on a flipped card.** The hover and focus state inverts the whole card, so muted copy needs its own value there.
+- **Interactive boundary on sunken surface.** The filter rail sits on the sunken ground, and its checkboxes are boundary-only controls.
+- **Strong hairline on surface.** Section openers and the ruled VERIFIED stamp. A rule that frames a word carries no information the word does not.
+- **Brand silver on the ink band.** Silver's only job on a light theme. It is never used on paper.
+- **Brand red as a graphic mark.** Registered decorative on purpose. Brand red carries no text and no text sits on it, so it has no contrast obligation. If anyone ever needs it as text it must be re-registered as large-text with the size class documented, rather than the token being weakened to suit.
+- **Plate ink on the worst of all 360 hues (H 163).** A generated sweep, not a sample. Every chromatic paint any dealership ever enters lands on this one lightness, so passing here means no listing can produce an unreadable plate.
 
 ## What is deliberately not in this table
 

@@ -2,6 +2,7 @@ import config from "@payload-config";
 import type { Where } from "payload";
 import { getPayload } from "payload";
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
+import { type ParsedQuery, parseQuery, type Term } from "@/lib/query-parse";
 import { populated, relName, relSlug } from "@/lib/relations";
 import type { Vehicle } from "@/payload-types";
 
@@ -57,8 +58,50 @@ export async function resolveSlug(collection: string, slug?: string): Promise<nu
   return doc?.id ?? null;
 }
 
+/**
+ * Turns what someone typed into real filters.
+ *
+ * The parsing itself is a pure function in query-parse.ts and is tested there. This is only
+ * the part that needs the database: it loads the taxonomy names and their seeded aliases,
+ * which is what lets "bakkie", "vw" and "pta" resolve without a synonym list maintained by
+ * hand somewhere else.
+ *
+ * Taxonomies are small, public and cached by Payload, so this is not the hot path.
+ */
+export async function resolveQuery(q: string | undefined | null): Promise<ParsedQuery> {
+  if (!q?.trim()) return { matched: [], unmatched: [] };
+
+  const payload = await getPayload({ config });
+  const load = async (collection: string, limit: number): Promise<Term[]> => {
+    const found = await payload.find({
+      collection: collection as never,
+      limit,
+      depth: 0,
+      pagination: false,
+    });
+    return found.docs as unknown as Term[];
+  };
+
+  const [makes, models, bodyTypes, fuelTypes, transmissions, provinces, cities] = await Promise.all(
+    [
+      load("makes", 200),
+      load("models", 2000),
+      load("body-types", 50),
+      load("fuel-types", 50),
+      load("transmissions", 50),
+      load("provinces", 20),
+      load("cities", 500),
+    ],
+  );
+
+  return parseQuery(q, { makes, models, bodyTypes, fuelTypes, transmissions, provinces, cities });
+}
+
 export function toCard(doc: Vehicle): VehicleCardData {
   const branch = populated(doc.branch);
+  // The paint colour fills the card's image area while there is no photography, so it travels
+  // with every card rather than being fetched again per listing.
+  const colour = doc.exteriorColour;
   return {
     publicRef: doc.publicRef ?? "",
     modelYear: doc.modelYear,
@@ -79,6 +122,11 @@ export function toCard(doc: Vehicle): VehicleCardData {
     cityName: branch ? relName(branch.city) : null,
     provinceName: branch ? relName(branch.province) : null,
     isDemonstration: Boolean(doc.isDemonstration),
+    colourName: relName(colour),
+    colourSwatch: colour && typeof colour === "object" ? (colour.swatch ?? null) : null,
+    // The family decides which half of the plate maths runs. White, silver, grey and black
+    // have no usable hue, and they are roughly 40% of South African stock.
+    colourFamily: colour && typeof colour === "object" ? (colour.family ?? null) : null,
   };
 }
 

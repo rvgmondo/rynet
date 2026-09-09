@@ -10,6 +10,7 @@ yet, as briefed.
 | 3. Content model | [CONTENT-MODEL.md](CONTENT-MODEL.md) |
 | 4. Sitemap and URL structure | [SITEMAP.md](SITEMAP.md) |
 | 5. Design directions and tokens | [DESIGN-SYSTEM.md](DESIGN-SYSTEM.md) |
+| 5a. **The direction that shipped: STOCKLIST** | [DESIGN-STOCKLIST.md](DESIGN-STOCKLIST.md) |
 | 6. Phased delivery plan | [DELIVERY-PLAN.md](DELIVERY-PLAN.md) |
 | 7. Version-pinned stack | [STACK.md](STACK.md) |
 | Reference project audit | [REFERENCE-NOTES.md](REFERENCE-NOTES.md) |

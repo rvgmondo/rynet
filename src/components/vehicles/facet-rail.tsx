@@ -11,6 +11,9 @@ type Active = {
   province?: string;
   minPrice?: string;
   maxPrice?: string;
+  /** Carried through untouched. See the hidden inputs below. */
+  q?: string;
+  colour?: string;
 };
 
 /**
@@ -87,12 +90,33 @@ export async function FacetRail({ active }: { active: Active }) {
   ]);
 
   return (
-    <aside aria-labelledby="filters-heading" className="lg:sticky lg:top-20 lg:self-start">
-      <h2 id="filters-heading" className="font-display text-lg">
+    <aside
+      aria-labelledby="filters-heading"
+      /*
+       * Order two on a phone, order one on a wide screen.
+       *
+       * This rail used to be the entire first screenful on mobile, so a buyer opening the
+       * search page saw a list of manufacturer names and no cars at all. Moving it below
+       * the results costs one declaration, needs no JavaScript, has no hydration flash,
+       * and cannot leave the filters unreachable the way a collapsed disclosure can if its
+       * script never runs. The results header carries a link straight down to it.
+       */
+      className="order-2 bg-surface-sunken px-5 py-6 lg:sticky lg:top-20 lg:order-1 lg:self-start"
+    >
+      <h2 id="filters-heading" className="rn-label scroll-mt-20">
         Filter
       </h2>
 
-      <form method="get" action="/cars" className="mt-4 space-y-1">
+      <form method="get" action="/cars" className="mt-4 space-y-1 pb-6">
+        {/*
+          A GET form submits only its own controls, so anything the buyer arrived with that
+          this form does not render would be silently dropped the moment they tick a facet.
+          Searching "bakkie under 300" and then ticking Diesel would have thrown the bakkie
+          away. These two lines are the whole fix.
+        */}
+        {active.q ? <input type="hidden" name="q" value={active.q} /> : null}
+        {active.colour ? <input type="hidden" name="colour" value={active.colour} /> : null}
+
         <FacetGroup
           legend="Make"
           name="make"
@@ -126,10 +150,10 @@ export async function FacetRail({ active }: { active: Active }) {
         />
 
         <fieldset className="border-t border-line py-4">
-          <legend className="font-display text-sm font-bold">Price</legend>
+          <legend className="rn-label py-3">Price</legend>
           <div className="mt-3 flex items-end gap-3">
             <div className="flex-1">
-              <label htmlFor="minPrice" className="block text-xs font-medium text-ink-secondary">
+              <label htmlFor="minPrice" className="rn-label rn-label--light block text-ink-muted">
                 From
               </label>
               <input
@@ -141,11 +165,11 @@ export async function FacetRail({ active }: { active: Active }) {
                 step={10000}
                 defaultValue={active.minPrice}
                 placeholder="0"
-                className="mt-1 min-h-11 w-full rounded-md border border-line-interactive bg-surface px-3 text-sm tabular"
+                className="mt-1 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium tabular"
               />
             </div>
             <div className="flex-1">
-              <label htmlFor="maxPrice" className="block text-xs font-medium text-ink-secondary">
+              <label htmlFor="maxPrice" className="rn-label rn-label--light block text-ink-muted">
                 To
               </label>
               <input
@@ -157,11 +181,11 @@ export async function FacetRail({ active }: { active: Active }) {
                 step={10000}
                 defaultValue={active.maxPrice}
                 placeholder="Any"
-                className="mt-1 min-h-11 w-full rounded-md border border-line-interactive bg-surface px-3 text-sm tabular"
+                className="mt-1 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium tabular"
               />
             </div>
           </div>
-          <p className="mt-1.5 text-2xs text-ink-muted">Rand, including VAT.</p>
+          <p className="rn-label rn-label--light mt-2 text-ink-muted">Rand, including VAT.</p>
         </fieldset>
 
         {/*
@@ -172,13 +196,13 @@ export async function FacetRail({ active }: { active: Active }) {
         <div className="flex gap-2 border-t border-line pt-4">
           <button
             type="submit"
-            className="min-h-11 flex-1 rounded-md bg-accent-solid px-4 text-sm font-semibold text-ink-on-accent hover:bg-accent-solid-hover"
+            className="rn-label min-h-11 flex-1 bg-accent-solid px-4 text-ink-on-accent hover:bg-accent-solid-hover"
           >
             Apply filters
           </button>
           <a
             href="/cars"
-            className="inline-flex min-h-11 items-center rounded-md border border-line-interactive px-4 text-sm font-semibold hover:bg-surface-sunken"
+            className="rn-label inline-flex min-h-11 items-center border border-line-interactive px-4 hover:bg-ink hover:text-ink-inverse"
           >
             Clear
           </a>

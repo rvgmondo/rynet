@@ -4,21 +4,38 @@
  * Every colour, size, radius, duration and z-index in the platform comes from here.
  * An arbitrary hex value in a component is a review rejection, not a shortcut.
  *
- * The colour ramps are anchored on the three brand values and were computed rather than
- * picked: neutral runs white to #B1B4BB (brand silver, at 400) to #001123 (brand navy, at
- * 900), and red-500 is the brand red with the ramp built around it. Every semantic pair
- * below is verified by scripts/contrast-report.ts, which CI runs on every pull request.
+ * ---------------------------------------------------------------------------------
+ * THE DIRECTION: STOCKLIST. See docs/DESIGN-STOCKLIST.md.
  *
- * Three findings from that work drive how the brand is allowed to be used:
+ * The product has no vehicle photography, so every element used to declare itself with a
+ * thin grey border, and three hundred thin grey borders is what cheap looks like. This set
+ * removes the ability to do that. There are NO radii, NO shadows and almost no borders:
+ * the four shadow tokens resolve to `none` and the four radius tokens to `0`, on purpose.
+ * Depth comes from ruled lines and shifts of ground, the way it does on a printed sheet.
  *
- *   1. Brand red on white is 4.60:1. That clears AA body text by 0.10, which is too thin
- *      to build on, so link and inline accent text uses red-600 (5.47).
- *   2. Brand red on brand navy is 4.13:1 and FAILS. Dark-theme accent text lightens to
- *      red-300 (7.75). Never navy text on red.
- *   3. Brand silver on white is 2.08:1 and fails everything, including the 3:1 minimum for
- *      an interactive boundary. Silver is a dark-theme text colour and a light-theme
- *      DECORATIVE rule only. It is never body text, placeholder text or an input border
- *      on a light ground.
+ * The grounds are plaster, not white. Pure #FFFFFF was the single largest contributor to
+ * the old build reading cheap.
+ *
+ * ---------------------------------------------------------------------------------
+ * THE RED RULE. Read this before reaching for a red fill.
+ *
+ * Red is a MARK, never a surface behind text. --rn-red #E32432 appears in exactly two
+ * places on any page: the terminus of the 2px masthead rule, and the Rynet mark. It carries
+ * no text and no text sits on it, so it has no contrast obligation and can never fail.
+ * Every red FILL is --rn-red-solid #CC2231, with white on it at 5.47. Every red WORD is
+ * --rn-red-text. There is never more than one red object in a viewport.
+ *
+ * Three findings from the original contrast work still drive this:
+ *
+ *   1. Brand red on white is 4.60:1, which clears AA body text by 0.10. Too thin to build
+ *      on, so link and inline accent text uses a darker red.
+ *   2. Brand red on brand navy is 4.13:1 and FAILS. Dark-theme accent text lightens.
+ *   3. Brand silver on a light ground is 2.08:1 and fails everything, including the 3:1
+ *      minimum for an interactive boundary. Silver is a DARK-theme text colour and a
+ *      decorative rule on the ink band. Never body text, never an input border on paper.
+ *
+ * Every semantic pair below is verified by scripts/contrast-report.ts, which CI runs on
+ * every pull request, and the plate sweep in that script covers all 360 hues.
  */
 
 :root {
@@ -53,64 +70,120 @@
   /* Status. Tuned per theme below, because no single value passes on both grounds. */
   --rn-green-600: #0f7a3d;
   --rn-green-300: #4fcb86;
-  --rn-amber-700: #8a5a00;
+  --rn-amber-700: #7d5100;
   --rn-amber-300: #f0b44a;
   --rn-blue-600: #0b5fa5;
   --rn-blue-300: #66b6f2;
 
-  /* ------------------------------------------------------- semantic (light) */
-  --rn-surface: var(--rn-neutral-0);
-  --rn-surface-raised: var(--rn-neutral-25);
-  --rn-surface-sunken: var(--rn-neutral-50);
-  --rn-surface-inverse: var(--rn-neutral-900);
+  /* =============================================================== LIGHT ===== */
 
-  --rn-text-primary: #0c1721; /* 18.10 on surface */
-  --rn-text-secondary: var(--rn-neutral-700); /*  9.13 */
-  --rn-text-muted: var(--rn-neutral-600); /*  5.89 */
-  --rn-text-inverse: var(--rn-neutral-50);
-  --rn-text-on-accent: var(--rn-neutral-0);
+  /* Grounds. Plaster, not white. */
+  --rn-paper: #ededea; /* page ground, and the card ground */
+  --rn-paper-raised: #f7f7f5; /* inset panels, used about four times in the product */
+  --rn-paper-sunken: #e2e2de; /* filter rail, register band, table heads */
 
-  --rn-accent: var(--rn-red-600); /*  5.47 as text on surface */
-  --rn-accent-hover: var(--rn-red-700); /*  7.13 */
-  --rn-accent-solid: var(--rn-red-600); /* white on it: 5.47 */
-  --rn-accent-solid-hover: var(--rn-red-700);
-  --rn-accent-subtle: var(--rn-red-50);
+  /* Ink. Navy-cast near-black, so the brand survives in the darkest value. */
+  --rn-ink: #0a1017; /* headlines, prices, 2px rules, the inverse band */
+  --rn-ink-body: #232a33; /* running body copy */
+  --rn-ink-muted: #545e6a; /* labels, spec values, counts */
+
+  /* Ink for use ON the inverse band and on a hover-flipped card. */
+  --rn-ink-inverse: #ededea;
+  --rn-ink-muted-inverse: #9ba3ad;
 
   /*
-   * Two border tokens on purpose. WCAG 2.2 SC 1.4.11 requires 3:1 only where a boundary is
-   * the SOLE indicator of a control. Collapsing these into one either makes every hairline
-   * too dark or leaves real input borders failing.
+   * Rules. Three, because WCAG asks three different things of them. SC 1.4.11 requires 3:1
+   * only where a boundary is the SOLE indicator of a control. Collapsing these into one
+   * either makes every hairline too dark or leaves real input borders failing.
    */
-  --rn-border-subtle: var(--rn-neutral-200); /* decorative: dividers, card edges */
-  --rn-border-interactive: var(--rn-neutral-500); /* 3.71: inputs, unfilled controls */
-  --rn-border-strong: var(--rn-neutral-700);
+  --rn-hairline: #c8c8c2; /* decorative: grid gutters, row rules */
+  --rn-hairline-strong: #a2a29a; /* decorative: section openers, ruled stamps */
+  --rn-line-interactive: #69727e; /* the SOLE boundary of a control */
+  --rn-silver: #b1b4bb; /* BRAND silver. Decorative rules on the ink band ONLY */
+
+  /* Red. Rationed to near zero. See the red rule at the top of this file. */
+  --rn-red: var(--rn-red-500); /* GRAPHIC MARKS ONLY, never behind text */
+  --rn-red-solid: var(--rn-red-600); /* the only red fill. White on it: 5.47 */
+  --rn-red-text: #b81b29; /* inline links, price drops */
+  --rn-red-text-inverse: #f4626b; /* the same job on the ink band or a flipped card */
+
+  /* The plate. These values ARE the imagery system, mirrored in src/lib/vehicle-plate.ts. */
+  --rn-plate-ink: #ededea; /* the only colour ever drawn on a plate, both themes */
+  --rn-plate-ink-soft: rgb(237 237 234 / 0.72); /* arc track, decorative */
+  --rn-plate-edge: rgb(10 16 23 / 0.16); /* 1px inset frame, decorative */
+  --rn-plate-scrim: rgb(10 16 23 / 0.78); /* the bottom band, for photo day */
+
+  /* ---------------------------------------------- semantic aliases (light) */
+  /*
+   * The names the components and the Tailwind theme already use, pointed at the values
+   * above. Renaming three hundred usages to prove a point would have been the expensive
+   * kind of change rather than the valuable kind.
+   */
+  --rn-surface: var(--rn-paper);
+  --rn-surface-raised: var(--rn-paper-raised);
+  --rn-surface-sunken: var(--rn-paper-sunken);
+  --rn-surface-inverse: var(--rn-ink);
+
+  --rn-text-primary: var(--rn-ink);
+  --rn-text-secondary: var(--rn-ink-body);
+  --rn-text-muted: var(--rn-ink-muted);
+  --rn-text-inverse: var(--rn-ink-inverse);
+  --rn-text-muted-inverse: var(--rn-ink-muted-inverse);
+  --rn-text-on-accent: var(--rn-neutral-0);
+
+  --rn-accent: var(--rn-red-text);
+  --rn-accent-hover: #93131f;
+  --rn-accent-solid: var(--rn-red-solid);
+  --rn-accent-solid-hover: var(--rn-red-700);
+  --rn-accent-subtle: #f2e2e3;
+
+  --rn-border-subtle: var(--rn-hairline);
+  --rn-border-interactive: var(--rn-line-interactive);
+  --rn-border-strong: var(--rn-line-interactive);
 
   --rn-success: var(--rn-green-600);
   --rn-warning: var(--rn-amber-700);
-  --rn-danger: var(--rn-red-700);
+  --rn-danger: var(--rn-red-text);
   --rn-info: var(--rn-blue-600);
-  --rn-success-subtle: #e8f5ed;
-  --rn-warning-subtle: #fbf2e0;
-  --rn-danger-subtle: var(--rn-red-50);
-  --rn-info-subtle: #e7f1fa;
+  --rn-success-subtle: #e0efe6;
+  --rn-warning-subtle: #f4ecda;
+  --rn-danger-subtle: #f2e2e3;
+  --rn-info-subtle: #e0ebf4;
 
-  --rn-focus-ring: var(--rn-red-600);
-  --rn-focus-offset: var(--rn-neutral-0);
+  --rn-focus-ring: var(--rn-red-text);
+  --rn-focus-offset: var(--rn-paper);
   /* For a ring drawn on an inverse panel, where the ground is the other theme's. */
-  --rn-focus-ring-inverse: var(--rn-red-300);
-  --rn-focus-offset-inverse: var(--rn-neutral-900);
+  --rn-focus-ring-inverse: var(--rn-red-text-inverse);
+  --rn-focus-offset-inverse: var(--rn-ink);
 
-  /* Elevation: ambient plus direct, tuned for a light ground. */
-  --rn-shadow-1: 0 1px 2px rgb(0 17 35 / 0.06);
-  --rn-shadow-2: 0 1px 2px rgb(0 17 35 / 0.05), 0 4px 12px -4px rgb(0 17 35 / 0.1);
-  --rn-shadow-3: 0 2px 4px rgb(0 17 35 / 0.05), 0 12px 28px -8px rgb(0 17 35 / 0.14);
-  --rn-shadow-4: 0 4px 8px rgb(0 17 35 / 0.06), 0 24px 56px -16px rgb(0 17 35 / 0.2);
+  /*
+   * Depth comes from rules and ground shifts. Nothing else. These four tokens exist only so
+   * that a component asking for elevation gets nothing, rather than reaching around the
+   * system for a hand-written box-shadow.
+   */
+  --rn-shadow-1: none;
+  --rn-shadow-2: none;
+  --rn-shadow-3: none;
+  --rn-shadow-4: none;
 
   color-scheme: light;
 }
 
-/* -------------------------------------------------------------- dark theme */
 /*
+ * Under 768px, structure has to survive a cheap panel in direct sunlight, so the decorative
+ * hairline steps up to the stronger value. A token override, not a component rule.
+ */
+@media (max-width: 47.9375rem) {
+  :root {
+    --rn-hairline: #a2a29a;
+  }
+}
+
+/* ================================================================= DARK ===== */
+/*
+ * Not a different design. The same two values, swapped. A screenshot of either theme is
+ * obviously the same product.
+ *
  * Three states, not two. An explicit choice stamps data-theme on the root; the default
  * "system" setting stamps nothing, so only prefers-color-scheme separates the two. Both
  * blocks below redefine ONLY tokens, never component rules, so a colour can never end up
@@ -118,91 +191,87 @@
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --rn-surface: var(--rn-neutral-900);
-    --rn-surface-raised: #0e1e2f;
-    --rn-surface-sunken: var(--rn-neutral-950);
-    --rn-surface-inverse: var(--rn-neutral-0);
+    --rn-paper: #080d14;
+    --rn-paper-raised: #121821;
+    --rn-paper-sunken: #05080d;
 
-    --rn-text-primary: var(--rn-neutral-50); /* 17.00 on surface */
-    --rn-text-secondary: var(--rn-neutral-300); /* 10.90 */
-    --rn-text-muted: var(--rn-neutral-400); /*  9.16 */
-    --rn-text-inverse: #0c1721;
-    --rn-text-on-accent: var(--rn-neutral-0);
+    --rn-ink: #f7f7f5;
+    --rn-ink-body: #e3e3df;
+    --rn-ink-muted: #99a0a9;
 
-    --rn-accent: var(--rn-red-300); /*  7.75 as text on surface */
-    --rn-accent-hover: var(--rn-red-200); /* 11.78 */
-    --rn-accent-solid: var(--rn-red-500); /* white on it: 4.60 */
-    --rn-accent-solid-hover: var(--rn-red-600); /* white on it: 5.47 */
-    --rn-accent-subtle: #12202e;
+    --rn-ink-inverse: #080d14;
+    --rn-ink-muted-inverse: #545e6a;
 
-    --rn-border-subtle: #273544;
-    --rn-border-interactive: var(--rn-neutral-500); /* 5.12 base, 4.54 raised */
-    --rn-border-strong: var(--rn-neutral-400); /* brand silver, 9.16 on navy */
+    --rn-hairline: #262d37;
+    --rn-hairline-strong: #3b434f;
+    --rn-line-interactive: #7d8691;
+    --rn-silver: #b1b4bb;
+
+    --rn-red: var(--rn-red-500);
+    --rn-red-solid: var(--rn-red-600);
+    --rn-red-text: #f4626b;
+    --rn-red-text-inverse: #b81b29;
+
+    --rn-plate-ink: #ededea;
+    --rn-plate-ink-soft: rgb(237 237 234 / 0.72);
+    /* Load-bearing: it is what stops a Midnight Black plate melting into a near-black page. */
+    --rn-plate-edge: rgb(237 237 234 / 0.28);
+    --rn-plate-scrim: rgb(8 13 20 / 0.8);
+
+    --rn-accent-hover: #f89aa0;
+    --rn-accent-subtle: #1c1013;
 
     --rn-success: var(--rn-green-300);
     --rn-warning: var(--rn-amber-300);
-    --rn-danger: var(--rn-red-300);
+    --rn-danger: var(--rn-red-text);
     --rn-info: var(--rn-blue-300);
-    --rn-success-subtle: #0d2419;
-    --rn-warning-subtle: #241d0c;
-    --rn-danger-subtle: #26141a;
-    --rn-info-subtle: #0c1d2b;
-
-    --rn-focus-ring: var(--rn-red-300);
-    --rn-focus-offset: var(--rn-neutral-900);
-    --rn-focus-ring-inverse: var(--rn-red-600);
-    --rn-focus-offset-inverse: var(--rn-neutral-0);
-
-    /* A dark theme separates surfaces with light, not with darker shadow. */
-    --rn-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
-    --rn-shadow-2: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.6);
-    --rn-shadow-3: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 28px -8px rgb(0 0 0 / 0.7);
-    --rn-shadow-4: 0 4px 8px rgb(0 0 0 / 0.4), 0 24px 56px -16px rgb(0 0 0 / 0.8);
+    --rn-success-subtle: #0a1f14;
+    --rn-warning-subtle: #1f1808;
+    --rn-info-subtle: #081724;
+    --rn-danger-subtle: #1c1013;
 
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --rn-surface: var(--rn-neutral-900);
-  --rn-surface-raised: #0e1e2f;
-  --rn-surface-sunken: var(--rn-neutral-950);
-  --rn-surface-inverse: var(--rn-neutral-0);
+  --rn-paper: #080d14;
+  --rn-paper-raised: #121821;
+  --rn-paper-sunken: #05080d;
 
-  --rn-text-primary: var(--rn-neutral-50);
-  --rn-text-secondary: var(--rn-neutral-300);
-  --rn-text-muted: var(--rn-neutral-400);
-  --rn-text-inverse: #0c1721;
-  --rn-text-on-accent: var(--rn-neutral-0);
+  --rn-ink: #f7f7f5;
+  --rn-ink-body: #e3e3df;
+  --rn-ink-muted: #99a0a9;
 
-  --rn-accent: var(--rn-red-300);
-  --rn-accent-hover: var(--rn-red-200);
-  --rn-accent-solid: var(--rn-red-500);
-  --rn-accent-solid-hover: var(--rn-red-600); /* white on it: 5.47 */
-  --rn-accent-subtle: #12202e;
+  --rn-ink-inverse: #080d14;
+  --rn-ink-muted-inverse: #545e6a;
 
-  --rn-border-subtle: #273544;
-  --rn-border-interactive: var(--rn-neutral-500);
-  --rn-border-strong: var(--rn-neutral-500);
+  --rn-hairline: #262d37;
+  --rn-hairline-strong: #3b434f;
+  --rn-line-interactive: #7d8691;
+  --rn-silver: #b1b4bb;
+
+  --rn-red: var(--rn-red-500);
+  --rn-red-solid: var(--rn-red-600);
+  --rn-red-text: #f4626b;
+  --rn-red-text-inverse: #b81b29;
+
+  --rn-plate-ink: #ededea;
+  --rn-plate-ink-soft: rgb(237 237 234 / 0.72);
+  --rn-plate-edge: rgb(237 237 234 / 0.28);
+  --rn-plate-scrim: rgb(8 13 20 / 0.8);
+
+  --rn-accent-hover: #f89aa0;
+  --rn-accent-subtle: #1c1013;
 
   --rn-success: var(--rn-green-300);
   --rn-warning: var(--rn-amber-300);
-  --rn-danger: var(--rn-red-300);
+  --rn-danger: var(--rn-red-text);
   --rn-info: var(--rn-blue-300);
-  --rn-success-subtle: #0d2419;
-  --rn-warning-subtle: #241d0c;
-  --rn-danger-subtle: #26141a;
-  --rn-info-subtle: #0c1d2b;
-
-  --rn-focus-ring: var(--rn-red-300);
-  --rn-focus-offset: var(--rn-neutral-900);
-  --rn-focus-ring-inverse: var(--rn-red-600);
-  --rn-focus-offset-inverse: var(--rn-neutral-0);
-
-  --rn-shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
-  --rn-shadow-2: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px -4px rgb(0 0 0 / 0.6);
-  --rn-shadow-3: 0 2px 4px rgb(0 0 0 / 0.4), 0 12px 28px -8px rgb(0 0 0 / 0.7);
-  --rn-shadow-4: 0 4px 8px rgb(0 0 0 / 0.4), 0 24px 56px -16px rgb(0 0 0 / 0.8);
+  --rn-success-subtle: #0a1f14;
+  --rn-warning-subtle: #1f1808;
+  --rn-info-subtle: #081724;
+  --rn-danger-subtle: #1c1013;
 
   color-scheme: dark;
 }
@@ -210,39 +279,60 @@
 /* --------------------------------------------------------- non-colour tokens */
 :root {
   /*
-   * Type. Montserrat is the logo's voice and carries display. Inter carries interface,
-   * body and every numeral, because this platform is mostly prices, mileage, kilowatts
-   * and rates, and Inter has real tabular figures. Poppins is reserved for the agency
-   * site's large marketing type and is not loaded on marketplace routes.
+   * TYPE. Two families, both variable, both self-hosted, latin only.
+   *
+   * Archivo is a variable grotesque with a real WIDTH axis (wdth 62 to 125) alongside
+   * weight, and that axis is the whole typographic idea. At wdth 118 / wght 800 a headline
+   * fills a twelve column measure edge to edge with no manual tracking hack. The same file
+   * at wdth 100 / wght 700 sets an 11px uppercase label at 0.16em without turning to mush.
+   * One family, two completely different registers. It also ships genuine tabular figures,
+   * which every price on the platform depends on.
+   *
+   * Newsreader does ONE job: running prose. The verification explanation, dealership
+   * descriptions, editorial. Never in a card, never in the search interface, never in a
+   * button. It is what keeps an enormous grotesk reading as restraint rather than as a
+   * student project, because students do not set body copy in an optically sized serif.
    */
-  --rn-font-display: var(--font-montserrat), "Montserrat", system-ui, sans-serif;
-  --rn-font-body: var(--font-inter), "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
-  --rn-font-marketing: var(--font-poppins), "Poppins", var(--rn-font-body);
+  --rn-font-display: var(--font-archivo), "Archivo", system-ui, sans-serif;
+  --rn-font-body: var(--font-archivo), "Archivo", system-ui, sans-serif;
+  --rn-font-prose: var(--font-newsreader), "Newsreader", Georgia, "Times New Roman", serif;
+  --rn-font-marketing: var(--rn-font-display);
   --rn-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /*
-   * Fluid scale. The marketplace runs a 1.2 ratio and the agency 1.25; both read from the
-   * same steps, and the agency layer overrides the clamp maximums.
+   * The scale. Named steps for the roles this direction actually has, and the old t-shirt
+   * sizes kept as aliases so nothing that already ships has to be rewritten to move.
    */
-  --rn-text-2xs: clamp(0.694rem, 0.68rem + 0.07vw, 0.72rem);
-  --rn-text-xs: clamp(0.833rem, 0.81rem + 0.11vw, 0.875rem);
-  --rn-text-sm: clamp(0.926rem, 0.9rem + 0.13vw, 0.95rem);
-  --rn-text-base: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
-  --rn-text-lg: clamp(1.2rem, 1.14rem + 0.3vw, 1.3rem);
-  --rn-text-xl: clamp(1.44rem, 1.34rem + 0.5vw, 1.6rem);
-  --rn-text-2xl: clamp(1.728rem, 1.56rem + 0.84vw, 2rem);
-  --rn-text-3xl: clamp(2.074rem, 1.8rem + 1.37vw, 2.5rem);
-  --rn-text-4xl: clamp(2.488rem, 2.06rem + 2.14vw, 3.15rem);
-  --rn-text-5xl: clamp(2.986rem, 2.34rem + 3.23vw, 3.94rem);
+  --rn-text-label: clamp(0.6875rem, 0.665rem + 0.11vw, 0.75rem); /* 11 -> 12 */
+  --rn-text-xs: clamp(0.8125rem, 0.79rem + 0.11vw, 0.875rem); /* 13 -> 14 */
+  --rn-text-sm: clamp(0.9375rem, 0.915rem + 0.11vw, 1rem); /* 15 -> 16 */
+  --rn-text-base: clamp(1rem, 0.955rem + 0.22vw, 1.125rem); /* 16 -> 18 */
+  --rn-text-lead: clamp(1.1875rem, 1.06rem + 0.63vw, 1.5rem); /* 19 -> 24 */
+  --rn-text-price: clamp(1.75rem, 1.32rem + 2.15vw, 2.5rem); /* 28 -> 40 */
+  --rn-text-head: clamp(2rem, 1.45rem + 2.75vw, 3.5rem); /* 32 -> 56 */
+  --rn-text-display: clamp(2.75rem, 1.35rem + 7vw, 7.5rem); /* 44 -> 120 */
+  --rn-text-mega: clamp(3.5rem, 1.2rem + 11.5vw, 11rem); /* 56 -> 176 */
+
+  --rn-text-2xs: var(--rn-text-label);
+  --rn-text-lg: var(--rn-text-lead);
+  --rn-text-xl: clamp(1.375rem, 1.2rem + 0.88vw, 1.875rem); /* 22 -> 30 */
+  --rn-text-2xl: var(--rn-text-price);
+  --rn-text-3xl: var(--rn-text-head);
+  --rn-text-4xl: clamp(2.5rem, 1.6rem + 4.5vw, 5rem); /* 40 -> 80 */
+  --rn-text-5xl: var(--rn-text-display);
 
   /* Line height is a token per step, not one global multiplier. */
-  --leading-tight: 1.08;
-  --leading-snug: 1.22;
+  --rn-leading-display: 0.88; /* display and mega only, and they carry padding-block */
+  --leading-tight: 1.04;
+  --leading-snug: 1.24;
   --leading-normal: 1.5;
-  --leading-relaxed: 1.62;
+  --leading-relaxed: 1.6;
+  --leading-prose: 1.65; /* Newsreader */
 
-  --tracking-tight: -0.022em;
+  --tracking-display: -0.03em;
   --tracking-tighter: -0.032em;
+  --tracking-tight: -0.02em;
+  --tracking-price: -0.015em;
   --tracking-wide: 0.06em;
   --tracking-widest: 0.16em;
 
@@ -269,25 +359,35 @@
 
   --container-max: 82.5rem;
   --container-pad: clamp(1rem, 4vw, 2.5rem);
-  --measure: 65ch;
+  /* PROSE ONLY. Never applied to the results grid: results centred at a text measure on a
+     1920px screen is what makes a marketplace read as a blog. */
+  --measure: 64ch;
 
-  --rn-radius-sm: 4px;
-  --rn-radius-md: 8px;
-  --rn-radius-lg: 12px;
-  --rn-radius-xl: 16px;
+  /*
+   * No radii. The commitment leaves the design nowhere to hide, which means any component
+   * that has not been redrawn to this system will look pasted in immediately, which is the
+   * point. --rn-radius-full survives for the one pill shape the product has.
+   */
+  --rn-radius-sm: 0;
+  --rn-radius-md: 0;
+  --rn-radius-lg: 0;
+  --rn-radius-xl: 0;
   --rn-radius-full: 9999px;
 
   /*
-   * Motion. Three durations, three easings. A one-off timing in a component is a review
-   * rejection. Everything animates transform and opacity only.
+   * Motion. Four movements exist in the whole product and the count is the point: rule
+   * draw, plate fade, ink flip, and the sweep on a vehicle page. Everything animates
+   * transform, opacity or colour. A one-off timing in a component is a review rejection.
    */
   --duration-micro: 120ms;
   --duration-element: 240ms;
   --duration-page: 480ms;
   --rn-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --rn-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --rn-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --stagger: 50ms;
+  /* Overshoot is the wrong physics for a document, and a springy card is exactly the
+     cheapness this direction exists to remove. Kept as a name, aliased to the real curve. */
+  --rn-ease-spring: var(--rn-ease-out);
+  --stagger: 24ms;
 
   --z-base: 0;
   --z-raised: 10;

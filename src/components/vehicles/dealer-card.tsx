@@ -35,7 +35,7 @@ export function DealerCard({ dealer, branch }: { dealer: Dealer | null; branch: 
   const today = branch?.tradingHours?.find((h) => h.day === todayKey);
 
   return (
-    <div className="rounded-lg border border-line p-5">
+    <div className="border-t-2 border-ink p-5 ps-0">
       <p className="text-xs font-medium uppercase tracking-[var(--tracking-wide)] text-ink-muted">
         Sold by
       </p>
@@ -93,7 +93,7 @@ export function DealerCard({ dealer, branch }: { dealer: Dealer | null; branch: 
 
       <Link
         href={`/dealers/${dealer.slug}`}
-        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-md border border-line-interactive px-4 text-sm font-semibold hover:bg-surface-sunken"
+        className="rn-label mt-4 inline-flex min-h-11 w-full items-center justify-center border border-line-interactive px-4 hover:bg-ink hover:text-ink-inverse"
       >
         See all their stock
       </Link>

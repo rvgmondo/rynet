@@ -47,13 +47,15 @@ const COLUMNS = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-[var(--section-base)] border-t border-line bg-surface-sunken">
+    <footer className="border-t-2 border-ink bg-surface-sunken">
       <div className="container-page py-[var(--section-tight)]">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_repeat(3,1fr)]">
           <div className="max-w-xs">
             <div className="flex items-center gap-2.5">
               <RynetMark className="h-8 w-auto" />
-              <span className="font-display text-lg font-extrabold tracking-tight">RYNET</span>
+              <span className="font-display text-lg font-extrabold tracking-tight [font-variation-settings:'wdth'_112]">
+                RYNET
+              </span>
             </div>
             <p className="mt-4 text-sm text-ink-secondary">
               Every car on Rynet comes from a registered dealership we have checked. No private
@@ -70,10 +72,7 @@ export function SiteFooter() {
 
           {COLUMNS.map((column) => (
             <nav key={column.heading} aria-labelledby={`footer-${column.heading}`}>
-              <h2
-                id={`footer-${column.heading}`}
-                className="font-display text-2xs font-bold uppercase tracking-[var(--tracking-widest)] text-ink-muted"
-              >
+              <h2 id={`footer-${column.heading}`} className="rn-label text-ink-muted">
                 {column.heading}
               </h2>
               <ul className="mt-4 space-y-0.5">
@@ -81,7 +80,7 @@ export function SiteFooter() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="flex min-h-11 items-center text-sm text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:text-accent"
+                      className="flex min-h-11 items-center border-b border-line text-sm text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:text-accent"
                     >
                       {link.label}
                     </Link>

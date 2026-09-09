@@ -1,9 +1,9 @@
 import config from "@payload-config";
 import Link from "next/link";
 import { getPayload } from "payload";
-
-import { VehicleCard, type VehicleCardData } from "@/components/vehicles/vehicle-card";
+import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { populated, relName, relSlug } from "@/lib/relations";
+import { toCard } from "@/lib/search";
 import type { Vehicle } from "@/payload-types";
 
 /**
@@ -82,31 +82,6 @@ async function loadSimilar(vehicle: Vehicle) {
   return { similar, fromDealer: fromDealer?.docs ?? [] };
 }
 
-function toCard(doc: Vehicle): VehicleCardData {
-  const branch = populated(doc.branch);
-  return {
-    publicRef: doc.publicRef ?? "",
-    modelYear: doc.modelYear,
-    makeName: relName(doc.make) ?? "",
-    makeSlug: relSlug(doc.make),
-    modelName: relName(doc.model) ?? "",
-    modelSlug: relSlug(doc.model),
-    variantName: relName(doc.variant),
-    price: doc.price,
-    previousPrice: doc.previousPrice ?? null,
-    mileageKm: doc.mileageKm,
-    transmissionName: relName(doc.transmission),
-    fuelName: relName(doc.fuelType),
-    bodyName: relName(doc.bodyType),
-    condition: doc.condition,
-    dealerName: populated(doc.dealer)?.tradingName ?? "",
-    dealerSlug: populated(doc.dealer)?.slug ?? "",
-    cityName: branch ? relName(branch.city) : null,
-    provinceName: branch ? relName(branch.province) : null,
-    isDemonstration: Boolean(doc.isDemonstration),
-  };
-}
-
 export async function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
   const { similar, fromDealer } = await loadSimilar(vehicle);
   const dealer = populated(vehicle.dealer);
@@ -133,7 +108,7 @@ export async function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
               </Link>
             ) : null}
           </div>
-          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="rn-grid mt-5">
             {similar.map((doc) => (
               <li key={doc.id} className="flex">
                 <VehicleCard vehicle={toCard(doc)} />
@@ -156,7 +131,7 @@ export async function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
               All their stock
             </Link>
           </div>
-          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="rn-grid mt-5">
             {fromDealer.map((doc) => (
               <li key={doc.id} className="flex">
                 <VehicleCard vehicle={toCard(doc)} />

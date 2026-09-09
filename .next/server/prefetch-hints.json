@@ -266,20 +266,6 @@
       }
     }
   },
-  "/": {
-    "hints": 64,
-    "slots": {
-      "children": {
-        "hints": 32,
-        "slots": {
-          "children": {
-            "hints": 128,
-            "slots": null
-          }
-        }
-      }
-    }
-  },
   "/privacy": {
     "hints": 64,
     "slots": {

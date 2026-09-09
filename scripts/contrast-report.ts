@@ -21,6 +21,16 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  oklchToHex,
+  PLATE,
+  PLATE_CHROMA_MAX,
+  PLATE_INK,
+  type PlateTheme,
+  plateField,
+  primerField,
+} from "../src/lib/vehicle-plate";
+
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(dirname, "..");
 
@@ -83,11 +93,31 @@ function parseTokens(css: string): { light: Map<string, string>; dark: Map<strin
   const light = new Map<string, string>();
   const dark = new Map<string, string>();
 
+  /*
+   * A block belongs to the dark theme if its SELECTOR names the dark theme, or if it sits
+   * inside a prefers-color-scheme: dark media query.
+   *
+   * The media query case is the one that matters and it was previously missed, because
+   * `:root:not([data-theme="light"])` does not contain the string `data-theme="dark"`. The
+   * whole dark palette was therefore being written into the light map, on top of the real
+   * light values, and the light theme was never actually checked by this report. It passed
+   * because dark values are self-consistent against a dark ground.
+   */
   const blocks = [...css.matchAll(/(:root[^{]*)\{([^}]*)\}/g)];
-  for (const [, selectorRaw, body] of blocks) {
+  for (const block of blocks) {
+    const [, selectorRaw, body] = block;
     if (!selectorRaw || !body) continue;
+
+    const before = css.slice(0, block.index ?? 0);
+    const lastMedia = before.lastIndexOf("@media");
+    const inDarkMedia =
+      lastMedia !== -1 &&
+      before.slice(lastMedia, lastMedia + 120).includes("prefers-color-scheme: dark") &&
+      // The query is still open if it has more { than } after it.
+      countChar(before.slice(lastMedia), "{") > countChar(before.slice(lastMedia), "}");
+
     const selector = selectorRaw.trim();
-    const target = selector.includes('data-theme="dark"') ? dark : light;
+    const target = selector.includes('data-theme="dark"') || inDarkMedia ? dark : light;
     for (const [, name, value] of body.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
       if (!name || !value) continue;
       target.set(name, value.trim());
@@ -97,6 +127,12 @@ function parseTokens(css: string): { light: Map<string, string>; dark: Map<strin
   // The dark block inherits every token the light block set and did not override.
   for (const [k, v] of light) if (!dark.has(k)) dark.set(k, v);
   return { light, dark };
+}
+
+function countChar(text: string, char: string): number {
+  let n = 0;
+  for (const c of text) if (c === char) n += 1;
+  return n;
 }
 
 /** Resolves var(--x) chains down to a literal hex. */
@@ -276,7 +312,104 @@ const PAIRS: Pair[] = [
     bg: "--rn-surface-raised",
     kind: "decorative",
   },
+
+  /*
+   * The ink flip. A card, a register row and a browse tile all invert on hover and on
+   * focus-within, so the flipped state carries its own full set of text pairs. It is the
+   * only interactive feedback in a design with no shadows and no borders, which makes these
+   * three rows as load-bearing as the rest state.
+   */
+  {
+    label: "Muted text on a flipped card",
+    fg: "--rn-text-muted-inverse",
+    bg: "--rn-surface-inverse",
+    kind: "text",
+    note: "The hover and focus state inverts the whole card, so muted copy needs its own value there.",
+  },
+  {
+    label: "Accent text on a flipped card",
+    fg: "--rn-red-text-inverse",
+    bg: "--rn-surface-inverse",
+    kind: "text",
+  },
+  {
+    label: "Interactive boundary on sunken surface",
+    fg: "--rn-border-interactive",
+    bg: "--rn-surface-sunken",
+    kind: "interactive",
+    note: "The filter rail sits on the sunken ground, and its checkboxes are boundary-only controls.",
+  },
+  {
+    label: "Strong hairline on surface",
+    fg: "--rn-hairline-strong",
+    bg: "--rn-surface",
+    kind: "decorative",
+    note: "Section openers and the ruled VERIFIED stamp. A rule that frames a word carries no information the word does not.",
+  },
+  {
+    label: "Brand silver on the ink band",
+    fg: "--rn-silver",
+    bg: "--rn-surface-inverse",
+    kind: "decorative",
+    note: "Silver's only job on a light theme. It is never used on paper.",
+  },
+  {
+    label: "Brand red as a graphic mark",
+    fg: "--rn-red",
+    bg: "--rn-surface",
+    kind: "decorative",
+    note: "Registered decorative on purpose. Brand red carries no text and no text sits on it, so it has no contrast obligation. If anyone ever needs it as text it must be re-registered as large-text with the size class documented, rather than the token being weakened to suit.",
+  },
 ];
+
+/*
+ * The plate sweep.
+ *
+ * The imagery system draws exactly one ink colour on a field whose lightness is a theme
+ * constant, so its readability is a bounded problem rather than one check per listing. This
+ * covers all 360 hues at the chromatic value plus both ends of the neutral band plus the
+ * primer, which is every field colour the product can produce.
+ */
+function plateRows(theme: PlateTheme): Row[] {
+  const rows: Row[] = [];
+  const k = PLATE[theme];
+
+  let worst = { hex: "", ratio: Number.POSITIVE_INFINITY, hue: 0 };
+  for (let hue = 0; hue < 360; hue += 1) {
+    const hex = oklchToHex(k.chromaticL, PLATE_CHROMA_MAX, hue);
+    const ratio = contrast(PLATE_INK, hex);
+    if (ratio < worst.ratio) worst = { hex, ratio, hue };
+  }
+
+  const add = (label: string, bg: string, note?: string) =>
+    rows.push({
+      label,
+      fg: "PLATE_INK",
+      bg,
+      kind: "text",
+      note,
+      fgHex: PLATE_INK,
+      bgHex: bg,
+      ratio: contrast(PLATE_INK, bg),
+      min: MIN.text,
+      pass: contrast(PLATE_INK, bg) >= MIN.text,
+    });
+
+  add(
+    `Plate ink on the worst of all 360 hues (H ${worst.hue})`,
+    worst.hex,
+    "A generated sweep, not a sample. Every chromatic paint any dealership ever enters lands on this one lightness, so passing here means no listing can produce an unreadable plate.",
+  );
+  add("Plate ink on the lightest neutral plate", oklchToHex(k.neutralMaxL, 0.01, 250));
+  add("Plate ink on the darkest neutral plate", oklchToHex(k.neutralMinL, 0.01, 250));
+  add("Plate ink on primer, where no colour was recorded", primerField(theme));
+  add(
+    "Plate ink on the worst seeded swatch (Glacier White)",
+    plateField("#F4F5F7", "white", theme),
+  );
+
+  return rows;
+}
 
 // --------------------------------------------------------------------- report
 
@@ -315,8 +448,8 @@ function main(): void {
   const css = readFileSync(path.join(root, "src/styles/tokens.css"), "utf8");
   const { light, dark } = parseTokens(css);
 
-  const lightRows = evaluate(light);
-  const darkRows = evaluate(dark);
+  const lightRows = [...evaluate(light), ...plateRows("light")];
+  const darkRows = [...evaluate(dark), ...plateRows("dark")];
   const failures = [...lightRows, ...darkRows].filter((r) => !r.pass);
 
   const report = `# Contrast report

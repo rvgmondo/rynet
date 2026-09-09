@@ -29,9 +29,14 @@ import { cn } from "@/lib/cn";
  */
 const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md",
-    "font-semibold transition-[background-color,border-color,color,transform] duration-[var(--duration-micro)] ease-[var(--rn-ease-out)]",
-    "active:translate-y-px",
+    // Never nowrap. A label-caps button carries a long label sometimes ("Enquire about this
+    // vehicle") and a fixed-width column is not going to grow for it, so the text wraps and
+    // centres rather than running out past the fill.
+    "inline-flex items-center justify-center gap-2 text-center text-balance",
+    // Tracking is 0.1em rather than the 0.16em of a field label. Letterspacing that wide is
+    // right for a four character stamp and wrong for a sentence.
+    "font-display text-label font-bold uppercase tracking-[0.1em] [font-variation-settings:'wdth'_100]",
+    "transition-[background-color,border-color,color] duration-[var(--duration-micro)] ease-[var(--rn-ease-out)]",
     "disabled:pointer-events-none disabled:opacity-45",
     "aria-disabled:cursor-not-allowed aria-disabled:opacity-45",
     "[&_svg]:size-[1.15em] [&_svg]:shrink-0",
@@ -39,18 +44,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary:
-          "bg-accent-solid text-ink-on-accent hover:bg-accent-solid-hover shadow-(--rn-shadow-1)",
-        secondary: "bg-surface text-ink border border-line-interactive hover:bg-surface-sunken",
-        ghost: "bg-transparent text-ink hover:bg-surface-sunken",
-        link: "bg-transparent text-accent underline underline-offset-4 hover:text-accent-hover hover:decoration-2",
+        primary: "bg-accent-solid text-ink-on-accent hover:bg-accent-solid-hover",
+        secondary:
+          "bg-transparent text-ink border border-line-interactive hover:bg-ink hover:text-ink-inverse",
+        ghost: "bg-transparent text-ink hover:bg-ink hover:text-ink-inverse",
+        link: "bg-transparent text-accent underline underline-offset-4 hover:text-accent-hover hover:decoration-2 normal-case tracking-normal text-sm",
         danger: "bg-danger text-ink-on-accent hover:opacity-90",
       },
       size: {
         // min-h keeps the 44px target even where the visual box is shorter.
-        sm: "min-h-11 px-3 py-1.5 text-xs",
-        md: "min-h-11 px-4 py-2.5 text-sm",
-        lg: "min-h-12 px-6 py-3 text-base",
+        sm: "min-h-11 px-3 py-1.5",
+        md: "min-h-11 px-5 py-2.5",
+        lg: "min-h-14 px-7 py-3",
         // Icon-only buttons are square and must still meet the target.
         icon: "size-11 p-0",
       },

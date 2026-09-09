@@ -1,5 +1,4 @@
 import config from "@payload-config";
-import { BadgeCheck, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPayload } from "payload";
@@ -88,7 +87,7 @@ export default async function DealersPage() {
         </p>
       </div>
 
-      <ul className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <ul className="rn-grid mt-8">
         {dealers.docs.map((dealer) => {
           const dealerBranches = branchesFor.get(dealer.id) ?? [];
           const primary = dealerBranches.find((b) => b.isPrimary) ?? dealerBranches[0];
@@ -96,29 +95,27 @@ export default async function DealersPage() {
 
           return (
             <li key={dealer.id}>
-              <article className="group relative flex h-full flex-col rounded-lg border border-line p-5 transition-shadow duration-[var(--duration-element)] hover:shadow-(--rn-shadow-2)">
+              <article className="rn-card h-full p-5">
                 <h2 className="text-lg leading-snug">
-                  <Link
-                    href={`/dealers/${dealer.slug}`}
-                    className="after:absolute after:inset-0 after:content-[''] hover:text-accent"
-                  >
+                  <Link href={`/dealers/${dealer.slug}`} className="after:absolute after:inset-0">
                     {dealer.tradingName}
                   </Link>
                 </h2>
 
-                <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-accent">
-                  <BadgeCheck aria-hidden="true" className="size-4" />
+                {/* The word inside a ruled box, not a tick. A glyph next to a name is what
+                    every template ships and it persuades nobody; the claim is checkable
+                    because a dealership cannot publish stock until all three checks pass. */}
+                <p className="rn-label mt-3 inline-block border border-current px-1.5 py-1">
                   Verified
                 </p>
 
                 {primary ? (
-                  <p className="mt-3 flex items-start gap-1.5 text-sm text-ink-secondary">
-                    <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-muted" />
+                  <p className="rn-card__muted mt-4 text-sm">
                     <span>
                       {relName(primary.city)}
                       {relName(primary.province) ? `, ${relName(primary.province)}` : ""}
                       {dealerBranches.length > 1 ? (
-                        <span className="text-ink-muted">
+                        <span>
                           {" "}
                           and {dealerBranches.length - 1} other branch
                           {dealerBranches.length > 2 ? "es" : ""}
@@ -128,12 +125,14 @@ export default async function DealersPage() {
                   </p>
                 ) : null}
 
-                <p className="mt-auto pt-4 text-sm font-semibold tabular">
-                  {count} {count === 1 ? "vehicle" : "vehicles"} in stock
+                <hr className="rn-card__rule mt-auto" />
+                <p className="mt-4 flex items-baseline justify-between gap-3">
+                  <span className="rn-label rn-card__muted">In stock</span>
+                  <span className="rn-figure">{count}</span>
                 </p>
 
                 {dealer.isDemonstration ? (
-                  <p className="mt-2 text-2xs text-ink-muted">
+                  <p className="rn-label rn-label--light rn-card__muted mt-2">
                     Demonstration listing, not a real business.
                   </p>
                 ) : null}

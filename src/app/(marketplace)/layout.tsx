@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { Archivo, Newsreader } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -9,26 +9,41 @@ import { SkipLink } from "@/components/layout/skip-link";
 import "@/styles/globals.css";
 
 /**
- * Montserrat carries display, because it is the logo's own voice. Inter carries interface,
- * body and every numeral: this platform is mostly prices, mileage, kilowatts and rates, and
- * Inter has real tabular figures where a geometric display face does not.
+ * Two families, and the second one exists to keep the first one honest.
  *
- * Both are self-hosted by next/font, which subsets them, serves them from our own origin and
- * writes a metric-matched fallback so the swap does not shift the layout.
+ * Archivo is a variable grotesque with a real WIDTH axis alongside weight, and that axis is
+ * the whole typographic idea. At wdth 118 / wght 800 a headline fills a twelve column
+ * measure edge to edge with no manual tracking hack; the same file at wdth 100 / wght 700
+ * sets an eleven pixel uppercase label at 0.16em without turning to mush. One family, two
+ * completely different registers. It also ships genuine tabular figures, which every price,
+ * mileage and instalment on this platform depends on, and e2e/typography.spec.ts fails the
+ * build if a subsetting change ever strips them.
+ *
+ * Newsreader does exactly one job: running prose. The verification explanation, dealership
+ * descriptions, editorial. Never in a card, never in the search interface, never in a
+ * button. This is the load-bearing decision, because a heavy expanded grotesk on its own is
+ * what makes a brutal layout read as a student project. Students do not set body copy in an
+ * optically sized serif.
+ *
+ * Both are self-hosted by next/font, which subsets them, serves them from our own origin
+ * and writes a metric-matched fallback so the swap does not shift the layout.
  */
-const montserrat = Montserrat({
+const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-montserrat",
+  axes: ["wdth"],
+  variable: "--font-archivo",
   display: "swap",
   preload: true,
 });
 
-const inter = Inter({
+const newsreader = Newsreader({
   subsets: ["latin"],
-  variable: "--font-inter",
+  axes: ["opsz"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
   display: "swap",
-  preload: true,
+  // Prose is below the fold on every page that has any, so it never blocks the first paint.
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -53,8 +68,8 @@ export const viewport: Viewport = {
   // Never cap zoom. Pinch-zoom is an accessibility requirement, not a layout nuisance.
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#001123" },
+    { media: "(prefers-color-scheme: light)", color: "#ededea" },
+    { media: "(prefers-color-scheme: dark)", color: "#080d14" },
   ],
 };
 
@@ -63,7 +78,7 @@ export default function MarketplaceLayout({ children }: { children: React.ReactN
     <html
       lang="en-ZA"
       suppressHydrationWarning
-      className={`${montserrat.variable} ${inter.variable}`}
+      className={`${archivo.variable} ${newsreader.variable}`}
     >
       <body>
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>

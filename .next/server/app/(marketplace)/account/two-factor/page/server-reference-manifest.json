@@ -1,6 +1,6 @@
 {
   "node": {
-    "0012903517bf4775e23e80a047c4ff88742a520940": {
+    "006cbdec436449cc9ef8d375b08ccbc75411cb1f6f": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -11,7 +11,7 @@
       "exportedName": "readTwoFactorStatus",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "607d601521c467ca83c55a6da4e5d5a3312aa1ea97": {
+    "60a4cd580ec88d30cdbfe716011964c405029b737a": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -19,10 +19,10 @@
           "codeHash": null
         }
       },
-      "exportedName": "confirmTwoFactorSetup",
+      "exportedName": "beginTwoFactorSetup",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "6090919b49f6378807866f558b4e76dc340128332e": {
+    "60bcbb16dec630d241c323dc1bb349cf00c3618615": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -33,7 +33,18 @@
       "exportedName": "regenerateRecoveryCodes",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "609be032cb0dc7c44d7c54e4fea126198295d5861f": {
+    "60c8b864273d6d8c7761b179540ae12b839a2b9336": {
+      "workers": {
+        "app/(marketplace)/account/two-factor/page": {
+          "moduleId": 117720,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "confirmTwoFactorSetup",
+      "filename": "src/app/actions/two-factor.ts"
+    },
+    "60dea215ad0356226eac358556a4aa000e0a18584e": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -42,17 +53,6 @@
         }
       },
       "exportedName": "disableTwoFactor",
-      "filename": "src/app/actions/two-factor.ts"
-    },
-    "60c77cde3b20bc39bbbe62c7988f45f618d6c9f924": {
-      "workers": {
-        "app/(marketplace)/account/two-factor/page": {
-          "moduleId": 117720,
-          "async": true,
-          "codeHash": null
-        }
-      },
-      "exportedName": "beginTwoFactorSetup",
       "filename": "src/app/actions/two-factor.ts"
     }
   },

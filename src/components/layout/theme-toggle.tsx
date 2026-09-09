@@ -36,13 +36,13 @@ export function ThemeToggle() {
   React.useEffect(() => setMounted(true), []);
 
   if (!mounted) {
-    return <div className="h-11 w-[7.5rem]" aria-hidden="true" />;
+    return <div className="h-11 w-[8rem]" aria-hidden="true" />;
   }
 
   const current = theme ?? "system";
 
   return (
-    <fieldset className="flex h-11 items-center gap-0.5 rounded-full border border-line p-0.5">
+    <fieldset className="flex h-11 items-center border border-line-interactive">
       <legend className="sr-only">Colour theme</legend>
       {OPTIONS.map(({ value, label, Icon }) => {
         const id = `theme-${value}`;
@@ -61,9 +61,9 @@ export function ThemeToggle() {
             <label
               htmlFor={id}
               title={label}
-              className={`flex size-10 cursor-pointer items-center justify-center rounded-full transition-colors duration-[var(--duration-micro)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--color-focus-ring)] ${
+              className={`flex size-10 cursor-pointer items-center justify-center transition-colors duration-[var(--duration-micro)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--rn-focus-ring)] ${
                 selected
-                  ? "bg-accent-subtle text-accent"
+                  ? "bg-ink text-ink-inverse"
                   : "text-ink-muted hover:bg-surface-sunken hover:text-ink"
               }`}
             >

@@ -34,9 +34,9 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
         : "Retail";
 
   return (
-    <div className="rounded-lg border border-line bg-surface-raised p-5">
+    <div className="border-t-2 border-ink bg-surface-sunken p-5">
       {drop && !sold ? (
-        <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-success-subtle px-2.5 py-1 text-2xs font-semibold text-success">
+        <p className="rn-label mb-3 inline-flex items-center gap-1.5 border border-current px-2 py-1 text-success">
           <TrendingDown aria-hidden="true" className="size-3" />
           {drop}
         </p>
@@ -44,16 +44,14 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
 
       {poa ? (
         <>
-          <p className="font-display text-2xl font-extrabold">Price on application</p>
+          <p className="rn-figure">Price on application</p>
           <p className="mt-1 text-sm text-ink-secondary">
             This dealership prices this one on enquiry. Ask and they will come back to you.
           </p>
         </>
       ) : (
         <>
-          <p className="font-display text-3xl font-extrabold tabular">
-            {formatRand(vehicle.price)}
-          </p>
+          <p className="rn-figure">{formatRand(vehicle.price)}</p>
           <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs text-ink-muted">
             {priceLabel ? <span>{priceLabel}</span> : null}
             {vehicle.vatStatus === "vat_inclusive" ? <span>VAT included</span> : null}
@@ -66,7 +64,7 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
       )}
 
       {verified ? (
-        <p className="mt-4 flex items-start gap-2 rounded-md bg-accent-subtle p-3 text-xs text-ink-secondary">
+        <p className="mt-4 flex items-start gap-2 border-y border-line py-3 text-xs text-ink-secondary">
           <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent" />
           <span>
             Sold by a dealership we have verified.{" "}
@@ -78,7 +76,7 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
       ) : null}
 
       {sold ? (
-        <p className="mt-5 rounded-md border border-line-interactive p-3 text-center text-sm text-ink-secondary">
+        <p className="mt-5 border border-line-interactive p-3 text-center text-sm text-ink-secondary">
           No longer available
         </p>
       ) : (
@@ -103,7 +101,7 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-line-interactive px-4 text-sm font-semibold hover:bg-surface-sunken"
+              className="rn-label inline-flex min-h-11 items-center justify-center gap-2 border border-line-interactive px-4 hover:bg-ink hover:text-ink-inverse"
             >
               <MessageCircle aria-hidden="true" className="size-4" />
               WhatsApp the dealership
@@ -127,7 +125,7 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
       </dl>
 
       {vehicle.isDemonstration ? (
-        <p className="mt-4 rounded-md border border-line-interactive p-2.5 text-2xs text-ink-muted">
+        <p className="mt-4 border border-line-interactive p-2.5 text-2xs text-ink-muted">
           <strong className="font-semibold">Demonstration listing.</strong> This is seeded example
           stock. The dealership is not a real business and the vehicle is not for sale.
         </p>
@@ -149,10 +147,12 @@ export function MobileActionBar({ vehicle, sold }: { vehicle: Vehicle; sold: boo
   const branch = populated(vehicle.branch);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] border-t border-line bg-surface/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm lg:hidden">
+    // Solid, never a backdrop blur: the page scrolls under this bar by definition, and a
+    // blur there is a full-viewport readback on every frame on a mid-range Android.
+    <div className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] border-t-2 border-ink bg-surface p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-base font-extrabold tabular">
+          <p className="truncate font-display text-base font-extrabold tabular [font-variation-settings:'wdth'_112]">
             {vehicle.priceType === "poa" ? "POA" : formatRand(vehicle.price)}
           </p>
         </div>

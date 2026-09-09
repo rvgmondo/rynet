@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 import { getPayload } from "payload";
 
 import { FacetRail } from "@/components/vehicles/facet-rail";
-import { Pagination } from "@/components/vehicles/pagination";
+import { ResultsGrid } from "@/components/vehicles/results-grid";
 import { ResultsHeader } from "@/components/vehicles/results-header";
-import { VehicleCard, type VehicleCardData } from "@/components/vehicles/vehicle-card";
+import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { formatRand } from "@/lib/format";
-import { populated, relName, relSlug } from "@/lib/relations";
+import { resolveQuery, toCard } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "Cars for sale from verified dealerships",
@@ -45,13 +45,29 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
 
   const page = Math.max(1, Number(one(params.page) ?? 1) || 1);
   const sort = one(params.sort) ?? "newest";
-  const makeSlug = one(params.make);
-  const bodySlug = one(params.body);
-  const fuelSlug = one(params.fuel);
-  const transmissionSlug = one(params.transmission);
-  const provinceSlug = one(params.province);
-  const minPrice = Number(one(params.minPrice) ?? 0) || undefined;
-  const maxPrice = Number(one(params.maxPrice) ?? 0) || undefined;
+
+  /*
+   * What someone typed into the search box, resolved into the same filters the rail
+   * produces. Explicit parameters always win, so a buyer who searches "bakkie under 300"
+   * and then ticks "Diesel" in the rail keeps both, and the rail is never overruled by the
+   * text they typed two clicks ago.
+   *
+   * This used to do nothing at all: the box on the 404 page sent ?q= here and this page
+   * ignored it, so the only search box on the site was decoration.
+   */
+  const query = one(params.q);
+  const parsed = await resolveQuery(query);
+
+  const makeSlug = one(params.make) ?? parsed.make;
+  const modelSlug = one(params.model) ?? parsed.model;
+  const bodySlug = one(params.body) ?? parsed.body;
+  const fuelSlug = one(params.fuel) ?? parsed.fuel;
+  const transmissionSlug = one(params.transmission) ?? parsed.transmission;
+  const provinceSlug = one(params.province) ?? parsed.province;
+  const citySlug = one(params.city) ?? parsed.city;
+  const colourSlug = one(params.colour);
+  const minPrice = Number(one(params.minPrice) ?? 0) || parsed.minPrice;
+  const maxPrice = Number(one(params.maxPrice) ?? 0) || parsed.maxPrice;
 
   // Resolve slugs to ids. Taxonomies are small and cached; this is not the hot path.
   const resolve = async (collection: string, slug?: string) => {
@@ -66,31 +82,40 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
     return doc?.id;
   };
 
-  const [makeId, bodyId, fuelId, transmissionId, provinceId] = await Promise.all([
-    resolve("makes", makeSlug),
-    resolve("body-types", bodySlug),
-    resolve("fuel-types", fuelSlug),
-    resolve("transmissions", transmissionSlug),
-    resolve("provinces", provinceSlug),
-  ]);
+  const [makeId, modelId, bodyId, fuelId, transmissionId, provinceId, cityId, colourId] =
+    await Promise.all([
+      resolve("makes", makeSlug),
+      resolve("models", modelSlug),
+      resolve("body-types", bodySlug),
+      resolve("fuel-types", fuelSlug),
+      resolve("transmissions", transmissionSlug),
+      resolve("provinces", provinceSlug),
+      resolve("cities", citySlug),
+      resolve("colours", colourSlug),
+    ]);
 
-  // Province filters through the branch, so it needs the branch ids for that province.
+  // Location filters through the branch, so it needs the branch ids first.
   let branchIds: number[] | undefined;
-  if (provinceId) {
+  if (provinceId || cityId) {
     const branches = await payload.find({
       collection: "branches",
-      where: { province: { equals: provinceId } },
+      where: cityId ? { city: { equals: cityId } } : { province: { equals: provinceId } },
       limit: 500,
       depth: 0,
     });
     branchIds = branches.docs.map((b) => b.id);
+    // A location with no branches means no stock, and an empty `in` clause would otherwise
+    // match everything rather than nothing.
+    if (branchIds.length === 0) branchIds = [-1];
   }
 
   const where: Record<string, unknown> = { status: { equals: "live" } };
   if (makeId) where.make = { equals: makeId };
+  if (modelId) where.model = { equals: modelId };
   if (bodyId) where.bodyType = { equals: bodyId };
   if (fuelId) where.fuelType = { equals: fuelId };
   if (transmissionId) where.transmission = { equals: transmissionId };
+  if (colourId) where.exteriorColour = { equals: colourId };
   if (branchIds) where.branch = { in: branchIds };
   if (minPrice || maxPrice) {
     where.price = {
@@ -116,31 +141,9 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
     depth: 2,
   });
 
-  const vehicles: VehicleCardData[] = results.docs.map((doc) => {
-    const branch = populated(doc.branch);
-
-    return {
-      publicRef: doc.publicRef ?? "",
-      modelYear: doc.modelYear,
-      makeName: relName(doc.make) ?? "",
-      makeSlug: relSlug(doc.make),
-      modelName: relName(doc.model) ?? "",
-      modelSlug: relSlug(doc.model),
-      variantName: relName(doc.variant),
-      price: doc.price,
-      previousPrice: doc.previousPrice ?? null,
-      mileageKm: doc.mileageKm,
-      transmissionName: relName(doc.transmission),
-      fuelName: relName(doc.fuelType),
-      bodyName: relName(doc.bodyType),
-      condition: doc.condition,
-      dealerName: populated(doc.dealer)?.tradingName ?? "",
-      dealerSlug: populated(doc.dealer)?.slug ?? "",
-      cityName: branch ? relName(branch.city) : null,
-      provinceName: branch ? relName(branch.province) : null,
-      isDemonstration: Boolean(doc.isDemonstration),
-    };
-  });
+  // The shared mapper. This page used to carry a verbatim copy of it, which is how the
+  // paint colour reached the card in one place and not the other two.
+  const vehicles: VehicleCardData[] = results.docs.map(toCard);
 
   /**
    * Page links carry every current filter. Without this, clicking page 2 drops the
@@ -165,7 +168,13 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
 
   return (
     <div className="container-page py-[var(--section-tight)]">
-      <div className="grid gap-8 lg:grid-cols-[17rem_1fr]">
+      {/*
+        A ruled column boundary rather than a gap. The rail sits on the sunken ground and the
+        results run the FULL width to the container maximum: centring them at a text measure
+        is what makes a marketplace read as a blog, and it is what left the old page with an
+        empty right half.
+      */}
+      <div className="grid gap-0 lg:grid-cols-[17.5rem_1fr] lg:divide-x lg:divide-line-strong">
         <FacetRail
           active={{
             make: makeSlug,
@@ -175,48 +184,31 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
             province: provinceSlug,
             minPrice: minPrice ? String(minPrice) : undefined,
             maxPrice: maxPrice ? String(maxPrice) : undefined,
+            // Carried through as hidden inputs so applying a facet does not silently drop
+            // the text someone searched for, or the colour they picked off the home page.
+            q: query,
+            colour: colourSlug,
           }}
         />
 
-        <section aria-labelledby="results-heading">
+        <section aria-labelledby="results-heading" className="order-1 pb-10 lg:order-2 lg:ps-8">
           <ResultsHeader
             total={results.totalDocs}
             page={results.page ?? 1}
             totalPages={results.totalPages}
             sort={sort}
             priceSummary={priceSummary}
+            query={query}
+            understood={parsed.matched}
+            ignored={parsed.unmatched}
           />
 
-          {vehicles.length === 0 ? (
-            /* Empty states are design work, not a div that says "no results". This one
-               says what happened, why, and gives the one action that actually helps. */
-            <div className="rounded-lg border border-line bg-surface-raised p-10 text-center">
-              <h3 className="text-lg">No cars match that combination</h3>
-              <p className="measure mx-auto mt-2 text-sm text-ink-secondary">
-                Nothing on the platform fits every filter you have set at once. Widening the price
-                range or removing the province usually brings results back.
-              </p>
-              <a
-                href="/cars"
-                className="mt-5 inline-flex min-h-11 items-center rounded-md bg-accent-solid px-4 font-semibold text-ink-on-accent hover:bg-accent-solid-hover"
-              >
-                Clear all filters
-              </a>
-            </div>
-          ) : (
-            <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {vehicles.map((vehicle) => (
-                <li key={vehicle.publicRef} className="flex">
-                  <VehicleCard vehicle={vehicle} />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <Pagination
+          <ResultsGrid
+            vehicles={vehicles}
             page={results.page ?? 1}
             totalPages={results.totalPages}
             buildHref={buildHref}
+            emptyAction="Clear all filters"
           />
         </section>
       </div>

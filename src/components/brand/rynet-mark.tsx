@@ -6,7 +6,7 @@
  *
  * Two deliberate departures from the raster files in `brand/`:
  *
- * 1. **The wordmark is not in here.** It is set in Montserrat as real text beside this,
+ * 1. **The wordmark is not in here.** It is set in Archivo as real text beside this,
  *    so it stays crisp at any size, is selectable, is readable by a screen reader, and does
  *    not need a second asset for the dark lockup.
  *
