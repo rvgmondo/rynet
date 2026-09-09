@@ -188,8 +188,46 @@ log("   media/ (empty, for uploads)");
 // needing a seed run on a host with a low process limit.
 const db = path.join(root, "rynet.db");
 if (existsSync(db)) {
+  /**
+   * REFUSE to ship a development database.
+   *
+   * This file is the working database of whoever ran the build. Mine had four fixture
+   * accounts on it whose password is written down in this repository, and seventy-six leads
+   * invented by the test suite. Uploading that to a live host would put usable credentials on
+   * the public internet, and it nearly happened because the bundle quietly includes the
+   * database and nothing said so.
+   *
+   * Searched as raw bytes rather than through a driver: SQLite stores short text inline, so a
+   * buffer scan finds these wherever they are, needs no dependency, and cannot be defeated by
+   * a schema change.
+   */
+  const contents = readFileSync(db);
+  const markers = ["@rynet.test", "IsolationTest!2026"];
+  const found = markers.filter((marker) => contents.includes(marker));
+
+  if (found.length > 0) {
+    log(`
+REFUSING TO BUILD.
+
+  ${db}
+  contains test data (${found.join(", ")}), and this bundle ships the database.
+
+  Those accounts have a password that is published in this repository. Build from a clean
+  database instead:
+
+    mv rynet.db rynet.dev.db
+    npx cross-env DATABASE_URI=file:./rynet.db payload migrate
+    npm run seed:admin && npm run seed
+    npm run deploy:build -- --url ${serverUrl}
+    mv rynet.dev.db rynet.db
+
+  Nothing has been written.
+`);
+    process.exit(1);
+  }
+
   cpSync(db, path.join(stageDir, "rynet.db"));
-  log("   rynet.db (seeded)");
+  log("   rynet.db (seeded, no test accounts)");
 } else {
   log("   WARNING: no rynet.db found. Run `npm run db:migrate && npm run seed` first.");
 }
@@ -228,6 +266,11 @@ R2_BUCKET=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 R2_ENDPOINT=
+
+# Two-factor. Leave unset until the platform admin and any dealer principal accounts have
+# enrolled at /account/two-factor. Setting it to true makes a second factor compulsory for
+# those roles, and an account that has not enrolled then cannot sign in at all.
+RYNET_REQUIRE_2FA=
 
 # PayFast. Sandbox until a real charge has been tested end to end.
 PAYFAST_MERCHANT_ID=<FILL IN>
