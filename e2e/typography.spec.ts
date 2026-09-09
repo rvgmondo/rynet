@@ -48,19 +48,24 @@ test.describe("the numerals every price depends on", () => {
      * South African prices group thousands with a space, "R 249 900", so with proportional
      * figures the digit widths jitter card to card and a column of twenty-four prices never
      * aligns, at exactly the moment the grid is meant to read expensive.
+     *
+     * The probe is measured twice: once in the page's own stack, and once in a stack with
+     * the display face removed. If those two agree, the first measurement was of the
+     * fallback and the failure has nothing to do with the OpenType feature, which is a
+     * distinction the failure message has to make or the next person debugs the wrong thing.
      */
-    const widths = await page.evaluate((stack) => {
-      const probe = (text: string) => {
+    const measured = await page.evaluate((stack) => {
+      const probe = (family: string, text: string, tabular: boolean) => {
         const el = document.createElement("span");
-        el.className = "tabular";
         /*
          * Set longhand, never the `font` shorthand. The shorthand resets
          * font-variant-numeric to normal, which would strip the very feature this test
          * exists to prove, and the test would then fail against a perfectly good font.
          */
         el.style.cssText =
-          `font-family:${stack};font-weight:800;font-size:40px;line-height:1;` +
-          "font-variant-numeric:tabular-nums;font-variation-settings:'wdth' 118;" +
+          `font-family:${family};font-weight:800;font-size:40px;line-height:1;` +
+          `font-variant-numeric:${tabular ? "tabular-nums" : "normal"};` +
+          "font-variation-settings:'wdth' 118;" +
           "position:absolute;visibility:hidden;white-space:pre";
         el.textContent = text;
         document.body.append(el);
@@ -68,11 +73,33 @@ test.describe("the numerals every price depends on", () => {
         el.remove();
         return width;
       };
-      return { ones: probe("111"), zeros: probe("000"), eights: probe("888") };
+
+      // Everything after the first family, which is what the browser would have used had
+      // the display face never arrived.
+      const withoutDisplay = stack.split(",").slice(1).join(",").trim() || "sans-serif";
+
+      return {
+        stack,
+        withoutDisplay,
+        ones: probe(stack, "111", true),
+        zeros: probe(stack, "000", true),
+        eights: probe(stack, "888", true),
+        untabbedOnes: probe(stack, "111", false),
+        untabbedZeros: probe(stack, "000", false),
+        fallbackOnes: probe(withoutDisplay, "111", true),
+        fallbackZeros: probe(withoutDisplay, "000", true),
+      };
     }, family);
 
-    expect(Math.abs(widths.ones - widths.zeros)).toBeLessThan(0.5);
-    expect(Math.abs(widths.ones - widths.eights)).toBeLessThan(0.5);
+    const detail =
+      `measured in ${measured.stack}: 111 is ${measured.ones}px and 000 is ${measured.zeros}px. ` +
+      `Without tabular-nums the same pair is ${measured.untabbedOnes} and ${measured.untabbedZeros}. ` +
+      `In the fallback stack (${measured.withoutDisplay}) it is ${measured.fallbackOnes} and ` +
+      `${measured.fallbackZeros}. If the first pair matches the fallback pair, the display ` +
+      `face is not being used and the OpenType feature is not the problem.`;
+
+    expect(Math.abs(measured.ones - measured.zeros), detail).toBeLessThan(0.5);
+    expect(Math.abs(measured.ones - measured.eights), detail).toBeLessThan(0.5);
   });
 
   test("every price on a results page is set in tabular figures", async ({ page }) => {
