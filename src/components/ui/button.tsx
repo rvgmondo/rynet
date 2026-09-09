@@ -29,8 +29,13 @@ import { cn } from "@/lib/cn";
  */
 const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap",
-    "font-display text-label font-bold uppercase tracking-[var(--tracking-widest)] [font-variation-settings:'wdth'_100]",
+    // Never nowrap. A label-caps button carries a long label sometimes ("Enquire about this
+    // vehicle") and a fixed-width column is not going to grow for it, so the text wraps and
+    // centres rather than running out past the fill.
+    "inline-flex items-center justify-center gap-2 text-center text-balance",
+    // Tracking is 0.1em rather than the 0.16em of a field label. Letterspacing that wide is
+    // right for a four character stamp and wrong for a sentence.
+    "font-display text-label font-bold uppercase tracking-[0.1em] [font-variation-settings:'wdth'_100]",
     "transition-[background-color,border-color,color] duration-[var(--duration-micro)] ease-[var(--rn-ease-out)]",
     "disabled:pointer-events-none disabled:opacity-45",
     "aria-disabled:cursor-not-allowed aria-disabled:opacity-45",
