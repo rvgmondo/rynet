@@ -5,6 +5,7 @@ import * as React from "react";
 import { useActionState } from "react";
 
 import { submitAgencyEnquiry } from "@/app/actions/agency-enquiry";
+import { CHOICE_CLASS, INPUT_CLASS, LABEL_CLASS } from "@/components/forms/multi-step";
 import { Button } from "@/components/ui/button";
 import {
   AGENCY_INTERESTS,
@@ -17,7 +18,10 @@ import {
 
 const initial: AgencyEnquiryState = { status: "idle" };
 
-const LABEL_CLASS = "block text-sm font-semibold";
+/*
+ * Imported, not redeclared. See the note further down: this file had its own copy of the
+ * label and input styling, so the design system reached one front door and not the other.
+ */
 
 /**
  * A labelled field.
@@ -272,13 +276,19 @@ export function QualificationForm() {
   // at each use.
   const current = STEPS[step] ?? STEPS[0];
 
-  const inputClass =
-    "mt-1 min-h-11 w-full rounded-md border border-line-interactive bg-surface px-3 text-sm";
+  /*
+   * The shared primitives, not a second copy of them.
+   *
+   * This file redefined the input styling inline, so the design system reached the sell
+   * form and stopped at the agency form: one front door had ruled inputs and the other
+   * still had boxes. Same class of bug as the three copies of `toCard`, and the same fix.
+   */
+  const inputClass = INPUT_CLASS;
   const labelClass = LABEL_CLASS;
 
   if (state.status === "success") {
     return (
-      <div role="status" className="rounded-lg bg-success-subtle p-8 text-center">
+      <div role="status" className="border-y-2 border-ink py-10 text-center">
         <CheckCircle2 aria-hidden="true" className="mx-auto size-9 text-success" />
         <p className="mt-4 font-display text-lg font-bold">{state.message}</p>
         <p className="measure mx-auto mt-3 text-sm text-ink-secondary">
@@ -302,10 +312,10 @@ export function QualificationForm() {
           elapsedField.current.value = String(Date.now() - renderedAt.current);
         }
       }}
-      className="rounded-lg border border-line p-6 sm:p-8"
+      className="border-t-2 border-ink pt-8"
     >
       {restored ? (
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-md bg-surface-sunken p-4">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-y border-line py-4">
           <p className="text-sm text-ink-secondary">
             We brought back what you had already filled in.
           </p>
@@ -318,7 +328,7 @@ export function QualificationForm() {
               setClientErrors({});
               goTo(0);
             }}
-            className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold hover:bg-surface-raised"
+            className="rn-label inline-flex min-h-11 items-center gap-2 px-3 hover:bg-ink hover:text-ink-inverse"
           >
             <RotateCcw aria-hidden="true" className="size-4" />
             Start again
@@ -348,7 +358,7 @@ export function QualificationForm() {
       </div>
 
       {state.status === "error" ? (
-        <p role="alert" className="mb-6 rounded-md bg-danger-subtle p-4 text-sm text-ink">
+        <p role="alert" className="mb-6 border-l-2 border-danger ps-4 text-sm text-ink">
           {state.message}
         </p>
       ) : null}
@@ -404,10 +414,7 @@ export function QualificationForm() {
           <legend className={labelClass}>How many branches?</legend>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {DEALERSHIP_SIZES.map((option) => (
-              <label
-                key={option.value}
-                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-line px-4 py-2 text-sm hover:bg-surface-sunken has-[:checked]:border-accent has-[:checked]:bg-accent-subtle"
-              >
+              <label key={option.value} className={CHOICE_CLASS}>
                 <input
                   type="radio"
                   name="size"
@@ -436,10 +443,7 @@ export function QualificationForm() {
           <p className="mt-0.5 text-xs text-ink-muted">Pick anything that applies.</p>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {AGENCY_INTERESTS.map((option) => (
-              <label
-                key={option.value}
-                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-line px-4 py-2 text-sm hover:bg-surface-sunken has-[:checked]:border-accent has-[:checked]:bg-accent-subtle"
-              >
+              <label key={option.value} className={CHOICE_CLASS}>
                 <input
                   type="checkbox"
                   name="interests"
@@ -459,10 +463,7 @@ export function QualificationForm() {
           <legend className={labelClass}>When would you want to start?</legend>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             {URGENCIES.map((option) => (
-              <label
-                key={option.value}
-                className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-line px-4 py-2 text-sm hover:bg-surface-sunken has-[:checked]:border-accent has-[:checked]:bg-accent-subtle"
-              >
+              <label key={option.value} className={CHOICE_CLASS}>
                 <input
                   type="radio"
                   name="urgency"
@@ -489,7 +490,7 @@ export function QualificationForm() {
             name="context"
             rows={4}
             aria-describedby="context-hint"
-            className="mt-1 w-full rounded-md border border-line-interactive bg-surface p-3 text-sm"
+            className="mt-2 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 py-2 text-base font-medium"
           />
         </Field>
       </fieldset>

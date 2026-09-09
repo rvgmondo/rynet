@@ -121,10 +121,7 @@ export default async function SellToADealerPage() {
         details on a promise it cannot currently keep. The agency site has the same problem and
         solves it the same way: say so, in the first thing the reader sees.
       */}
-      <div
-        role="note"
-        className="measure mt-8 rounded-lg border-2 border-warning bg-warning-subtle p-5"
-      >
+      <div role="note" className="measure mt-8 border-l-2 border-warning ps-5">
         <p className="font-display text-sm font-bold text-warning">
           We are new, so read this first
         </p>
@@ -147,10 +144,7 @@ export default async function SellToADealerPage() {
             an email, and s18(1)(h)(v) wants the Regulator's own contact details rather than
             a statement that a right to complain exists.
           */}
-          <section
-            aria-labelledby="popia-heading"
-            className="mt-8 rounded-lg border border-line p-6"
-          >
+          <section aria-labelledby="popia-heading" className="mt-8 border-t-2 border-ink pt-6">
             <h2 id="popia-heading" className="text-lg">
               What happens to your details
             </h2>
@@ -259,7 +253,7 @@ export default async function SellToADealerPage() {
             <h2 id="not-heading" className="text-2xl">
               What we do not do
             </h2>
-            <ul className="mt-5 space-y-4 rounded-lg border-2 border-line-interactive p-6">
+            <ul className="mt-5 divide-y divide-line border-y-2 border-ink">
               {[
                 {
                   Icon: Ban,
@@ -357,7 +351,7 @@ export default async function SellToADealerPage() {
 
       <section
         aria-labelledby="buying-heading"
-        className="mt-[var(--section-base)] rounded-lg bg-surface-sunken p-8"
+        className="mt-[var(--section-base)] border-t-2 border-ink bg-surface-sunken p-8"
       >
         <h2 id="buying-heading" className="text-2xl">
           Buying rather than selling?
@@ -369,13 +363,13 @@ export default async function SellToADealerPage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/cars"
-            className="inline-flex min-h-11 items-center rounded-md bg-accent-solid px-6 font-semibold text-ink-on-accent hover:bg-accent-solid-hover"
+            className="rn-label inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
           >
             Browse the stock
           </Link>
           <Link
             href="/how-verification-works"
-            className="inline-flex min-h-11 items-center rounded-md border-2 border-line-interactive px-6 font-semibold hover:bg-surface-raised"
+            className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 hover:bg-ink hover:text-ink-inverse"
           >
             How we verify dealerships
           </Link>

@@ -33,11 +33,29 @@ import { Button } from "@/components/ui/button";
  * survives a browser close, and a timing stamp taken on submit rather than at render.
  */
 
-export const LABEL_CLASS = "block text-sm font-semibold";
+/*
+ * The three shared form primitives, drawn as ruled lines rather than as boxes.
+ *
+ * Every form on both front doors reads from these, so this is where the design system
+ * either reaches the forms or does not. It did not: the sell page and the agency
+ * qualification form were still rendering boxed inputs with pill radii while the rest of
+ * the site had been redrawn, which is exactly the "one component that has not been redrawn
+ * looks pasted in" failure the direction warns about.
+ *
+ * An input is a LINE. It carries a 2px bottom rule in --rn-line-interactive, which is the
+ * token that clears the 3:1 that SC 1.4.11 requires of a boundary that IS the control, and
+ * it is set at body size rather than small text because a person is typing into it.
+ *
+ * A choice is a ROW, and its selected state is the ink flip the rest of the product uses,
+ * not a tinted background. The `has-[:checked]` selector keeps that working without any
+ * JavaScript, which matters because these forms work before hydration.
+ */
+export const LABEL_CLASS =
+  "block font-display text-label font-bold uppercase tracking-[var(--tracking-widest)] text-ink-muted [font-variation-settings:'wdth'_100]";
 export const INPUT_CLASS =
-  "mt-1 min-h-11 w-full rounded-md border border-line-interactive bg-surface px-3 text-sm";
+  "mt-2 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium text-ink placeholder:text-ink-muted";
 export const CHOICE_CLASS =
-  "flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-line px-4 py-2 text-sm hover:bg-surface-sunken has-[:checked]:border-accent has-[:checked]:bg-accent-subtle";
+  "flex min-h-11 cursor-pointer items-center gap-3 border border-line-interactive px-4 py-2 text-sm transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse has-[:checked]:bg-ink has-[:checked]:text-ink-inverse";
 
 /** A labelled field. Module scope, deliberately. See hazard one above. */
 export function Field({
@@ -425,12 +443,12 @@ export function useMultiStepForm({
 /** The "we brought your answers back" banner, shown when a draft was restored. */
 export function RestoredNotice({ onStartAgain }: { onStartAgain: () => void }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-md bg-surface-sunken p-4">
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-y border-line py-4">
       <p className="text-sm text-ink-secondary">We brought back what you had already filled in.</p>
       <button
         type="button"
         onClick={onStartAgain}
-        className="inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm font-semibold hover:bg-surface-raised"
+        className="rn-label inline-flex min-h-11 items-center gap-2 px-3 hover:bg-ink hover:text-ink-inverse"
       >
         <RotateCcw aria-hidden="true" className="size-4" />
         Start again
