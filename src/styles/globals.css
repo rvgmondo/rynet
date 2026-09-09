@@ -631,6 +631,16 @@
 
 .rn-plate {
   position: relative;
+  /*
+   * A floor, then the ratio.
+   *
+   * Nothing inside the plate contributes height: the arc is an absolutely positioned SVG and
+   * the furniture is an absolutely positioned band. So in an engine without `aspect-ratio`
+   * the whole imagery system collapsed to nothing and the results page became a list of
+   * prices with no plates at all. The min-height is a floor that keeps it visible, and the
+   * ratio wins wherever it is supported, which is everywhere current.
+   */
+  min-height: 10rem;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   /*
@@ -814,6 +824,8 @@
 
 .rn-plate--thumb {
   animation: none;
+  /* Deliberately small, so it opts out of the floor the card-size plate needs. */
+  min-height: 0;
 }
 
 /*

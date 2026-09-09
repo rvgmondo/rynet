@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { HeroSearch } from "@/components/marketplace/hero-search";
 import { ColourWall } from "@/components/vehicles/colour-wall";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { getHomeData } from "@/lib/home-data";
+import { organisationJsonLd, websiteJsonLd } from "@/lib/structured-data";
 
 /**
  * Marketplace home.
@@ -35,6 +37,17 @@ import { getHomeData } from "@/lib/home-data";
  */
 export const dynamic = "force-dynamic";
 
+/*
+ * A canonical on the home page, which had none.
+ *
+ * Without one, every query string a campaign, a share or a crawler appends is a separate,
+ * self-canonicalising duplicate of the front page. This is the cheapest possible fix and it
+ * was simply missing.
+ */
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
 /** The mega counter never shouts a number that would be better not shouted. */
 const COUNTER_FLOOR = 150;
 
@@ -61,24 +74,45 @@ export default async function HomePage() {
   }).format(new Date());
 
   /*
-   * Eight chips, each a real indexable link into a real result set. Four are the body types
-   * that actually have the most stock right now rather than the four somebody guessed, so a
-   * chip can never land on an empty page. That is a buyer's whole journey in one tap, and
-   * eight free landing paths for search engines.
+   * Eight chips, and six of them are real landing pages rather than filtered views.
+   *
+   * They all used to point at /cars?body=... and robots.txt disallows /cars? outright, so
+   * every browse link on the front page was one a crawler is told not to follow, while the
+   * facet landing pages that DO exist had no internal links anywhere on the site. The path
+   * scheme is /cars/body/bakkie, /cars/fuel/diesel, /cars/in/gauteng, /cars/new and
+   * /cars/demo, and it is a whitelist, so these are the shapes that resolve.
+   *
+   * The two price chips stay as query strings on purpose. There is no landing page for
+   * "under R300 000" and inventing one would be a URL with nothing behind it; a filtered
+   * view is what it is, and robots.txt correctly keeps it out of the index.
    */
   const chips = [
     ...data.bodyTypes.slice(0, 4).map((tile) => ({
       label: tile.name,
-      href: `/cars?body=${tile.slug}`,
+      href: `/cars/body/${tile.slug}`,
     })),
+    { label: "Diesel", href: "/cars/fuel/diesel" },
+    { label: "New", href: "/cars/new" },
     { label: "Under R150k", href: "/cars?maxPrice=150000" },
     { label: "Under R300k", href: "/cars?maxPrice=300000" },
-    { label: "Automatic", href: "/cars?transmission=automatic" },
-    { label: "Diesel", href: "/cars?fuel=diesel" },
   ];
 
   return (
     <>
+      {/*
+        The two blocks that describe the site itself, which were written months ago and
+        never imported, so the most important page on the platform shipped no structured
+        data at all. Both are about Rynet rather than about any listing, so neither depends
+        on whether the stock is real.
+      */}
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and this is serialised from a literal we constructed.
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify([websiteJsonLd(), organisationJsonLd()]),
+        }}
+      />
+
       {/* 1. THE DATELINE. Every figure is a live count, and the date is what makes the site
              read as issued today rather than built once. Separators are 1px rules, not
              punctuation. */}
@@ -263,13 +297,13 @@ export default async function HomePage() {
           <BrowseList
             id="body-heading"
             title="Browse by body type"
-            base="/cars?body="
+            base="/cars/body/"
             tiles={data.bodyTypes}
           />
           <BrowseList
             id="province-heading"
             title="Browse by province"
-            base="/cars?province="
+            base="/cars/in/"
             tiles={data.provinces}
           />
         </div>

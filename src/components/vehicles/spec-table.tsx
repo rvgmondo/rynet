@@ -170,11 +170,20 @@ export function SpecTable({ vehicle }: { vehicle: Vehicle }) {
           <ul className="mt-3 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
               <li key={feature} className="flex items-start gap-2 py-1">
-                {/* A tick that is decorative: the feature being listed IS the information,
-                    so announcing "tick" before every one would be noise. */}
-                <span aria-hidden="true" className="mt-0.5 text-accent">
-                  &#10003;
-                </span>
+                {/*
+                  A rule, not a red tick.
+
+                  There were thirteen of these on one vehicle page, every one of them red, in
+                  a system whose rule is one red object per viewport. Red used thirteen times
+                  on a features list is not emphasis, it is decoration, and it spends the
+                  colour that has to mean "this is the action" further down the page. The
+                  feature being listed IS the information, so the mark carries none and is
+                  hidden from a screen reader either way.
+                */}
+                <span
+                  aria-hidden="true"
+                  className="mt-[0.55em] h-px w-3 shrink-0 bg-current opacity-40"
+                />
                 <span>{feature}</span>
               </li>
             ))}

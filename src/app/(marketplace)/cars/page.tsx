@@ -13,6 +13,16 @@ export const metadata: Metadata = {
   title: "Cars for sale from verified dealerships",
   description:
     "Search used, demo and new cars from registered South African dealerships. Filter by make, model, price, body type, transmission and province. No private sellers.",
+  /*
+   * Every query variant of this page canonicalises to /cars.
+   *
+   * There was no canonical at all, so ?q=, ?colour=, ?sort= and every combination of facets
+   * each declared itself the original of a page with the same 311 cars on it. robots.txt
+   * already asks crawlers not to fetch /cars?, but a canonical is what consolidates the ones
+   * that arrive anyway, from a share or a link. The real landing pages under /cars/body/,
+   * /cars/fuel/ and /cars/in/ set their own canonicals and are unaffected.
+   */
+  alternates: { canonical: "/cars" },
 };
 
 const PER_PAGE = 24;

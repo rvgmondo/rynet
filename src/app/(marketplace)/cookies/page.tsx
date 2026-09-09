@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Prose } from "@/components/layout/prose";
+import { LegalReviewNotice, Prose } from "@/components/layout/prose";
 
 export const metadata: Metadata = {
   title: "Cookies",
@@ -13,9 +13,14 @@ export const metadata: Metadata = {
 /**
  * The cookie notice.
  *
- * Short because the answer is short. This is not a draft needing legal review in the way the
- * privacy notice is: it is a factual description of what the site does, and what it does is
- * almost nothing.
+ * Short because the answer is short, and it carries the review notice anyway.
+ *
+ * The earlier reasoning here was that this page is a factual description of what the site
+ * does rather than a legal draft, so it did not need the notice. That was wrong on its own
+ * terms: "there is no cookie banner because there is nothing to ask you about" is a
+ * conclusion about what POPIA requires, not a description of a script tag, and the brief
+ * forbids publishing compliance copy as though it had been reviewed. The privacy notice and
+ * the terms both carry it; this is the same kind of claim.
  *
  * There is no consent banner because there is nothing to consent to. POPIA requires
  * non-essential scripts to be blocked BEFORE consent, and the honest way to meet that is not
@@ -29,6 +34,8 @@ export default function CookiesPage() {
       intro="There is no cookie banner on this site because there is nothing to ask you about."
       updated="26 August 2026"
     >
+      <LegalReviewNotice />
+
       <h2>What we do not use</h2>
       <ul>
         <li>No advertising or retargeting cookies.</li>

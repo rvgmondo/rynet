@@ -283,13 +283,14 @@ export function websiteJsonLd() {
     "@type": "WebSite",
     name: "Rynet Showroom",
     url: SITE,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE}/cars?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    /*
+     * No SearchAction.
+     *
+     * It pointed at /cars?q={search_term_string}, and robots.txt disallows /cars? outright,
+     * so the markup invited Google to use a URL the same site tells it not to fetch. The
+     * honest options were to open that path to crawlers, which would expose every filter
+     * combination as a duplicate, or to drop the action. A sitelinks search box is a nicety;
+     * a contradiction between the markup and robots.txt is a reported error.
+     */
   };
 }

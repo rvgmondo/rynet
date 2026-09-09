@@ -59,6 +59,15 @@ export const metadata: Metadata = {
     locale: "en_ZA",
     siteName: "Rynet Showroom",
   },
+  /*
+   * Large card rather than the imageless default.
+   *
+   * The image itself comes from opengraph-image.tsx, which Next wires up automatically for
+   * every route in this group. Declaring the card type is the other half: without it a
+   * shared link renders as a line of text with no picture, which is how every route on this
+   * site was sharing.
+   */
+  twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
 };
 
