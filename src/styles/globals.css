@@ -16,6 +16,7 @@
   --color-ink-secondary: var(--rn-text-secondary);
   --color-ink-muted: var(--rn-text-muted);
   --color-ink-inverse: var(--rn-text-inverse);
+  --color-ink-muted-inverse: var(--rn-text-muted-inverse);
   --color-ink-on-accent: var(--rn-text-on-accent);
 
   --color-accent: var(--rn-accent);
@@ -23,10 +24,13 @@
   --color-accent-solid: var(--rn-accent-solid);
   --color-accent-solid-hover: var(--rn-accent-solid-hover);
   --color-accent-subtle: var(--rn-accent-subtle);
+  --color-accent-inverse: var(--rn-red-text-inverse);
+  --color-brand-red: var(--rn-red);
+  --color-silver: var(--rn-silver);
 
   --color-line: var(--rn-border-subtle);
   --color-line-interactive: var(--rn-border-interactive);
-  --color-line-strong: var(--rn-border-strong);
+  --color-line-strong: var(--rn-hairline-strong);
 
   --color-success: var(--rn-success);
   --color-warning: var(--rn-warning);
@@ -39,19 +43,26 @@
 
   --font-display: var(--rn-font-display);
   --font-body: var(--rn-font-body);
+  --font-prose: var(--rn-font-prose);
   --font-marketing: var(--rn-font-marketing);
   --font-mono: var(--rn-font-mono);
 
+  --text-label: var(--rn-text-label);
   --text-2xs: var(--rn-text-2xs);
   --text-xs: var(--rn-text-xs);
   --text-sm: var(--rn-text-sm);
   --text-base: var(--rn-text-base);
+  --text-lead: var(--rn-text-lead);
   --text-lg: var(--rn-text-lg);
   --text-xl: var(--rn-text-xl);
+  --text-price: var(--rn-text-price);
   --text-2xl: var(--rn-text-2xl);
+  --text-head: var(--rn-text-head);
   --text-3xl: var(--rn-text-3xl);
   --text-4xl: var(--rn-text-4xl);
+  --text-display: var(--rn-text-display);
   --text-5xl: var(--rn-text-5xl);
+  --text-mega: var(--rn-text-mega);
 
   --radius-sm: var(--rn-radius-sm);
   --radius-md: var(--rn-radius-md);
@@ -90,7 +101,13 @@
   h3,
   h4 {
     font-family: var(--rn-font-display);
-    font-weight: 700;
+    font-weight: 800;
+    /*
+     * The width axis is the typographic idea. A heading at wdth 112 fills its measure
+     * rather than sitting in the middle of it, which is what stops a page with no imagery
+     * reading as an empty template.
+     */
+    font-variation-settings: "wdth" 112;
     line-height: var(--leading-tight);
     letter-spacing: var(--tracking-tight);
     text-wrap: balance;
@@ -100,6 +117,7 @@
    * Prices, mileage, power, rates and years must align in columns and must never wobble
    * between R 249 900 and R 1 249 900. This is the single most repeated piece of content
    * on the platform, so it is a base rule rather than a utility someone remembers to add.
+   * e2e/typography.spec.ts fails the build if a font change ever strips the feature.
    */
   .tabular,
   td.numeric,
@@ -109,7 +127,7 @@
   }
 
   /*
-   * A focus ring that survives being drawn on top of vehicle photography: an accent ring
+   * A focus ring that survives being drawn on any ground the product has: an accent ring
    * with a surface-coloured offset, so there is always contrast on at least one side.
    */
   :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
@@ -133,12 +151,21 @@
    * out, which is what the :not() list is for.
    */
   p a:not([class*="button"]),
-  li a:not([class*="flex"]):not([class*="button"]),
+  li > a:not([class*="flex"]):not([class*="button"]),
   dd a,
   span a {
     text-decoration: underline;
     text-underline-offset: 2px;
     text-decoration-thickness: 1px;
+  }
+
+  /*
+   * A heading is never running text, so its link is never underlined. Without this, a card
+   * title inside a list item picks up the rule above and every result in the grid arrives
+   * underlined, which reads as unstyled rather than as emphasis.
+   */
+  :where(h1, h2, h3, h4, h5, h6) a {
+    text-decoration: none;
   }
 
   ::selection {
@@ -168,6 +195,7 @@
     padding-inline: var(--container-pad);
   }
 
+  /* PROSE ONLY. Applying this to a results grid is what makes a marketplace read as a blog. */
   .measure {
     max-width: var(--measure);
   }
@@ -186,96 +214,470 @@
   }
 }
 
+/* ============================================================================
+ * TYPE ROLES
+ *
+ * Six of them, and the count is the point. Every string on the marketplace is one of
+ * these. Letterspaced caps in particular is addictive and turns a page into shouted
+ * fragments, so it is permitted on the dateline, running heads, field labels, the spec
+ * run, the plate furniture and the verification stamp, and nowhere else. Titles, prices,
+ * dealer names and running copy are never in it.
+ * ========================================================================= */
+
+.rn-label {
+  font-family: var(--rn-font-display);
+  font-size: var(--rn-text-label);
+  font-weight: 700;
+  font-variation-settings: "wdth" 100;
+  letter-spacing: var(--tracking-widest);
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.rn-label--light {
+  font-weight: 400;
+  letter-spacing: 0.12em;
+}
+
 /*
- * prefers-reduced-motion is honoured everywhere, and reduced does not mean broken:
- * transitions become effectively instant, but nothing disappears and no state becomes
- * unreachable. 0.01ms rather than 0 so transitionend and animationend still fire and any
- * state machine waiting on them still advances.
+ * Display. The width axis is stepped by breakpoint rather than left to a clamp, which is
+ * how a hand-broken headline is guaranteed never to overflow at 320px. Sub-1 leading clips
+ * caps in Safari and older Chrome, so every display element carries padding-block: it looks
+ * like a rendering bug because it is one.
  */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+.rn-display {
+  font-family: var(--rn-font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 88;
+  font-size: var(--rn-text-display);
+  line-height: var(--rn-leading-display);
+  letter-spacing: var(--tracking-display);
+  text-transform: uppercase;
+  padding-block: 0.08em;
+  text-wrap: nowrap;
+  margin: 0;
+}
+
+@media (min-width: 30rem) {
+  .rn-display {
+    font-variation-settings: "wdth" 105;
+  }
+}
+
+@media (min-width: 56.25rem) {
+  .rn-display {
+    font-variation-settings: "wdth" 118;
+  }
+}
+
+/*
+ * A headline that actually fills its measure.
+ *
+ * A viewport clamp cannot do this: it has no idea how many characters are on the longest
+ * line, so it either overflows a short viewport or leaves half the width empty on a wide
+ * one, and the empty right half was the single most common complaint about the old build.
+ * So the size comes from the CONTAINER divided by the longest line's own length, which the
+ * server sets inline as --head-chars. The clamp stays as the floor and the ceiling.
+ *
+ * The 0.74 is the average character advance of expanded Archivo at weight 800 in caps,
+ * measured rather than guessed: the face itself runs about 0.709em per character at wdth
+ * 118 with the display tracking applied, and the extra leaves the line clear of the edge.
+ * At the narrower width axes below 900px the advance is smaller still, so the headline
+ * under-fills rather than overflowing. Re-measure if the display face ever changes.
+ */
+.rn-display--fill {
+  font-size: clamp(
+    2.75rem,
+    calc(100cqw / var(--head-chars, 10) / 0.74),
+    var(--rn-display-ceiling, 13rem)
+  );
+}
+
+.rn-mega {
+  font-family: var(--rn-font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 118;
+  font-size: var(--rn-text-mega);
+  line-height: var(--rn-leading-display);
+  letter-spacing: var(--tracking-display);
+  padding-block: 0.08em;
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.rn-head {
+  font-family: var(--rn-font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 112;
+  font-size: var(--rn-text-head);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+  margin: 0;
+}
+
+/*
+ * A price. Expanded, heavy, tabular, and sized by its CONTAINER rather than the viewport.
+ *
+ * R 1 249 900 is eleven glyphs and 40px expanded Archivo needs roughly 300px for it, so a
+ * viewport-only clamp overflows a narrow card. The plain clamp is declared first as the
+ * fallback for any engine without container queries. --fig-chars is set inline by the
+ * server component from the formatted string's own length, and the 1.85 is calibrated for
+ * the Rand format specifically, where the thin spaces pull the per-character average below
+ * a digit advance. Re-check it if formatRand ever changes.
+ */
+.rn-figure {
+  font-family: var(--rn-font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 118;
+  font-size: var(--rn-text-price);
+  line-height: 1;
+  letter-spacing: var(--tracking-price);
+  font-variant-numeric: tabular-nums slashed-zero;
+  padding-block: 0.04em;
+}
+
+@supports (width: 1cqw) {
+  .rn-figure {
+    font-size: min(var(--rn-text-price), calc(100cqw / var(--fig-chars, 11) * 1.85));
+  }
+}
+
+/*
+ * The Rand mark is a typographic move, not a string. Setting it back at 0.58em in muted ink
+ * lets the numerals dominate, which is most of the distance between a price that looks like
+ * a sticker and one that looks like a figure.
+ */
+.rn-rand {
+  font-size: 0.58em;
+  font-weight: 400;
+  color: var(--card-muted, var(--rn-ink-muted));
+  margin-inline-end: 0.12em;
+}
+
+/* Running prose, and the only place Newsreader is allowed. */
+.rn-prose {
+  font-family: var(--rn-font-prose);
+  font-size: var(--rn-text-base);
+  line-height: var(--leading-prose);
+  max-width: var(--measure);
+}
+
+.rn-prose--drop::first-letter {
+  float: left;
+  font-size: 3.1em;
+  line-height: 0.86;
+  padding-inline-end: 0.08em;
+  font-weight: 400;
+}
+
+/*
+ * A run of small facts separated by rules rather than punctuation. Mileage, town, dealer.
+ * Drawn as 1px pseudo-elements, which keeps typographic characters out of the copy and
+ * gives the separators the same weight as every other rule on the page.
+ */
+.rn-run {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.85rem;
+  row-gap: 0.25rem;
+}
+
+.rn-run > * {
+  position: relative;
+  margin: 0;
+}
+
+.rn-run > * + *::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -0.44rem;
+  top: 0.1em;
+  bottom: 0.05em;
+  width: 1px;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+/* ============================================================================
+ * RULES
+ *
+ * Sections announce themselves by being ruled off, like a page being set. The 2px brand
+ * rule is the tachometer sweep unrolled, and it is one of only two places brand red is
+ * allowed to appear on a page. It carries no text, so it has no contrast obligation.
+ * ========================================================================= */
+
+.rn-rule {
+  height: 2px;
+  border: 0;
+  margin: 0;
+  background: var(--rn-ink);
+  transform-origin: left center;
+}
+
+.rn-rule--brand {
+  background: linear-gradient(
+    90deg,
+    var(--rn-silver) 0%,
+    #c2c4ca 44%,
+    var(--rn-red-400) 78%,
+    var(--rn-red) 100%
+  );
+}
+
+.rn-rule--hair {
+  height: 1px;
+  background: var(--rn-hairline);
+}
+
+/* Movement one of four: a rule draws itself in from the left, once, when it is reached. */
+.rn-rule[data-draw="pending"] {
+  transform: scaleX(0);
+}
+
+.rn-rule[data-draw="in"] {
+  animation: rn-rule-draw var(--duration-page) var(--rn-ease-out) both;
+}
+
+@keyframes rn-rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
   }
 }
 
 /* ============================================================================
- * The colour plate
+ * THE GUTTER GRID
  *
- * Fills a listing's image area on a site with no vehicle photography, using the car's real
- * paint colour. See src/components/vehicles/colour-plate.tsx for why this exists.
+ * The single biggest visual fix available. The gaps between cards are hairlines showing
+ * through the container background, so a results page is one continuous ruled sheet rather
+ * than twenty-four floating rectangles. That deletes twenty-four per-card borders in one
+ * declaration, and three hundred thin grey borders was the whole complaint.
+ * ========================================================================= */
+
+.rn-grid {
+  display: grid;
+  gap: 1px;
+  background: var(--rn-hairline);
+  border: 1px solid var(--rn-hairline);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+}
+
+.rn-grid > * {
+  background: var(--rn-paper);
+  /* So a price inside can size itself against the card rather than the viewport. */
+  container-type: inline-size;
+  /*
+   * Load-bearing. A `1fr` track is `minmax(auto, 1fr)`, so it grows past its share to fit
+   * its content's minimum width. A 40px expanded price is wide enough to do exactly that,
+   * which left every column a different width and every plate a different height, and a
+   * grid of mismatched rectangles is precisely what this design exists to remove. Zeroing
+   * the minimum lets the tracks stay equal and lets the price size itself down instead.
+   */
+  min-width: 0;
+}
+
+/* Below four results a card grid is close to a blank page, so it goes two-up and taller. */
+.rn-grid--sparse {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
+}
+
+/*
+ * Below the width where the floor fits four up, it becomes a rail that runs past the right
+ * edge of the viewport with the last card half cut. Content continuing past the frame is
+ * what tells a thumb to swipe without a word of copy, and it stops the home page becoming
+ * eight full-width cards and nine thousand pixels of scroll on a phone.
+ */
+@media (max-width: 79.99rem) {
+  .rn-grid--floor {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+  }
+
+  .rn-grid--floor > * {
+    flex: 0 0 min(19rem, 76vw);
+    scroll-snap-align: start;
+  }
+}
+
+/* A rail that runs past the right edge of the viewport, so a thumb knows to swipe without
+   a word of copy. It is its own scroll container, so the page never scrolls sideways. */
+.rn-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(15.5rem, 78vw);
+  gap: 1px;
+  background: var(--rn-hairline);
+  border-block: 1px solid var(--rn-hairline);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+}
+
+.rn-rail > * {
+  background: var(--rn-paper);
+  container-type: inline-size;
+  scroll-snap-align: start;
+  min-width: 0;
+}
+
+/* ============================================================================
+ * THE INK FLIP
  *
- * The drawing lives here, once, rather than in each card. A card contributes three custom
- * properties, so twenty-four of them cost bytes rather than requests.
+ * Movement three of four, and the only interactive feedback in a design with no shadows
+ * and no borders. Hover or focus swaps the ground to ink and the type to paper. Colour
+ * only: no lift, no scale, no shadow, no border change. Paper on ink is 16.28:1, so the
+ * hover state is more legible than the rest state rather than less.
+ *
+ * Everything inside a card reads its colour from these four locals, which is what lets one
+ * rule invert an entire card without touching a single child selector.
+ * ========================================================================= */
+
+.rn-card,
+.rn-row {
+  --card-ground: var(--rn-paper);
+  --card-ink: var(--rn-ink);
+  --card-muted: var(--rn-ink-muted);
+  --card-accent: var(--rn-red-text);
+  --card-rule: var(--rn-hairline);
+
+  position: relative;
+  background: var(--card-ground);
+  color: var(--card-ink);
+  transition:
+    background-color var(--duration-micro) var(--rn-ease-out),
+    color var(--duration-micro) var(--rn-ease-out);
+}
+
+.rn-card {
+  display: flex;
+  flex-direction: column;
+  /*
+   * Both are load-bearing. The card sits inside a flex list item inside a grid track, and
+   * without them it shrinks to its own content width: the track stays the right size, the
+   * card does not fill it, and because the plate is a fixed 16:10 ratio every card in the
+   * row then gets a different plate height. A grid of mismatched rectangles is precisely
+   * what this design exists to remove.
+   */
+  width: 100%;
+  flex: 1;
+}
+
+/* A row on the sunken ground of the filter rail starts from that ground instead. */
+.rn-row--sunken {
+  --card-ground: transparent;
+}
+
+.rn-card__muted {
+  color: var(--card-muted);
+}
+
+.rn-card__accent {
+  color: var(--card-accent);
+}
+
+.rn-card__rule {
+  border: 0;
+  height: 1px;
+  margin: 0;
+  background: var(--card-rule);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rn-card:hover,
+  .rn-row:hover {
+    --card-ground: var(--rn-ink);
+    --card-ink: var(--rn-ink-inverse);
+    --card-muted: var(--rn-ink-muted-inverse);
+    --card-accent: var(--rn-red-text-inverse);
+    --card-rule: var(--rn-ink-muted-inverse);
+  }
+}
+
+/* Unconditional, so a keyboard gets the same state on a touch device. */
+.rn-card:focus-within,
+.rn-row:focus-within {
+  --card-ground: var(--rn-ink);
+  --card-ink: var(--rn-ink-inverse);
+  --card-muted: var(--rn-ink-muted-inverse);
+  --card-accent: var(--rn-red-text-inverse);
+  --card-rule: var(--rn-ink-muted-inverse);
+}
+
+/* ============================================================================
+ * THE COLOUR PLATE
+ *
+ * See src/components/vehicles/colour-plate.tsx for what it is and src/lib/vehicle-plate.ts
+ * for the arithmetic. Four layers and one 400 byte inline SVG: no raster assets, no network
+ * requests, no canvas, no client colour maths, sharp at any pixel density, works with
+ * JavaScript off.
  * ========================================================================= */
 
 .rn-plate {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
-  background-color: var(--plate-swatch, #8a8f98);
-  isolation: isolate;
+  /*
+   * Layer two, the grain, and it is not cosmetics. It is the entire difference between a
+   * coloured div and printed ink, and it ships with the plates or the plates do not ship.
+   *
+   * It is a BACKGROUND LAYER rather than a blended pseudo-element. `mix-blend-mode` forces
+   * its whole stacking context to be composited and read back on every paint, and a results
+   * page carries twenty-four of these on a phone that has no budget for it. The translucency
+   * is baked into the SVG instead, so the grain is one decoded tile shared by every plate on
+   * the page, drawn as an ordinary background over the field colour, costing no extra layer
+   * and no blending pass at all.
+   */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.055'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  background-position: calc(var(--plate-grain, 0) * 1px) calc(var(--plate-grain, 0) * 0.7px);
+  background-color: var(--plate-field, #484848);
+  color: var(--rn-plate-ink);
+  /* Decorative, and in dark theme it is what stops a black plate melting into the page. */
+  box-shadow: inset 0 0 0 1px var(--rn-plate-edge);
+  /* Movement two of four. Opacity only, so there is no layout cost and no scroll jank on a
+     cheap Android. The stagger is capped at the first eight cards by the component. */
+  animation: rn-plate-in var(--duration-element) var(--rn-ease-out) backwards;
+  animation-delay: calc(var(--plate-index, 0) * var(--stagger));
 }
+
+:root[data-theme="dark"] .rn-plate,
+.rn-plate[data-theme="dark"] {
+  background-color: var(--plate-field-dark, #525252);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .rn-plate {
+    background-color: var(--plate-field-dark, #525252);
+  }
+}
+
+@keyframes rn-plate-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------- layer one: the arc */
 
 /*
- * Light falling across paint. Two flat gradients rather than a filter or a blur: this repeats
- * twenty-four times on a search page and has to stay free on a mid-range Android.
- *
- * The first is a broad sheen from the top left, the way an overhead showroom lamp actually
- * falls. The second is a floor shadow, so the colour reads as a panel with weight rather than
- * a coloured div.
+ * The brand tachometer, finally used at a size that deserves it, reading this car's real
+ * odometer against a 250 000km ceiling. The viewBox is 200 by 125, which is exactly the
+ * plate's 16:10, so it scales without distortion at every variant. pathLength is 100, so
+ * every dash figure is a percentage and the same markup renders at 88px in a register row
+ * and at 400px on a vehicle page with no arithmetic anywhere.
  */
-.rn-plate::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(120% 90% at 22% 8%, rgb(255 255 255 / 0.26), transparent 58%),
-    linear-gradient(to bottom, transparent 55%, rgb(0 0 0 / 0.22));
-  z-index: 1;
-}
-
-/* A fine diagonal tooth, so a large flat field has texture at close range. */
-.rn-plate::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(
-    var(--plate-grain, 45deg),
-    rgb(255 255 255 / 0.045) 0 1px,
-    transparent 1px 4px
-  );
-  z-index: 2;
-  pointer-events: none;
-}
-
-.rn-plate--light {
-  --plate-ink: #ffffff;
-  --plate-ink-soft: rgb(255 255 255 / 0.74);
-  --plate-ink-track: rgb(255 255 255 / 0.22);
-}
-
-.rn-plate--dark {
-  --plate-ink: #0c0d0f;
-  --plate-ink-soft: rgb(12 13 15 / 0.68);
-  --plate-ink-track: rgb(12 13 15 / 0.18);
-}
-
-/* --------------------------------------------------------------- the mileage gauge */
-
 .rn-plate__gauge {
   position: absolute;
-  left: 5%;
-  bottom: 6%;
-  width: 34%;
-  max-width: 5.5rem;
-  height: auto;
-  z-index: 3;
-  overflow: visible;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .rn-plate__gauge title {
@@ -283,63 +685,131 @@
 }
 
 .rn-plate__track,
-.rn-plate__needle {
+.rn-plate__value,
+.rn-plate__redline {
   fill: none;
-  stroke-linecap: round;
-  stroke-width: 5;
+  stroke-linecap: butt;
 }
 
 .rn-plate__track {
-  stroke: var(--plate-ink-track);
+  stroke: var(--rn-plate-ink);
+  opacity: 0.22;
+  stroke-width: 2;
 }
 
 /*
- * The needle rests at the car's true mileage BY DEFAULT. The animation runs from empty to
- * that, rather than the other way round, so a browser that never runs it, or a reader with
- * reduced motion, still sees the correct reading. Animating to a resting state you cannot
- * reach without JavaScript is how a gauge ends up permanently on zero.
+ * The needle rests at the car's true mileage BY DEFAULT and the sweep animates up to it,
+ * rather than the other way round. A browser that never runs the animation, and a reader
+ * with reduced motion, both still see the correct reading. Animating to a resting state you
+ * cannot reach without JavaScript is how a gauge ends up permanently on zero.
  */
-.rn-plate__needle {
-  stroke: var(--plate-ink);
-  stroke-dasharray: var(--arc-length, 107);
-  stroke-dashoffset: var(--arc-offset, 107);
-  animation: rn-ignition-sweep 900ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(var(--plate-index, 0) * 45ms);
+.rn-plate__value {
+  stroke: var(--rn-plate-ink);
+  stroke-width: 2;
+  stroke-dasharray: var(--sweep, 0) 100;
 }
 
 /*
- * The ignition sweep. Every needle rises from the peg to its true reading in a staggered wave,
- * the way an instrument cluster sweeps when a car is started. It happens once, on load, and it
- * is the reason a page of stock feels like a showroom rather than a spreadsheet.
+ * Redline as stroke WEIGHT rather than colour. It keeps status off colour alone per SC
+ * 1.4.1, it keeps red off the plates entirely, and it deletes a contrast pair that would
+ * have failed at 2.86:1.
  */
-@keyframes rn-ignition-sweep {
+.rn-plate__redline {
+  stroke: var(--rn-plate-ink);
+  stroke-width: 6;
+  stroke-dasharray: 20 100;
+  stroke-dashoffset: -80;
+  opacity: 0.55;
+}
+
+.rn-plate__tick {
+  stroke: var(--rn-plate-ink);
+  stroke-width: 2;
+}
+
+/* Movement four of four, and only on a vehicle page: the cluster self-test on ignition.
+   Twenty-four sweeping gauges in a grid is a slot machine, so cards never get this. */
+.rn-plate--hero .rn-plate__value {
+  animation: rn-sweep 640ms var(--rn-ease-out) both;
+}
+
+@keyframes rn-sweep {
   from {
-    stroke-dashoffset: var(--arc-length, 107);
+    stroke-dasharray: 0 100;
+  }
+  to {
+    stroke-dasharray: var(--sweep, 0) 100;
   }
 }
 
-/* --------------------------------------------------------------- the gallery label */
+/* ------------------------------------------------------- layer three: the furniture */
 
-.rn-plate__label {
+/*
+ * Every mark on a plate is a value from the vehicle record. All of it lives in one bottom
+ * band from day one, so that on photo day there is exactly one scrim and exactly one
+ * contrast pair to verify.
+ */
+.rn-plate__band {
   position: absolute;
-  right: 0.75rem;
-  bottom: 0.7rem;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  color: var(--rn-plate-ink);
+}
+
+.rn-plate__band p {
+  margin: 0;
+}
+
+.rn-plate__place {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.rn-plate__paint {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-align: right;
+  align-items: flex-end;
+  max-width: 62%;
+}
+
+.rn-plate__code {
+  font-size: var(--rn-text-xs);
+}
+
+/* Only when the condition is worth saying. Pre-owned is the default and does not need it. */
+.rn-plate__condition {
+  position: absolute;
+  top: 0.7rem;
+  inset-inline-start: 0.75rem;
   z-index: 3;
   margin: 0;
-  max-width: 60%;
-  text-align: right;
-  color: var(--plate-ink-soft);
-  font-size: 0.6875rem;
-  line-height: 1.25;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-variant-numeric: tabular-nums;
+  color: var(--rn-plate-ink);
+}
+
+/* A register row's thumbnail carries the field, the grain and the arc, and no words. */
+.rn-plate--thumb .rn-plate__band,
+.rn-plate--thumb .rn-plate__condition {
+  display: none;
+}
+
+.rn-plate--thumb {
+  animation: none;
 }
 
 /*
- * A real photograph, when there is one, sits in the same box and covers everything above it.
- * Nothing else about the card changes, so a listing with photographs and one without can sit
- * next to each other in the same grid.
+ * A real photograph, when there is one, sits in the same box and covers the field, which
+ * stays underneath as the loading state and the letterbox fill. A portrait phone snap of a
+ * bakkie sitting in a band of its own declared paint is dramatically better than grey bars,
+ * and twelve dealerships will upload twelve different aspect ratios.
  */
 .rn-plate__photo {
   position: absolute;
@@ -348,4 +818,166 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.rn-plate--photo .rn-plate__band {
+  z-index: 5;
+  background: linear-gradient(0deg, var(--rn-plate-scrim) 0%, transparent 100%);
+  padding-top: 2.5rem;
+}
+
+/* ============================================================================
+ * MOTION POLICY
+ *
+ * Reduced does not mean broken, and this is what makes that testable rather than
+ * aspirational: every animation in this stylesheet runs FROM a synthetic state TO the
+ * element's own resting style, so switching animation off leaves the element correct.
+ *
+ *   - Rules render at scaleX(1). Present, not missing.
+ *   - Plates render at opacity 1 with no stagger.
+ *   - The arc renders at its true mileage. It is never left on zero.
+ *   - The ink flip is KEPT, at 0ms. A colour change is not vestibular motion, and it is
+ *     the only interactive feedback the design has.
+ *
+ * A blanket `* { animation: none }` without that discipline is how a reduced-motion site
+ * ends up with half its elements stuck at opacity 0.
+ * ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .rn-rule[data-draw="pending"] {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+ * THE EXPOSED GRID
+ *
+ * Twelve column rules drawn straight onto the hero's background. One repeating gradient,
+ * no elements, no cost. It is what makes a page with almost nothing on it read as
+ * deliberately set rather than unfinished, and it is the reason everything in the hero can
+ * be ranged left without the right half looking empty.
+ * ========================================================================= */
+
+.rn-columns {
+  position: relative;
+  isolation: isolate;
+  /* So a headline inside can size itself from this box rather than from the viewport, which
+     is what lets it fill the measure instead of stopping halfway across a wide screen. */
+  container-type: inline-size;
+}
+
+.rn-columns::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--rn-hairline) 0 1px,
+    transparent 1px calc(100% / 12)
+  );
+  opacity: 0.55;
+}
+
+@media (max-width: 47.9375rem) {
+  .rn-columns::before {
+    display: none;
+  }
+}
+
+/* ============================================================================
+ * THE COLOUR WALL
+ *
+ * The plate engine turned into navigation. Full bleed, and its own scroll container so the
+ * page body never moves sideways.
+ * ========================================================================= */
+
+.rn-wall {
+  /*
+   * Flex rather than grid, and the reason is the last row: a grid leaves empty cells at the
+   * end whenever the number of colours does not divide into the number of columns, and a
+   * wall with a hole in it looks broken rather than deliberate. Flex items stretch to fill
+   * the row instead, at every width, with no arithmetic.
+   *
+   * It wraps on desktop and becomes a scroll rail only on a phone. If it ever goes back to
+   * grid, note that a fractional track inside an `overflow-x: auto` container has no
+   * definite free space to divide: give the tracks a real width and never a fraction.
+   */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--rn-hairline);
+  border-block: 1px solid var(--rn-hairline);
+}
+
+.rn-wall > li {
+  display: flex;
+  flex: 1 1 9.5rem;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 47.9375rem) {
+  .rn-wall {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+  }
+
+  .rn-wall > li {
+    flex: 0 0 46vw;
+  }
+}
+
+.rn-wall__tile {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  min-height: 15rem;
+  padding: 0.85rem 0.8rem;
+  /* The same grain tile as the plates, so a wall tile and a listing are visibly the same
+     material rather than two things that happen to share a colour. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)' opacity='.055'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  background-color: var(--plate-field, #484848);
+  color: var(--rn-plate-ink);
+  text-decoration: none;
+  /*
+   * The edge is an outline rather than a transitioned inset box-shadow. Transitioning a
+   * box-shadow re-rasterises the element on every frame of the transition, and there are
+   * sixteen of these in a row. An outline swap does the same job for nothing.
+   */
+  outline: 1px solid var(--rn-plate-edge);
+  outline-offset: -1px;
+}
+
+:root[data-theme="dark"] .rn-wall__tile {
+  background-color: var(--plate-field-dark, #525252);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .rn-wall__tile {
+    background-color: var(--plate-field-dark, #525252);
+  }
+}
+
+.rn-wall__tile:hover,
+.rn-wall__tile:focus-visible {
+  outline: 3px solid var(--rn-plate-ink);
+  outline-offset: -3px;
 }

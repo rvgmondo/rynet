@@ -1,15 +1,15 @@
 import config from "@payload-config";
-import { getPayload } from "payload";
+import { getPayload, type Where } from "payload";
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { toCard } from "@/lib/search";
 
 /**
  * What the home page needs to be a marketplace rather than a brochure.
  *
- * The home page fetched nothing at all and showed no cars, which is the single biggest reason
- * it read as cheap: a marketplace whose front page has nothing to buy is a leaflet. Everything
- * here is deliberately cheap to compute, because this is the most requested page on the site
- * and it renders on demand against SQLite.
+ * The home page fetched nothing at all and showed no cars, which is the single biggest
+ * reason it read as cheap: a marketplace whose front page has nothing to buy is a leaflet.
+ * Everything here is deliberately cheap to compute, because this is the most requested page
+ * on the site and it renders on demand against SQLite.
  */
 
 export type BrowseTile = {
@@ -18,12 +18,27 @@ export type BrowseTile = {
   count: number;
 };
 
+export type ColourTile = BrowseTile & {
+  swatch: string | null;
+  family: string | null;
+};
+
 export type HomeData = {
   featured: VehicleCardData[];
   bodyTypes: BrowseTile[];
   provinces: BrowseTile[];
+  colours: ColourTile[];
   totalLive: number;
   dealershipCount: number;
+  /**
+   * How many of the live listings are seeded demonstration stock.
+   *
+   * The home page states this out loud rather than shouting a headline count that is not
+   * what it appears to be. Every seeded listing carries `isDemonstration`, and a figure at
+   * poster scale that quietly includes them would be exactly the fabricated statistic the
+   * brief forbids.
+   */
+  demonstrationCount: number;
 };
 
 const MIN_TO_SHOW = 1;
@@ -32,8 +47,8 @@ const MIN_TO_SHOW = 1;
  * Featured stock, spread across dealerships.
  *
  * One dealership uploading forty cars in an afternoon would otherwise own the entire front
- * page, which is both ugly and unfair to everyone else. So this takes the newest listings and
- * keeps at most two from any one dealership.
+ * page, which is both ugly and unfair to everyone else. So this takes the newest listings
+ * and keeps at most two from any one dealership.
  */
 function spreadAcrossDealers(cards: VehicleCardData[], limit: number, perDealer = 2) {
   const seen = new Map<string, number>();
@@ -66,7 +81,7 @@ export async function getHomeData(featuredLimit = 8): Promise<HomeData> {
 
   const featured = spreadAcrossDealers(recent.docs.map(toCard), featuredLimit);
 
-  const [bodyDocs, provinceDocs, total, dealers] = await Promise.all([
+  const [bodyDocs, provinceDocs, colourDocs, total, demonstration, dealers] = await Promise.all([
     payload.find({
       collection: "body-types",
       where: { isActive: { equals: true } },
@@ -74,23 +89,43 @@ export async function getHomeData(featuredLimit = 8): Promise<HomeData> {
       depth: 0,
     }),
     payload.find({ collection: "provinces", limit: 20, depth: 0, sort: "name" }),
+    payload.find({ collection: "colours", limit: 60, depth: 0, sort: "name" }),
     payload.count({ collection: "vehicles", where: live }),
+    payload.count({
+      collection: "vehicles",
+      where: { and: [live, { isDemonstration: { equals: true } }] },
+    }),
     payload.count({ collection: "dealers", where: { verificationStatus: { equals: "verified" } } }),
   ]);
 
   // Counted rather than assumed. A browse tile promising SUVs and landing on an empty result
   // is worse than not offering the tile, and the counts are the reason to click.
+  // Typed as Where explicitly. TypeScript infers Record<string, unknown> from an inline
+  // object literal, which is not assignable, and this exact shape has bitten this codebase
+  // three times now.
+  const countLive = async (clause: Where) =>
+    (await payload.count({ collection: "vehicles", where: { and: [live, clause] } })).totalDocs;
+
   const bodyTypes = (
     await Promise.all(
       bodyDocs.docs.map(async (body) => ({
         slug: body.slug,
         name: body.name,
-        count: (
-          await payload.count({
-            collection: "vehicles",
-            where: { and: [live, { bodyType: { equals: body.id } }] },
-          })
-        ).totalDocs,
+        count: await countLive({ bodyType: { equals: body.id } }),
+      })),
+    )
+  )
+    .filter((tile) => tile.count >= MIN_TO_SHOW)
+    .sort((a, b) => b.count - a.count);
+
+  const colours = (
+    await Promise.all(
+      colourDocs.docs.map(async (colour) => ({
+        slug: colour.slug,
+        name: colour.name,
+        swatch: (colour as { swatch?: string | null }).swatch ?? null,
+        family: (colour as { family?: string | null }).family ?? null,
+        count: await countLive({ exteriorColour: { equals: colour.id } }),
       })),
     )
   )
@@ -109,11 +144,11 @@ export async function getHomeData(featuredLimit = 8): Promise<HomeData> {
         if (branches.docs.length === 0)
           return { slug: province.slug, name: province.name, count: 0 };
 
-        const count = await payload.count({
-          collection: "vehicles",
-          where: { and: [live, { branch: { in: branches.docs.map((b) => b.id) } }] },
-        });
-        return { slug: province.slug, name: province.name, count: count.totalDocs };
+        return {
+          slug: province.slug,
+          name: province.name,
+          count: await countLive({ branch: { in: branches.docs.map((b) => b.id) } }),
+        };
       }),
     )
   )
@@ -124,7 +159,9 @@ export async function getHomeData(featuredLimit = 8): Promise<HomeData> {
     featured,
     bodyTypes,
     provinces,
+    colours,
     totalLive: total.totalDocs,
     dealershipCount: dealers.totalDocs,
+    demonstrationCount: demonstration.totalDocs,
   };
 }

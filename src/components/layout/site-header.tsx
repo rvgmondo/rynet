@@ -37,10 +37,15 @@ const NAV = [
  *
  * There is no sign-in or dealer login yet, so neither is linked. They return with the
  * accounts and the portal.
+ *
+ * The bar is SOLID, never a backdrop blur. A sticky bar has the page scrolling under it by
+ * definition, so a blur there is a full-viewport readback on every frame, on exactly the
+ * mid-range Android this platform is mostly viewed on. It is separated by a 2px rule, which
+ * is the same rule that opens every section below it.
  */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-[var(--z-header)] border-b border-line bg-surface/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-[var(--z-header)] border-b-2 border-ink bg-surface">
       <div className="container-page flex h-16 items-center gap-3 sm:gap-6">
         <Link
           href="/"
@@ -48,7 +53,7 @@ export function SiteHeader() {
           aria-label="Rynet Showroom, home"
         >
           <RynetMark className="h-7 w-auto sm:h-8" />
-          <span className="font-display text-base font-extrabold tracking-tight sm:text-lg">
+          <span className="font-display text-base font-extrabold tracking-tight [font-variation-settings:'wdth'_112] sm:text-lg">
             RYNET
           </span>
         </Link>
@@ -60,7 +65,7 @@ export function SiteHeader() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:bg-surface-sunken hover:text-ink"
+                  className="rn-label flex min-h-11 items-center px-3 text-ink-muted transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
                 >
                   {item.label}
                 </Link>
@@ -81,7 +86,7 @@ export function SiteHeader() {
           */}
           <details className="group lg:hidden">
             <summary
-              className="flex size-11 cursor-pointer list-none items-center justify-center rounded-md border border-line-interactive [&::-webkit-details-marker]:hidden"
+              className="flex size-11 cursor-pointer list-none items-center justify-center border border-line-interactive [&::-webkit-details-marker]:hidden"
               aria-label="Open menu"
             >
               <Menu aria-hidden="true" className="size-5 group-open:hidden" />
@@ -93,7 +98,7 @@ export function SiteHeader() {
               accessibility problem in its own right: a screen reader lists both as "Main
               navigation" with no way to tell them apart.
             */}
-            <div className="absolute inset-x-0 top-16 border-b border-line bg-surface shadow-(--rn-shadow-3)">
+            <div className="absolute inset-x-0 top-16 border-b-2 border-ink bg-surface">
               <nav aria-label="Menu" className="container-page py-2">
                 <ul>
                   {NAV.map((item) => (
@@ -108,7 +113,7 @@ export function SiteHeader() {
                   ))}
                 </ul>
                 <div className="flex items-center justify-between gap-4 py-4">
-                  <span className="text-sm text-ink-secondary">Colour theme</span>
+                  <span className="rn-label text-ink-muted">Colour theme</span>
                   <ThemeToggle />
                 </div>
               </nav>

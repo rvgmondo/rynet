@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { Archivo, Newsreader } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import { AgencyFooter } from "@/components/agency/agency-footer";
@@ -20,19 +20,21 @@ import "@/styles/globals.css";
  * The fonts are declared again because each root layout owns its own `<html>`, so the CSS
  * variables have to be applied here too. next/font deduplicates the actual files.
  */
-const montserrat = Montserrat({
+const archivo = Archivo({
   subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-montserrat",
+  axes: ["wdth"],
+  variable: "--font-archivo",
   display: "swap",
   preload: true,
 });
 
-const inter = Inter({
+const newsreader = Newsreader({
   subsets: ["latin"],
-  variable: "--font-inter",
+  axes: ["opsz"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -56,8 +58,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#001123" },
+    { media: "(prefers-color-scheme: light)", color: "#ededea" },
+    { media: "(prefers-color-scheme: dark)", color: "#080d14" },
   ],
 };
 
@@ -66,7 +68,7 @@ export default function AgencyLayout({ children }: { children: React.ReactNode }
     <html
       lang="en-ZA"
       suppressHydrationWarning
-      className={`${montserrat.variable} ${inter.variable}`}
+      className={`${archivo.variable} ${newsreader.variable}`}
     >
       <body>
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>

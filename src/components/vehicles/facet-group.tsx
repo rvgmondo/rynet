@@ -28,9 +28,9 @@ export function FacetGroup({
 
   return (
     <details open={defaultOpen || Boolean(active)} className="border-t border-line">
-      <summary className="flex min-h-11 cursor-pointer items-center justify-between py-2 font-display text-sm font-bold">
+      <summary className="rn-label flex min-h-11 cursor-pointer items-center justify-between py-3 text-ink">
         {legend}
-        {active ? <span className="text-xs font-medium text-accent">1 selected</span> : null}
+        {active ? <span className="rn-label rn-label--light text-accent">1 selected</span> : null}
       </summary>
 
       <fieldset className="pb-3">
@@ -43,8 +43,8 @@ export function FacetGroup({
               <li key={option.value}>
                 <label
                   htmlFor={id}
-                  className={`flex min-h-11 cursor-pointer items-center gap-2.5 rounded-md px-2 text-sm ${
-                    disabled ? "cursor-not-allowed text-ink-muted" : "hover:bg-surface-sunken"
+                  className={`rn-row rn-row--sunken flex min-h-11 cursor-pointer items-center gap-3 px-1 text-sm ${
+                    disabled ? "cursor-not-allowed opacity-60" : ""
                   }`}
                 >
                   <input
@@ -63,7 +63,7 @@ export function FacetGroup({
                     to tell "nothing matches" apart from "we do not have this category".
                   */}
                   {option.count >= 0 ? (
-                    <span className="tabular text-xs text-ink-muted">{option.count}</span>
+                    <span className="rn-card__muted tabular text-xs">{option.count}</span>
                   ) : null}
                 </label>
               </li>
