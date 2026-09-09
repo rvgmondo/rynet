@@ -42,6 +42,17 @@ export default async function HomePage() {
   const data = await getHomeData(8);
   const provinceCount = data.provinces.length;
 
+  /*
+   * Two questions the page asks repeatedly, answered once.
+   *
+   * `allDemonstration` decides whether the word "demonstration" has to travel with every
+   * count. `countable` decides whether the register is worth putting at poster scale, and
+   * it is deliberately about REAL stock: a big number is impressive at 311 and dishonest at
+   * 311 when all 311 are seeded.
+   */
+  const allDemonstration = data.demonstrationCount >= data.totalLive && data.totalLive > 0;
+  const countable = data.realLive >= COUNTER_FLOOR;
+
   const today = new Intl.DateTimeFormat("en-ZA", {
     weekday: "long",
     day: "numeric",
@@ -76,7 +87,11 @@ export default async function HomePage() {
           <span>Rynet Showroom</span>
           <span className="hidden sm:inline">The register of verified dealer stock</span>
           <span>{today}</span>
-          <span className="tabular">{data.totalLive} cars</span>
+          {/* The word "demonstration" travels with the count for as long as the count is
+              made of demonstration data. A figure and its caveat must not be separated. */}
+          <span className="tabular">
+            {data.totalLive} {allDemonstration ? "demonstration " : ""}cars
+          </span>
           <span className="tabular">{data.dealershipCount} dealerships</span>
           <span className="tabular">{provinceCount} provinces</span>
         </p>
@@ -96,7 +111,8 @@ export default async function HomePage() {
             phone would just be noise. */}
         <div className="rn-columns container-page pb-[var(--section-base)] pt-[var(--section-tight)]">
           <p className="rn-label text-ink">
-            Verified dealerships only. {data.totalLive} cars. {data.dealershipCount} dealerships.
+            Verified dealerships only. {data.totalLive}{" "}
+            {allDemonstration ? "demonstration cars" : "cars"}. {data.dealershipCount} dealerships.
           </p>
 
           {/* Hand-broken on purpose. Expanded Archivo at 800 across three lines produces an
@@ -182,41 +198,48 @@ export default async function HomePage() {
         </h2>
         <hr className="rn-rule rn-rule--brand" />
 
-        <dl className="mt-8 grid gap-8 sm:grid-cols-3 sm:divide-x sm:divide-line">
-          {/*
-            The counter floor. A big number is impressive at 311 and an embarrassment at 40
-            rendered at poster scale, so below the floor the vehicle count simply does not
-            appear at this size. The template must never shout a figure it would be better
-            not to shout.
-          */}
-          {data.totalLive >= COUNTER_FLOOR ? (
+        {/*
+          The counter shows REAL stock, and while there is none it does not show a counter.
+
+          Every one of the listings on this site today is seeded demonstration data, so
+          rendering 311 at poster scale would be a fabricated statistic, which the brief
+          forbids outright. The floor rule and the honesty rule are the same rule here: a
+          number is either worth shouting or it is not, and a number that is not true is
+          never worth shouting.
+
+          This flips to the three figures on its own, the day real dealerships list.
+        */}
+        {countable ? (
+          <dl className="mt-8 grid gap-8 sm:grid-cols-3 sm:divide-x sm:divide-line">
             <div>
-              <dd className="rn-mega">{data.totalLive}</dd>
+              <dd className="rn-mega">{data.realLive}</dd>
               <dt className="rn-label mt-2 text-ink-muted">Cars on the register</dt>
             </div>
-          ) : null}
-          <div className="sm:ps-8">
-            <dd className="rn-mega">{data.dealershipCount}</dd>
-            <dt className="rn-label mt-2 text-ink-muted">Verified dealerships</dt>
+            <div className="sm:ps-8">
+              <dd className="rn-mega">{data.realDealershipCount}</dd>
+              <dt className="rn-label mt-2 text-ink-muted">Verified dealerships</dt>
+            </div>
+            <div className="sm:ps-8">
+              <dd className="rn-mega">{provinceCount}</dd>
+              <dt className="rn-label mt-2 text-ink-muted">Provinces</dt>
+            </div>
+          </dl>
+        ) : (
+          <div className="mt-8">
+            <p className="rn-label text-ink-muted">Read this before you go any further</p>
+            <p className="rn-head mt-4 max-w-[20ch]">Every car on this site is an example.</p>
+            <p className="rn-prose mt-5 text-ink-secondary">
+              The {data.totalLive} listings and {data.dealershipCount} dealerships you can browse
+              here were seeded to build and test the platform. None of the cars is for sale and none
+              of those businesses exists. Everything else on the page is real: the search, the
+              filters, the colour fields and the verification rules all work exactly as they will on
+              the day a dealership publishes its first car.
+            </p>
+            <p className="rn-label rn-label--light mt-5 text-ink-muted">
+              The counter turns on when real stock arrives
+            </p>
           </div>
-          <div className="sm:ps-8">
-            <dd className="rn-mega">{provinceCount}</dd>
-            <dt className="rn-label mt-2 text-ink-muted">Provinces</dt>
-          </div>
-        </dl>
-
-        {/*
-          Said plainly rather than hidden. The seeded stock exists to build and test the
-          platform, and a headline count that quietly includes it would be a fabricated
-          statistic. This line disappears by itself the day real listings outnumber it.
-        */}
-        {data.demonstrationCount > 0 ? (
-          <p className="mt-6 text-sm text-ink-muted">
-            <span className="tabular">{data.demonstrationCount}</span> of these listings are
-            demonstration entries, seeded while the platform is being built. They are marked on
-            every card and they are not for sale.
-          </p>
-        ) : null}
+        )}
       </section>
 
       {/* 6. BROWSE BY COLOUR. The wall as navigation: generated from data, honest, and a

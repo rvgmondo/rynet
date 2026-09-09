@@ -58,6 +58,29 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
   const query = one(params.q);
   const parsed = await resolveQuery(query);
 
+  /*
+   * A search that understood nothing must not answer with everything.
+   *
+   * "asdfgh" parsed to no filters at all, so the page fell through to the unfiltered query
+   * and presented all 311 cars under the heading the buyer had just searched. That is worse
+   * than returning nothing: it looks like a result, and the buyer scrolls a list that has no
+   * relationship to what they typed. If a query was given and none of it resolved, the
+   * result set is deliberately empty and the empty state explains why.
+   */
+  const queryUnderstood =
+    !query ||
+    Boolean(
+      parsed.make ||
+        parsed.model ||
+        parsed.body ||
+        parsed.fuel ||
+        parsed.transmission ||
+        parsed.province ||
+        parsed.city ||
+        parsed.minPrice ||
+        parsed.maxPrice,
+    );
+
   const makeSlug = one(params.make) ?? parsed.make;
   const modelSlug = one(params.model) ?? parsed.model;
   const bodySlug = one(params.body) ?? parsed.body;
@@ -110,6 +133,9 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
   }
 
   const where: Record<string, unknown> = { status: { equals: "live" } };
+  // -1 is an id no row has, which is how "match nothing" is expressed without a special case
+  // running through every clause below.
+  if (!queryUnderstood) where.id = { equals: -1 };
   if (makeId) where.make = { equals: makeId };
   if (modelId) where.model = { equals: modelId };
   if (bodyId) where.bodyType = { equals: bodyId };
@@ -141,6 +167,13 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
     depth: 2,
   });
 
+  // How much of this result set is seeded example stock, so the page can say so once at the
+  // top rather than leaving it to a marker on each card.
+  const demonstration = await payload.count({
+    collection: "vehicles",
+    where: { and: [where, { isDemonstration: { equals: true } }] } as never,
+  });
+
   // The shared mapper. This page used to carry a verbatim copy of it, which is how the
   // paint colour reached the card in one place and not the other two.
   const vehicles: VehicleCardData[] = results.docs.map(toCard);
@@ -150,6 +183,21 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
    * filters and dumps the buyer back into all 311 cars, which is the single most common
    * pagination bug on faceted sites.
    */
+  /*
+   * Every filter the buyer arrived with, as hidden inputs for the sort form.
+   *
+   * A GET form submits only its own controls, so the sort control was posting `sort` alone
+   * and throwing away the search term, the colour and every ticked facet. Choosing "price,
+   * low to high" on a filtered result set dumped the buyer back into all 311 cars, which is
+   * the same class of bug the facet rail had, in the one control a buyer is most likely to
+   * touch after filtering.
+   */
+  const carried = Object.entries(params)
+    .map(([key, value]) => ({ key, value: one(value) }))
+    .filter((entry): entry is { key: string; value: string } =>
+      Boolean(entry.value && entry.key !== "sort" && entry.key !== "page"),
+    );
+
   const buildHref = (target: number) => {
     const next = new URLSearchParams();
     for (const [key, value] of Object.entries(params)) {
@@ -161,8 +209,15 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
     return query ? `/cars?${query}` : "/cars";
   };
 
+  /*
+   * The price range on THIS page, and only when this page has cars on it.
+   *
+   * `results.totalDocs > 0` was the wrong guard: a page number past the last page returns a
+   * non-zero total with an empty `docs` array, and Math.min of nothing is Infinity, so the
+   * page printed "R Infinity to R -Infinity on this page" and still answered 200.
+   */
   const priceSummary =
-    results.totalDocs > 0
+    vehicles.length > 0
       ? `${formatRand(Math.min(...vehicles.map((v) => v.price)))} to ${formatRand(Math.max(...vehicles.map((v) => v.price)))} on this page`
       : null;
 
@@ -201,6 +256,8 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
             query={query}
             understood={parsed.matched}
             ignored={parsed.unmatched}
+            demonstrationCount={demonstration.totalDocs}
+            filters={carried}
           />
 
           <ResultsGrid

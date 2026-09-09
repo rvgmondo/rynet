@@ -28,7 +28,17 @@ export function RandFigure({ value, className = "" }: { value: number; className
       className={`rn-figure ${className}`}
       style={{ "--fig-chars": Math.max(digits.length, 5) } as CSSProperties}
     >
+      {/*
+        The space between the R and the figure is REAL, not margin.
+
+        Setting it back with `margin-inline-end` alone looked right and read wrong: the text
+        content became "R584 000", so copying a price gave the wrong string, and a screen
+        reader announced it without the separator. The house format is "R 249 900" and it is
+        the format everywhere, including in the accessible name. The span is still narrowed
+        by CSS; it just no longer eats the space.
+      */}
       <span className="rn-rand">R</span>
+      <span className="rn-rand-gap"> </span>
       {digits}
     </p>
   );

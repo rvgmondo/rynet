@@ -138,21 +138,7 @@ export function VehicleCard({
         <div className="flex items-start gap-3">
           <p className="rn-label shrink-0 border border-current px-1.5 py-1">Verified</p>
           <div className="min-w-0 flex-1">
-            <p
-              className={`truncate text-xs font-medium ${
-                vehicle.isDemonstration ? "border-b-2 border-current pb-0.5" : ""
-              }`}
-              title={
-                vehicle.isDemonstration
-                  ? "Seeded example listing. Not a real business and not a real vehicle for sale."
-                  : undefined
-              }
-            >
-              {vehicle.dealerName}
-              {vehicle.isDemonstration ? (
-                <span className="sr-only"> (demonstration listing, not a real business)</span>
-              ) : null}
-            </p>
+            <p className="truncate text-xs font-medium">{vehicle.dealerName}</p>
             {vehicle.cityName ? (
               <p className="rn-card__muted rn-label rn-label--light mt-1 truncate">
                 {vehicle.cityName}
@@ -160,6 +146,21 @@ export function VehicleCard({
             ) : null}
           </div>
         </div>
+
+        {/*
+          A demonstration listing says so in words a person can read.
+          ----------------------------------------------------------
+          This was a two pixel underline under the dealer name, a `title` attribute and a
+          screen-reader-only sentence. A sighted visitor saw an underline, which reads as
+          emphasis rather than as a warning, so in practice 311 listings for cars that do not
+          exist were presented as stock for sale. The client's brief forbids exactly that, and
+          a marker only a screen reader can hear is not a marker.
+        */}
+        {vehicle.isDemonstration ? (
+          <p className="rn-label rn-card__muted border-t border-current pt-2">
+            Demonstration listing, not for sale
+          </p>
+        ) : null}
       </div>
     </article>
   );

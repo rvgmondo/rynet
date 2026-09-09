@@ -56,6 +56,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
         ? `${dealer.tradingName} is a verified dealership on Rynet. See their current stock, branches and trading hours.`
         : `${dealer.tradingName} is a verified dealership on Rynet. See their current stock, branches and trading hours.`,
     alternates: { canonical: `/dealers/${dealer.slug}` },
+    // A dealership that does not exist is not offered for indexing. `follow` stays on so the
+    // stock links are still crawled once real dealerships replace the seed.
+    ...(dealer.isDemonstration ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -112,47 +115,59 @@ export default async function DealerPage({
 
   const cheapest = stock.docs.length ? Math.min(...stock.docs.map((v) => v.price)) : null;
 
-  const localBusinessJsonLd = branches.docs.map((branch) => ({
-    "@context": "https://schema.org",
-    "@type": "AutoDealer",
-    name: `${dealer.tradingName}${branches.docs.length > 1 ? `, ${branch.name}` : ""}`,
-    url: `${process.env.NEXT_PUBLIC_SERVER_URL ?? ""}/dealers/${dealer.slug}`,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: [branch.addressLine1, branch.addressLine2].filter(Boolean).join(", "),
-      addressLocality: relName(branch.city) ?? undefined,
-      addressRegion: relName(branch.province) ?? undefined,
-      postalCode: branch.postalCode ?? undefined,
-      addressCountry: "ZA",
-    },
-    ...(typeof branch.latitude === "number" && typeof branch.longitude === "number"
-      ? {
-          geo: {
-            "@type": "GeoCoordinates",
-            latitude: branch.latitude,
-            longitude: branch.longitude,
-          },
-        }
-      : {}),
-    telephone: branch.phone ?? undefined,
-    openingHoursSpecification: (branch.tradingHours ?? [])
-      .filter((h) => !h.closed && h.opensAt && h.closesAt)
-      .map((h) => ({
-        "@type": "OpeningHoursSpecification",
-        dayOfWeek: `https://schema.org/${DAY_LABEL[h.day ?? ""] ?? ""}`,
-        opens: h.opensAt,
-        closes: h.closesAt,
-      })),
-    // No aggregateRating. None has been earned.
-  }));
+  /*
+   * A demonstration dealership publishes no structured data.
+   *
+   * Every branch below carries a street address, a postal code, a telephone number, GPS
+   * coordinates and trading hours. For the twelve seeded dealerships none of that describes
+   * a real business, and the page says so in its own copy. Handing it to Google as an
+   * AutoDealer says the opposite to the one reader that cannot see the disclaimer.
+   */
+  const localBusinessJsonLd = dealer.isDemonstration
+    ? []
+    : branches.docs.map((branch) => ({
+        "@context": "https://schema.org",
+        "@type": "AutoDealer",
+        name: `${dealer.tradingName}${branches.docs.length > 1 ? `, ${branch.name}` : ""}`,
+        url: `${process.env.NEXT_PUBLIC_SERVER_URL ?? ""}/dealers/${dealer.slug}`,
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: [branch.addressLine1, branch.addressLine2].filter(Boolean).join(", "),
+          addressLocality: relName(branch.city) ?? undefined,
+          addressRegion: relName(branch.province) ?? undefined,
+          postalCode: branch.postalCode ?? undefined,
+          addressCountry: "ZA",
+        },
+        ...(typeof branch.latitude === "number" && typeof branch.longitude === "number"
+          ? {
+              geo: {
+                "@type": "GeoCoordinates",
+                latitude: branch.latitude,
+                longitude: branch.longitude,
+              },
+            }
+          : {}),
+        telephone: branch.phone ?? undefined,
+        openingHoursSpecification: (branch.tradingHours ?? [])
+          .filter((h) => !h.closed && h.opensAt && h.closesAt)
+          .map((h) => ({
+            "@type": "OpeningHoursSpecification",
+            dayOfWeek: `https://schema.org/${DAY_LABEL[h.day ?? ""] ?? ""}`,
+            opens: h.opensAt,
+            closes: h.closesAt,
+          })),
+        // No aggregateRating. None has been earned.
+      }));
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and this is serialised from typed data we constructed.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
-      />
+      {localBusinessJsonLd.length > 0 ? (
+        <script
+          type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and this is serialised from typed data we constructed.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
+      ) : null}
 
       <div className="container-page py-[var(--section-tight)]">
         <Breadcrumbs

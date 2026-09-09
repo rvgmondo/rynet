@@ -351,7 +351,18 @@
   font-size: 0.58em;
   font-weight: 400;
   color: var(--card-muted, var(--rn-ink-muted));
-  margin-inline-end: 0.12em;
+}
+
+/*
+ * A real space, tightened rather than removed.
+ *
+ * The house format is "R 249 900" and that space has to survive into the text content, so a
+ * copied price and an announced price are both right. Setting it back with a margin instead
+ * looked identical and produced "R584 000" everywhere it mattered.
+ */
+.rn-rand-gap {
+  font-size: 0.58em;
+  letter-spacing: -0.28em;
 }
 
 /* Running prose, and the only place Newsreader is allowed. */

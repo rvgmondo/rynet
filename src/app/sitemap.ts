@@ -74,9 +74,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // ------------------------------------------------------------------ vehicles
+  // Demonstration stock is excluded here for the same reason it emits no structured data:
+  // a sitemap is an assertion that these pages are worth indexing, and 311 cars that do not
+  // exist are not. See isDemonstrationRecord in src/lib/structured-data.ts.
   const vehicles = await payload.find({
     collection: "vehicles",
-    where: { status: { equals: "live" } },
+    where: {
+      and: [{ status: { equals: "live" } }, { isDemonstration: { not_equals: true } }],
+    },
     limit: 5000,
     depth: 1,
     sort: "-publishedAt",
@@ -105,7 +110,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // --------------------------------------------------------------- dealerships
   const dealers = await payload.find({
     collection: "dealers",
-    where: { verificationStatus: { equals: "verified" } },
+    where: {
+      and: [
+        { verificationStatus: { equals: "verified" } },
+        { isDemonstration: { not_equals: true } },
+      ],
+    },
     limit: 500,
     depth: 0,
   });
