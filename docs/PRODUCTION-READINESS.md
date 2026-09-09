@@ -1,6 +1,6 @@
 # PRODUCTION READINESS
 
-Updated 2 September 2026. The first version of this document said the site deployed but was not
+Updated 9 September 2026. The first version of this document said the site deployed but was not
 ready to be public. Most of what it listed is now done.
 
 ---
@@ -29,6 +29,51 @@ figures for the same reason, and the bands render real numbers the moment
 **What is still missing is scope, not soundness:** buyer accounts, the dealer portal, agency case
 studies, insights and resources, and vehicle photography. None of those stop the site being
 public. Two things below do.
+
+---
+
+## Redesigned, and what the redesign audit found
+
+**The whole marketplace was redrawn onto the STOCKLIST direction on 9 September 2026.** The
+client's verdict on the previous build was that it looked cheap, and the diagnosis was specific:
+with no vehicle photography every element had to declare itself with a thin grey border, and three
+hundred thin grey borders is what cheap looks like. `docs/DESIGN-STOCKLIST.md` is the authority on
+what replaced it. There are now no radii and no shadows anywhere, the type is Archivo with
+Newsreader for prose, and the image area of every listing is a field derived from that car's own
+recorded paint.
+
+**An adversarial audit ran across ten dimensions afterwards and found one genuinely serious
+thing.** Every seeded listing and dealership was publishing full schema.org to search engines: a
+Car with an Offer, a rand price and in-stock availability, and an AutoDealer with a street address,
+a telephone number and GPS coordinates. All 311 were in the sitemap and all were indexable, while
+the pages themselves said in their own copy that none of it is real. The site was telling a person
+one thing and telling Google the opposite.
+
+That is fixed at every surface: no structured data, out of the sitemap, and noindex with follow.
+The sitemap went from 400 URLs to 77. **The rule to carry forward is that a visible disclaimer is
+not enough. Any new machine-readable surface has to be gated on `isDemonstration` the same way.**
+
+The same audit found the home page shouting 311 cars at poster scale when all 311 are seeded, so
+the counter now reads real stock and says plainly that every car on the site is an example while
+there is none. It also found four correctness bugs worth naming, because each is a class of
+mistake rather than a one-off:
+
+- **A GET form submits only its own controls.** The sort control was posting `sort` alone, so
+  choosing a sort order discarded the search term and every ticked facet. The facet rail had the
+  same bug for the query and the colour. Any new GET form on `/cars` needs hidden inputs for
+  everything the buyer arrived with.
+- **A search that understood nothing answered with everything.** "asdfgh" parsed to no filters,
+  fell through to the unfiltered query, and presented all 311 cars under the buyer's own term.
+- **Facet counts ignored every filter except make**, so on bakkie plus diesel the rail still
+  advertised every hatchback in the catalogue.
+- **Searching Cape Town, Durban or Johannesburg returned nothing**, because the branches are
+  registered in Bellville, Pinetown and Sandton. A city with no stock now widens to its province
+  and says so.
+
+**The audit did not finish.** It hit the account session limit two thirds of the way through, so
+accessibility, performance, responsive behaviour and dark theme were never examined by it. The axe
+checks, the reduced-motion assertions and the horizontal-overflow gate in the suite all pass, but
+that is not the same as having looked.
 
 ---
 
