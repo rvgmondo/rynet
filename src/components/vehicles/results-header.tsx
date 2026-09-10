@@ -9,13 +9,16 @@ const SORT_OPTIONS = [
 /**
  * The heading above a result set.
  *
- * The count sits in an `aria-live="polite"` region. When a buyer changes a filter the
- * number changes, and without a live region a screen reader user gets no indication that
- * anything happened at all: the page looks identical from the keyboard until they tab all
- * the way down into the grid.
+ * The count carries no live region, and it used to. The comment here claimed the region was
+ * what told a screen reader user that a filter had changed the number, and it never once
+ * did: a live region announces a MUTATION inside a document that stays put, and every filter
+ * on this page is a GET form that loads a whole new document. The region was created and
+ * read in the same paint, which is the one case where nothing is announced. It was an
+ * accessibility claim that had never been true.
  *
- * `polite` rather than `assertive` on purpose. A result count is worth announcing at the
- * next natural pause, not worth interrupting whatever is being read.
+ * What actually does the work is the navigation itself. A new document is announced by
+ * title, and the count then sits second in the reading order, immediately under the heading,
+ * where it is reached in one step rather than after tabbing the length of the grid.
  *
  * THE HONESTY CAPTION belongs here and nowhere else on this page. The colour fields are the
  * most obvious thing about the design and the first question anyone will ask about them, so
@@ -61,7 +64,7 @@ export function ResultsHeader({
           <h1 id="results-heading" className="rn-head">
             Cars for sale
           </h1>
-          <p aria-live="polite" className="mt-3 text-sm text-ink-secondary">
+          <p className="mt-3 text-sm text-ink-secondary">
             <span className="font-semibold tabular text-ink">{total.toLocaleString("en-ZA")}</span>{" "}
             {total === 1 ? "car" : "cars"} from verified dealerships
             {totalPages > 1 ? (
@@ -80,7 +83,7 @@ export function ResultsHeader({
         {/* On a phone the rail sits below the results, so this is how a buyer reaches it. */}
         <a
           href="#filters-heading"
-          className="rn-label inline-flex min-h-11 items-center text-ink-muted lg:hidden"
+          className="rn-label inline-flex min-h-11 items-center text-ink-muted xl:hidden"
         >
           Filter
         </a>

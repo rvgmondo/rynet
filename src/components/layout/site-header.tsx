@@ -76,7 +76,7 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden lg:block">
-            <ThemeToggle />
+            <ThemeToggle name="theme-bar" />
           </div>
 
           {/*
@@ -114,7 +114,7 @@ export function SiteHeader() {
                 </ul>
                 <div className="flex items-center justify-between gap-4 py-4">
                   <span className="rn-label text-ink-muted">Colour theme</span>
-                  <ThemeToggle />
+                  <ThemeToggle name="theme-menu" />
                 </div>
               </nav>
             </div>

@@ -62,6 +62,12 @@
     ],
     "[project]/src/app/(marketplace)/vehicles/[make]/[model]/[slug]/page": [
       "static/media/21ca8f3f56c22ca2-s.p.1cp9-4nby68jc.woff2"
+    ],
+    "[project]/src/app/(payload)/admin/[[...segments]]/page": [
+      "static/media/21ca8f3f56c22ca2-s.p.1cp9-4nby68jc.woff2"
+    ],
+    "[project]/src/app/_not-found/page": [
+      "static/media/21ca8f3f56c22ca2-s.p.1cp9-4nby68jc.woff2"
     ]
   },
   "appUsingSizeAdjust": true,

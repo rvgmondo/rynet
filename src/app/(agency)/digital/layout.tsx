@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Newsreader } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-
 import { AgencyFooter } from "@/components/agency/agency-footer";
 import { AgencyHeader } from "@/components/agency/agency-header";
 import { SkipLink } from "@/components/layout/skip-link";
+
+import { displayFontUrl } from "@/lib/font-preload";
 
 import "@/styles/globals.css";
 
@@ -30,7 +31,15 @@ const archivo = Archivo({
 
 const newsreader = Newsreader({
   subsets: ["latin"],
-  axes: ["opsz"],
+  /*
+   * No `axes: ["opsz"]`.
+   *
+   * The optical size axis was requested and then never used: nothing on either front door
+   * sets `font-optical-sizing` or an `opsz` variation, so the only thing the axis did was
+   * keep a second variable dimension in every file. It cost 128.8 KB across the four faces
+   * for a difference no rule on this site asks for. Weight still varies, because weight is
+   * the default axis and is not what was removed.
+   */
   style: ["normal", "italic"],
   variable: "--font-newsreader",
   display: "swap",
@@ -63,13 +72,42 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function AgencyLayout({ children }: { children: React.ReactNode }) {
+export default async function AgencyLayout({ children }: { children: React.ReactNode }) {
+  /*
+   * See lib/font-preload.ts. Next writes this link itself on a prerendered route and not on
+   * a rendered-on-demand one, and the two busiest pages on this site are the second kind.
+   */
+  const displayFont = await displayFontUrl();
+
   return (
     <html
       lang="en-ZA"
       suppressHydrationWarning
       className={`${archivo.variable} ${newsreader.variable}`}
     >
+      {/*
+        A real element in a real head, not ReactDOM.preload.
+        ------------------------------------------------------------------
+        `preload()` was tried first and does nothing here, for the same reason next/font's
+        own request does nothing here: on a route rendered on demand the hint travels in the
+        flight payload and never becomes a tag the parser can act on. Which is the entire
+        problem being fixed.
+
+        On the routes Next DOES write a link for, this is a second tag with the same href.
+        The browser issues one request for it, because a preload is deduplicated by URL and
+        CORS mode, and `crossorigin=""` and `crossorigin="anonymous"` are the same mode.
+      */}
+      <head>
+        {displayFont ? (
+          <link
+            rel="preload"
+            href={displayFont}
+            as="font"
+            type="font/woff2"
+            crossOrigin="anonymous"
+          />
+        ) : null}
+      </head>
       <body>
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
           <SkipLink />

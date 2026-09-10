@@ -5,7 +5,12 @@ import * as React from "react";
 import { useActionState } from "react";
 
 import { submitAgencyEnquiry } from "@/app/actions/agency-enquiry";
-import { CHOICE_CLASS, INPUT_CLASS, LABEL_CLASS } from "@/components/forms/multi-step";
+import {
+  CHOICE_CLASS,
+  focusFirstInvalid,
+  INPUT_CLASS,
+  LABEL_CLASS,
+} from "@/components/forms/multi-step";
 import { Button } from "@/components/ui/button";
 import {
   AGENCY_INTERESTS,
@@ -117,6 +122,8 @@ export function QualificationForm() {
   const renderedAt = React.useRef<number>(Date.now());
   const elapsedField = React.useRef<HTMLInputElement>(null);
   const shouldFocus = React.useRef(false);
+  // Set when a render is about to paint validation errors, read once by the focus effect.
+  const invalid = React.useRef<Record<string, string> | null>(null);
 
   // ------------------------------------------------------------------ draft persistence
 
@@ -209,17 +216,31 @@ export function QualificationForm() {
     const steps = Object.keys(state.fieldErrors).map((field) => FIELD_STEP[field] ?? 2);
     const earliest = Math.min(...steps);
     if (Number.isFinite(earliest)) {
+      invalid.current = state.fieldErrors;
       shouldFocus.current = true;
       setStep(earliest);
     }
   }, [state]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: focus follows a step change, which is what `step` tracks.
+  /*
+   * A failed step outranks a completed one when both want focus in the same commit. See
+   * focusFirstInvalid in components/forms/multi-step.tsx for why this is focus rather than a
+   * live region, and why the heading loses.
+   *
+   * No dependency array: both triggers are refs, so there is nothing to compare.
+   */
   React.useEffect(() => {
+    const errors = invalid.current;
+    if (errors) {
+      invalid.current = null;
+      shouldFocus.current = false;
+      if (focusFirstInvalid(formRef.current, errors)) return;
+    }
+
     if (!shouldFocus.current) return;
     shouldFocus.current = false;
     headingRef.current?.focus();
-  }, [step]);
+  });
 
   const validateStep = (index: number): boolean => {
     const form = formRef.current;
@@ -254,7 +275,13 @@ export function QualificationForm() {
     }
 
     setClientErrors(onThisStep);
-    return Object.keys(onThisStep).length === 0;
+
+    if (Object.keys(onThisStep).length > 0) {
+      invalid.current = onThisStep;
+      return false;
+    }
+
+    return true;
   };
 
   const goTo = (index: number) => {

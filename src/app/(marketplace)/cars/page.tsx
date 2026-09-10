@@ -1,5 +1,6 @@
 import config from "@payload-config";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { getPayload, type Where } from "payload";
 
 import { FacetRail } from "@/components/vehicles/facet-rail";
@@ -31,6 +32,76 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const one = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
+
+type ResultPage = {
+  vehicles: VehicleCardData[];
+  totalDocs: number;
+  page: number;
+  totalPages: number;
+  demonstrationCount: number;
+};
+
+async function readResults(
+  where: Record<string, unknown>,
+  sort: string,
+  page: number,
+): Promise<ResultPage> {
+  const payload = await getPayload({ config });
+
+  const found = await payload.find({
+    collection: "vehicles",
+    where: where as never,
+    sort,
+    limit: PER_PAGE,
+    page,
+    depth: 2,
+  });
+
+  // How much of this result set is seeded example stock, so the page can say so once at the
+  // top rather than leaving it to a marker on each card.
+  const demonstration = await payload.count({
+    collection: "vehicles",
+    where: { and: [where, { isDemonstration: { equals: true } }] } as never,
+  });
+
+  return {
+    // The shared mapper. This page used to carry a verbatim copy of it, which is how the
+    // paint colour reached the card in one place and not the other two.
+    vehicles: found.docs.map(toCard),
+    totalDocs: found.totalDocs,
+    page: found.page ?? 1,
+    totalPages: found.totalPages,
+    demonstrationCount: demonstration.totalDocs,
+  };
+}
+
+/**
+ * The cache on the search itself, which is where the time on this page actually went.
+ *
+ * Measured, not guessed. With the taxonomy lookups cached, a warm request spent 4ms
+ * resolving eight slugs and its location, and then 125 to 175ms inside this one `find`.
+ * `depth: 2` is why: twenty-four vehicles, each pulling its make, model, body, fuel,
+ * transmission and colour, and a branch that pulls its own city and province. Hundreds of
+ * round trips to SQLite to draw one page of results.
+ *
+ * Only the CARD data is kept, not the documents. `toCard` throws away everything a card does
+ * not draw, including the VIN, so what sits in the cache is a few hundred bytes a car rather
+ * than a fully populated listing.
+ *
+ * Sixty seconds, tagged for stock. A car is not so perishable that a minute matters, and any
+ * write to a vehicle drops this immediately anyway.
+ */
+function getResults(
+  where: Record<string, unknown>,
+  sort: string,
+  page: number,
+): Promise<ResultPage> {
+  return unstable_cache(
+    () => readResults(where, sort, page),
+    ["cars-results", JSON.stringify(where), sort, String(page)],
+    { revalidate: 60, tags: ["vehicles"] },
+  )();
+}
 
 /**
  * Search.
@@ -218,25 +289,12 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
     year: "-modelYear",
   };
 
-  const results = await payload.find({
-    collection: "vehicles",
-    where: where as never,
-    sort: SORTS[sort] ?? SORTS.newest,
-    limit: PER_PAGE,
-    page,
-    depth: 2,
-  });
+  // `noUncheckedIndexedAccess` types the fallback as possibly undefined too, and "newest" is
+  // a key this object literally declares. Named once rather than asserted at the call.
+  const order = SORTS[sort] ?? "-publishedAt";
 
-  // How much of this result set is seeded example stock, so the page can say so once at the
-  // top rather than leaving it to a marker on each card.
-  const demonstration = await payload.count({
-    collection: "vehicles",
-    where: { and: [where, { isDemonstration: { equals: true } }] } as never,
-  });
-
-  // The shared mapper. This page used to carry a verbatim copy of it, which is how the
-  // paint colour reached the card in one place and not the other two.
-  const vehicles: VehicleCardData[] = results.docs.map(toCard);
+  const results = await getResults(where, order, page);
+  const { vehicles, demonstrationCount } = results;
 
   /**
    * Page links carry every current filter. Without this, clicking page 2 drops the
@@ -288,8 +346,12 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
         results run the FULL width to the container maximum: centring them at a text measure
         is what makes a marketplace read as a blog, and it is what left the old page with an
         empty right half.
+
+        The sidebar appears at 1280px, not 1024px. At 1024 a 280px rail left only enough room
+        for two card tracks, so widening the window from 1023 to 1024 REMOVED a column of
+        cars and added 632px of scroll, at the width more laptops sit at than any other.
       */}
-      <div className="grid gap-0 lg:grid-cols-[17.5rem_1fr] lg:divide-x lg:divide-line-strong">
+      <div className="grid gap-0 xl:grid-cols-[17.5rem_1fr] xl:divide-x xl:divide-line-strong">
         <FacetRail
           active={{
             make: makeSlug,
@@ -306,24 +368,24 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
           }}
         />
 
-        <section aria-labelledby="results-heading" className="order-1 pb-10 lg:order-2 lg:ps-8">
+        <section aria-labelledby="results-heading" className="pb-10 xl:ps-8">
           <ResultsHeader
             total={results.totalDocs}
-            page={results.page ?? 1}
+            page={results.page}
             totalPages={results.totalPages}
             sort={sort}
             priceSummary={priceSummary}
             query={query}
             understood={parsed.matched}
             ignored={parsed.unmatched}
-            demonstrationCount={demonstration.totalDocs}
+            demonstrationCount={demonstrationCount}
             filters={carried}
             widened={widened}
           />
 
           <ResultsGrid
             vehicles={vehicles}
-            page={results.page ?? 1}
+            page={results.page}
             totalPages={results.totalPages}
             buildHref={buildHref}
             emptyAction="Clear all filters"

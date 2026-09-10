@@ -1,4 +1,5 @@
 import config from "@payload-config";
+import { unstable_cache } from "next/cache";
 import type { Where } from "payload";
 import { getPayload } from "payload";
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
@@ -44,9 +45,17 @@ export const SORTS: Record<string, string> = {
   year: "-modelYear",
 };
 
-/** Resolves a taxonomy slug to its id. Returns null for an unknown slug, which 404s. */
-export async function resolveSlug(collection: string, slug?: string): Promise<number | null> {
-  if (!slug) return null;
+/**
+ * How long a cached taxonomy answer is allowed to be stale.
+ *
+ * An hour, because makes, models, body types, provinces and colours change when someone
+ * edits the seed data, which is roughly never, and every one of them is invalidated by hand
+ * through the `taxonomy` tag when it does happen. Stock is a different matter and is not
+ * cached here at all.
+ */
+const TAXONOMY_TTL = 3600;
+
+async function readSlug(collection: string, slug: string): Promise<number | null> {
   const payload = await getPayload({ config });
   const found = await payload.find({
     collection: collection as never,
@@ -59,6 +68,23 @@ export async function resolveSlug(collection: string, slug?: string): Promise<nu
 }
 
 /**
+ * Resolves a taxonomy slug to its id. Returns null for an unknown slug, which 404s.
+ *
+ * Cached per slug. `/cars` resolves eight of these on every request, one per facet
+ * dimension, and each was a separate round trip to answer a question whose answer changes
+ * about once a year. The key is bounded by the number of slugs that exist, so a crawler
+ * cannot grow this without limit: an unknown slug resolves to null and 404s.
+ */
+export function resolveSlug(collection: string, slug?: string): Promise<number | null> {
+  if (!slug) return Promise.resolve(null);
+
+  return unstable_cache(() => readSlug(collection, slug), ["slug", collection, slug], {
+    revalidate: TAXONOMY_TTL,
+    tags: ["taxonomy"],
+  })();
+}
+
+/**
  * Turns what someone typed into real filters.
  *
  * The parsing itself is a pure function in query-parse.ts and is tested there. This is only
@@ -66,11 +92,22 @@ export async function resolveSlug(collection: string, slug?: string): Promise<nu
  * which is what lets "bakkie", "vw" and "pta" resolve without a synonym list maintained by
  * hand somewhere else.
  *
- * Taxonomies are small, public and cached by Payload, so this is not the hot path.
+ * The corpus is cached rather than re-read. It is seven queries, and two of them pull two
+ * thousand models and five hundred cities in full, on every single request that carries a
+ * search term. Nothing was caching that: Payload has no such cache, and the comment that
+ * used to sit here claiming it did was simply wrong.
  */
-export async function resolveQuery(q: string | undefined | null): Promise<ParsedQuery> {
-  if (!q?.trim()) return { matched: [], unmatched: [] };
+type Corpus = {
+  makes: Term[];
+  models: Term[];
+  bodyTypes: Term[];
+  fuelTypes: Term[];
+  transmissions: Term[];
+  provinces: Term[];
+  cities: Term[];
+};
 
+async function readCorpus(): Promise<Corpus> {
   const payload = await getPayload({ config });
   const load = async (collection: string, limit: number): Promise<Term[]> => {
     const found = await payload.find({
@@ -94,7 +131,18 @@ export async function resolveQuery(q: string | undefined | null): Promise<Parsed
     ],
   );
 
-  return parseQuery(q, { makes, models, bodyTypes, fuelTypes, transmissions, provinces, cities });
+  return { makes, models, bodyTypes, fuelTypes, transmissions, provinces, cities };
+}
+
+const getCorpus = unstable_cache(readCorpus, ["search-corpus"], {
+  revalidate: TAXONOMY_TTL,
+  tags: ["taxonomy"],
+});
+
+export async function resolveQuery(q: string | undefined | null): Promise<ParsedQuery> {
+  if (!q?.trim()) return { matched: [], unmatched: [] };
+
+  return parseQuery(q, await getCorpus());
 }
 
 export function toCard(doc: Vehicle): VehicleCardData {

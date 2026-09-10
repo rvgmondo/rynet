@@ -58,6 +58,19 @@ export function ResultsGrid({
 
   return (
     <>
+      {/*
+        The level between the page heading and the card titles.
+        ------------------------------------------------------
+        Every card title is an h3 and the page heading above this grid is an h1, so the
+        outline jumped straight from one to three and axe failed the page on heading-order.
+        A skipped level is not cosmetic: heading navigation is how a screen reader user moves
+        around a long page, and a missing rung reads as a missing section.
+
+        It is hidden rather than drawn because the results need no visible label. The heading
+        above already says what they are, and printing "Results" over a grid of results is
+        the kind of caption that makes an interface feel like a form.
+      */}
+      <h2 className="sr-only">Matching cars</h2>
       <ul className={`rn-grid ${sparse ? "rn-grid--sparse" : ""}`}>
         {vehicles.map((vehicle, index) => (
           <li key={vehicle.publicRef} className="flex">

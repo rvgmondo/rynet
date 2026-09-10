@@ -1,4 +1,5 @@
 import config from "@payload-config";
+import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 
 import { FacetGroup } from "./facet-group";
@@ -16,19 +17,17 @@ type Active = {
   colour?: string;
 };
 
-/**
- * The filter rail.
- *
- * Server rendered along with the results, so the counts arrive in the HTML rather than
- * appearing a second later. Counts are the thing that makes a facet usable: a buyer needs
- * to know that "Diesel" leaves 84 cars before clicking it, not after.
- *
- * Zero-count options render disabled with the count still shown, per Section 6. Hiding them
- * is the common shortcut and it is wrong: the list jumps around as you filter, and a buyer
- * cannot tell whether "Electric" is missing because nothing matches or because the site
- * does not have the category.
- */
-export async function FacetRail({ active }: { active: Active }) {
+type Option = { label: string; value: string; count: number };
+
+type RailData = {
+  makeOptions: Option[];
+  bodyOptions: Option[];
+  fuelOptions: Option[];
+  transmissionOptions: Option[];
+  provinceOptions: Option[];
+};
+
+async function readRail(active: Active): Promise<RailData> {
   const payload = await getPayload({ config });
 
   const [makes, bodies, fuels, transmissions, provinces] = await Promise.all([
@@ -197,25 +196,98 @@ export async function FacetRail({ active }: { active: Active }) {
     ),
   );
 
+  return { makeOptions, bodyOptions, fuelOptions, transmissionOptions, provinceOptions };
+}
+
+/**
+ * The cache, and this is the expensive thing on the page rather than the results.
+ *
+ * A single render of this rail issues one count per make, one per body type, one per fuel,
+ * one per transmission, and a branch lookup plus a count per province. On the seeded
+ * catalogue that is over a hundred queries to draw a sidebar, and it ran again in full on
+ * every page of every result set. The vehicle search itself, the thing the buyer actually
+ * asked for, is one indexed query beside it.
+ *
+ * Keyed on the filter combination, because that is exactly what the counts depend on, and
+ * bounded by the combinations people really use: robots.txt keeps crawlers off /cars? so
+ * this cannot be grown by a machine walking the facet space. Tagged for both stock and
+ * taxonomy, so a car going live and a make being renamed each drop it.
+ */
+function getRail(active: Active): Promise<RailData> {
+  return unstable_cache(() => readRail(active), ["facet-rail", JSON.stringify(active)], {
+    revalidate: 60,
+    tags: ["vehicles", "taxonomy"],
+  })();
+}
+
+/**
+ * The filter rail.
+ *
+ * Server rendered along with the results, so the counts arrive in the HTML rather than
+ * appearing a second later. Counts are the thing that makes a facet usable: a buyer needs
+ * to know that "Diesel" leaves 84 cars before clicking it, not after.
+ *
+ * Zero-count options render disabled with the count still shown, per Section 6. Hiding them
+ * is the common shortcut and it is wrong: the list jumps around as you filter, and a buyer
+ * cannot tell whether "Electric" is missing because nothing matches or because the site
+ * does not have the category.
+ */
+export async function FacetRail({ active }: { active: Active }) {
+  const { makeOptions, bodyOptions, fuelOptions, transmissionOptions, provinceOptions } =
+    await getRail(active);
+
   return (
     <aside
       aria-labelledby="filters-heading"
-      /*
-       * Order two on a phone, order one on a wide screen.
-       *
-       * This rail used to be the entire first screenful on mobile, so a buyer opening the
-       * search page saw a list of manufacturer names and no cars at all. Moving it below
-       * the results costs one declaration, needs no JavaScript, has no hydration flash,
-       * and cannot leave the filters unreachable the way a collapsed disclosure can if its
-       * script never runs. The results header carries a link straight down to it.
-       */
-      className="order-2 bg-surface-sunken px-5 py-6 lg:sticky lg:top-20 lg:order-1 lg:self-start"
+      className="bg-surface-sunken px-5 py-4 xl:sticky xl:top-20 xl:flex xl:max-h-[calc(100vh-6rem)] xl:flex-col xl:px-5 xl:py-6"
     >
-      <h2 id="filters-heading" className="rn-label scroll-mt-20">
-        Filter
-      </h2>
+      {/*
+        Collapsed on a phone, open on a wide screen, and FIRST in the document at both.
+        ----------------------------------------------------------------------------
+        This rail was reordered below the results on mobile with CSS `order`, which fixed
+        the wrong problem and created a worse one. The rail is first in the DOM, so a
+        keyboard user tabbing through /cars at 390px was thrown 11 800px down the page to
+        reach it and then back again, with `scroll-behavior: smooth` animating every one of
+        those journeys. That is SC 2.4.3, and it is a great deal worse for the people it
+        affects than a long filter list was for everybody.
 
-      <form method="get" action="/cars" className="mt-4 space-y-1 pb-6">
+        So the document order and the visual order agree again at every width, and the rail
+        stops eating the first screenful by being COLLAPSED on a phone instead of moved.
+
+        A checkbox rather than `<details>`, because this has to work in both directions with
+        no JavaScript: the checkbox and its label are hidden above 1024px and the form is
+        shown unconditionally there, so a desktop visitor never sees a control and a phone
+        visitor gets one that works before hydration. `hidden` is display:none, so the
+        collapsed form is out of the tab order rather than merely invisible.
+      */}
+      <input
+        id="rn-filters-open"
+        type="checkbox"
+        className="peer sr-only"
+        aria-label="Show filters"
+      />
+      {/*
+        The word swap is scoped from the checkbox's SIBLING, not from the label, because
+        Tailwind's `peer-` variants compile to a sibling combinator and the label is nested.
+      */}
+      <div className="flex items-center justify-between peer-checked:[&_.rn-show]:hidden peer-checked:[&_.rn-hide]:inline xl:block">
+        <h2 id="filters-heading" className="rn-label scroll-mt-20">
+          Filter
+        </h2>
+        <label
+          htmlFor="rn-filters-open"
+          className="rn-label inline-flex min-h-11 cursor-pointer items-center px-2 text-ink-muted xl:hidden"
+        >
+          <span className="rn-show">Show</span>
+          <span className="rn-hide hidden">Hide</span>
+        </label>
+      </div>
+
+      <form
+        method="get"
+        action="/cars"
+        className="mt-4 hidden pb-6 peer-checked:block xl:flex xl:min-h-0 xl:flex-1 xl:flex-col xl:pb-0"
+      >
         {/*
           A GET form submits only its own controls, so anything the buyer arrived with that
           this form does not render would be silently dropped the moment they tick a facet.
@@ -225,79 +297,104 @@ export async function FacetRail({ active }: { active: Active }) {
         {active.q ? <input type="hidden" name="q" value={active.q} /> : null}
         {active.colour ? <input type="hidden" name="colour" value={active.colour} /> : null}
 
-        <FacetGroup
-          legend="Make"
-          name="make"
-          options={makeOptions.filter((o) => o.count > 0 || o.value === active.make)}
-          active={active.make}
-          defaultOpen
-        />
-        <FacetGroup
-          legend="Body type"
-          name="body"
-          options={bodyOptions}
-          active={active.body}
-          defaultOpen
-        />
-        <FacetGroup legend="Fuel" name="fuel" options={fuelOptions} active={active.fuel} />
-        <FacetGroup
-          legend="Transmission"
-          name="transmission"
-          options={transmissionOptions}
-          active={active.transmission}
-        />
-        <FacetGroup
-          legend="Province"
-          name="province"
-          options={provinceOptions}
-          active={active.province}
-        />
+        {/*
+          The facets scroll. The submit row does not, and is no longer inside what scrolls.
+          ------------------------------------------------------------------------------
+          It used to be `sticky bottom-0` at the end of this list, which put it on top of the
+          list rather than beside it: at any scroll position other than the very bottom it
+          covered whatever facet happened to be underneath. axe caught it on Transmission,
+          where 25px of a 44px row was under the bar, and a target that is half covered is
+          half a target however tall it was declared.
 
-        <fieldset className="border-t border-line py-4">
-          <legend className="rn-label py-3">Price</legend>
-          <div className="mt-3 flex items-end gap-3">
-            <div className="flex-1">
-              <label htmlFor="minPrice" className="rn-label rn-label--light block text-ink-muted">
-                From
-              </label>
-              <input
-                id="minPrice"
-                name="minPrice"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={10000}
-                defaultValue={active.minPrice}
-                placeholder="0"
-                className="mt-1 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium tabular"
-              />
+          Sticky cannot be fixed by padding, because overlapping the content it floats over
+          is the whole definition of it. So the row comes out of the scroll box and the box
+          shrinks to fit beside it. Nothing overlaps anything now, at any scroll position or
+          viewport height.
+        */}
+        <div className="space-y-1 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
+          <FacetGroup
+            legend="Make"
+            name="make"
+            options={makeOptions.filter((o) => o.count > 0 || o.value === active.make)}
+            active={active.make}
+            defaultOpen
+          />
+          <FacetGroup
+            legend="Body type"
+            name="body"
+            options={bodyOptions}
+            active={active.body}
+            defaultOpen
+          />
+          <FacetGroup legend="Fuel" name="fuel" options={fuelOptions} active={active.fuel} />
+          <FacetGroup
+            legend="Transmission"
+            name="transmission"
+            options={transmissionOptions}
+            active={active.transmission}
+          />
+          <FacetGroup
+            legend="Province"
+            name="province"
+            options={provinceOptions}
+            active={active.province}
+          />
+
+          <fieldset className="border-t border-line py-4">
+            <legend className="rn-label py-3">Price</legend>
+            <div className="mt-3 flex items-end gap-3">
+              <div className="flex-1">
+                <label htmlFor="minPrice" className="rn-label rn-label--light block text-ink-muted">
+                  From
+                </label>
+                <input
+                  id="minPrice"
+                  name="minPrice"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={10000}
+                  defaultValue={active.minPrice}
+                  placeholder="0"
+                  className="mt-1 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium tabular"
+                />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="maxPrice" className="rn-label rn-label--light block text-ink-muted">
+                  To
+                </label>
+                <input
+                  id="maxPrice"
+                  name="maxPrice"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={10000}
+                  defaultValue={active.maxPrice}
+                  placeholder="Any"
+                  className="mt-1 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium tabular"
+                />
+              </div>
             </div>
-            <div className="flex-1">
-              <label htmlFor="maxPrice" className="rn-label rn-label--light block text-ink-muted">
-                To
-              </label>
-              <input
-                id="maxPrice"
-                name="maxPrice"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={10000}
-                defaultValue={active.maxPrice}
-                placeholder="Any"
-                className="mt-1 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium tabular"
-              />
-            </div>
-          </div>
-          <p className="rn-label rn-label--light mt-2 text-ink-muted">Rand, including VAT.</p>
-        </fieldset>
+            <p className="rn-label rn-label--light mt-2 text-ink-muted">Rand, including VAT.</p>
+          </fieldset>
+        </div>
 
         {/*
           A real submit button, and the form works without JavaScript. The filters are GET
           parameters on /cars, so this posts the buyer straight to a shareable URL. Enhanced
           client-side filtering layers on top of this later; it does not replace it.
         */}
-        <div className="flex gap-2 border-t border-line pt-4">
+        {/*
+          The foot of the rail, outside what scrolls.
+
+          The rail is `xl:sticky xl:top-20`, so on every desktop viewport the submit row sat
+          below the fold for the entire time the filters were being used: a buyer could tick
+          five facets and never see the button that applies them. It is now the second child
+          of a flex column whose first child takes the scrolling, which puts it on screen at
+          every viewport height without floating over anything.
+        */}
+        <div className="flex shrink-0 gap-2 border-t border-line bg-surface-sunken py-4">
           <button
             type="submit"
             className="rn-label min-h-11 flex-1 bg-accent-solid px-4 text-ink-on-accent hover:bg-accent-solid-hover"
