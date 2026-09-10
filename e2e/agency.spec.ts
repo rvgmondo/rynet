@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
+import { renderEverything } from "./axe-context";
 
 /**
  * Rynet Digital.
@@ -29,6 +30,7 @@ test.describe("accessibility", () => {
   for (const route of ROUTES) {
     test(`${route.name} has no axe violations`, async ({ page }) => {
       await page.goto(route.path);
+      await renderEverything(page);
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
         .analyze();

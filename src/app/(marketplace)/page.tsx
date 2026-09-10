@@ -225,7 +225,7 @@ export default async function HomePage() {
       {/* 5. THE NUMBERS. */}
       <section
         aria-labelledby="numbers-heading"
-        className="container-page pb-[var(--section-base)]"
+        className="rn-defer container-page pb-[var(--section-base)]"
       >
         <h2 id="numbers-heading" className="sr-only">
           The register in numbers
@@ -279,7 +279,7 @@ export default async function HomePage() {
       {/* 6. BROWSE BY COLOUR. The wall as navigation: generated from data, honest, and a
              filter a buyer genuinely uses. */}
       {data.colours.length > 0 ? (
-        <section aria-labelledby="colour-heading" className="pb-[var(--section-base)]">
+        <section aria-labelledby="colour-heading" className="rn-defer pb-[var(--section-base)]">
           <div className="container-page">
             <h2 id="colour-heading" className="rn-head pb-5">
               Browse by colour
@@ -292,7 +292,7 @@ export default async function HomePage() {
 
       {/* 7. BROWSE BY BODY TYPE, AND BY PROVINCE. Two plain typographic lists with live
              counts. No icons, no cards. */}
-      <section className="container-page pb-[var(--section-base)]">
+      <section className="rn-defer container-page pb-[var(--section-base)]">
         <div className="grid gap-10 md:grid-cols-2 md:gap-16">
           <BrowseList
             id="body-heading"
@@ -312,7 +312,10 @@ export default async function HomePage() {
       {/* 8. WHAT VERIFIED MEANS. A full-bleed ink band, three editorial columns in the prose
              face. The three icon-and-paragraph cards that used to sit here were the most
              template-like object on the site and they are deleted, not restyled. */}
-      <section aria-labelledby="verified-heading" className="bg-surface-inverse text-ink-inverse">
+      <section
+        aria-labelledby="verified-heading"
+        className="rn-defer bg-surface-inverse text-ink-inverse"
+      >
         <div className="container-page py-[var(--section-base)]">
           <h2 id="verified-heading" className="rn-head">
             What verified means
@@ -350,7 +353,10 @@ export default async function HomePage() {
       </section>
 
       {/* 9. SELL TO A DEALER. */}
-      <section aria-labelledby="sell-heading" className="container-page py-[var(--section-base)]">
+      <section
+        aria-labelledby="sell-heading"
+        className="rn-defer container-page py-[var(--section-base)]"
+      >
         <h2 id="sell-heading" className="rn-head max-w-[16ch]">
           Selling instead? Put it in front of five dealerships.
         </h2>

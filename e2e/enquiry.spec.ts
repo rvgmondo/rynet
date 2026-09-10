@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { renderEverything } from "./axe-context";
 
 /**
  * The enquiry flow.
@@ -105,6 +106,7 @@ test.describe("the vehicle page", () => {
 
   test("has no axe violations", async ({ page }) => {
     await openFirstListing(page);
+    await renderEverything(page);
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       .analyze();
@@ -209,6 +211,8 @@ test.describe("enquiring", () => {
       .first()
       .click();
     await expect(page.getByRole("dialog")).toBeVisible();
+
+    await renderEverything(page);
 
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])

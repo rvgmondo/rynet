@@ -93,6 +93,7 @@ Nine findings, each verified in a real browser against a production build before
 | Newsreader shipped with an optical size axis that no rule on the site ever asked for | Dropped. The font payload went from 726KB to 433KB, which is 40 percent of it, for no visible difference |
 | `/cars` did no caching at all and spent 155 to 215ms per request. Measured, it was one `find` at depth two: twenty-four vehicles each pulling six taxonomies and a branch pulling its own city and province | The card data, the facet counts and the taxonomy lookups are each cached for sixty seconds and dropped by a tag on any write. Warm requests are 69 to 80ms |
 | A full page of stock on a 390px phone was about fifteen thousand pixels of scroll | Two columns from 368px up, which halves it to seven and a half thousand. It works here only because there is no photography to shrink |
+| Nothing painted on either busy page until hydration had finished, so both busted the two second budget | Cards and the bands below the fold are not laid out until they are scrolled to. The browser gets about 120ms between finishing the document and the first script taking the main thread, and the first frame now fits in it |
 | The price in the vehicle page's mobile action bar rendered as "R 5..." at 320, 360 and 390 | The price has its own line above two full-width buttons. Nothing is abbreviated and both buttons became thumb-sized |
 
 Three of those needed a second fix that the finding did not name. Making the price rigid in the
@@ -450,7 +451,13 @@ Everything below is checked on every push, and a failure blocks the deploy branc
 - **A dealership cannot verify itself, rate itself, or claim an accreditation**, same.
 - **No VIN reaches the public or another dealership**, asserted against a row that has one.
 - **The sitemap lists nothing robots.txt blocks.**
-- **Largest Contentful Paint under the 2 second budget**, at 1.37s on the home page and 1.23s on
-  search, measured on a production build at 390px with the CPU throttled four times and the link
-  held to 1.6Mbps.
+- **Largest Contentful Paint under the 2 second budget.** Median of seven cold loads against a
+  production build at 390px, CPU throttled four times, link held to 1.6Mbps and 150ms of latency,
+  which is the mid-range Android in the brief.
+
+  | Page | Before | After |
+  |---|---|---|
+  | Home | 2252ms | 1716ms |
+  | Search | 2276ms | 1932ms |
+
 - **Warm search under 100ms**, down from 215ms, measured over eight requests per URL.

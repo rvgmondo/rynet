@@ -4,10 +4,7 @@
     {
       "name": "rynet",
       "runtimeExecutable": "vendor/node/npm.cmd",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     },
     {
