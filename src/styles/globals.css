@@ -516,10 +516,74 @@
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
 }
 
+/*
+ * A whole band of the page, not laid out until it is scrolled to.
+ *
+ * The card rule below explains why this helps at all. This is the same lever aimed at a
+ * section rather than a card, and it does one extra thing that matters more than the layout
+ * saving: a font is only fetched when something rendered actually needs a glyph from it, so
+ * skipping a section skips its fonts too. Every word of Newsreader on the home page sits at
+ * 1604px and below, and it was still downloading 57KB during the two hundred milliseconds
+ * the first paint was waiting for.
+ *
+ * Put it only on a band that is genuinely below the fold on a phone, and never on one
+ * holding a `position: sticky` child. Containment is what makes the saving, and sticky does
+ * not survive containment.
+ */
+.rn-defer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
+/*
+ * Print gets all of it.
+ *
+ * Skipped content is rendered the moment it scrolls into view, so nobody reading the page
+ * ever sees a gap. A printer never scrolls: it takes one pass at the whole document, and
+ * every card below the fold came out as an empty rectangle. Somebody printing a page of
+ * stock to take to a dealership is a real thing on this site.
+ *
+ * The same rule is why a full-page screenshot of /cars had six blank cards at the bottom,
+ * which is worth knowing before it is mistaken for a rendering bug.
+ */
+@media print {
+  *,
+  *::before,
+  *::after {
+    content-visibility: visible !important;
+  }
+}
+
 .rn-grid > * {
   background: var(--rn-paper);
   /* So a price inside can size itself against the card rather than the viewport. */
   container-type: inline-size;
+  /*
+   * Cards below the fold are not laid out until they are scrolled to.
+   *
+   * Measured on a production build at 390px with the CPU throttled four times and the link
+   * held to 1.6Mbps, which is the mid-range Android in the brief:
+   *
+   *     /cars    2276ms -> 1972ms
+   *     home     2252ms -> 2128ms
+   *
+   * The search page is where the work is, because that is where two dozen cards are. The
+   * browser has a window of roughly 120ms between finishing the document and the first
+   * script taking the main thread for a second, and nothing paints until that script is
+   * done. Laying out cards nobody can see yet did not fit in the window. Skipping it does.
+   *
+   * `auto` on the intrinsic size, so 380px is only the first guess: once a card has been
+   * rendered the browser remembers its real height and the scrollbar stops moving under the
+   * thumb. It goes on the CARD rather than on the section, which was measured too and was
+   * both slower and riskier: a section is where the sticky filter rail lives, and
+   * content-visibility establishes containment that sticky does not survive.
+   *
+   * Skipped content is still found by the browser's own find-in-page, still reachable by
+   * anchor, and still read by a screen reader, because the contents are rendered the moment
+   * anything needs them. This is not display: none with better manners.
+   */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 380px;
   /*
    * Load-bearing. A `1fr` track is `minmax(auto, 1fr)`, so it grows past its share to fit
    * its content's minimum width. A 40px expanded price is wide enough to do exactly that,
@@ -598,6 +662,9 @@
 .rn-rail > * {
   background: var(--rn-paper);
   container-type: inline-size;
+  /* Same reasoning as .rn-grid > *, and the rail is entirely off-screen to the right. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 380px;
   scroll-snap-align: start;
   min-width: 0;
 }

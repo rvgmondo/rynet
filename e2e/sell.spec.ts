@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type APIRequestContext, expect, type Page, test } from "@playwright/test";
+import { renderEverything } from "./axe-context";
 
 /**
  * Sell to a dealer.
@@ -28,6 +29,7 @@ const WIDTHS = [320, 375, 768, 1024, 1440, 1920];
 test.describe("accessibility and layout", () => {
   test("has no axe violations", async ({ page }) => {
     await page.goto(PATH);
+    await renderEverything(page);
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
       .analyze();
