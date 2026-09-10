@@ -28,8 +28,15 @@ const OPTIONS = [
  *
  * Renders a fixed-size placeholder before mount. The theme is not known during server
  * render, and swapping the control in afterwards would shift the header.
+ *
+ * `name` is a required-in-practice prop, not decoration. Each header mounts this twice, once
+ * for the wide layout and once inside the mobile drawer, and with a single hard-coded group
+ * name all six radios were one radio group: only one could be checked, and it was whichever
+ * copy happened to render last, which is the hidden one. The visible control therefore
+ * reported no option selected at all, and the duplicate ids meant every label in the second
+ * copy pointed at an input in the first. Two mount points, two names.
  */
-export function ThemeToggle() {
+export function ThemeToggle({ name = "theme" }: { name?: string }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -45,14 +52,14 @@ export function ThemeToggle() {
     <fieldset className="flex h-11 items-center border border-line-interactive">
       <legend className="sr-only">Colour theme</legend>
       {OPTIONS.map(({ value, label, Icon }) => {
-        const id = `theme-${value}`;
+        const id = `${name}-${value}`;
         const selected = current === value;
         return (
           <div key={value} className="contents">
             <input
               id={id}
               type="radio"
-              name="theme"
+              name={name}
               value={value}
               checked={selected}
               onChange={() => setTheme(value)}

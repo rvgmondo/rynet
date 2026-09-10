@@ -62,7 +62,7 @@ export function AgencyHeader() {
 
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden lg:block">
-            <ThemeToggle />
+            <ThemeToggle name="theme-bar" />
           </div>
 
           <Link
@@ -119,7 +119,7 @@ export function AgencyHeader() {
                   </Link>
                 </li>
                 <li className="pt-2">
-                  <ThemeToggle />
+                  <ThemeToggle name="theme-menu" />
                 </li>
               </ul>
             </nav>

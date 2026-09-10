@@ -83,6 +83,27 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+
+    /*
+     * Room for the sticky chrome, which is what SC 2.4.11 is about.
+     *
+     * The masthead is 4rem and sticks to the top; a vehicle page pins an action bar to the
+     * bottom below 1024px which measures 111px at 320 wide, hence 7rem. Without these, tabbing to an element near either edge scrolls
+     * it exactly flush with the viewport and the sticky bar then covers it completely: the
+     * focus ring is drawn, and none of it is on screen.
+     *
+     * The bottom figure grew with the bar, which now carries the price on its own line
+     * above two full-width buttons rather than truncating it to fit beside them.
+     */
+    scroll-padding-top: 4.5rem;
+    scroll-padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+  }
+
+  /* Above the breakpoint the action bar is gone, so the bottom reserve goes with it. */
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-bottom: 2rem;
+    }
   }
 
   body {
@@ -320,10 +341,8 @@
  *
  * R 1 249 900 is eleven glyphs and 40px expanded Archivo needs roughly 300px for it, so a
  * viewport-only clamp overflows a narrow card. The plain clamp is declared first as the
- * fallback for any engine without container queries. --fig-chars is set inline by the
- * server component from the formatted string's own length, and the 1.85 is calibrated for
- * the Rand format specifically, where the thin spaces pull the per-character average below
- * a digit advance. Re-check it if formatRand ever changes.
+ * fallback for any engine without container queries. The container-query override is below,
+ * and --fig-adv comes with each price from rand-figure.tsx.
  */
 .rn-figure {
   font-family: var(--rn-font-display);
@@ -336,9 +355,22 @@
   padding-block: 0.04em;
 }
 
+/*
+ * The figure sizes itself to the room it actually has.
+ *
+ * `100cqw` is the whole card and the price is inside a 1rem pad on each side, so the old
+ * rule was handing the type a sixteenth more width than existed. At a 350px card that error
+ * was 9 percent and it hid; at the 178px card the two-up phone grid produces it was 18
+ * percent, and every price on the page broke across two lines with the last three digits
+ * stranded underneath. Subtracting the padding is not a tweak to the constant, it is the
+ * difference between measuring the container and measuring the space.
+ *
+ * `--fig-adv` comes from rand-figure.tsx and is this price's own width in ems, so a short
+ * price is not shrunk to fit an imaginary long one.
+ */
 @supports (width: 1cqw) {
   .rn-figure {
-    font-size: min(var(--rn-text-price), calc(100cqw / var(--fig-chars, 11) * 1.85));
+    font-size: min(var(--rn-text-price), calc((100cqw - 2rem) / var(--fig-adv, 6.81)));
   }
 }
 
@@ -473,7 +505,15 @@
   gap: 1px;
   background: var(--rn-hairline);
   border: 1px solid var(--rn-hairline);
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  /*
+   * 16rem, not 17.5rem.
+   *
+   * At 17.5rem the results column at 1024px, which is where the 280px filter rail appears,
+   * could only fit two tracks, so widening the window from 1023 to 1024 REMOVED a column of
+   * cars and added 632px of scroll. Dropping the minimum track keeps three columns at the
+   * moment the rail arrives, which is the only width where the arithmetic was ever tight.
+   */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
 }
 
 .rn-grid > * {
@@ -493,6 +533,31 @@
 /* Below four results a card grid is close to a blank page, so it goes two-up and taller. */
 .rn-grid--sparse {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
+}
+
+/*
+ * Two up on a phone, and this is the single biggest usability change on the results page.
+ *
+ * A full page of stock is twenty-four cards. One up on a 390px screen that is roughly
+ * fifteen thousand pixels of scroll, about forty flicks of a thumb, to reach the pagination
+ * at the bottom. Nobody does that. In practice a buyer sees six cars and leaves.
+ *
+ * It works here specifically because there is no photography. A grid of photographs halved
+ * in width loses the thing it is selling, which is why every marketplace with real pictures
+ * stays one up on a phone. A grid of colour fields halved in width does not: it stops being
+ * a stack of coloured slabs and starts reading as a swatch book, which is closer to what
+ * this design is anyway.
+ *
+ * The floor is 23rem, which is 368px, so that a 375 and a 390 wide phone both get two
+ * columns: those two are most of the market and a rule that missed them would have been
+ * decoration. Below it the tracks are under 170px, where the dealership name has nowhere to
+ * go, so the smallest phones keep the single column they need. Sparse sets and the home
+ * page rail keep their own shapes.
+ */
+@media (min-width: 23rem) and (max-width: 47.9375rem) {
+  .rn-grid:not(.rn-grid--sparse):not(.rn-grid--floor) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /*
@@ -802,6 +867,39 @@
   max-width: 62%;
 }
 
+/*
+ * The band stacks once the card is too narrow to hold both ends of it.
+ *
+ * At the 178px card the two-up phone grid produces, the place and the paint together want
+ * about 170px of a 134px line, so the paint block was pushed out of the plate and clipped by
+ * its overflow: "MIDNIGHT BLACK" simply ended at the edge of the card with no indication
+ * there had been more of it. Letting the words break instead was worse and was tried:
+ * "TITANIU M GREY" and "RUSTENBU RG" are not a design, they are a bug with a rounded corner.
+ *
+ * So below 15rem of card it stops being two ends of a line and becomes one stacked block in
+ * the corner. Nothing is dropped, nothing is abbreviated, and no string length can break it,
+ * which matters because these are place names and manufacturers' paint names and neither is
+ * a list we control. It costs about 80px of a 160px plate, and the plate is a colour field
+ * with nothing else on it.
+ *
+ * A container query rather than a media query, so it follows the CARD. The same plate at the
+ * same viewport is wide in a sparse result set and narrow in a full one.
+ */
+@container (max-width: 15rem) {
+  .rn-plate__band {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding: 0.6rem 0.7rem;
+  }
+
+  .rn-plate__paint {
+    max-width: 100%;
+    text-align: left;
+    align-items: flex-start;
+  }
+}
+
 .rn-plate__code {
   font-size: var(--rn-text-xs);
 }
@@ -826,6 +924,18 @@
   animation: none;
   /* Deliberately small, so it opts out of the floor the card-size plate needs. */
   min-height: 0;
+}
+
+/*
+ * The plates already on screen do not fade in.
+ *
+ * An element at opacity zero is not a largest-contentful-paint candidate, and the first
+ * plate on a results page is the largest element on it, so this rule was costing 850ms of
+ * LCP on a throttled mid-range Android for an animation nobody can see happen. See
+ * STILL_ABOVE_THE_FOLD in colour-plate.tsx for the measurement.
+ */
+.rn-plate--still {
+  animation: none;
 }
 
 /*

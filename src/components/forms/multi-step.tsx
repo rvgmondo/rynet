@@ -120,15 +120,67 @@ export function ChoiceGroup({
               type={type}
               name={name}
               value={option.value}
+              /*
+               * The description goes on every control in the group, not on the fieldset.
+               * A description on a fieldset is not reliably read when a radio inside it
+               * takes focus, and focus landing on the control is how the person is told
+               * what went wrong.
+               */
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? `${name}-error` : undefined}
               className="size-4 accent-[var(--rn-accent-solid)]"
             />
             {option.label}
           </label>
         ))}
       </div>
-      {error ? <p className="mt-1 text-xs font-medium text-danger">{error}</p> : null}
+      {error ? (
+        <p id={`${name}-error`} className="mt-1 text-xs font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
     </fieldset>
   );
+}
+
+/**
+ * Put focus on the first control that failed, and report whether it found one.
+ *
+ * Validation was silent. Pressing Continue on an unanswered step redrew the same screen
+ * with red text somewhere on it, focus still sitting on the Continue button, and nothing
+ * announced. A screen reader user got no indication at all that anything had happened,
+ * which is SC 4.1.3, and a sighted keyboard user had to hunt for the message.
+ *
+ * Focus is the fix rather than a live region, and deliberately so. Every control on these
+ * forms already carries `aria-invalid` and an `aria-describedby` pointing at its own error
+ * text, so landing on the control reads the label, the state and the reason in one go, and
+ * leaves the caret in the field that needs typing. Announcing the same string a second time
+ * through `role="alert"` would only make the reader say it twice.
+ *
+ * DOM order, not the order the validator happened to return, so the person is sent to the
+ * first problem down the page. Inactive steps stay mounted with the `hidden` attribute so
+ * that nothing typed is lost, which means their controls are still queryable and must be
+ * skipped.
+ */
+export function focusFirstInvalid(
+  form: HTMLFormElement | null,
+  errors: Record<string, string>,
+): boolean {
+  if (!form) return false;
+
+  const names = new Set(Object.keys(errors));
+  if (names.size === 0) return false;
+
+  for (const control of form.querySelectorAll<HTMLElement>("input, select, textarea")) {
+    const { name } = control as HTMLInputElement;
+    if (!name || !names.has(name)) continue;
+    if (control.closest("[hidden]")) continue;
+
+    control.focus();
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -270,6 +322,8 @@ export function useMultiStepForm({
   const elapsedField = React.useRef<HTMLInputElement>(null);
   const renderedAt = React.useRef<number>(Date.now());
   const shouldFocus = React.useRef(false);
+  // Set when a render is about to paint validation errors, read once by the focus effect.
+  const invalid = React.useRef<Record<string, string> | null>(null);
 
   const arrays = React.useMemo(() => new Set(arrayFields), [arrayFields]);
 
@@ -376,15 +430,31 @@ export function useMultiStepForm({
     if (state.status !== "error" || !state.fieldErrors) return;
     const indexes = Object.keys(state.fieldErrors).map((field) => fieldStep[field] ?? 0);
     if (indexes.length === 0) return;
+    invalid.current = state.fieldErrors;
     goTo(Math.min(...indexes));
   }, [state, fieldStep, goTo]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: focus follows a step change, which is what `step` tracks.
+  /*
+   * One effect for both kinds of focus move, because they compete for the same commit and
+   * only one of them can win. A step the person completed sends focus to the new heading. A
+   * step that failed sends it to the control that failed, which outranks the heading: being
+   * told where you are is worth less than being told what is wrong.
+   *
+   * No dependency array on purpose. Both triggers are refs, so there is nothing for React to
+   * compare, and the body costs two null checks on the renders where neither is set.
+   */
   React.useEffect(() => {
+    const errors = invalid.current;
+    if (errors) {
+      invalid.current = null;
+      shouldFocus.current = false;
+      if (focusFirstInvalid(formRef.current, errors)) return;
+    }
+
     if (!shouldFocus.current) return;
     shouldFocus.current = false;
     headingRef.current?.focus();
-  }, [step]);
+  });
 
   const next = React.useCallback(
     (validate: (index: number, data: FormData) => Record<string, string>) => {
@@ -393,7 +463,13 @@ export function useMultiStepForm({
 
       const errors = validate(step, new FormData(form));
       setClientErrors(errors);
-      if (Object.keys(errors).length === 0) goTo(step + 1);
+
+      if (Object.keys(errors).length === 0) {
+        goTo(step + 1);
+        return;
+      }
+
+      invalid.current = errors;
     },
     [step, goTo],
   );

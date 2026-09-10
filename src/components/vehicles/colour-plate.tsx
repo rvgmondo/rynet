@@ -50,6 +50,21 @@ const ARC = "M 0 96 A 125 125 0 0 1 200 96";
 /** The stagger is capped, because a wave that runs down twenty-four cards reads as a delay. */
 const MAX_STAGGER_INDEX = 8;
 
+/**
+ * How many plates skip the entry fade entirely.
+ *
+ * The fade starts at opacity zero, and Chrome will not treat an element at opacity zero as
+ * a largest-contentful-paint candidate. The first plate on a results page IS the largest
+ * element, so animating it moved LCP by 850ms on a throttled mid-range Android: 3254ms
+ * median against a 2000ms budget, measured over eight paired runs, versus 2408ms with the
+ * animation off. Nothing else about the page got faster in that comparison, which is what
+ * pins the cost on this rule rather than on the network.
+ *
+ * So the plates a person can already see do not fade in. The wave still runs down the rest
+ * of the grid, which is where it was doing the work anyway.
+ */
+const STILL_ABOVE_THE_FOLD = 4;
+
 export type PlateVariant = "card" | "thumb" | "hero";
 
 export function ColourPlate({
@@ -86,7 +101,7 @@ export function ColourPlate({
 
   return (
     <div
-      className={`rn-plate rn-plate--${variant} ${className}`}
+      className={`rn-plate rn-plate--${variant} ${index < STILL_ABOVE_THE_FOLD ? "rn-plate--still" : ""} ${className}`}
       style={
         {
           "--plate-field": plate.field,

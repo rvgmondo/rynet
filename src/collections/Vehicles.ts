@@ -8,6 +8,7 @@ import {
   isPlatformAdmin,
   isPlatformStaff,
 } from "@/access/roles";
+import { dropTag } from "@/lib/revalidate";
 import { generatePublicRef } from "@/lib/slug";
 
 /**
@@ -166,6 +167,17 @@ export const Vehicles: CollectionConfig = {
         return data;
       },
     ],
+
+    /*
+     * Stock is cached, so a write has to say so.
+     *
+     * The home page reads its featured row and its counts through a sixty second cache. That
+     * is the right window for load and the wrong one for a dealership that has just marked a
+     * car sold and is looking at it still for sale on the front page. Both hooks fire on the
+     * status change as well as on the price, because either one changes what the public sees.
+     */
+    afterChange: [() => dropTag("vehicles")],
+    afterDelete: [() => dropTag("vehicles")],
   },
 
   fields: [

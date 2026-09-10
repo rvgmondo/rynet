@@ -151,9 +151,24 @@ test.describe("search", () => {
     const heading = page.getByRole("heading", { level: 1 });
     await expect(heading).toHaveText("Cars for sale");
 
-    // The count is announced, so it must be in a live region.
-    const live = page.locator('[aria-live="polite"]').first();
-    await expect(live).toContainText("verified dealerships");
+    /*
+     * The count is reachable immediately after the heading, and NOT in a live region.
+     *
+     * This asserted a live region until the region was removed, because it could never have
+     * fired: a live region announces a mutation to a document that stays put, and every
+     * filter here is a GET form that loads a new one. The region was created and read in the
+     * same paint, which announces nothing. What actually tells a screen reader user the
+     * number changed is the navigation, so what has to be true is that the count is the next
+     * thing after the heading rather than something to be hunted for.
+     */
+    const afterHeading = page.locator("h1#results-heading + p");
+    await expect(afterHeading).toContainText("verified dealerships");
+
+    // Asserted on the count itself, not on the page. Next injects its own route announcer,
+    // an empty assertive region at the end of the body, so a page-wide count of live regions
+    // would only ever be measuring the framework.
+    const inLiveRegion = await afterHeading.evaluate((el) => Boolean(el.closest("[aria-live]")));
+    expect(inLiveRegion).toBe(false);
 
     // Prices ascend.
     const prices = await page

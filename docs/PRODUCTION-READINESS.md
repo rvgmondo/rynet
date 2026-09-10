@@ -75,6 +75,34 @@ accessibility, performance, responsive behaviour and dark theme were never exami
 checks, the reduced-motion assertions and the horizontal-overflow gate in the suite all pass, but
 that is not the same as having looked.
 
+A second audit did cover those four, and everything below came out of it.
+
+---
+
+## Fixed since the second audit
+
+Nine findings, each verified in a real browser against a production build before and after.
+
+| Was | Now |
+|---|---|
+| An unmatched top-level path served Next's own unstyled 404, on pure white or pure black, with no masthead and no way back. Both layouts on this site are scoped to a route group, and a route group's layout does not wrap the global not-found | `src/app/not-found.tsx`, carrying its own document, one font and no client JavaScript. It follows the operating system through `prefers-color-scheme`, which is what the tokens already key on when nothing is stamped on the root |
+| Pressing Continue on an unanswered step redrew the same screen with red text on it, focus still on the button, and nothing announced. SC 4.1.3, on both multi-step forms | Focus moves to the first control that failed, in document order. Every one of them already carried `aria-invalid` and an `aria-describedby` pointing at its own error, so landing on it reads the label, the state and the reason in one go |
+| The result count on `/cars` sat in an `aria-live` region that could never fire. Every filter is a GET form, so the region was created and read in the same paint | The region is gone and the comment claiming it worked with it. What announces a new result set is the navigation, and the count sits second in the reading order, under the heading |
+| Heading levels went h1 to h3 on `/cars`, so heading navigation had a rung missing | A visually hidden h2 over the grid. axe `heading-order` clean at 390 and 1440 |
+| The font preload was reaching the browser only inside the RSC payload, on exactly the two busiest pages. Next writes that link while prerendering, and both of those routes render on demand | The link is written explicitly, with the hashed filename read out of the compiled stylesheet at first request. The font request now starts at about 500ms on a throttled mid-range Android rather than at two seconds |
+| Newsreader shipped with an optical size axis that no rule on the site ever asked for | Dropped. The font payload went from 726KB to 433KB, which is 40 percent of it, for no visible difference |
+| `/cars` did no caching at all and spent 155 to 215ms per request. Measured, it was one `find` at depth two: twenty-four vehicles each pulling six taxonomies and a branch pulling its own city and province | The card data, the facet counts and the taxonomy lookups are each cached for sixty seconds and dropped by a tag on any write. Warm requests are 69 to 80ms |
+| A full page of stock on a 390px phone was about fifteen thousand pixels of scroll | Two columns from 368px up, which halves it to seven and a half thousand. It works here only because there is no photography to shrink |
+| The price in the vehicle page's mobile action bar rendered as "R 5..." at 320, 360 and 390 | The price has its own line above two full-width buttons. Nothing is abbreviated and both buttons became thumb-sized |
+
+Three of those needed a second fix that the finding did not name. Making the price rigid in the
+action bar only moved the truncation, because a full rand figure and two labelled buttons do not
+fit across 320px at any distribution of the slack. The two-up grid put the price at a size where
+its container query, which had been handing the type a sixteenth more width than existed, wrapped
+every price on the page onto two lines. And the same grid narrowed the colour plate until the
+place and the paint could no longer share a line, so the paint was pushed out and clipped by the
+plate's own overflow: "MIDNIGHT BLACK" simply ended at the edge of the card.
+
 ---
 
 ## Fixed since the first audit
@@ -403,9 +431,9 @@ existed, at least two of the six problems above would have been obvious on paper
 
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
-- **172 unit tests.** TOTP 51, access control 33, finance 25, trade-in matching 18,
-  formatting 16, contrast 15, slugs 14.
-- **181 end-to-end tests** across desktop and mobile: 39 adversarial, 25 on the agency site,
+- **223 unit tests.** TOTP 51, plate colour 34, access control 33, finance 25, trade-in matching
+  18, query parsing 17, formatting 16, contrast 15, slugs 14.
+- **219 end-to-end tests** across desktop and mobile: 39 adversarial, 25 on the agency site,
   16 on two-factor.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
   vehicle page, the enquiry dialog, and all seven agency templates.
@@ -422,3 +450,7 @@ Everything below is checked on every push, and a failure blocks the deploy branc
 - **A dealership cannot verify itself, rate itself, or claim an accreditation**, same.
 - **No VIN reaches the public or another dealership**, asserted against a row that has one.
 - **The sitemap lists nothing robots.txt blocks.**
+- **Largest Contentful Paint under the 2 second budget**, at 1.37s on the home page and 1.23s on
+  search, measured on a production build at 390px with the CPU throttled four times and the link
+  held to 1.6Mbps.
+- **Warm search under 100ms**, down from 215ms, measured over eight requests per URL.

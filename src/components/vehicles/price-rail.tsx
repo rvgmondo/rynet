@@ -149,12 +149,30 @@ export function MobileActionBar({ vehicle, sold }: { vehicle: Vehicle; sold: boo
     // Solid, never a backdrop blur: the page scrolls under this bar by definition, and a
     // blur there is a full-viewport readback on every frame on a mid-range Android.
     <div className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] border-t-2 border-ink bg-surface p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-base font-extrabold tabular [font-variation-settings:'wdth'_112]">
-            {vehicle.priceType === "poa" ? "POA" : formatRand(vehicle.price)}
-          </p>
-        </div>
+      {/*
+        The price on its own line, and the two buttons under it.
+
+        All three were on one row, and the price was the only flexible item on it, with
+        `flex-1` and `truncate`. So at 320, 360 and 390 wide it rendered as "R 5..." while
+        the two buttons kept their full labels. A price truncated to its first digit is worse
+        than no price: it is the number the whole bar exists to show, and R 584 000 and
+        R 5 840 000 truncate identically.
+
+        Making the price rigid instead only moves the problem, because the arithmetic does
+        not close at 320: a full rand figure and two labelled buttons do not fit across a
+        screen that narrow, at any distribution of the slack. The choice is therefore between
+        cutting the buttons down to bare icons and giving the price its own line, and the
+        line wins twice over. Nothing is abbreviated, and the buttons go full width, which
+        makes both of them a thumb-sized target instead of two small ones sharing an edge.
+
+        Roughly 28px more bar. Paid for in globals.css, where scroll-padding-bottom already
+        keeps anchored content clear of this thing.
+      */}
+      <p className="font-display text-lg font-extrabold tabular [font-variation-settings:'wdth'_112]">
+        {vehicle.priceType === "poa" ? "POA" : formatRand(vehicle.price)}
+      </p>
+
+      <div className="mt-2 flex gap-2 [&>*]:flex-1">
         <PhoneReveal
           compact
           vehicleRef={vehicle.publicRef ?? ""}

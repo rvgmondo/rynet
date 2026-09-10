@@ -1,6 +1,7 @@
 import type { CollectionConfig, CollectionSlug, Field } from "payload";
 
 import { isPlatformStaff, platformStaffOnly } from "@/access/roles";
+import { dropTag } from "@/lib/revalidate";
 import { isReservedSlug, slugify } from "@/lib/slug";
 
 /**
@@ -48,6 +49,13 @@ export function taxonomyCollection(options: TaxonomyOptions): CollectionConfig {
   return {
     slug,
     labels: { singular, plural },
+    // Every taxonomy read on the public site is cached under one tag. Editing one here is
+    // what drops it, so a corrected make name is live on the next request rather than within
+    // the hour the timer would otherwise allow.
+    hooks: {
+      afterChange: [() => dropTag("taxonomy")],
+      afterDelete: [() => dropTag("taxonomy")],
+    },
     admin: {
       useAsTitle: "name",
       defaultColumns: ["name", "slug", "isActive", "sortOrder"],
