@@ -30,14 +30,21 @@ export const metadata: Metadata = {
 export default function AgencyHomePage() {
   return (
     <>
-      <section className="border-b border-line bg-surface-sunken">
+      <section className="rn-columns border-b border-line bg-surface-sunken">
         <div className="container-page py-[var(--section-base)]">
           {/* Muted, not red. The one filled red object above this fold is the call to
               action; a red eyebrow above it competes with the thing it is meant to point at. */}
           <p className="rn-label text-ink-muted">Rynet Digital</p>
-          <h1 className="measure mt-4 text-4xl leading-[1.1] md:text-5xl">
-            More test drives. More sales.
-          </h1>
+          {/*
+            `rn-head`, not `text-5xl`.
+            ------------------------
+            This whole page was set at Tailwind's default scale in the default width while
+            the marketplace was rebuilt around a display face with a real width axis. The
+            headline said the same words at two thirds the presence, and a visitor crossing
+            from one front door to the other could see that one of them had been designed and
+            the other had been laid out.
+          */}
+          <h1 className="rn-head mt-5 max-w-[18ch]">More test drives. More sales.</h1>
           <p className="measure mt-6 text-lg text-ink-secondary">
             We work with car dealerships and nobody else. Websites that load on a phone, stock feeds
             that stay correct, advertising you can trace to a lead, and reporting that fits on one
@@ -70,7 +77,7 @@ export default function AgencyHomePage() {
       <section aria-labelledby="proof-heading" className="container-page py-[var(--section-base)]">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-start">
           <div>
-            <h2 id="proof-heading" className="text-3xl">
+            <h2 id="proof-heading" className="rn-head">
               We have not done this for you yet
             </h2>
             <div className="measure mt-5 space-y-4 text-ink-secondary">
@@ -124,7 +131,7 @@ export default function AgencyHomePage() {
         className="border-t border-line bg-surface-sunken"
       >
         <div className="container-page py-[var(--section-base)]">
-          <h2 id="services-heading" className="text-3xl">
+          <h2 id="services-heading" className="rn-head">
             Seven things, done properly
           </h2>
           <p className="measure mt-4 text-ink-secondary">
@@ -132,97 +139,153 @@ export default function AgencyHomePage() {
             will say so rather than sell you the list.
           </p>
 
-          <ul className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {SERVICES.map(({ slug, Icon, name, summary }) => (
-              <li key={slug}>
-                <article className="rn-card h-full p-6">
-                  <Icon aria-hidden="true" className="size-6 text-accent" />
-                  <h3 className="mt-4 text-lg leading-snug">
-                    <Link
-                      href={`/digital/services/${slug}`}
-                      className="after:absolute after:inset-0 after:content-[''] hover:text-accent"
-                    >
+          {/*
+            An index, not a card grid.
+            -------------------------
+            Seven bordered boxes with a small red icon in the corner of each is the layout
+            every agency site in the country already has, and it is what made this page read
+            as a template next to the marketplace. It also fought the design system, which
+            spent the whole redesign taking boxes off things.
+
+            So the seven become a numbered list, which is what they actually are. The number
+            is set at display scale in the muted ink so the row has a spine, the name carries
+            the weight, and the rule between rows does the work the border was doing. It
+            reads as a contents page, which is a form that suits seven items and suits a firm
+            that wants to look like it has done this before.
+          */}
+          <ol className="mt-10 border-t border-line">
+            {SERVICES.map(({ slug, name, summary }, index) => (
+              <li key={slug} className="border-b border-line">
+                <Link
+                  href={`/digital/services/${slug}`}
+                  className="group flex flex-col gap-2 py-6 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse sm:flex-row sm:items-baseline sm:gap-8 sm:px-4"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="font-display text-2xl font-extrabold tabular text-ink-muted group-hover:text-ink-inverse [font-variation-settings:'wdth'_112]"
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-8">
+                    <span className="font-display text-xl font-bold leading-snug sm:w-[20rem] sm:shrink-0">
                       {name}
-                    </Link>
-                  </h3>
-                  <p className="mt-2 text-sm text-ink-secondary">{summary}</p>
-                </article>
+                    </span>
+                    <span className="mt-2 block text-sm text-ink-secondary group-hover:text-ink-inverse sm:mt-0">
+                      {summary}
+                    </span>
+                  </span>
+                  <ArrowRight
+                    aria-hidden="true"
+                    className="hidden size-4 shrink-0 self-center sm:block"
+                  />
+                </Link>
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
       </section>
 
-      <section aria-labelledby="fit-heading" className="container-page py-[var(--section-base)]">
-        <h2 id="fit-heading" className="text-3xl">
-          Whether this is a fit
-        </h2>
-        <p className="measure mt-4 text-ink-secondary">
-          Being wrong about this wastes your time and ours, so here it is plainly.
-        </p>
+      {/*
+        The tonal break this page did not have.
+        --------------------------------------
+        Every band on this page sat on the same two grounds in the same left-aligned column,
+        so it read as one long scroll with headings in it. The marketplace breaks its own
+        rhythm exactly once, by inverting the ground under "What verified means", and the
+        break is most of what makes that page feel composed rather than stacked.
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-line p-6">
-            <h3 className="flex items-center gap-2 text-lg">
-              <Check aria-hidden="true" className="size-5 text-accent" />
-              Probably a fit
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm text-ink-secondary">
-              {[
-                "You are a registered dealership with stock on a floor and a DMS you can export from.",
-                "Your current site is slow, or your stock is wrong on it, or both.",
-                "You are spending on Google or Facebook and cannot say what came back.",
-                "Leads are arriving in four places and some of them go unanswered.",
-                "You want to own what gets built rather than rent it.",
-              ].map((item) => (
-                <li key={item} className="flex gap-3">
-                  <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        This is the right band to do it to. Saying plainly who should not hire us is the most
+        confident thing on the page, so it gets the ground that looks like a statement.
 
-          <div className="rounded-lg border-2 border-line-interactive p-6">
-            <h3 className="flex items-center gap-2 text-lg">
-              <X aria-hidden="true" className="size-5 text-ink-muted" />
-              Probably not
-            </h3>
-            <ul className="mt-4 space-y-3 text-sm text-ink-secondary">
-              {[
-                "You sell privately rather than as a registered dealership. We only work with dealerships, same as the marketplace.",
-                "You want a guaranteed position in search results. Nobody can promise that honestly.",
-                "You want the cheapest option. We are not it, and we will tell you who might be.",
-                "You want somebody to post on social media three times a week. That is not what we do.",
-                "You need it live next week. The first stock import alone takes longer than that to get right.",
-              ].map((item) => (
-                <li key={item} className="flex gap-3">
-                  <X aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-muted" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section aria-labelledby="cta-heading" className="border-t border-line bg-surface-sunken">
+        Two columns split by a rule rather than two bordered boxes. A box around a list is a
+        container drawn because the layout felt loose, and the rule between the columns is
+        the same information with nothing extra around it.
+      */}
+      <section aria-labelledby="fit-heading" className="bg-surface-inverse text-ink-inverse">
         <div className="container-page py-[var(--section-base)]">
-          <h2 id="cta-heading" className="text-3xl">
-            Start with the free review
+          <h2 id="fit-heading" className="rn-head">
+            Whether this is a fit
           </h2>
-          <p className="measure mt-4 text-ink-secondary">
-            Send us your website and we will come back with what is actually slowing it down, what
-            is stopping it being found, and what we would fix first. No obligation, and we will tell
-            you if the answer is that you do not need us.
+          <p className="measure mt-4 text-lg opacity-80">
+            Being wrong about this wastes your time and ours, so here it is plainly.
           </p>
-          <Link
-            href="/digital/contact"
-            className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-md bg-accent-solid px-6 font-semibold text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover"
-          >
-            Get in touch
-            <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
+          <hr className="mt-8 h-px border-0 bg-silver" />
+
+          <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-0 md:divide-x md:divide-silver">
+            {[
+              {
+                heading: "Probably a fit",
+                Mark: Check,
+                items: [
+                  "You are a registered dealership with stock on a floor and a DMS you can export from.",
+                  "Your current site is slow, or your stock is wrong on it, or both.",
+                  "You are spending on Google or Facebook and cannot say what came back.",
+                  "Leads are arriving in four places and some of them go unanswered.",
+                  "You want to own what gets built rather than rent it.",
+                ],
+              },
+              {
+                heading: "Probably not",
+                Mark: X,
+                items: [
+                  "You sell privately rather than as a registered dealership. We only work with dealerships, same as the marketplace.",
+                  "You want a guaranteed position in search results. Nobody can promise that honestly.",
+                  "You want the cheapest option. We are not it, and we will tell you who might be.",
+                  "You want somebody to post on social media three times a week. That is not what we do.",
+                  "You need it live next week. The first stock import alone takes longer than that to get right.",
+                ],
+              },
+            ].map((column, index) => (
+              <div key={column.heading} className={index === 0 ? "md:pe-10" : "md:ps-10"}>
+                <h3 className="rn-label">{column.heading}</h3>
+                <ul className="mt-6 space-y-0">
+                  {column.items.map((item) => (
+                    <li
+                      key={item}
+                      className="flex gap-4 border-t border-silver/40 py-4 text-sm opacity-90"
+                    >
+                      <column.Mark aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/*
+        The close, at closing scale.
+        ---------------------------
+        It was a third-level heading, a paragraph and a small button, which is how a page
+        ends when nobody decided how it should end. The offer is the single most valuable
+        thing on this page and it was the quietest object on it.
+
+        The rule above it is the masthead sweep, which appears twice on this site and both
+        times to say that something is over.
+      */}
+      <section aria-labelledby="cta-heading" className="container-page py-[var(--section-base)]">
+        <hr className="rn-rule rn-rule--brand" />
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
+          <div>
+            <h2 id="cta-heading" className="rn-head max-w-[14ch]">
+              Start with the free review
+            </h2>
+          </div>
+          <div>
+            <p className="rn-prose text-ink-secondary">
+              Send us your website and we will come back with what is actually slowing it down, what
+              is stopping it being found, and what we would fix first. No obligation, and we will
+              tell you if the answer is that you do not need us.
+            </p>
+            <Link
+              href="/digital/contact"
+              className="rn-label mt-8 inline-flex min-h-12 items-center gap-2 bg-accent-solid px-6 text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover"
+            >
+              Get in touch
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          </div>
         </div>
       </section>
     </>
