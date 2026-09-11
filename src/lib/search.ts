@@ -5,6 +5,7 @@ import { getPayload } from "payload";
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { type ParsedQuery, parseQuery, type Term } from "@/lib/query-parse";
 import { populated, relName, relSlug } from "@/lib/relations";
+import { vehiclePhoto } from "@/lib/vehicle-photo";
 import type { Vehicle } from "@/payload-types";
 
 /**
@@ -170,6 +171,7 @@ export function toCard(doc: Vehicle): VehicleCardData {
     cityName: branch ? relName(branch.city) : null,
     provinceName: branch ? relName(branch.province) : null,
     isDemonstration: Boolean(doc.isDemonstration),
+    photo: vehiclePhoto(doc, "card"),
     colourName: relName(colour),
     colourSwatch: colour && typeof colour === "object" ? (colour.swatch ?? null) : null,
     // The family decides which half of the plate maths runs. White, silver, grey and black

@@ -78,6 +78,28 @@ export const Media: CollectionConfig = {
       admin: { description: "Photographer or source, where one is owed." },
     },
     {
+      /*
+       * Seeded illustration, not a dealer's photograph.
+       *
+       * The demonstration stock is illustrated with real photographs of the real models from
+       * Wikimedia Commons, because a car marketplace with no photographs in it cannot be
+       * judged, designed or demonstrated. They are photographs of the MODEL, never of the
+       * individual car, and every listing that carries one already says it is an example.
+       *
+       * This flag is what lets all of it be found and deleted in one command the day real
+       * dealer photography arrives, and what keeps it out of anything that speaks to a
+       * machine. Same rule as the listings themselves: see structured-data.ts.
+       */
+      name: "isDemonstration",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        description:
+          "Seeded illustration rather than a real photograph of a real car. Deleted when real stock arrives.",
+        position: "sidebar",
+      },
+    },
+    {
       name: "folder",
       type: "text",
       index: true,

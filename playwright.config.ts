@@ -45,7 +45,16 @@ export default defineConfig({
         command: "npm run start -- --port 3100",
         // The whole suite shares one visitor hash, so the production limit of five would
         // lock the run out partway through. Raised here only, never in the shipped default.
-        env: { ENQUIRY_RATE_LIMIT: "1000" },
+        env: {
+          ENQUIRY_RATE_LIMIT: "1000",
+          /*
+           * The suite runs the app on 3100 while the build was made against 3000, and Payload
+           * will not accept a session cookie from an origin it has not been told is ours. The
+           * whole two-factor suite drives the real page in a real browser, so it is the only
+           * part of the suite that authenticates by cookie, and it was the only part failing.
+           */
+          SERVER_URL: "http://localhost:3100",
+        },
         url: "http://localhost:3100",
         /**
          * Never reuse, not even locally.

@@ -890,6 +890,129 @@
  * JavaScript off.
  * ========================================================================= */
 
+/* ============================================================================
+ * THE PHOTOGRAPH
+ *
+ * The subject of a card, and of a listing. It sits in exactly the slot the colour plate used
+ * to own, at the same ratio, so a grid of photographed cars and a grid of unphotographed ones
+ * line up rather than stepping over each other.
+ *
+ * `object-fit: cover` on a fixed ratio, because dealer photography is not consistent: a feed
+ * arrives with 4:3 phone shots, 16:9 forecourt shots and the occasional portrait, and a grid
+ * that lets each one set its own height is a grid that looks broken. Cropping to a common
+ * frame is what every marketplace does and it is the right answer.
+ * ========================================================================= */
+
+.rn-shot {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  min-height: 10rem;
+  overflow: hidden;
+  /* Under the photograph while it decodes, so a slow connection shows the card's own ground
+     rather than a white flash. */
+  background: var(--rn-surface-sunken);
+}
+
+.rn-shot__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Photography carries its own contrast, and the card below it is set on paper. A hairline
+     keeps a white car from bleeding into a white card. */
+  box-shadow: inset 0 0 0 1px var(--rn-plate-edge);
+}
+
+/*
+ * How many photographs there are, which is a signal in itself.
+ *
+ * Every marketplace in this market puts this on the card, and it is not decoration: a listing
+ * with sixteen photographs has been prepared by somebody who wants to sell the car, and one
+ * with a single photograph has not. A buyer reads it that way whether or not anybody tells
+ * them to.
+ */
+.rn-shot__count {
+  position: absolute;
+  bottom: 0;
+  inset-inline-start: 0;
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--rn-font-display);
+  font-size: var(--rn-text-2xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-wide);
+  color: var(--rn-plate-ink);
+  background: rgb(0 0 0 / 0.55);
+}
+
+/* ============================================================================
+ * THE GALLERY
+ *
+ * A stage and a strip, switched by radio inputs and a sibling selector. No JavaScript, so the
+ * second photograph is reachable before hydration and with scripting off, which on a phone on
+ * a slow connection is most of the time a buyer is looking at it.
+ *
+ * Every shot is in the DOM and stacked; the checked radio reveals its own. That costs the
+ * bytes of the other photographs up front, which is why only the first is `priority` and the
+ * rest are lazy: the browser does not fetch a hidden image until it is shown.
+ * ========================================================================= */
+
+.rn-gallery__stage {
+  display: flex;
+  aspect-ratio: 3 / 2;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  background: var(--rn-surface-sunken);
+}
+
+.rn-gallery__shot {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  scroll-snap-align: start;
+  /* An anchor from the strip scrolls this into view. Without the margin the browser also
+     scrolls the PAGE to put it at the top, which throws the buyer past the price. */
+  scroll-margin: 0;
+}
+
+.rn-gallery__strip {
+  display: flex;
+  gap: 1px;
+  margin-top: 1px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.rn-gallery__strip a {
+  flex: 0 0 clamp(4.5rem, 12vw, 7rem);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  /* They sit back until the pointer or the keyboard reaches one, which is the same restraint
+     the rest of the interface shows: nothing is emphasised until somebody asks for it. */
+  opacity: 0.5;
+  transition: opacity var(--duration-micro) var(--ease-standard);
+}
+
+.rn-gallery__strip a:hover,
+.rn-gallery__strip a:focus-visible {
+  opacity: 1;
+}
+
+.rn-gallery__strip a img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* The listing page's own photograph, which is the hero and takes the wider frame a hero wants. */
+.rn-shot--hero {
+  aspect-ratio: 3 / 2;
+  min-height: 14rem;
+}
+
 .rn-plate {
   position: relative;
   /*

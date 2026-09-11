@@ -27,6 +27,33 @@ const dirname = path.dirname(filename);
 const serverURL = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000";
 
 /**
+ * The origins allowed to authenticate with the session COOKIE.
+ *
+ * Payload compares the request's Origin header against this list and, when it does not match,
+ * quietly drops the cookie. The request still succeeds, it simply arrives with no user on it.
+ * That is the right defence against a cross-site request riding somebody's session, and it
+ * stays.
+ *
+ * It is also the most misleading failure in the system, because nothing reports it. A wrong
+ * entry here reads as a broken sign-in page: the login endpoint returns a token, the cookie is
+ * set, and every page after it says you are not signed in. It cost this project eight failing
+ * tests that looked like a broken enrolment screen and were an app running on port 3100 while
+ * this list named port 3000.
+ *
+ * NEXT_PUBLIC_SERVER_URL is fixed at build time, so it cannot answer for a build that is run
+ * on more than one origin. SERVER_URL and TRUSTED_ORIGINS are read at run time and can.
+ * An attacker's page cannot forge an Origin header, so naming a second origin here does not
+ * let anybody in; it only says which of our own front doors count as ours.
+ */
+const trustedOrigins = Array.from(
+  new Set(
+    [serverURL, process.env.SERVER_URL, ...(process.env.TRUSTED_ORIGINS ?? "").split(",")]
+      .map((value) => value?.trim().replace(/\/$/, ""))
+      .filter((value): value is string => Boolean(value)),
+  ),
+);
+
+/**
  * Media storage.
  *
  * Local disk unless the R2 credentials are present, then Cloudflare R2 through the S3
@@ -100,8 +127,8 @@ export default buildConfig({
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || "",
   serverURL,
-  cors: [serverURL],
-  csrf: [serverURL],
+  cors: trustedOrigins,
+  csrf: trustedOrigins,
 
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
