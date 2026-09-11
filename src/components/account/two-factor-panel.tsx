@@ -22,7 +22,7 @@ function groupKey(secret: string): string {
 
 function RecoveryCodes({ codes, heading }: { codes: string[]; heading: string }) {
   return (
-    <div role="status" className="mt-6 rounded-lg border-2 border-warning bg-warning-subtle p-5">
+    <div role="status" className="mt-6 border-t-2 border-warning pt-5">
       <p className="font-display text-sm font-bold text-warning">{heading}</p>
       <p className="mt-2 text-sm text-ink-secondary">
         This is the only time they are shown. They are stored as hashes, so nobody at Rynet can read
@@ -84,7 +84,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
    */
   if (confirmState.status === "enabled") {
     return (
-      <div className="rounded-lg border border-line p-6">
+      <div className="border-t-2 border-ink pt-6">
         <h2 className="flex items-center gap-2 text-lg">
           <ShieldCheck aria-hidden="true" className="size-5 text-success" />
           Two-factor is on for {status.email}
@@ -99,7 +99,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
 
   if (!status.signedIn) {
     return (
-      <div className="rounded-lg border border-line p-6">
+      <div className="border-t-2 border-ink pt-6">
         <h2 className="text-lg">You are not signed in</h2>
         <p className="mt-2 text-sm text-ink-secondary">
           Sign in at <a href="/admin">/admin</a> first, then come back to this page. It only ever
@@ -114,7 +114,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
   if (status.enabled) {
     return (
       <div className="space-y-8">
-        <div className="rounded-lg border border-line p-6">
+        <div className="border-t-2 border-ink pt-6">
           <h2 className="flex items-center gap-2 text-lg">
             <ShieldCheck aria-hidden="true" className="size-5 text-success" />
             Two-factor is on
@@ -131,7 +131,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
           </p>
         </div>
 
-        <form action={regen} className="rounded-lg border border-line p-6">
+        <form action={regen} className="border-t-2 border-ink pt-6">
           <h2 className="text-lg">New recovery codes</h2>
           <p className="mt-2 text-sm text-ink-secondary">
             Generating a set invalidates the old one immediately.
@@ -158,7 +158,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
           ) : null}
         </form>
 
-        <form action={disable} className="rounded-lg border-2 border-line-interactive p-6">
+        <form action={disable} className="border-t-2 border-danger pt-6">
           <h2 className="flex items-center gap-2 text-lg">
             <ShieldOff aria-hidden="true" className="size-5 text-ink-muted" />
             Turn two-factor off
@@ -201,7 +201,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
   if (status.pending && status.secret) {
     return (
       <div className="space-y-8">
-        <div className="rounded-lg border border-line p-6">
+        <div className="border-t-2 border-ink pt-6">
           <h2 className="text-lg">Add Rynet to your authenticator app</h2>
           <ol className="mt-4 space-y-4 text-sm text-ink-secondary">
             <li>
@@ -228,7 +228,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
           </ol>
         </div>
 
-        <form action={confirm} className="rounded-lg border border-line p-6">
+        <form action={confirm} className="border-t-2 border-ink pt-6">
           <h2 className="text-lg">Confirm the code</h2>
           <div className="mt-4 max-w-xs">
             <Field name="totp" label="Six digit code" error={undefined}>
@@ -259,7 +259,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
   // ------------------------------------------------------------------------- not started
 
   return (
-    <form action={begin} className="rounded-lg border border-line p-6">
+    <form action={begin} className="border-t-2 border-ink pt-6">
       <h2 className="flex items-center gap-2 text-lg">
         <ShieldOff aria-hidden="true" className="size-5 text-ink-muted" />
         Two-factor is off

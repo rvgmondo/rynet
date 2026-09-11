@@ -49,7 +49,12 @@ export default function GlobalNotFound() {
             that has since been taken down.
           </p>
 
-          <hr className="rn-rule rn-rule--brand mt-10" />
+          {/* The rule carries `margin: 0` from .rn-rule, which beats a `mt-` utility of the same
+              specificity depending on source order, so it was drawing flush through the
+              paragraph above it. The gap goes on a wrapper, where nothing can reset it. */}
+          <div className="mt-12">
+            <hr className="rn-rule rn-rule--brand" />
+          </div>
 
           <ul className="mt-8 flex flex-wrap gap-3">
             {[
