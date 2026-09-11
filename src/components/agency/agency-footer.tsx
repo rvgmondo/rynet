@@ -42,10 +42,7 @@ export function AgencyFooter() {
           </div>
 
           <nav aria-labelledby="footer-services">
-            <h2
-              id="footer-services"
-              className="rn-label text-ink-muted"
-            >
+            <h2 id="footer-services" className="rn-label text-ink-muted">
               Services
             </h2>
             <ul className="mt-4 space-y-0.5">
@@ -63,10 +60,7 @@ export function AgencyFooter() {
           </nav>
 
           <nav aria-labelledby="footer-rynet">
-            <h2
-              id="footer-rynet"
-              className="rn-label text-ink-muted"
-            >
+            <h2 id="footer-rynet" className="rn-label text-ink-muted">
               Rynet
             </h2>
             <ul className="mt-4 space-y-0.5">
