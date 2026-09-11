@@ -1,13 +1,13 @@
 import config from "@payload-config";
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPayload } from "payload";
 
 import { Breadcrumbs, type Crumb } from "@/components/layout/breadcrumbs";
 import { ResultsGrid } from "@/components/vehicles/results-grid";
+import { ResultsHeader } from "@/components/vehicles/results-header";
 import { formatRand } from "@/lib/format";
-import { PER_PAGE, priceRange, searchVehicles } from "@/lib/search";
+import { buildVehicleWhere, PER_PAGE, priceRange, safePage, searchVehicles } from "@/lib/search";
 
 /**
  * Facet landing pages.
@@ -184,10 +184,14 @@ export default async function FacetPage({
   const resolved = resolveShape(facets);
   if (!resolved) notFound();
 
-  const page = Math.max(1, Number(one(query.page) ?? 1) || 1);
+  // Clamped at both ends. See safePage: the floor was clamped and the ceiling was not, and a
+  // page number past the safe integer range reached SQLite as an offset and answered 500.
+  const page = safePage(one(query.page) ?? 1);
   const sort = one(query.sort) ?? "newest";
 
-  const results = await searchVehicles({ ...resolved.filters, page, sort });
+  const filters = { ...resolved.filters, page, sort };
+  const results = await searchVehicles(filters);
+  const where = await buildVehicleWhere(filters);
 
   // An unknown make or model is a 404, not an empty page. A crawler that finds
   // /cars/toyata should be told it does not exist rather than shown every Toyota.
@@ -221,45 +225,93 @@ export default async function FacetPage({
     return qs ? `${basePath}?${qs}` : basePath;
   };
 
+  /*
+   * The price sentence, and it is only printed when it is true of THIS page.
+   *
+   * priceRange resolved three dimensions where the search resolved eight, so every province,
+   * city, fuel and condition page printed the whole catalogue's range as its own. /cars/in/limpopo
+   * holds no cars at all and told a buyer it had stock "from R 83 300 to R 1 489 600". Both now
+   * take the same clause set from buildVehicleWhere, so an empty set has no range and says
+   * nothing rather than saying something false.
+   */
+  const rangeSummary =
+    range && results.total > 0
+      ? `${formatRand(range.min)} to ${formatRand(range.max)} across this page`
+      : null;
+
+  /*
+   * "No Audi right now", not "No audi right now".
+   *
+   * The empty title lowercased whatever the heading held, at 56px, so every make and every
+   * province was set as a common noun on the one screen a buyer reads word by word. Only the
+   * leading word ever needs case-folding, and only when it is not a name.
+   */
+  const emptySubject = heading.replace(" for sale", "").replace(/^Cars /, "cars ");
+
+  /*
+   * The demonstration count for THIS set, so the landing pages carry the same admission the
+   * search page does. Every listing on the platform is currently seeded, and a page headed
+   * "Bakkies for sale, 84 vehicles from verified dealerships" with nothing to correct it is a
+   * fabricated claim whatever the individual cards say. It costs one count.
+   */
+  const payload = await getPayload({ config });
+  const demonstration = await payload.count({
+    collection: "vehicles",
+    where: { and: [where, { isDemonstration: { equals: true } }] } as never,
+  });
+
   return (
-    <div className="container-page py-[var(--section-tight)]">
-      <Breadcrumbs trail={trail} />
+    <>
+      {/*
+        A masthead band, like every other page that was redrawn.
+        -------------------------------------------------------
+        These are the most numerous pages on the platform and the whole of its SEO surface, and
+        they opened on a bare breadcrumb and a `text-3xl` heading on the same flat ground as the
+        results. So the version of this site most visitors arrive at was the one that had never
+        been designed.
+      */}
+      <section className="rn-columns border-b border-line bg-surface-sunken">
+        <div className="container-page py-[var(--section-tight)]">
+          <Breadcrumbs trail={trail} />
+          <h1 className="rn-head mt-8 max-w-[18ch]">{heading}</h1>
+        </div>
+      </section>
 
-      <div className="mt-5 border-b border-line pb-5">
-        <h1 className="text-3xl">{heading}</h1>
-        <p aria-live="polite" className="mt-2 text-sm text-ink-secondary">
-          <span className="font-semibold tabular text-ink">
-            {results.total.toLocaleString("en-ZA")}
-          </span>{" "}
-          {results.total === 1 ? "vehicle" : "vehicles"} from verified dealerships
-          {range ? (
-            <>
-              , from <span className="tabular">{formatRand(range.min)}</span> to{" "}
-              <span className="tabular">{formatRand(range.max)}</span>
-            </>
-          ) : null}
-        </p>
-        <p className="mt-3 text-sm">
-          <Link href="/cars" className="font-semibold text-accent hover:underline">
-            Search all stock with filters
-          </Link>
-        </p>
-      </div>
+      <div className="container-page py-[var(--section-tight)]">
+        {/*
+          The same header component the search page uses, rather than a second worse copy of it.
+          A landing page that renders results slightly differently from the search page is how a
+          site starts to feel assembled rather than built, which results-grid.tsx has said in a
+          comment since it was written. These pages had no sort control at all while reading and
+          preserving ?sort=, no honesty caption and no demonstration notice.
+        */}
+        <ResultsHeader
+          heading={heading}
+          showHeading={false}
+          formAction={basePath}
+          filterHref="/cars"
+          filterLabel="All filters"
+          total={results.total}
+          page={results.page}
+          totalPages={results.totalPages}
+          sort={sort}
+          priceSummary={rangeSummary}
+          demonstrationCount={demonstration.totalDocs}
+        />
 
-      <div className="mt-6">
         <ResultsGrid
           vehicles={results.vehicles}
           page={results.page}
           totalPages={results.totalPages}
           buildHref={buildHref}
-          emptyTitle={`No ${heading.replace(" for sale", "").toLowerCase()} right now`}
+          emptyTitle={`No ${emptySubject} right now`}
           emptyBody="Nothing matching this is on the platform at the moment. Stock changes daily, so it is worth checking back, and there is plenty else in the meantime."
         />
-      </div>
 
-      {/* Per-page count is not shown because it is always PER_PAGE except on the last page,
-          and a number that is almost always the same is noise rather than information. */}
-      <p className="sr-only">Showing up to {PER_PAGE} vehicles per page.</p>
-    </div>
+        {/* Per-page count is not shown because it is always PER_PAGE except on the last page,
+            and a number that is almost always the same is noise rather than information. */}
+        <p className="sr-only">Showing up to {PER_PAGE} vehicles per page.</p>
+      </div>
+    </>
   );
 }

@@ -1,5 +1,5 @@
 var R=require("../../../chunks/ssr/[turbopack]_runtime.js")("server/app/(marketplace)/dealers/page.js")
-R.c("server/chunks/ssr/[root-of-the-server]__1hyw75g._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1dyby5r._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1n3w9lb._.js")
 R.c("server/chunks/ssr/_0izgp_m._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1poh_qr._.js")

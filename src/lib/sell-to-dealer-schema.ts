@@ -63,21 +63,51 @@ export const FINANCE_STATES = [
   { value: "unsure", label: "Not sure" },
 ] as const satisfies readonly Option<(typeof FINANCE_VALUES)[number]>[];
 
+/**
+ * An empty form field is nothing, not zero.
+ *
+ * `z.coerce.number()` turns "" into 0 and `z.coerce.number()` turns null into 0 as well, so a
+ * field nobody touched arrives looking answered. This hands `undefined` to the schema instead,
+ * which is the only value a required check can see.
+ */
+const emptyToUndefined = (value: unknown) =>
+  value === "" || value === null || value === undefined ? undefined : value;
+
 export const sellToDealerSchema = z.object({
   // Step one. The car, and nothing personal, so the first screen asks nothing a person would
   // hesitate over.
   make: z.string().trim().min(1, "Which make?").max(60),
   model: z.string().trim().min(1, "Which model?").max(80),
-  modelYear: z.coerce
-    .number()
-    .int()
-    .min(OLDEST_YEAR, `Year must be ${OLDEST_YEAR} or later.`)
-    .max(CURRENT_YEAR + 1, "That year is in the future."),
-  mileageKm: z.coerce
-    .number()
-    .int()
-    .min(0, "Mileage cannot be negative.")
-    .max(2_000_000, "That mileage does not look right."),
+  /*
+   * Blank has to mean blank, and with `z.coerce.number()` it does not.
+   *
+   * An empty number input submits "", which coerces to 0, and 0 satisfied `min(0)`. So leaving
+   * Mileage untouched passed validation and moved the seller to step two, while Make, Model and
+   * Year all reported their own errors: the one field that looked satisfied was the one nobody
+   * had filled in. The lead then reached up to five dealerships reading 0 km, which on a 2019
+   * Hilux is not a typo a dealer forgives.
+   *
+   * `emptyToUndefined` is what makes a blank field report "required" rather than coercing to a
+   * number, and the floor on mileage is 1 rather than 0 for the same reason: nobody is selling a
+   * car with no kilometres on it, and a genuine delivery-mileage car is a dealership's problem,
+   * not this form's.
+   */
+  modelYear: z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number({ message: "Which year?" })
+      .int()
+      .min(OLDEST_YEAR, `Year must be ${OLDEST_YEAR} or later.`)
+      .max(CURRENT_YEAR + 1, "That year is in the future."),
+  ),
+  mileageKm: z.preprocess(
+    emptyToUndefined,
+    z.coerce
+      .number({ message: "How many kilometres?" })
+      .int()
+      .min(1, "How many kilometres?")
+      .max(2_000_000, "That mileage does not look right."),
+  ),
 
   // Step two. Condition and papers.
   transmission: z.enum(TRANSMISSION_VALUES, { message: "Pick one." }),

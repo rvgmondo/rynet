@@ -25,8 +25,21 @@ const SORT_OPTIONS = [
  * the answer is stated once, plainly, above the results. Saying it out loud is more
  * confident than hoping nobody asks, and it turns the platform's biggest gap into its most
  * self-assured line. Repeating it per card would make it noise.
+ *
+ * THE FACET LANDING PAGES USE THIS TOO, and until they did they were a second, worse copy of
+ * it: a plain `text-3xl` heading, a decorative hairline instead of the rule, no sort control at
+ * all although the page read and preserved `?sort=`, no honesty caption and no demonstration
+ * notice. Those are the most numerous pages on the platform and the whole of its SEO surface, so
+ * they were the version most visitors would meet. `results-grid.tsx` has carried the argument in
+ * a comment since it was written: a landing page that renders results slightly differently from
+ * the search page is how a site starts to feel assembled rather than built.
  */
 export function ResultsHeader({
+  heading = "Cars for sale",
+  showHeading = true,
+  formAction = "/cars",
+  filterHref = "#filters-heading",
+  filterLabel = "Filter",
   total,
   page,
   totalPages,
@@ -39,6 +52,18 @@ export function ResultsHeader({
   filters = [],
   widened = null,
 }: {
+  /** What this result set is. The search page is "Cars for sale"; a landing page names itself. */
+  heading?: string;
+  /** False where the page has already set its own h1 in a masthead band above this. Two h1s
+   *  carrying the same words is a duplicate for a screen reader and a stutter for everyone
+   *  else. */
+  showHeading?: boolean;
+  /** Where the sort form posts, so a landing page sorts itself rather than jumping to /cars. */
+  formAction?: string;
+  /** The escape hatch beside the sort control. On /cars it jumps to the rail, which is on the
+   *  same page; on a landing page there is no rail, so it goes to the full filter set. */
+  filterHref?: string;
+  filterLabel?: string;
   total: number;
   page: number;
   totalPages: number;
@@ -61,10 +86,16 @@ export function ResultsHeader({
     <div className="mb-6">
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div>
-          <h1 id="results-heading" className="rn-head">
-            Cars for sale
-          </h1>
-          <p className="mt-3 text-sm text-ink-secondary">
+          {showHeading ? (
+            <h1 id="results-heading" className="rn-head max-w-[16ch]">
+              {heading}
+            </h1>
+          ) : (
+            <h2 id="results-heading" className="sr-only">
+              {heading}
+            </h2>
+          )}
+          <p className={`text-sm text-ink-secondary ${showHeading ? "mt-3" : ""}`}>
             <span className="font-semibold tabular text-ink">{total.toLocaleString("en-ZA")}</span>{" "}
             {total === 1 ? "car" : "cars"} from verified dealerships
             {totalPages > 1 ? (
@@ -80,15 +111,18 @@ export function ResultsHeader({
           ) : null}
         </div>
 
-        {/* On a phone the rail sits below the results, so this is how a buyer reaches it. */}
+        {/* On a phone the rail sits below the results, so this is how a buyer reaches it. On a
+            landing page there is no rail and this is the way into the full filter set. */}
         <a
-          href="#filters-heading"
-          className="rn-label inline-flex min-h-11 items-center text-ink-muted xl:hidden"
+          href={filterHref}
+          className={`rn-label inline-flex min-h-11 items-center text-ink-muted hover:text-ink ${
+            filterHref.startsWith("#") ? "xl:hidden" : ""
+          }`}
         >
-          Filter
+          {filterLabel}
         </a>
 
-        <form method="get" action="/cars" className="flex items-end gap-3">
+        <form method="get" action={formAction} className="flex items-end gap-3">
           {/*
             A GET form submits only its own controls. Without these, choosing a sort order
             discarded the search term and every ticked facet and dropped the buyer back into

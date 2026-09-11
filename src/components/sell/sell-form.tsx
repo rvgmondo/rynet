@@ -169,7 +169,7 @@ export function SellForm({ provinces }: { provinces: readonly { slug: string; na
               inputMode="numeric"
               min={OLDEST_YEAR}
               max={CURRENT_YEAR + 1}
-              placeholder={String(CURRENT_YEAR - 6)}
+              placeholder={`e.g. ${CURRENT_YEAR - 6}`}
               aria-invalid={Boolean(form.errorFor("modelYear"))}
               aria-describedby={form.errorFor("modelYear") ? "modelYear-error" : undefined}
               className={INPUT_CLASS}
@@ -187,8 +187,8 @@ export function SellForm({ provinces }: { provinces: readonly { slug: string; na
               name="mileageKm"
               type="number"
               inputMode="numeric"
-              min={0}
-              placeholder="128000"
+              min={1}
+              placeholder="e.g. 128 000"
               aria-invalid={Boolean(form.errorFor("mileageKm"))}
               aria-describedby={form.errorFor("mileageKm") ? "mileageKm-error" : "mileageKm-hint"}
               className={INPUT_CLASS}

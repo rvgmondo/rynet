@@ -21,13 +21,14 @@
     ]
   },
   {
-    "route": "/digital/contact",
-    "firstLoadUncompressedJsBytes": 816823,
+    "route": "/sell-to-a-dealer",
+    "firstLoadUncompressedJsBytes": 816884,
     "firstLoadChunkPaths": [
       ".next/static/chunks/33t46atd3n2zd.js",
       ".next/static/chunks/3zp3ole03cbx8.js",
       ".next/static/chunks/13sj3cl768oaa.js",
-      ".next/static/chunks/1qc1z-rb_00sz.js",
+      ".next/static/chunks/36v767fd_kg_u.js",
+      ".next/static/chunks/0oufbk03r7ae2.js",
       ".next/static/chunks/3m0g799rg5szc.js",
       ".next/static/chunks/3nvksw-8ye3xj.js",
       ".next/static/chunks/0wf2rmyoojkx7.js",
@@ -38,14 +39,13 @@
     ]
   },
   {
-    "route": "/sell-to-a-dealer",
-    "firstLoadUncompressedJsBytes": 816765,
+    "route": "/digital/contact",
+    "firstLoadUncompressedJsBytes": 816823,
     "firstLoadChunkPaths": [
       ".next/static/chunks/33t46atd3n2zd.js",
       ".next/static/chunks/3zp3ole03cbx8.js",
       ".next/static/chunks/13sj3cl768oaa.js",
-      ".next/static/chunks/36v767fd_kg_u.js",
-      ".next/static/chunks/10d9nosjvcc63.js",
+      ".next/static/chunks/1n6q6qv8g53hm.js",
       ".next/static/chunks/3m0g799rg5szc.js",
       ".next/static/chunks/3nvksw-8ye3xj.js",
       ".next/static/chunks/0wf2rmyoojkx7.js",
@@ -64,7 +64,7 @@
       ".next/static/chunks/13sj3cl768oaa.js",
       ".next/static/chunks/36v767fd_kg_u.js",
       ".next/static/chunks/3nvksw-8ye3xj.js",
-      ".next/static/chunks/1cq5d10h3nke_.js",
+      ".next/static/chunks/2ttim29x51phm.js",
       ".next/static/chunks/0wf2rmyoojkx7.js",
       ".next/static/chunks/0if-vqkhyn-zc.js",
       ".next/static/chunks/08sd7xz61zo_j.js",
@@ -80,7 +80,7 @@
       ".next/static/chunks/3zp3ole03cbx8.js",
       ".next/static/chunks/13sj3cl768oaa.js",
       ".next/static/chunks/36v767fd_kg_u.js",
-      ".next/static/chunks/0c5egj6yo2ei2.js",
+      ".next/static/chunks/1tnrt13a4gojx.js",
       ".next/static/chunks/3nvksw-8ye3xj.js",
       ".next/static/chunks/0wf2rmyoojkx7.js",
       ".next/static/chunks/0if-vqkhyn-zc.js",
