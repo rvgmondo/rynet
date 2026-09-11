@@ -50,8 +50,15 @@ cd "$REPO" || die "cannot enter $REPO"
 # disk quota. `--no-tags` for the same reason. FETCH_HEAD rather than a remote-tracking ref, so
 # this works whether or not the ref exists and whether or not the clone is shallow.
 say "fetching origin/$BRANCH"
-git fetch --no-tags --depth=1 origin "$BRANCH" \
-  || die "could not fetch origin/$BRANCH. If this is a credentials error, cPanel's Git Version Control is the thing that holds them: open the repository there once and let it update from remote."
+# The shallow fetch is the one that matters, and it is also the one with a failure mode: a
+# clone made in full becomes shallow for these objects, and some git versions refuse the mix.
+# A full fetch of a branch carrying a build in every commit is expensive, but it works
+# everywhere, so it is the fallback rather than the default.
+if ! git fetch --no-tags --depth=1 origin "$BRANCH"; then
+  say "shallow fetch refused, falling back to a full one"
+  git fetch --no-tags origin "$BRANCH" \
+    || die "could not fetch origin/$BRANCH. If this is a credentials error, cPanel's Git Version Control is what holds them: open the repository there once and let it update from remote."
+fi
 
 INCOMING="$(git rev-parse --short FETCH_HEAD)"
 say "fetched $INCOMING"
