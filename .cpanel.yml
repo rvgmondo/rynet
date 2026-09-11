@@ -1,29 +1,30 @@
 ---
 # cPanel Git Version Control deployment.
 #
-# This used to be twenty-odd shell tasks written as a YAML list. It is now one line, because
-# the install logic lives in scripts/host-deploy.sh where it can be read, reviewed and tested.
-# It was tested: eight scenarios, including a checkout with no build in it, a copy that runs
-# out of inodes half way, and a build that will not boot.
+# THIS BUTTON NOW WORKS, AND IT IS THE SUPPORTED PATH ON A HOST WITH NO SSH.
 #
-# YOU SHOULD NOT BE USING THIS BUTTON.
+# It used to be two lines of shell that installed from the checked-out working tree, and that
+# is why nothing had reached the live site since 3 September: the host's clone sits on `main`,
+# `main` has no build in it by design, so "Deploy HEAD Commit" had nothing to install and
+# refused. The checked-out branch drifting back to `main` is a cPanel behaviour nobody can turn
+# off, and several sessions went into fighting it.
 #
-# cPanel's Git Version Control cannot do this job reliably, and several sessions went into
-# proving it rather than accepting it:
+# scripts/cpanel-deploy.sh stops fighting it. It reads NOTHING from the working tree: it fetches
+# the `deploy` branch, unpacks that commit with `git archive` into a staging directory, and
+# installs from there. So the checked-out branch stops mattering, the index is never touched,
+# and "Update from Remote" pulling `main` with --ff-only is fine, because `main` is the one
+# branch that is never rewritten.
 #
-#   "Update from Remote" pulls with --ff-only, and the deploy branch carries a full build, so
-#   it gets rewritten and a fast-forward stops being possible. The checked-out branch also
-#   keeps reverting to `main`, which has no build in it by design. And even when it all works,
-#   it is two buttons plus a Restart plus remembering to check which branch you are on.
+#   Update from Remote  ->  brings this file and the script up to date on the host
+#   Deploy HEAD Commit  ->  runs the script, which installs the latest BUILD
 #
-# The supported path is ~/deploy-rynet.sh, run by cron. It does `git fetch` and
-# `git reset --hard origin/deploy`, which does not care about fast-forwards or which branch
-# happened to be checked out, and then calls the same script this file calls. See
-# DEPLOY-GIT.md.
+# In that order, and nothing to restart afterwards: host-deploy.sh touches tmp/restart.txt. If
+# the deploy branch has no build in it, or the site stops answering afterwards, it refuses or
+# rolls back rather than leaving a broken site up.
 #
-# This is kept, and kept correct, only so that clicking the button cannot do damage. If the
-# checkout has no build in it, host-deploy.sh refuses before it writes anything.
+# The same script is what cron should run, and what GitHub Actions runs over SSH when the
+# account has it. See DEPLOY-GIT.md.
 
 deployment:
   tasks:
-    - bash scripts/host-deploy.sh
+    - bash scripts/cpanel-deploy.sh

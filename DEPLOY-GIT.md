@@ -1,31 +1,94 @@
 # Deploying
 
-Push to `main`. That is the whole thing, once the four secrets below exist.
+GitHub Actions builds every push to `main` and publishes the result to the `deploy` branch.
+Something then has to install it, and there are two ways, both running the same script:
 
-GitHub Actions builds, publishes the result to the `deploy` branch, ships it to the host over
-SSH, installs it atomically, restarts the app, checks the site is serving the commit that was
-just built, and rolls itself back if it is not.
+- **Two clicks in cPanel**, which works today and needs nothing set up. Update from Remote,
+  then Deploy HEAD Commit.
+- **Nothing at all**, once four repository secrets exist, because the same Actions run installs
+  it over SSH and then checks the live site is serving the commit it just built.
+
+Either way the install is atomic, keeps the previous build, restarts the app itself, and rolls
+back if the site stops answering.
 
 For the manual upload route, and for the host troubleshooting that applies either way, see
 [DEPLOY-CPANEL.md](DEPLOY-CPANEL.md).
 
 ---
 
-## Nothing has reached the live site yet
+## Read this first if the site looks out of date
 
-Checked on 11 September 2026. `rynet.co.za` answers 200 and serves a build from BEFORE the
-STOCKLIST redesign: its HTML still carries Montserrat and Inter, which commit `737d061` replaced
-with Archivo and Newsreader on 9 September. Its deployment id is the format
-`scripts/build-deploy.mjs` stamps on a MANUAL bundle, not the commit sha CI stamps, so what is
-live was hand-uploaded and the automatic path has never run.
+On 11 September 2026 `rynet.co.za` was answering 200 and serving a build from 3 September, with
+three weeks of work sitting on the `deploy` branch behind it. Nothing was broken. cPanel's
+repository was checked out on `main` at the newest commit, and `main` has no build in it by
+design, so "Deploy HEAD Commit" correctly refused every time and nobody was told.
 
-Nothing is wrong with the automatic path. The `deploy` branch is current for every commit: it
-carries 1 143 files under `.next`, a `BUILD_ID`, the fonts, and source that matches `main`. Every
-CI run has been green.
+That cannot happen again in the same way: `.cpanel.yml` no longer installs from the working
+tree, so the checked-out branch stops mattering. **Two clicks now deploy**, and the section
+below explains why they did not before.
 
-**What is missing is four repository secrets.** Until they exist, every push builds, publishes,
-and is never installed. The redesign, both rounds of audit fixes, the performance work, the agency
-rebuild and the nine-surface sweep are all in that gap.
+To check what is live at any time, without guessing:
+
+```bash
+curl -s https://rynet.co.za/ | grep -o 'dpl=[A-Za-z0-9-]*' | sort -u
+```
+
+That is the commit the running build was made from. The GitHub Actions run summary prints the
+same value, and `~/rynet/DEPLOYED.txt` on the host records it with a timestamp.
+
+---
+
+## The cPanel button, which now works
+
+Two clicks, in **Git Version Control**, on the repository's **Pull or Deploy** tab:
+
+1. **Update from Remote**
+2. **Deploy HEAD Commit**
+
+Nothing to restart afterwards, and no branch to check first.
+
+### Why it did not work before, and what changed
+
+Three things were said about this button, and two of them were about what it DEPLOYED rather
+than about the button:
+
+- **The checked-out branch keeps reverting to `main`.** True, and not fixable from inside
+  cPanel. `main` has no build in it deliberately, so "Deploy HEAD Commit" had nothing to
+  install. This is why the site sat on a build from 3 September while every push built
+  correctly: the host was on `main` at the newest commit, and the newest commit has no `.next`.
+- **"Update from Remote" pulls with `--ff-only`.** True, and it only ever mattered because the
+  checked-out branch was supposed to be `deploy`, which carries a full build and has been
+  rewritten. Pulling `main` fast-forwards cleanly, because `main` is the one branch that is
+  never rewritten.
+- **It is a ritual, not a deploy.** It was: two buttons, a Restart, and checking the branch.
+
+`.cpanel.yml` now runs `scripts/cpanel-deploy.sh`, which reads NOTHING from the working tree.
+It fetches the `deploy` branch, unpacks that commit with `git archive` into a staging directory,
+and installs from there. So:
+
+- the checked-out branch stops mattering, and so does its drift
+- the index and working tree are never touched, so there is nothing to conflict
+- `--ff-only` on `main` is fine, and that is all the button pulls
+- the Restart is gone: `host-deploy.sh` touches `tmp/restart.txt` itself
+
+If the deploy branch has no build in it, it refuses before writing anything. If the site stops
+answering afterwards, it rolls back. Pressing the button twice does nothing the second time: it
+compares the fetched commit against the second line of `DEPLOYED.txt` before it unpacks anything.
+
+### Then put it on cron and stop clicking
+
+The same script, every five minutes, in cPanel's **Cron Jobs**:
+
+```
+*/5 * * * * /bin/bash $HOME/repositories/rynet/scripts/cpanel-deploy.sh >> $HOME/deploy.log 2>&1
+```
+
+It exits in about a second when the commit has not changed, so this is cheap. Set the cron email
+to yours and a failed deploy finds you rather than the other way round.
+
+The one thing cron cannot do is pick up a change to `cpanel-deploy.sh` itself, because that ships
+on `main` and cron only ever fetches `deploy`. When this script changes, press **Update from
+Remote** once.
 
 ---
 
@@ -90,35 +153,16 @@ is the question nobody was asking for the three weeks the site sat on a pre-rede
 
 ---
 
-## The manual path
+## From a terminal, if you have one
 
-Still there, and still correct, for a host with no SSH or for a deploy you want to watch. It needs
-the host to have a clone, so it is steps 2 to 5 below rather than the four secrets above. After
-the one-time setup it is one command:
+The same script, run by hand, which is what to do when you want to watch a deploy go through:
 
 ```bash
-~/deploy-rynet.sh
+bash ~/repositories/rynet/scripts/cpanel-deploy.sh
 ```
 
----
-
-## Do not use cPanel's Git Version Control button
-
-It is the wrong tool for this and it cost several sessions to be sure of that. Three separate
-reasons, none fixable from inside cPanel:
-
-- **It pulls with `--ff-only`.** The `deploy` branch carries a full build. Any history rewrite,
-  and there have been several, makes a fast-forward impossible, and the button then either
-  errors or silently redeploys whatever it already had.
-- **The checked-out branch keeps reverting to `main`.** `main` has no build in it, deliberately,
-  so deploying from there does nothing useful and once took the site down.
-- **It is a ritual, not a deploy.** Update from Remote, then Deploy HEAD Commit, then Restart,
-  and check the branch first.
-
-`git reset --hard` cares about none of that. So the host stops asking cPanel.
-
-The button is left wired up and harmless: `.cpanel.yml` now calls the same script, which refuses
-before writing anything if the checkout has no build in it.
+It prints what it is doing and ends with `https://rynet.co.za answered 200`. Add `--force` to
+make it reinstall a commit it has already installed.
 
 ---
 
@@ -130,27 +174,35 @@ you push to main
         v
 GitHub Actions builds  (Node 22, same as the host)
         |
-        +--> commits source + prebuilt .next to the `deploy` branch
-        |      the record of what was built, and what a rollback reads
-        |
         v
-the same run, over SSH:
-   tar the build through the connection into ~/rynet-incoming
-   scripts/host-deploy.sh --force, out of that directory
+commits source + prebuilt .next to the `deploy` branch
         |
-        v
-   refuse if there is no build in the tree
-   stage beside the live app, swap by rename, keep the previous build
-   touch tmp/restart.txt
-   check the site answers, roll back if it does not
-        |
-        v
-the runner then asks the LIVE site whether it is serving this commit,
-because a stale build answers 200 just as happily as a new one
+        +------------------------------+
+        |                              |
+        v                              v
+ON THE HOST                      FROM THE RUNNER, if SSH is set up
+scripts/cpanel-deploy.sh         tar the build through the SSH connection
+  git fetch --depth=1 deploy       into ~/rynet-incoming
+  git archive into a staging dir
+        |                              |
+        +--------------+---------------+
+                       |
+                       v
+             scripts/host-deploy.sh
+               refuse if there is no build in the tree
+               stage beside the live app, swap by rename
+               keep the previous build
+               touch tmp/restart.txt
+               check the site answers, roll back if it does not
+                       |
+                       v
+        the runner additionally asks the LIVE site whether it is
+        serving THIS commit, because a stale build answers 200
+        just as happily as a new one
 ```
 
-The manual path below does the same thing with the host pulling the `deploy` branch itself,
-which is what to use when the account has no SSH.
+Neither path reads the host's working tree, which is the whole reason the checked-out branch
+stopped mattering.
 
 **The host cannot build.** Next 16 with Turbopack needs far more memory than a shared CloudLinux
 account allows, and it gets killed rather than erroring usefully. That constraint shapes all of

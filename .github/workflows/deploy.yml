@@ -276,9 +276,17 @@ jobs:
           # shared host and this needs no second tool at either end. Only the files
           # host-deploy.sh actually installs are sent; node_modules stays on the host, where
           # it is installed against the host's own architecture.
-          tar -cz \
-            .next src scripts server.cjs package.json package-lock.json next.config.ts \
-            $([ -d public ] && echo public) \
+          # This list is the one scripts/host-deploy.sh installs, and it has to stay that
+          # way. The first version dropped tsconfig.json and postcss.config.mjs, which the
+          # script copies `if [ -f ]`, so they would have quietly stopped being updated
+          # rather than failing.
+          WANTED=".next src scripts public server.cjs package.json package-lock.json next.config.ts tsconfig.json postcss.config.mjs"
+          SEND=""
+          for item in $WANTED; do
+            if [ -e "$item" ]; then SEND="$SEND $item"; else echo "not in this build: $item"; fi
+          done
+
+          tar -cz $SEND \
             | ssh -i ~/.ssh/id_deploy -p "${SSH_PORT:-22}" -o BatchMode=yes \
                   "$SSH_USER@$SSH_HOST" '
               set -euo pipefail
