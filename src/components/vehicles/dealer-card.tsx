@@ -35,7 +35,10 @@ export function DealerCard({ dealer, branch }: { dealer: Dealer | null; branch: 
   const today = branch?.tradingHours?.find((h) => h.day === todayKey);
 
   return (
-    <div className="border-t-2 border-ink p-5 ps-0">
+    /* Flush. The rail above carried `p-5` and this carried `p-5 ps-0`, so the two blocks in
+       the same column sat 20px apart under rules that were flush with each other. The rail's
+       fill is gone, so this padding goes with it. */
+    <div className="border-t-2 border-ink pt-5">
       <p className="text-xs font-medium uppercase tracking-[var(--tracking-wide)] text-ink-muted">
         Sold by
       </p>

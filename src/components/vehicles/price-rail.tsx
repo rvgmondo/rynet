@@ -1,8 +1,9 @@
-import { MessageCircle, TrendingDown } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 import { EnquiryDialog } from "@/components/vehicles/enquiry-dialog";
 import { PhoneReveal } from "@/components/vehicles/phone-reveal";
-import { formatRand, priceDrop } from "@/lib/format";
+import { RandFigure } from "@/components/vehicles/rand-figure";
+import { formatRand } from "@/lib/format";
 import { populated, relName } from "@/lib/relations";
 import type { Vehicle } from "@/payload-types";
 
@@ -18,10 +19,19 @@ import type { Vehicle } from "@/payload-types";
  *
  * Price on application is a real state, not a missing price. Showing "R 0" or an empty
  * space where a number belongs reads as broken, and dealerships use POA deliberately.
+ *
+ * REDRAWN. This was the last filled card on the site: a grey panel with three more bordered
+ * boxes nested inside it, on a design that had spent the whole redesign taking boxes off things.
+ * It is a ruled column on the page ground now, the way the dealer block beneath it already was,
+ * which also puts both blocks on one left edge instead of 20px apart under rules that were
+ * flush.
  */
 export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }) {
   const poa = vehicle.priceType === "poa";
-  const drop = priceDrop(vehicle.price, vehicle.previousPrice);
+  const dropAmount =
+    typeof vehicle.previousPrice === "number" && vehicle.previousPrice > vehicle.price
+      ? vehicle.previousPrice - vehicle.price
+      : null;
   const dealer = populated(vehicle.dealer);
   const branch = populated(vehicle.branch);
   const verified = dealer?.verificationStatus === "verified";
@@ -34,14 +44,13 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
         : "Retail";
 
   return (
-    <div className="border-t-2 border-ink bg-surface-sunken p-5">
-      {drop && !sold ? (
-        <p className="rn-label mb-3 inline-flex items-center gap-1.5 border border-current px-2 py-1 text-success">
-          <TrendingDown aria-hidden="true" className="size-3" />
-          {drop}
-        </p>
-      ) : null}
-
+    /*
+     * `container-type: inline-size` is what lets the price size itself to this column rather
+     * than to the viewport. Without it RandFigure's container query has no container to measure
+     * and falls back to the viewport clamp, which is how the asking price ended up the only
+     * price on the platform set at a different size from every other price on the platform.
+     */
+    <div className="border-t-2 border-ink pt-5 [container-type:inline-size]">
       {poa ? (
         <>
           <p className="rn-figure">Price on application</p>
@@ -51,7 +60,25 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
         </>
       ) : (
         <>
-          <p className="rn-figure">{formatRand(vehicle.price)}</p>
+          {/*
+            The same figure component every card uses, so the rand mark on the page a buyer
+            makes the decision on matches the rand mark on the card that brought them here. It
+            was a full-size ink R at a viewport-clamped size: four prices in four styles on one
+            page.
+          */}
+          <RandFigure value={vehicle.price} />
+
+          {dropAmount && !sold ? (
+            /* Drawn the way the card draws it. It was a green bordered pill with a lucide arrow
+               reading "R 20 000 OFF": a second colour this palette does not use, a capsule on a
+               system with no radius, and a different sentence for the same fact. */
+            <p className="rn-label rn-card__accent mt-1.5 tabular text-accent">
+              <span aria-hidden="true">- {formatRand(dropAmount)}</span>
+              <span className="sr-only">
+                Reduced by {formatRand(dropAmount)} from {formatRand(vehicle.previousPrice ?? 0)}
+              </span>
+            </p>
+          ) : null}
           <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs text-ink-muted">
             {priceLabel ? <span>{priceLabel}</span> : null}
             {vehicle.vatStatus === "vat_inclusive" ? <span>VAT included</span> : null}
@@ -75,9 +102,7 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
       ) : null}
 
       {sold ? (
-        <p className="mt-5 border border-line-interactive p-3 text-center text-sm text-ink-secondary">
-          No longer available
-        </p>
+        <p className="rn-label mt-5 border-y-2 border-ink py-4 text-ink">No longer available</p>
       ) : (
         <div className="mt-5 flex flex-col gap-2">
           <EnquiryDialog
@@ -124,7 +149,7 @@ export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }
       </dl>
 
       {vehicle.isDemonstration ? (
-        <p className="mt-4 border border-line-interactive p-2.5 text-2xs text-ink-muted">
+        <p className="mt-4 border-t border-line pt-3 text-2xs text-ink-muted">
           <strong className="font-semibold">Demonstration listing.</strong> This is seeded example
           stock. The dealership is not a real business and the vehicle is not for sale.
         </p>
