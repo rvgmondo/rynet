@@ -54,8 +54,22 @@ export const LABEL_CLASS =
   "block font-display text-label font-bold uppercase tracking-[var(--tracking-widest)] text-ink-muted [font-variation-settings:'wdth'_100]";
 export const INPUT_CLASS =
   "mt-2 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium text-ink placeholder:text-ink-muted";
+/*
+ * A choice is a ROW, and until now this class did not draw one.
+ *
+ * The comment above has said "a choice is a ROW, and its selected state is the ink flip" since
+ * the primitives were written, and the class underneath it drew a box on all four sides. So step
+ * two of the sell form was eleven thin-bordered rectangles in a two-column grid, and because two
+ * of the four groups have three options, two of those rectangles sat alone on a row with a full
+ * empty cell beside them. Eleven grey-bordered boxes with two holes in the grid is the exact
+ * object the redesign exists to remove, on the one screen that is nothing but choices.
+ *
+ * Now it is a row: no border, a hairline between rows only, full width, and the ink flip it
+ * always claimed. The rule is on the TOP of each row so the group closes on the rule below the
+ * last one, which is how every other list on the site is ruled.
+ */
 export const CHOICE_CLASS =
-  "flex min-h-11 cursor-pointer items-center gap-3 border border-line-interactive px-4 py-2 text-sm transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse has-[:checked]:bg-ink has-[:checked]:text-ink-inverse";
+  "flex min-h-12 w-full cursor-pointer items-center gap-4 border-t border-line px-2 text-sm transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse has-[:checked]:bg-ink has-[:checked]:font-semibold has-[:checked]:text-ink-inverse";
 
 /** A labelled field. Module scope, deliberately. See hazard one above. */
 export function Field({
@@ -72,7 +86,18 @@ export function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    /*
+     * A column that pushes its control to the bottom, so two fields side by side rule together.
+     *
+     * The hint sat between the label and the input, so a field with a hint pushed its own rule
+     * down and a field without one did not. Year and Mileage share a row on the sell form, and
+     * their 2px rules sat 21px apart: two underlines at two different heights, in a design whose
+     * entire idea is that a rule is where a control is. Every pair on both forms did it.
+     *
+     * `h-full` plus `mt-auto` on the control fixes it without moving the hint, which belongs
+     * above the field a person is about to type in rather than below it.
+     */
+    <div className="flex h-full flex-col">
       <label htmlFor={name} className={LABEL_CLASS}>
         {label}
       </label>
@@ -81,7 +106,7 @@ export function Field({
           {hint}
         </p>
       ) : null}
-      {children}
+      <div className="mt-auto">{children}</div>
       {error ? (
         <p id={`${name}-error`} className="mt-1 text-xs font-medium text-danger">
           {error}
@@ -113,7 +138,16 @@ export function ChoiceGroup({
     <fieldset>
       <legend className={LABEL_CLASS}>{legend}</legend>
       {hint ? <p className="mt-0.5 text-xs text-ink-muted">{hint}</p> : null}
-      <div className={`mt-2 grid gap-2 ${columns === 2 ? "sm:grid-cols-2" : ""}`}>
+      {/*
+        One column, with the rows ruled, and a closing rule under the last.
+        ------------------------------------------------------------------
+        Two columns left a hole whenever a group had an odd number of options, which two of the
+        four on the sell form do. A ruled single column has no such arithmetic, reads top to
+        bottom the way a list of options is read, and gives every row the full width to flip to
+        ink, which is the feedback. The `columns` prop stays for callers that want a wide pair of
+        short options, and it now splits the SAME ruled rows rather than switching to boxes.
+      */}
+      <div className={`mt-3 grid border-b border-line ${columns === 2 ? "sm:grid-cols-2" : ""}`}>
         {options.map((option) => (
           <label key={option.value} className={CHOICE_CLASS}>
             <input
@@ -128,7 +162,12 @@ export function ChoiceGroup({
                */
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? `${name}-error` : undefined}
-              className="size-4 accent-[var(--rn-accent-solid)]"
+              /*
+               * `accent-color` on the ink rather than on red. A ticked option already flips its
+               * whole row to ink, so a red dot inside a black row is a second mark saying the
+               * same thing, in the one colour this palette rations.
+               */
+              className="size-4 shrink-0 accent-[var(--rn-ink)]"
             />
             {option.label}
           </label>
@@ -203,13 +242,24 @@ export function StepProgress({
         Step {step + 1} of {steps.length}: {current.title}
         <span className="ml-2 font-normal text-ink-muted">{current.hint}</span>
       </p>
-      <ol aria-hidden="true" className="mt-3 flex gap-2">
+      {/*
+        A rule in three parts, not three capsules.
+        -----------------------------------------
+        The unreached segments were `bg-surface-sunken`, which in dark theme is the ground the
+        form is already standing on, so two of the three were invisible: on step one the
+        indicator was a single red capsule floating on its own with nothing to be one third of.
+        It also put a second red object in a viewport that already has the Continue button,
+        which is the one rule this palette has, and it drew four rounded capsules on a system
+        whose radius tokens are all zero.
+
+        Ink for done, the strong hairline for not yet, 2px, square. The same rule the rest of
+        the site uses to separate things, cut into as many parts as there are steps.
+      */}
+      <ol aria-hidden="true" className="mt-4 flex gap-1">
         {steps.map((item, index) => (
           <li
             key={item.title}
-            className={`h-1.5 flex-1 rounded-full ${
-              index <= step ? "bg-accent-solid" : "bg-surface-sunken"
-            }`}
+            className={`h-[2px] flex-1 ${index <= step ? "bg-ink" : "bg-line-strong"}`}
           />
         ))}
       </ol>

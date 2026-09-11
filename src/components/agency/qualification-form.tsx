@@ -5,12 +5,7 @@ import * as React from "react";
 import { useActionState } from "react";
 
 import { submitAgencyEnquiry } from "@/app/actions/agency-enquiry";
-import {
-  CHOICE_CLASS,
-  focusFirstInvalid,
-  INPUT_CLASS,
-  LABEL_CLASS,
-} from "@/components/forms/multi-step";
+import { ChoiceGroup, Field, focusFirstInvalid, INPUT_CLASS } from "@/components/forms/multi-step";
 import { Button } from "@/components/ui/button";
 import {
   AGENCY_INTERESTS,
@@ -40,39 +35,13 @@ const initial: AgencyEnquiryState = { status: "idle" };
  * thing happened on every step change and every validation error, quietly discarding what
  * the person had typed. It looked like a persistence bug and it was a component identity
  * bug.
+ *
+ * It is now the SHARED `Field` from components/forms/multi-step.tsx rather than a second copy
+ * of it, which is what the comment above was always describing. The copy is how this form kept
+ * the misaligned rules after the shared one was fixed: a field with a hint pushed its own 2px
+ * underline down and a field without one did not, so "Your name" and "Your role" ruled 20px
+ * apart in the same row. One component, one fix.
  */
-function Field({
-  name,
-  label,
-  hint,
-  error,
-  children,
-}: {
-  name: string;
-  label: string;
-  hint?: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className={LABEL_CLASS}>
-        {label}
-      </label>
-      {hint ? (
-        <p id={`${name}-hint`} className="mt-0.5 text-xs text-ink-muted">
-          {hint}
-        </p>
-      ) : null}
-      {children}
-      {error ? (
-        <p id={`${name}-error`} className="mt-1 text-xs font-medium text-danger">
-          {error}
-        </p>
-      ) : null}
-    </div>
-  );
-}
 
 const STEPS = [
   { title: "Your dealership", hint: "Three questions." },
@@ -311,7 +280,6 @@ export function QualificationForm() {
    * still had boxes. Same class of bug as the three copies of `toCard`, and the same fix.
    */
   const inputClass = INPUT_CLASS;
-  const labelClass = LABEL_CLASS;
 
   if (state.status === "success") {
     return (
@@ -372,13 +340,24 @@ export function QualificationForm() {
           Step {step + 1} of {STEPS.length}: {current.title}
           <span className="ml-2 font-normal text-ink-muted">{current.hint}</span>
         </p>
-        <ol aria-hidden="true" className="mt-3 flex gap-2">
+        {/*
+          A rule in three parts, not three capsules.
+          -----------------------------------------
+          The unreached segments were `bg-surface-sunken`, which in dark theme is the ground the
+          form is already standing on, so two of the three were invisible: on step one the
+          indicator was a single red capsule floating on its own with nothing to be one third of.
+          It also put a second red object in a viewport that already has the Continue button,
+          which is the one rule this palette has, and it drew four rounded capsules on a system
+          whose radius tokens are all zero.
+
+          Ink for done, the strong hairline for not yet, 2px, square. The same rule the rest of
+          the site uses to separate things, cut into as many parts as there are steps.
+        */}
+        <ol aria-hidden="true" className="mt-4 flex gap-1">
           {STEPS.map((item, index) => (
             <li
               key={item.title}
-              className={`h-1.5 flex-1 rounded-full ${
-                index <= step ? "bg-accent-solid" : "bg-surface-sunken"
-              }`}
+              className={`h-[2px] flex-1 ${index <= step ? "bg-ink" : "bg-line-strong"}`}
             />
           ))}
         </ol>
@@ -437,25 +416,21 @@ export function QualificationForm() {
           />
         </Field>
 
-        <fieldset>
-          <legend className={labelClass}>How many branches?</legend>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {DEALERSHIP_SIZES.map((option) => (
-              <label key={option.value} className={CHOICE_CLASS}>
-                <input
-                  type="radio"
-                  name="size"
-                  value={option.value}
-                  className="size-4 accent-[var(--rn-accent-solid)]"
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-          {errorFor("size") ? (
-            <p className="mt-1 text-xs font-medium text-danger">{errorFor("size")}</p>
-          ) : null}
-        </fieldset>
+        {/*
+          The shared ChoiceGroup, not a fourth hand-rolled copy of it.
+          -----------------------------------------------------------
+          This file had three of these written out by hand, which is how the choice rows came to
+          be drawn one way here and another way on the sell form, and why the ink accent colour on
+          the control had to be changed in four places. Same class of bug as the three copies of
+          `toCard`, and the same fix: one component, used.
+        */}
+        <ChoiceGroup
+          name="size"
+          legend="How many branches?"
+          type="radio"
+          options={DEALERSHIP_SIZES}
+          error={errorFor("size")}
+        />
       </fieldset>
 
       {/* ------------------------------------------------------------------ step two */}
@@ -465,46 +440,22 @@ export function QualificationForm() {
           What you need
         </h2>
 
-        <fieldset>
-          <legend className={labelClass}>What are you thinking about?</legend>
-          <p className="mt-0.5 text-xs text-ink-muted">Pick anything that applies.</p>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {AGENCY_INTERESTS.map((option) => (
-              <label key={option.value} className={CHOICE_CLASS}>
-                <input
-                  type="checkbox"
-                  name="interests"
-                  value={option.value}
-                  className="size-4 accent-[var(--rn-accent-solid)]"
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-          {errorFor("interests") ? (
-            <p className="mt-1 text-xs font-medium text-danger">{errorFor("interests")}</p>
-          ) : null}
-        </fieldset>
+        <ChoiceGroup
+          name="interests"
+          legend="What are you thinking about?"
+          hint="Pick anything that applies."
+          type="checkbox"
+          options={AGENCY_INTERESTS}
+          error={errorFor("interests")}
+        />
 
-        <fieldset>
-          <legend className={labelClass}>When would you want to start?</legend>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            {URGENCIES.map((option) => (
-              <label key={option.value} className={CHOICE_CLASS}>
-                <input
-                  type="radio"
-                  name="urgency"
-                  value={option.value}
-                  className="size-4 accent-[var(--rn-accent-solid)]"
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-          {errorFor("urgency") ? (
-            <p className="mt-1 text-xs font-medium text-danger">{errorFor("urgency")}</p>
-          ) : null}
-        </fieldset>
+        <ChoiceGroup
+          name="urgency"
+          legend="When would you want to start?"
+          type="radio"
+          options={URGENCIES}
+          error={errorFor("urgency")}
+        />
 
         <Field
           name="context"
