@@ -1,7 +1,23 @@
 # PRODUCTION READINESS
 
-Updated 9 September 2026. The first version of this document said the site deployed but was not
+Updated 11 September 2026. The first version of this document said the site deployed but was not
 ready to be public. Most of what it listed is now done.
+
+---
+
+## Read this first: none of it is on the live site
+
+`rynet.co.za` answers 200 and serves a build from before the redesign. Its HTML still carries
+Montserrat and Inter, which commit `737d061` replaced on 9 September, and its deployment id is the
+format a manual bundle gets rather than the commit sha CI stamps. So what is live was
+hand-uploaded, and the automatic path has never run on the host.
+
+The pipeline itself is fine. The `deploy` branch is current on every commit, carrying 1 143 files
+under `.next` with a `BUILD_ID` and the fonts. What is missing is one command in the cPanel
+terminal, once, and then a cron entry. Both are steps 2 to 5 of [DEPLOY-GIT.md](../DEPLOY-GIT.md).
+
+Everything described below this line is true of the build on the `deploy` branch. None of it is
+true of what a visitor to `rynet.co.za` sees today.
 
 ---
 

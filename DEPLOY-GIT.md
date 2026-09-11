@@ -11,6 +11,25 @@ For the manual upload route, and for the host troubleshooting that applies eithe
 
 ---
 
+## This is not set up on the host yet, and nothing has reached the live site
+
+Checked on 11 September 2026. `rynet.co.za` answers 200 and serves a build from BEFORE the
+STOCKLIST redesign: its HTML still carries Montserrat and Inter, which commit `737d061` replaced
+with Archivo and Newsreader on 9 September. Its deployment id is in the format
+`scripts/build-deploy.mjs` stamps on a MANUAL bundle, not the commit sha that CI stamps, so what is
+live was hand-uploaded and the automatic path has never run.
+
+Nothing is wrong with the automatic path. The `deploy` branch is current on every commit: it
+carries 1 143 files under `.next`, a `BUILD_ID`, nine font files, and source that matches `main`.
+Every CI run since has been green.
+
+**What is missing is steps 2 to 5 below, run once on the host.** Until somebody runs
+`~/deploy-rynet.sh` in the cPanel terminal, every commit builds, publishes, and is never installed,
+and the live site stays where it was. The redesign, both rounds of audit fixes, the performance
+work and the agency rebuild are all in that gap.
+
+---
+
 ## Do not use cPanel's Git Version Control button
 
 It is the wrong tool for this and it cost several sessions to be sure of that. Three separate
