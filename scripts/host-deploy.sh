@@ -54,7 +54,10 @@ say "app  $APP"
 [ -d "$REPO/src" ] || die "src/ is missing from the checkout. Nothing has been changed."
 [ -s "$REPO/scripts/link-runtime-deps.cjs" ] || die "scripts/link-runtime-deps.cjs is missing, and server.cjs requires it at boot. Nothing has been changed."
 
-INCOMING_SHA="$(cd "$REPO" && git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+# RYNET_SHA first, because the checkout being installed is not always a git checkout. When
+# GitHub Actions ships the build straight to the host there is no .git directory to ask, and
+# the commit is the one thing the runner knows for certain.
+INCOMING_SHA="${RYNET_SHA:-$(cd "$REPO" && git rev-parse --short HEAD 2>/dev/null || echo unknown)}"
 CURRENT_SHA="$(sed -n '2p' "$APP/DEPLOYED.txt" 2>/dev/null || true)"
 
 if [ "$FORCE" != "--force" ] && [ -n "$CURRENT_SHA" ] && [ "$CURRENT_SHA" = "$INCOMING_SHA" ]; then

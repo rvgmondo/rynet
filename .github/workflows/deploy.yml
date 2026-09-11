@@ -3,9 +3,13 @@ name: Build deploy branch
 # The cPanel host cannot build. Next 16 with Turbopack needs far more memory than a shared
 # CloudLinux account allows, and it gets killed rather than erroring usefully.
 #
-# So this builds on every push to main and force-pushes the result, source plus a prebuilt
-# .next, to a `deploy` branch. cPanel's Git Version Control tracks `deploy`, pulls it, and
-# runs .cpanel.yml.
+# So this builds on every push to main and publishes the result, source plus a prebuilt
+# .next, to a `deploy` branch. The `install` job below then puts it on the host over SSH, and
+# the host does the rest with scripts/host-deploy.sh, which ships in the build.
+#
+# The install job is INERT until three secrets exist: HOST_SSH_KEY, HOST_SSH_HOST and
+# HOST_SSH_USER. Without them it reports what is missing and succeeds, so a repository with no
+# host credentials still gets a green build and a publishable deploy branch.
 #
 # main  = source, no build output, readable history
 # deploy = what actually runs, one commit per build, ON TOP of the previous one
@@ -36,6 +40,10 @@ jobs:
   build:
     name: Build and publish to deploy
     runs-on: ubuntu-latest
+    outputs:
+      # The commit the install job checks out, so it ships exactly what this run built rather
+      # than whatever happens to be on the branch a minute later.
+      commit: ${{ steps.publish.outputs.commit }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -100,6 +108,7 @@ jobs:
           rm -f build.db build.db-shm build.db-wal rynet.db
 
       - name: Publish the deploy branch
+        id: publish
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -142,15 +151,188 @@ jobs:
           # A plain push, not a force. If this is ever rejected, the branch has diverged and
           # somebody should look at why rather than have a workflow quietly overwrite it.
           git push origin "$COMMIT:refs/heads/deploy"
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
           echo "Published $COMMIT to deploy${PARENT:+ (parent $PARENT)}"
 
       - name: Summary
         run: |
-          echo "### Deploy branch updated" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Built for \`${{ inputs.serverUrl || vars.SITE_URL || 'https://rynet.co.za' }}\` from \`${{ github.sha }}\`." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "In cPanel: **Git Version Control**, then **Update from Remote**, then **Deploy HEAD Commit**." >> $GITHUB_STEP_SUMMARY
-          echo "Then **Restart** on the Setup Node.js App screen." >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Run \`npm install --omit=dev\` first only if dependencies changed, and \`npx payload migrate\` first only if the schema changed." >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### Deploy branch updated"
+            echo ""
+            echo "Built for \`${{ inputs.serverUrl || vars.SITE_URL || 'https://rynet.co.za' }}\` from \`${{ github.sha }}\`."
+            echo ""
+            echo "The \`install\` job takes it from here. Nothing to click in cPanel."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------------------
+  #
+  # THE HOST NEEDS NO GITHUB CREDENTIALS, AND THAT IS THE POINT
+  #
+  # The first version of this job had the host clone the deploy branch itself, which meant a
+  # private repository needed a token stored in .git/config on shared hosting, kept alive
+  # forever, for a fetch the runner had already done. So the runner ships the build instead:
+  # one tar stream over the SSH connection that is already open, into a staging directory, and
+  # then scripts/host-deploy.sh does what it has always done with it.
+  #
+  # host-deploy.sh only ever used git to read the commit, and it takes RYNET_SHA now. Nothing
+  # else in it cared. The deploy branch still exists and is still published, because it is the
+  # record of what was built and the thing a rollback reads, but it is no longer on the path
+  # between a push and the site changing.
+  install:
+    name: Install on the host
+    needs: build
+    runs-on: ubuntu-latest
+
+    # Never two deploys writing to the same home directory at once. host-deploy.sh stages and
+    # swaps by rename, so a concurrent run could put half a build live.
+    concurrency:
+      group: install-host
+      cancel-in-progress: false
+
+    env:
+      SSH_KEY: ${{ secrets.HOST_SSH_KEY }}
+      SSH_HOST: ${{ secrets.HOST_SSH_HOST }}
+      SSH_USER: ${{ secrets.HOST_SSH_USER }}
+      SSH_PORT: ${{ secrets.HOST_SSH_PORT }}
+      KNOWN_HOSTS: ${{ secrets.HOST_SSH_KNOWN_HOSTS }}
+      SITE_URL: ${{ inputs.serverUrl || vars.SITE_URL || 'https://rynet.co.za' }}
+      SHORT_SHA: ${{ github.sha }}
+
+    steps:
+      # Secrets cannot be read in a job-level `if`, so the gate is a step everything else keys
+      # off. A repository with no host credentials passes straight through and says what is
+      # missing, rather than failing a build over something the build did not do wrong.
+      - name: Is there a host to install onto
+        id: gate
+        run: |
+          missing=""
+          [ -n "$SSH_KEY" ]  || missing="$missing HOST_SSH_KEY"
+          [ -n "$SSH_HOST" ] || missing="$missing HOST_SSH_HOST"
+          [ -n "$SSH_USER" ] || missing="$missing HOST_SSH_USER"
+
+          if [ -n "$missing" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Built, not installed"
+              echo ""
+              echo "The build is on the \`deploy\` branch and nothing installed it, because"
+              echo "these repository secrets are not set:"
+              echo ""
+              for name in $missing; do echo "- \`$name\`"; done
+              echo ""
+              echo "See **Making it automatic** in DEPLOY-GIT.md. Until they exist, the host has"
+              echo "to be told by hand: \`~/deploy-rynet.sh\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::No host credentials configured. Deploy branch published, nothing installed."
+            exit 0
+          fi
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Take the build that this run published
+        if: steps.gate.outputs.ready == 'true'
+        uses: actions/checkout@v4
+        with:
+          # The exact commit, not the branch tip. Another push landing between the two jobs
+          # would otherwise install a build this run never made.
+          ref: ${{ needs.build.outputs.commit }}
+          fetch-depth: 1
+
+      - name: Authorise this runner
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+
+          if [ -n "$KNOWN_HOSTS" ]; then
+            # Pinned. The runner will refuse to talk to anything that is not the host whose
+            # key was recorded, which is the whole value of the setting.
+            printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            # Trust on first use, on every run, which is not the same thing as trust. It is
+            # here so the first deploy works before anybody has run ssh-keyscan, and the key
+            # is printed into the summary so it can be checked once and pinned.
+            ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
+            echo "::warning::HOST_SSH_KNOWN_HOSTS is not set, so this run trusted whatever answered."
+            {
+              echo "### Pin the host key"
+              echo ""
+              echo "Set the repository secret \`HOST_SSH_KNOWN_HOSTS\` to this and the runner"
+              echo "will refuse to talk to anything else:"
+              echo ""
+              echo '```'
+              ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" 2>/dev/null
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Ship the build to the host
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          # tar over the SSH connection rather than rsync, because rsync is not on every
+          # shared host and this needs no second tool at either end. Only the files
+          # host-deploy.sh actually installs are sent; node_modules stays on the host, where
+          # it is installed against the host's own architecture.
+          tar -cz \
+            .next src scripts server.cjs package.json package-lock.json next.config.ts \
+            $([ -d public ] && echo public) \
+            | ssh -i ~/.ssh/id_deploy -p "${SSH_PORT:-22}" -o BatchMode=yes \
+                  "$SSH_USER@$SSH_HOST" '
+              set -euo pipefail
+              STAGE="$HOME/rynet-incoming"
+              rm -rf "$STAGE"
+              mkdir -p "$STAGE"
+              tar -xz -C "$STAGE"
+              echo "received $(find "$STAGE/.next" -type f | wc -l) files under .next"
+            '
+
+      - name: Install
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          # host-deploy.sh is the thing that knows how to do this: it refuses a tree with no
+          # build in it, stages beside the live app and swaps by rename, keeps the previous
+          # build for a one-rename rollback, restarts, health-checks the site, and rolls itself
+          # back if the site stops answering. All this step does is call it and report.
+          ssh -i ~/.ssh/id_deploy -p "${SSH_PORT:-22}" -o BatchMode=yes \
+              "$SSH_USER@$SSH_HOST" \
+              "RYNET_REPO=\$HOME/rynet-incoming RYNET_SHA='${SHORT_SHA:0:7}' RYNET_SITE_URL='$SITE_URL' bash \$HOME/rynet-incoming/scripts/host-deploy.sh --force"
+
+      - name: Check the site is serving this commit
+        if: steps.gate.outputs.ready == 'true'
+        run: |
+          # The host's own health check only asks for a 200, and a stale build answers 200 too.
+          # This asks whether what is live is what was just built, which is the question that
+          # went unasked for the three weeks the site sat on a pre-redesign build.
+          for attempt in 1 2 3 4 5 6; do
+            body=$(curl -fsS --max-time 20 "$SITE_URL/" || true)
+            if printf '%s' "$body" | grep -q "dpl=$SHORT_SHA"; then
+              {
+                echo "### Installed"
+                echo ""
+                echo "\`$SITE_URL\` is serving \`$SHORT_SHA\`."
+              } >> "$GITHUB_STEP_SUMMARY"
+              echo "Live and serving $SHORT_SHA."
+              exit 0
+            fi
+            echo "Attempt $attempt: not serving this commit yet."
+            sleep 10
+          done
+
+          echo "::error::The deploy reported success but $SITE_URL is not serving $SHORT_SHA."
+          echo "The page references these deployment ids instead:"
+          curl -fsS --max-time 20 "$SITE_URL/" | grep -o 'dpl=[A-Za-z0-9-]*' | sort -u | head
+          exit 1
+
+      - name: Forget the staging copy, then the key
+        if: always()
+        run: |
+          # In that order. The first version deleted the key and then tried to use it, which
+          # left a full copy of the build in the host's home directory after every run.
+          if [ -f ~/.ssh/id_deploy ]; then
+            ssh -i ~/.ssh/id_deploy -p "${SSH_PORT:-22}" -o BatchMode=yes \
+                "$SSH_USER@$SSH_HOST" 'rm -rf "$HOME/rynet-incoming"' 2>/dev/null || true
+          fi
+          rm -f ~/.ssh/id_deploy
