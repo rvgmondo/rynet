@@ -59,112 +59,129 @@ const STAGES = [
  */
 export default function ProcessPage() {
   return (
-    <div className="container-page py-[var(--section-tight)]">
-      <Breadcrumbs trail={[{ href: "/digital/process", label: "How we work" }]} />
+    <>
+      <section className="rn-columns border-b border-line bg-surface-sunken">
+        <div className="container-page py-[var(--section-tight)]">
+          <Breadcrumbs trail={[{ href: "/digital/process", label: "How we work" }]} />
 
-      <div className="measure mt-6">
-        <h1 className="text-4xl">How we work</h1>
-        <p className="mt-4 text-lg text-ink-secondary">
-          Five stages. The first one is free and the second one ends with a number in writing. What
-          you have to do at each stage is listed, because that is usually the part nobody mentions
-          until it is late.
-        </p>
-      </div>
+          <h1 className="rn-head mt-8 max-w-[12ch]">How we work</h1>
+          <p className="measure mt-6 text-lg text-ink-secondary">
+            Five stages. The first one is free and the second one ends with a number in writing.
+            What you have to do at each stage is listed, because that is usually the part nobody
+            mentions until it is late.
+          </p>
+        </div>
+      </section>
 
-      <ol className="mt-14 space-y-4">
-        {STAGES.map((stage) => (
-          <li
-            key={stage.number}
-            className="grid gap-4 rounded-lg border border-line p-6 md:grid-cols-[auto_1fr] md:gap-8"
-          >
-            <p
-              aria-hidden="true"
-              className="font-display text-3xl font-extrabold tabular text-accent md:text-4xl"
+      {/*
+        Five stages as a ruled sheet, not five bordered cards.
+        -----------------------------------------------------
+        A number in a box in a stack of boxes is a card grid pretending to be a sequence. The
+        rule between rows is what makes it read in order, the number carries the display face
+        so the eye can find its place from across the room, and "what you do" sits in its own
+        column rather than in a quoted aside, because on this page it is the half a dealer
+        principal has actually come to read.
+      */}
+      <section className="container-page py-[var(--section-base)]">
+        <ol className="border-t border-line">
+          {STAGES.map((stage) => (
+            <li
+              key={stage.number}
+              className="grid gap-4 border-b border-line py-8 lg:grid-cols-[4rem_1fr_1fr] lg:gap-10"
             >
-              {stage.number}
-            </p>
+              <p
+                aria-hidden="true"
+                className="font-display text-2xl font-extrabold tabular text-ink-muted [font-variation-settings:'wdth'_112]"
+              >
+                {stage.number}
+              </p>
 
-            <div>
-              <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                <h2 className="text-xl">{stage.name}</h2>
-                <p className="text-sm text-ink-muted">{stage.duration}</p>
+              <div>
+                <h2 className="font-display text-xl font-bold leading-snug">{stage.name}</h2>
+                <p className="rn-label mt-2 text-ink-muted">{stage.duration}</p>
+                <p className="rn-prose mt-4 text-ink-secondary">{stage.what}</p>
               </div>
 
-              <p className="measure mt-3 text-ink-secondary">{stage.what}</p>
+              <div className="border-t border-line pt-4 lg:border-l lg:border-t-0 lg:ps-10 lg:pt-0">
+                <p className="rn-label text-ink-muted">What you do</p>
+                <p className="rn-prose mt-3 text-ink-secondary">{stage.you}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-              <p className="measure mt-4 border-l-2 border-line-interactive pl-4 text-sm text-ink-secondary">
-                <span className="font-semibold text-ink">What you do: </span>
-                {stage.you}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      {/*
+        The point of the page, on the ground that says so.
+        -------------------------------------------------
+        Every agency process page describes the happy path, which is the least useful thing
+        to publish: a dealer principal has been through this before and knows it goes wrong.
+        Naming the two ways it actually does, and saying out loud which one is our fault, is
+        worth more than another diagram of arrows. So it is not a pair of boxes at the bottom
+        of a stack, it is the band the page is built towards.
+      */}
+      <section aria-labelledby="wrong-heading" className="bg-surface-inverse text-ink-inverse">
+        <div className="container-page py-[var(--section-base)]">
+          <h2 id="wrong-heading" className="rn-head max-w-[14ch]">
+            The two ways this goes wrong
+          </h2>
+          <p className="measure mt-5 text-lg opacity-80">
+            Worth saying before you commit rather than after, since you have almost certainly had at
+            least one of these happen to you before.
+          </p>
+          <hr className="mt-8 h-px border-0 bg-silver" />
 
-      <section aria-labelledby="wrong-heading" className="mt-[var(--section-base)]">
-        <h2 id="wrong-heading" className="text-2xl">
-          The two ways this goes wrong
-        </h2>
-        <p className="measure mt-4 text-ink-secondary">
-          Worth saying before you commit rather than after, since you have almost certainly had at
-          least one of these happen to you before.
-        </p>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-lg border border-line p-6">
-            <h3 className="text-lg">Approvals stall</h3>
-            <p className="mt-3 text-sm text-ink-secondary">
-              A question sits for two weeks because the person who can answer it is on the floor
-              selling cars, which is where they should be. The build waits, the momentum goes, and
-              the eventual launch lands in a month nobody planned for.
-            </p>
-            <p className="mt-3 text-sm text-ink-secondary">
-              What we do about it: one named contact, questions batched rather than trickled, and a
-              default. If we do not hear back in three working days we take the sensible option and
-              tell you what we chose, so the work keeps moving and you can still change it.
-            </p>
-            <p className="mt-4 text-2xs font-semibold uppercase tracking-[var(--tracking-wide)] text-ink-muted">
-              Usually your side, and it is understandable
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-line p-6">
-            <h3 className="text-lg">The stock feed is worse than it looked</h3>
-            <p className="mt-3 text-sm text-ink-secondary">
-              The export is missing a field that matters, or encodes derivative and variant in one
-              string, or the photographs come through in an order nobody controls. This is the
-              normal case in South Africa, not the unlucky one, and it is where estimates break.
-            </p>
-            <p className="mt-3 text-sm text-ink-secondary">
-              What we do about it: we ask for a real export before quoting, not a description of
-              one. If we quote without seeing it and it turns out worse, that is our risk and our
-              cost, not a variation order.
-            </p>
-            <p className="mt-4 text-2xs font-semibold uppercase tracking-[var(--tracking-wide)] text-ink-muted">
-              Our side to manage
-            </p>
+          <div className="mt-10 grid gap-10 lg:grid-cols-2 lg:gap-0 lg:divide-x lg:divide-silver">
+            {[
+              {
+                title: "Approvals stall",
+                cause:
+                  "A question sits for two weeks because the person who can answer it is on the floor selling cars, which is where they should be. The build waits, the momentum goes, and the eventual launch lands in a month nobody planned for.",
+                fix: "One named contact, questions batched rather than trickled, and a default. If we do not hear back in three working days we take the sensible option and tell you what we chose, so the work keeps moving and you can still change it.",
+                whose: "Usually your side, and it is understandable",
+              },
+              {
+                title: "The stock feed is worse than it looked",
+                cause:
+                  "The export is missing a field that matters, or encodes derivative and variant in one string, or the photographs come through in an order nobody controls. This is the normal case in South Africa, not the unlucky one, and it is where estimates break.",
+                fix: "We ask for a real export before quoting, not a description of one. If we quote without seeing it and it turns out worse, that is our risk and our cost, not a variation order.",
+                whose: "Our side to manage",
+              },
+            ].map((item, index) => (
+              <div key={item.title} className={index === 0 ? "lg:pe-12" : "lg:ps-12"}>
+                <h3 className="font-display text-2xl font-bold leading-tight">{item.title}</h3>
+                <p className="rn-prose mt-4 opacity-90">{item.cause}</p>
+                <p className="rn-label mt-8 opacity-70">What we do about it</p>
+                <p className="rn-prose mt-3 opacity-90">{item.fix}</p>
+                <p className="rn-label mt-8 border-t border-silver/40 pt-4 opacity-70">
+                  {item.whose}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section
-        aria-labelledby="process-cta"
-        className="mt-[var(--section-base)] rounded-lg bg-surface-sunken p-8"
-      >
-        <h2 id="process-cta" className="text-2xl">
-          Stage one is free
-        </h2>
-        <p className="measure mt-3 text-ink-secondary">
-          Send us your site and you get the written review whether or not anything comes of it.
-        </p>
-        <Link
-          href="/digital/contact"
-          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-md bg-accent-solid px-6 font-semibold text-ink-on-accent hover:bg-accent-solid-hover"
-        >
-          Start the review
-          <ArrowRight aria-hidden="true" className="size-4" />
-        </Link>
+      <section aria-labelledby="process-cta" className="container-page py-[var(--section-base)]">
+        <hr className="rn-rule rn-rule--brand" />
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
+          <h2 id="process-cta" className="rn-head max-w-[10ch]">
+            Stage one is free
+          </h2>
+          <div>
+            <p className="rn-prose text-ink-secondary">
+              Send us your site and you get the written review whether or not anything comes of it.
+            </p>
+            <Link
+              href="/digital/contact"
+              className="rn-label mt-8 inline-flex min-h-12 items-center gap-2 bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
+            >
+              Start the review
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          </div>
+        </div>
       </section>
-    </div>
+    </>
   );
 }

@@ -14,75 +14,96 @@ export const metadata: Metadata = {
 
 export default function ServicesIndexPage() {
   return (
-    <div className="container-page py-[var(--section-tight)]">
-      <Breadcrumbs trail={[{ href: "/digital/services", label: "Services" }]} />
+    <>
+      <section className="rn-columns border-b border-line bg-surface-sunken">
+        <div className="container-page py-[var(--section-tight)]">
+          <Breadcrumbs trail={[{ href: "/digital/services", label: "Services" }]} />
 
-      <div className="measure mt-6">
-        <h1 className="text-4xl">What we do</h1>
-        <p className="mt-4 text-lg text-ink-secondary">
-          Seven services, all of them for car dealerships. Most dealerships need three or four. Each
-          page below says what is actually delivered and where the line is, because a services page
-          that only lists reassurances is a brochure.
-        </p>
-      </div>
+          <h1 className="rn-head mt-8 max-w-[12ch]">What we do</h1>
+          <p className="measure mt-6 text-lg text-ink-secondary">
+            Seven services, all of them for car dealerships. Most dealerships need three or four.
+            Each page below says what is actually delivered and where the line is, because a
+            services page that only lists reassurances is a brochure.
+          </p>
+        </div>
+      </section>
 
-      <ul className="mt-12 grid gap-6 lg:grid-cols-2">
-        {SERVICES.map(({ slug, Icon, name, title, summary, notThis }) => (
-          <li key={slug}>
-            <article className="group relative flex h-full flex-col rounded-lg border border-line p-6 transition-shadow duration-[var(--duration-element)] hover:shadow-(--rn-shadow-2)">
-              <div className="flex items-center gap-3">
-                <Icon aria-hidden="true" className="size-6 shrink-0 text-accent" />
-                <p className="font-display text-2xs font-bold uppercase tracking-[var(--tracking-widest)] text-ink-muted">
-                  {name}
-                </p>
-              </div>
+      {/*
+        The index again, one level deeper.
+        ----------------------------------
+        The home page lists these seven as names. This page lists them as arguments, with the
+        limit of each one carried at the same weight as the promise. Same device either way,
+        because a visitor arriving from the home page should recognise where they are rather
+        than meet a different site's layout one click in.
 
-              <h2 className="mt-3 text-xl leading-snug">
-                <Link
-                  href={`/digital/services/${slug}`}
-                  className="after:absolute after:inset-0 after:content-[''] hover:text-accent"
+        "Where the line is" gets its own column rather than a footnote under a card. It is the
+        sentence that separates this from a brochure and it was set in the smallest, palest
+        type on the page.
+      */}
+      <section className="container-page py-[var(--section-base)]">
+        <ol className="border-t border-line">
+          {SERVICES.map(({ slug, name, title, summary, notThis }, index) => (
+            <li key={slug} className="border-b border-line">
+              <Link
+                href={`/digital/services/${slug}`}
+                className="group grid gap-4 py-8 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse lg:grid-cols-[4rem_1fr_1fr_2rem] lg:gap-10 lg:px-4"
+              >
+                <span
+                  aria-hidden="true"
+                  className="font-display text-2xl font-extrabold tabular text-ink-muted group-hover:text-ink-inverse [font-variation-settings:'wdth'_112]"
                 >
-                  {title}
-                </Link>
-              </h2>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
 
-              <p className="mt-3 text-sm text-ink-secondary">{summary}</p>
+                <span>
+                  <span className="rn-label block text-ink-muted group-hover:text-ink-inverse">
+                    {name}
+                  </span>
+                  <h2 className="mt-3 font-display text-xl font-bold leading-snug">{title}</h2>
+                  <span className="rn-prose mt-3 block text-ink-secondary group-hover:text-ink-inverse">
+                    {summary}
+                  </span>
+                </span>
 
-              <p className="mt-4 border-t border-line pt-4 text-sm text-ink-muted">
-                <span className="font-semibold text-ink-secondary">Where the line is: </span>
-                {notThis[0]}
-              </p>
+                <span className="border-t border-line pt-4 group-hover:border-ink-inverse/30 lg:border-l lg:border-t-0 lg:ps-10 lg:pt-0">
+                  <span className="rn-label block text-ink-muted group-hover:text-ink-inverse">
+                    Where the line is
+                  </span>
+                  <span className="rn-prose mt-3 block text-ink-secondary group-hover:text-ink-inverse">
+                    {notThis[0]}
+                  </span>
+                </span>
 
-              <p className="mt-auto pt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
-                Read more
                 <ArrowRight
                   aria-hidden="true"
-                  className="size-4 transition-transform duration-[var(--duration-micro)] group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                  className="hidden size-4 shrink-0 self-center lg:block"
                 />
-              </p>
-            </article>
-          </li>
-        ))}
-      </ul>
-
-      <section
-        aria-labelledby="services-cta"
-        className="mt-[var(--section-base)] rounded-lg bg-surface-sunken p-8"
-      >
-        <h2 id="services-cta" className="text-2xl">
-          Not sure which of these you need?
-        </h2>
-        <p className="measure mt-3 text-ink-secondary">
-          Send us your site. We will tell you what we would fix first and in what order, and if the
-          honest answer is that you do not need us yet, we will say that instead.
-        </p>
-        <Link
-          href="/digital/contact"
-          className="mt-6 inline-flex min-h-11 items-center rounded-md bg-accent-solid px-6 font-semibold text-ink-on-accent hover:bg-accent-solid-hover"
-        >
-          Get in touch
-        </Link>
+              </Link>
+            </li>
+          ))}
+        </ol>
       </section>
-    </div>
+
+      <section aria-labelledby="services-cta" className="container-page pb-[var(--section-base)]">
+        <hr className="rn-rule rn-rule--brand" />
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
+          <h2 id="services-cta" className="rn-head max-w-[14ch]">
+            Not sure which of these you need?
+          </h2>
+          <div>
+            <p className="rn-prose text-ink-secondary">
+              Send us your site. We will tell you what we would fix first and in what order, and if
+              the honest answer is that you do not need us yet, we will say that instead.
+            </p>
+            <Link
+              href="/digital/contact"
+              className="rn-label mt-8 inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
+            >
+              Get in touch
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

@@ -513,7 +513,17 @@
    * cars and added 632px of scroll. Dropping the minimum track keeps three columns at the
    * moment the rail arrives, which is the only width where the arithmetic was ever tight.
    */
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  /*
+   * `auto-fit`, not `auto-fill`, and the difference is visible rather than academic.
+   *
+   * The hairline between cards is the grid's own background showing through a 1px gap, which
+   * is what gives a page of stock its ruled sheet. `auto-fill` keeps empty tracks, and an
+   * empty track is a whole cell of that background: on the vehicle page, where "Similar
+   * vehicles" and "More from this dealership" each show three cars in a row with room for
+   * four, it painted a solid grey block on the end of both rows. It read as a card that had
+   * failed to load. `auto-fit` collapses the empty tracks and the cars share the row.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }
 
 /*
@@ -596,7 +606,7 @@
 
 /* Below four results a card grid is close to a blank page, so it goes two-up and taller. */
 .rn-grid--sparse {
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
 }
 
 /*
