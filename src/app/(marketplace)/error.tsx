@@ -1,6 +1,5 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
@@ -28,33 +27,41 @@ export default function MarketplaceError({
   return (
     <div className="container-page py-[var(--section-loose)]">
       <div className="measure">
-        <h1 className="text-4xl">Something went wrong</h1>
-        <p className="mt-4 text-lg text-ink-secondary">
+        <p className="rn-label text-ink-muted">Rynet</p>
+        <h1 className="rn-head mt-6 max-w-[14ch]">Something went wrong</h1>
+        <p className="rn-prose mt-5 text-ink-secondary">
           That page did not load. It is usually temporary, so trying again is worth a go before
           anything else.
         </p>
 
+        <hr className="rn-rule mt-10" />
+
+        {/* One red object. The secondary action takes the ink flip, which is also the only
+            hover this design has: `hover:bg-surface-sunken` on a page already standing on the
+            sunken ground was no hover at all in dark. */}
         <div className="mt-8 flex flex-wrap gap-3">
           <button
             type="button"
             onClick={reset}
-            className="inline-flex min-h-11 items-center gap-2 rounded-md bg-accent-solid px-5 font-semibold text-ink-on-accent hover:bg-accent-solid-hover"
+            className="rn-label inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
           >
-            <RefreshCw aria-hidden="true" className="size-4" />
             Try again
           </button>
           <Link
             href="/cars"
-            className="inline-flex min-h-11 items-center rounded-md border border-line-interactive px-5 font-semibold hover:bg-surface-sunken"
+            className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 hover:bg-ink hover:text-ink-inverse"
           >
             Back to the stock
           </Link>
         </div>
 
         {error.digest ? (
-          <p className="mt-8 text-xs text-ink-muted">
+          <p className="mt-10 border-t border-line pt-5 text-xs text-ink-muted">
             If it keeps happening, quote this when you{" "}
-            <Link href="/contact" className="text-accent hover:underline">
+            <Link
+              href="/contact"
+              className="text-ink underline decoration-line-interactive underline-offset-4 hover:decoration-ink"
+            >
               get in touch
             </Link>
             : <code className="tabular">{error.digest}</code>

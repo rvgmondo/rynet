@@ -32,33 +32,39 @@ export default async function TwoFactorPage() {
   const status = await readTwoFactorStatus();
 
   return (
-    <div className="container-page py-[var(--section-tight)]">
-      <Breadcrumbs trail={[{ href: "/account/two-factor", label: "Two-factor authentication" }]} />
+    <>
+      <section className="rn-columns border-b border-line bg-surface-sunken">
+        <div className="container-page py-[var(--section-tight)]">
+          <Breadcrumbs
+            trail={[{ href: "/account/two-factor", label: "Two-factor authentication" }]}
+          />
 
-      <div className="measure mt-6">
-        <h1 className="text-3xl">Two-factor authentication</h1>
-        <p className="mt-4 text-ink-secondary">
-          A second step at sign-in, from an app on your phone. It means a stolen password on its own
-          is not enough to get into an account that can see a dealership's leads, change its prices,
-          or approve a dealership as verified.
-        </p>
-      </div>
-
-      <div className="mt-10 max-w-2xl">
-        <TwoFactorPanel status={status} />
-      </div>
-
-      <section aria-labelledby="lost-heading" className="measure mt-14">
-        <h2 id="lost-heading" className="text-xl">
-          If you lose the phone
-        </h2>
-        <p className="mt-3 text-sm text-ink-secondary">
-          Use one of the recovery codes in place of the six digit code. Each one works once. If they
-          are gone as well, a platform admin has to clear the second factor on the account, and that
-          is deliberately a conversation with a person rather than a self-service reset: an
-          automated one would be a way around the whole thing.
-        </p>
+          <h1 className="rn-head mt-8 max-w-[14ch]">Two-factor authentication</h1>
+          <p className="measure mt-6 text-lg text-ink-secondary">
+            A second step at sign-in, from an app on your phone. It means a stolen password on its
+            own is not enough to get into an account that can see a dealership's leads, change its
+            prices, or approve a dealership as verified.
+          </p>
+        </div>
       </section>
-    </div>
+
+      <div className="container-page py-[var(--section-base)]">
+        <div className="max-w-2xl">
+          <TwoFactorPanel status={status} />
+        </div>
+
+        <section aria-labelledby="lost-heading" className="measure mt-14">
+          <h2 id="lost-heading" className="text-xl">
+            If you lose the phone
+          </h2>
+          <p className="mt-3 text-sm text-ink-secondary">
+            Use one of the recovery codes in place of the six digit code. Each one works once. If
+            they are gone as well, a platform admin has to clear the second factor on the account,
+            and that is deliberately a conversation with a person rather than a self-service reset:
+            an automated one would be a way around the whole thing.
+          </p>
+        </section>
+      </div>
+    </>
   );
 }
