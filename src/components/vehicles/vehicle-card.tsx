@@ -1,9 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { ColourPlate } from "@/components/vehicles/colour-plate";
 import { RandFigure } from "@/components/vehicles/rand-figure";
 import { formatKm, formatRand } from "@/lib/format";
 import { vehicleUrl } from "@/lib/urls";
+import type { VehiclePhoto } from "@/lib/vehicle-photo";
 
 export type VehicleCardData = {
   publicRef: string;
@@ -25,7 +27,12 @@ export type VehicleCardData = {
   cityName: string | null;
   provinceName: string | null;
   isDemonstration: boolean;
-  /** The car's real paint colour, which is what fills the image area until there are photos. */
+  /**
+   * The listing's own photograph, when it has one. This is the subject of the card: every
+   * competitor in this market leads with one and a buyer scans the photographs, not the text.
+   */
+  photo: VehiclePhoto | null;
+  /** The car's real paint colour. The fallback for a listing with no photograph, and only that. */
   colourName: string | null;
   colourSwatch: string | null;
   colourFamily: string | null;
@@ -92,17 +99,50 @@ export function VehicleCard({
 
   return (
     <article className="rn-card">
-      <ColourPlate
-        publicRef={vehicle.publicRef}
-        mileageKm={vehicle.mileageKm}
-        colourSwatch={vehicle.colourSwatch}
-        colourFamily={vehicle.colourFamily}
-        colourName={vehicle.colourName}
-        provinceName={vehicle.provinceName}
-        cityName={vehicle.cityName}
-        condition={vehicle.condition}
-        index={index}
-      />
+      {vehicle.photo ? (
+        /*
+         * The photograph, and it is the card.
+         *
+         * `sizes` matters here and is easy to get wrong. The grid is four up at 1440, two up on
+         * a phone from 368px, and one up below that, so the widest a card ever gets is about a
+         * third of the viewport on a desktop and half of it on a phone. Telling Next that stops
+         * it serving a 1280px derivative into a 178px slot, which on a throttled connection is
+         * the difference between a page of photographs and a page of grey.
+         */
+        <div className="rn-shot">
+          <Image
+            src={vehicle.photo.url}
+            alt={vehicle.photo.alt}
+            width={vehicle.photo.width}
+            height={vehicle.photo.height}
+            sizes="(min-width: 80rem) 22vw, (min-width: 48rem) 33vw, 50vw"
+            className="rn-shot__img"
+            // The first row is above the fold on every screen size, and the LCP element on a
+            // results page is now one of these rather than a paragraph.
+            priority={index < 4}
+          />
+          {vehicle.photo.count > 1 ? (
+            <p className="rn-shot__count">
+              <span aria-hidden="true">{vehicle.photo.count}</span>
+              <span className="sr-only">{vehicle.photo.count} photographs</span>
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        /* No photograph on this listing. The plate is the honest answer to that, and a better
+           one than the grey rectangle with a camera glyph every other site shows. */
+        <ColourPlate
+          publicRef={vehicle.publicRef}
+          mileageKm={vehicle.mileageKm}
+          colourSwatch={vehicle.colourSwatch}
+          colourFamily={vehicle.colourFamily}
+          colourName={vehicle.colourName}
+          provinceName={vehicle.provinceName}
+          cityName={vehicle.cityName}
+          condition={vehicle.condition}
+          index={index}
+        />
+      )}
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div>

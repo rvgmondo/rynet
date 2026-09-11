@@ -455,6 +455,10 @@ export interface Media {
    */
   credit?: string | null;
   /**
+   * Seeded illustration rather than a real photograph of a real car. Deleted when real stock arrives.
+   */
+  isDemonstration?: boolean | null;
+  /**
    * Groups the library. For example: stock, dealers, editorial, agency.
    */
   folder?: string | null;
@@ -2022,6 +2026,7 @@ export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   isDecorative?: T;
   credit?: T;
+  isDemonstration?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;

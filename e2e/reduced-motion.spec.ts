@@ -67,21 +67,53 @@ for (const path of PAGES) {
 }
 
 test("the mileage gauge reads the real odometer, never zero", async ({ page }) => {
-  await page.goto("/cars");
-  await page.waitForTimeout(400);
-
   /*
    * The needle rests at the car's true mileage by default and the sweep animates up to it,
    * rather than the other way round. If that is ever inverted, a reader with reduced motion
    * sees every car in the country showing zero kilometres, which is worse than no gauge.
+   *
+   * The plate only draws for a listing with no photographs, which is now most of a page of
+   * results away rather than all of it, so this walks the first three pages to collect a
+   * sample worth asserting on. The seed deliberately leaves one listing in twelve bare.
    */
-  const sweeps = await page
-    .locator(".rn-plate__value")
-    .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).strokeDasharray));
+  const gauges: { sweep: number; dash: number }[] = [];
 
-  expect(sweeps.length).toBeGreaterThan(4);
-  const drawn = sweeps.filter((value) => Number.parseFloat(value) > 0);
-  expect(drawn.length, "every gauge is on the peg").toBeGreaterThan(sweeps.length / 2);
+  for (const page_ of [1, 2, 3]) {
+    await page.goto(page_ === 1 ? "/cars" : `/cars?page=${page_}`);
+    await page.waitForTimeout(400);
+
+    gauges.push(
+      ...(await page.locator(".rn-plate").evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const value = node.querySelector(".rn-plate__value");
+          return {
+            // What the server said the odometer was, as a share of the gauge.
+            sweep: Number.parseFloat(getComputedStyle(node).getPropertyValue("--sweep")),
+            // What the browser actually drew.
+            dash: value ? Number.parseFloat(getComputedStyle(value).strokeDasharray) : Number.NaN,
+          };
+        }),
+      )),
+    );
+  }
+
+  expect(gauges.length, "no colour plate rendered, so nothing was tested").toBeGreaterThan(3);
+
+  for (const gauge of gauges) {
+    expect(Number.isNaN(gauge.dash), "a plate drew no gauge at all").toBe(false);
+    // Not "more than half are non-zero". Every single one has to agree with its own car.
+    expect(
+      gauge.dash,
+      `the gauge drew ${gauge.dash} for an odometer of ${gauge.sweep}`,
+    ).toBeCloseTo(gauge.sweep, 1);
+  }
+
+  // And at least one car in the sample has actually been driven, so a suite where every
+  // sweep happened to be zero cannot pass by agreeing with itself.
+  expect(
+    gauges.some((gauge) => gauge.sweep > 0),
+    "every car in the sample read zero",
+  ).toBe(true);
 });
 
 test("the ink flip still happens, because it is the only feedback the design has", async ({

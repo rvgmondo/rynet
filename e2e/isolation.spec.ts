@@ -126,9 +126,32 @@ test.beforeAll(async ({ playwright, baseURL }) => {
   expect(leadBId, "fixture lead B is missing, run npm run seed:fixtures").toBeTruthy();
   expect(tradeInLeadId, "the trade-in fixture is missing, run npm run seed:fixtures").toBeTruthy();
 
+  /*
+   * Sweep anything a previous run left behind.
+   *
+   * The create test below posts a draft and deletes it at the end. A run that fails between
+   * those two lines leaves the draft in the database, and the next run picks it up as the
+   * dealership's stock, because it is the newest row. That is how a green suite turned red
+   * on a machine where nothing had changed: the anonymous VIN test asked for a draft and got
+   * the 404 it should get, which the test read as a broken endpoint.
+   */
+  const leaked = await (
+    await request.get("/api/vehicles?where[stockNumber][like]=ISO-&limit=100&depth=0", as(admin))
+  ).json();
+  for (const doc of leaked.docs ?? []) {
+    await request.delete(`/api/vehicles/${doc.id}`, as(admin));
+  }
+
+  /*
+   * A LIVE listing, and the same one every run.
+   *
+   * Half the assertions here are about what the public can see, and the public cannot see a
+   * draft at all, so a draft would make them pass or fail for the wrong reason. Ordered by id
+   * so the row is the same on every machine rather than whichever was touched last.
+   */
   const stockOf = async (dealer: number) => {
     const res = await request.get(
-      `/api/vehicles?where[dealer][equals]=${dealer}&limit=1&depth=0`,
+      `/api/vehicles?where[dealer][equals]=${dealer}&where[status][equals]=live&sort=id&limit=1&depth=0`,
       as(admin),
     );
     return (await res.json()).docs[0]?.id as number;
@@ -424,6 +447,15 @@ test.describe("dealer A against dealer B's stock", () => {
       ...as(ownerA),
       data: {
         ...fields,
+        /*
+         * The gallery rows arrive carrying the ids of the rows they were read from, and
+         * posting those back asks the database to insert a row on top of an existing primary
+         * key. That is a 500, not a refusal, and it would have been read here as the access
+         * control rejecting the request when access control had not yet been consulted.
+         */
+        gallery: (fields.gallery ?? []).map(
+          ({ id: _rowId, ...row }: { id?: unknown; [key: string]: unknown }) => row,
+        ),
         dealer: dealerBId,
         stockNumber: `ISO-${Date.now()}`,
         status: "draft",

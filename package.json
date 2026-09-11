@@ -27,6 +27,8 @@
     "seed:admin": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env src/seed/create-admin.ts",
     "distribute:trade-ins": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env src/jobs/distribute-trade-ins.ts",
     "seed:fixtures": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env src/seed/create-test-fixtures.ts",
+    "seed:photos": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env src/seed/attach-photos.ts",
+    "fetch:photos": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/fetch-demo-photos.ts",
     "db:migrate": "cross-env NODE_OPTIONS=--no-deprecation payload migrate",
     "db:migrate:create": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:create",
     "db:migrate:status": "cross-env NODE_OPTIONS=--no-deprecation payload migrate:status",

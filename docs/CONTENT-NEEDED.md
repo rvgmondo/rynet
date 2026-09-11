@@ -37,6 +37,26 @@ They are not real cars and none of them is for sale.
 
 **Needed:** real stock, from a real feed or captured through the portal.
 
+## 2b. The photographs illustrate the model, not the car
+
+`src/seed/photos/`, sourced by `npm run fetch:photos` and attached by `npm run seed:photos`.
+
+Forty one photographs from Wikimedia Commons, every one under a licence that permits commercial
+use, every one a photograph of the model it is attached to, taken and identified by a named
+photographer. A seeded Hilux carries a photograph of a Hilux.
+
+It is not a photograph of THAT Hilux, because that Hilux does not exist. The listing page prints
+"Photograph of this model, not of this car" with the photographer and the licence directly under
+the image, and the demonstration badge on the same page says the listing itself is generated.
+
+One listing in twelve is deliberately left without a photograph, because a dealership that adds
+stock before it photographs it is a real state the site has to handle and be seen handling.
+
+Every media record carries `isDemonstration: true`.
+
+**Needed:** the dealership's own photographs of its own stock, through the portal.
+**To remove all of it:** `npm run seed:photos -- --clear`.
+
 ## 3. Plan prices are placeholders
 
 `src/seed/data/dealers.ts`, the `PLANS` constant. Starter R 1 500, Professional R 3 500, Growth

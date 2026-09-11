@@ -226,9 +226,18 @@ export function ResultsHeader({
         </p>
       ) : null}
 
-      <p className="rn-label rn-label--light mt-3 text-ink-muted">
-        Colour fields are each car's own recorded paint, set to one tone. Not photographs.
-      </p>
+      {/*
+        The caption used to say the images were not photographs, which was true and is not any
+        more. Now the thing that needs saying is the reverse: these ARE photographs, of the
+        model rather than of the individual car, because the stock is seeded. It disappears
+        with the demonstration notice above it, on the day real stock outnumbers the seed.
+      */}
+      {demonstrationCount > 0 ? (
+        <p className="rn-label rn-label--light mt-3 text-ink-muted">
+          Photographs show the model, not the individual car. A listing with none shows its recorded
+          paint colour instead.
+        </p>
+      ) : null}
     </div>
   );
 }
