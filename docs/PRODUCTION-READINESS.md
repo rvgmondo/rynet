@@ -95,6 +95,38 @@ A second audit did cover those four, and everything below came out of it.
 
 ---
 
+## Fixed since the third sweep
+
+A nine-surface read of everything the redesign had not touched, each reader
+capturing and reading the rendered page rather than the source alone. It returned
+seventy-four findings. Its own verifiers and its judge panel never ran, because
+the account hit its session limit, so every finding below was checked by hand
+before it was acted on and one of them was refuted.
+
+Three were not design at all.
+
+| Was | Now |
+|---|---|
+| `priceRange` resolved three filter dimensions where the search resolved eight, so every province, city, fuel and condition landing page printed the range of a different set from the cars underneath it. `/cars/in/limpopo`, which holds no cars, told a buyer it had stock "from R 83 300 to R 1 489 600" | One clause builder, taken by both. A dimension added to search reaches the range by construction |
+| The page number's floor was clamped and its ceiling was not, so `/cars?page=999999999999999999999` reached SQLite as an offset and answered 500. A crawler following a malformed link was enough to take search down | Clamped at both ends, on both routes that read a page number |
+| An empty number input submits `""`, `z.coerce` turned that into 0, and 0 satisfied `min(0)`, so a blank mileage passed validation while every other empty field on the same screen reported an error. The lead went to five dealerships reading 0 km | A floor of 1 and an empty-to-undefined preprocess. The schema had no tests; it has twenty, four of them this bug |
+
+The rest was the same finding nine times over: the redesign had reached the home
+page, search, the card, the rail and the forms' primitives, and stopped. It has
+now reached the facet landing pages, both contact pages, the sell page, the seven
+service pages, the four legal notices, the dealership microsite, the vehicle
+page's rail and finance panel, the enquiry dialog, the chrome on every page, and
+the error and 404 surfaces. Each is its own commit with the measurement that
+prompted it.
+
+**One finding was refuted rather than fixed.** It claimed the focus ring on a red
+primary button is invisible in light theme at 1.20:1, measuring the ring against
+the button fill. The ring is not drawn on the fill: `outline-offset` puts it 2px
+out and a 4px paper `box-shadow` fills that gap, so it lands on `#EDEDEA` at
+roughly 6:1. Captured focused at 1440 in both themes to be sure.
+
+---
+
 ## Fixed since the second audit
 
 Nine findings, each verified in a real browser against a production build before and after.
@@ -448,8 +480,8 @@ existed, at least two of the six problems above would have been obvious on paper
 
 Everything below is checked on every push, and a failure blocks the deploy branch.
 
-- **223 unit tests.** TOTP 51, plate colour 34, access control 33, finance 25, trade-in matching
-  18, query parsing 17, formatting 16, contrast 15, slugs 14.
+- **239 unit tests.** TOTP 51, plate colour 34, access control 33, finance 25, sell-to-a-dealer
+  schema 20, trade-in matching 18, query parsing 17, contrast 15, slugs 14, formatting 12.
 - **219 end-to-end tests** across desktop and mobile: 39 adversarial, 25 on the agency site,
   16 on two-factor.
 - **Zero axe violations** under WCAG 2.0 A through 2.2 AA on home, search, filtered search, the
