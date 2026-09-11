@@ -45,6 +45,44 @@ type Entry = {
 
 const PHOTO_DIR = path.join(process.cwd(), "src", "seed", "photos");
 
+/**
+ * Empty every gallery whose photograph matches, or has stopped existing.
+ *
+ * `matches` is asked about each referenced media id. Pass null to mean "only the rows whose
+ * media is missing", which is the repair case.
+ */
+async function emptyGalleries(
+  payload: Awaited<ReturnType<typeof getPayload>>,
+  matches: ((imageId: number) => boolean) | null,
+): Promise<number> {
+  const vehicles = await payload.find({ collection: "vehicles", limit: 1000, depth: 1 });
+  let cleared = 0;
+
+  for (const vehicle of vehicles.docs) {
+    const gallery = (vehicle as { gallery?: { image?: unknown }[] }).gallery ?? [];
+    if (gallery.length === 0) continue;
+
+    const hit = gallery.some((row) => {
+      const image = row.image;
+      // depth 1, so a live record arrives as an object and a dead reference as a bare id.
+      if (image && typeof image === "object") {
+        return matches ? matches((image as { id: number }).id) : false;
+      }
+      return matches === null;
+    });
+    if (!hit) continue;
+
+    await payload.update({
+      collection: "vehicles",
+      id: vehicle.id,
+      data: { gallery: [] } as never,
+    });
+    cleared += 1;
+  }
+
+  return cleared;
+}
+
 async function main() {
   const refresh = process.argv.includes("--refresh");
   const clear = process.argv.includes("--clear");
@@ -58,12 +96,24 @@ async function main() {
       limit: 1000,
       depth: 0,
     });
+    const ids = new Set(media.docs.map((doc) => doc.id));
+
+    // The galleries first. Deleting the media on its own leaves every listing holding a row
+    // that points at a record that is gone, which renders as no photograph but is not the
+    // same thing as having none: the next run sees a non-empty gallery and leaves it alone.
+    await emptyGalleries(payload, (imageId) => ids.has(imageId));
+
     for (const doc of media.docs) {
       await payload.delete({ collection: "media", id: doc.id });
     }
     console.log(`removed ${media.docs.length} demonstration photographs`);
     return;
   }
+
+  // Anything left pointing at a photograph that no longer exists, from a clear that ran before
+  // this script knew to tidy up after itself, or from a media record deleted by hand.
+  const swept = await emptyGalleries(payload, null);
+  if (swept > 0) console.log(`cleared ${swept} galleries pointing at a deleted photograph`);
 
   const manifest = JSON.parse(
     await readFile(path.join(PHOTO_DIR, "manifest.json"), "utf8"),
