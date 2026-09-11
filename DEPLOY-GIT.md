@@ -1,32 +1,104 @@
 # Deploying
 
-Push to `main`. That is the whole thing.
+Push to `main`. That is the whole thing, once the four secrets below exist.
 
-GitHub Actions builds, publishes the result to the `deploy` branch, and a cron job on the host
-picks it up within five minutes, installs it atomically, restarts the app, checks the site
-answers, and rolls itself back if it does not.
+GitHub Actions builds, publishes the result to the `deploy` branch, ships it to the host over
+SSH, installs it atomically, restarts the app, checks the site is serving the commit that was
+just built, and rolls itself back if it is not.
 
 For the manual upload route, and for the host troubleshooting that applies either way, see
 [DEPLOY-CPANEL.md](DEPLOY-CPANEL.md).
 
 ---
 
-## This is not set up on the host yet, and nothing has reached the live site
+## Nothing has reached the live site yet
 
 Checked on 11 September 2026. `rynet.co.za` answers 200 and serves a build from BEFORE the
 STOCKLIST redesign: its HTML still carries Montserrat and Inter, which commit `737d061` replaced
-with Archivo and Newsreader on 9 September. Its deployment id is in the format
-`scripts/build-deploy.mjs` stamps on a MANUAL bundle, not the commit sha that CI stamps, so what is
+with Archivo and Newsreader on 9 September. Its deployment id is the format
+`scripts/build-deploy.mjs` stamps on a MANUAL bundle, not the commit sha CI stamps, so what is
 live was hand-uploaded and the automatic path has never run.
 
-Nothing is wrong with the automatic path. The `deploy` branch is current on every commit: it
-carries 1 143 files under `.next`, a `BUILD_ID`, nine font files, and source that matches `main`.
-Every CI run since has been green.
+Nothing is wrong with the automatic path. The `deploy` branch is current for every commit: it
+carries 1 143 files under `.next`, a `BUILD_ID`, the fonts, and source that matches `main`. Every
+CI run has been green.
 
-**What is missing is steps 2 to 5 below, run once on the host.** Until somebody runs
-`~/deploy-rynet.sh` in the cPanel terminal, every commit builds, publishes, and is never installed,
-and the live site stays where it was. The redesign, both rounds of audit fixes, the performance
-work and the agency rebuild are all in that gap.
+**What is missing is four repository secrets.** Until they exist, every push builds, publishes,
+and is never installed. The redesign, both rounds of audit fixes, the performance work, the agency
+rebuild and the nine-surface sweep are all in that gap.
+
+---
+
+## Making it automatic
+
+One setup, then nobody touches the host again.
+
+### 1. Get an SSH key onto the host
+
+In cPanel, **SSH Access**, **Manage SSH Keys**, **Generate a New Key**. Name it `rynet-deploy`
+and leave the passphrase EMPTY, because a runner cannot type one. Then **Manage**, and
+**Authorize** it.
+
+Download the PRIVATE key. It is the one that starts `-----BEGIN OPENSSH PRIVATE KEY-----`.
+
+If SSH Access is not in your cPanel, the host has it switched off for the account. One support
+ticket usually turns it on; if it does not, skip to **The manual path** below, which still works.
+
+### 2. Put it in the repository
+
+GitHub, **Settings**, **Secrets and variables**, **Actions**, **New repository secret**. Four of
+them, three required:
+
+| Secret | Value | Required |
+|---|---|---|
+| `HOST_SSH_KEY` | The whole private key file, including both `-----` lines | Yes |
+| `HOST_SSH_HOST` | The server's hostname or IP, NOT `rynet.co.za`. Cloudflare sits in front of the domain and does not forward SSH. cPanel shows it under **General Information**, and it usually looks like `server12.yourhost.co.za` | Yes |
+| `HOST_SSH_USER` | The cPanel username, the one your home directory is named after | Yes |
+| `HOST_SSH_PORT` | Only if the host does not use 22. Many South African hosts use `2222` | No |
+
+### 3. Push anything
+
+The `install` job runs after the build, and the run summary says either which secrets are
+missing or which commit is now live.
+
+### 4. Pin the host key
+
+The first run prints the host's SSH fingerprint into its summary and warns that it trusted
+whatever answered. Copy that block into a fifth secret, `HOST_SSH_KNOWN_HOSTS`, and from then on
+the runner refuses to talk to anything that is not that host. Do this once. It is the difference
+between authenticating the server and hoping.
+
+### What the runner actually does
+
+It does NOT ask the host to pull from GitHub. The first version of this did, and on a private
+repository that means a token living in `.git/config` on shared hosting forever, for a fetch the
+runner has already done.
+
+Instead the runner streams the build it just made through the SSH connection as a tar, into
+`~/rynet-incoming`, and runs `scripts/host-deploy.sh` out of it. That script is unchanged and is
+still the thing that knows how to install: it refuses a tree with no build in it, stages beside
+the live app and swaps by rename, keeps the previous build so a rollback is one rename, restarts
+through `tmp/restart.txt`, health-checks the site, and rolls itself back if the site stops
+answering. The staging copy is deleted afterwards whether the deploy worked or not.
+
+The `deploy` branch is still published, because it is the record of what was built and what a
+rollback reads. It is simply no longer on the path between a push and the site changing.
+
+**The one check the host cannot do.** `host-deploy.sh` asks the site for a 200, and a stale build
+answers 200 too. The runner asks whether the page references the commit that was just built, which
+is the question nobody was asking for the three weeks the site sat on a pre-redesign build.
+
+---
+
+## The manual path
+
+Still there, and still correct, for a host with no SSH or for a deploy you want to watch. It needs
+the host to have a clone, so it is steps 2 to 5 below rather than the four secrets above. After
+the one-time setup it is one command:
+
+```bash
+~/deploy-rynet.sh
+```
 
 ---
 
@@ -58,20 +130,27 @@ you push to main
         v
 GitHub Actions builds  (Node 22, same as the host)
         |
-        v
-commits source + prebuilt .next to the `deploy` branch
+        +--> commits source + prebuilt .next to the `deploy` branch
+        |      the record of what was built, and what a rollback reads
         |
         v
-cron on the host, every five minutes:
-   git fetch && git reset --hard origin/deploy
-   scripts/host-deploy.sh
+the same run, over SSH:
+   tar the build through the connection into ~/rynet-incoming
+   scripts/host-deploy.sh --force, out of that directory
         |
         v
-   refuse if there is no build in the checkout
+   refuse if there is no build in the tree
    stage beside the live app, swap by rename, keep the previous build
    touch tmp/restart.txt
    check the site answers, roll back if it does not
+        |
+        v
+the runner then asks the LIVE site whether it is serving this commit,
+because a stale build answers 200 just as happily as a new one
 ```
+
+The manual path below does the same thing with the host pulling the `deploy` branch itself,
+which is what to use when the account has no SSH.
 
 **The host cannot build.** Next 16 with Turbopack needs far more memory than a shared CloudLinux
 account allows, and it gets killed rather than erroring usefully. That constraint shapes all of
