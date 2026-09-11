@@ -170,9 +170,15 @@
    * invisible to a reader with a colour vision deficiency. Standalone links in navigation,
    * cards and buttons are exempt, because their position and context already mark them
    * out, which is what the :not() list is for.
+   *
+   * `grid` is in that list for the same reason `flex` is. A link that lays its own children
+   * out is a ROW, not a phrase: the numbered indexes on the agency site are whole rows that
+   * flip to ink on hover, and they arrived underlined, name and summary both, because the
+   * exemption only knew about one of the two ways of building a row. It is a heuristic either
+   * way, and it is the cheapest one that does not need a class on every link.
    */
   p a:not([class*="button"]),
-  li > a:not([class*="flex"]):not([class*="button"]),
+  li > a:not([class*="flex"]):not([class*="grid"]):not([class*="button"]),
   dd a,
   span a {
     text-decoration: underline;
