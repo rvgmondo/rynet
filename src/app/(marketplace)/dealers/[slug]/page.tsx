@@ -1,5 +1,4 @@
 import config from "@payload-config";
-import { BadgeCheck, Clock, Mail, MapPin, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -169,156 +168,168 @@ export default async function DealerPage({
         />
       ) : null}
 
-      <div className="container-page py-[var(--section-tight)]">
-        <Breadcrumbs
-          trail={[
-            { href: "/dealers", label: "Dealerships" },
-            { href: `/dealers/${dealer.slug}`, label: dealer.tradingName },
-          ]}
-        />
+      {/*
+        REDRAWN. This is the page Rynet shows a dealership when it sells them on listing, so it
+        is a commercial surface, and it was a single flat band with the whole of its right-hand
+        column given to one bordered box: at three branches the box ran 500px while the stock
+        grid beside it ran 3,800, leaving three and a half thousand pixels of empty column. The
+        address, phone and hours a buyer drives to are now a ruled band across the full width,
+        directly under the header, where they are read before the stock rather than beside it.
+      */}
+      <section className="rn-columns border-b border-line bg-surface-sunken">
+        <div className="container-page py-[var(--section-tight)]">
+          <Breadcrumbs
+            trail={[
+              { href: "/dealers", label: "Dealerships" },
+              { href: `/dealers/${dealer.slug}`, label: dealer.tradingName },
+            ]}
+          />
 
-        <header className="mt-5 border-b border-line pb-8">
-          <h1 className="text-4xl">{dealer.tradingName}</h1>
+          <h1 className="rn-head mt-8 max-w-[16ch]">{dealer.tradingName}</h1>
 
-          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             {dealer.verificationStatus === "verified" ? (
+              /* The same ruled stamp the cards carry, in ink. It was a red link behind a
+                 BadgeCheck glyph: the one glyph the direction names and rejects, and the only
+                 red object on a page that has no other. */
               <Link
                 href="/how-verification-works"
-                className="inline-flex items-center gap-1.5 font-semibold text-accent hover:underline"
+                className="rn-label inline-flex min-h-11 items-center border border-current px-2 py-1 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
               >
-                <BadgeCheck aria-hidden="true" className="size-4" />
                 Verified dealership
               </Link>
             ) : null}
-            {dealer.foundedYear ? (
-              <span className="text-ink-secondary">Trading since {dealer.foundedYear}</span>
-            ) : null}
-            <span className="tabular font-semibold">
+            <span className="rn-label tabular text-ink">
               {stock.totalDocs} {stock.totalDocs === 1 ? "vehicle" : "vehicles"} in stock
             </span>
             {cheapest ? (
-              <span className="text-ink-secondary">
-                from <span className="tabular">{formatRand(cheapest)}</span>
-              </span>
+              <span className="rn-label tabular text-ink-muted">from {formatRand(cheapest)}</span>
+            ) : null}
+            {dealer.foundedYear ? (
+              <span className="rn-label text-ink-muted">Trading since {dealer.foundedYear}</span>
             ) : null}
           </div>
 
           {dealer.isDemonstration ? (
-            <p className="mt-4 rounded-md border border-line-interactive p-3 text-sm text-ink-muted">
-              <strong className="font-semibold">Demonstration listing.</strong> This dealership is
-              seeded example data. It is not a real business, and its stock is not for sale.
+            /* The same sentence the cards set as a ruled label. It was a bordered box here and
+               a rule there, for one fact. */
+            <p className="rn-label mt-8 border-t border-line-interactive pt-4 text-ink-muted">
+              Demonstration listing. This dealership is seeded example data. It is not a real
+              business, and its stock is not for sale.
             </p>
           ) : null}
-        </header>
-
-        <div className="mt-8 grid gap-10 lg:grid-cols-[1fr_20rem]">
-          <div className="min-w-0">
-            <h2 className="text-2xl">Their stock</h2>
-            <div className="mt-5">
-              <ResultsGrid
-                vehicles={stock.docs.map(toCard)}
-                page={stock.page ?? 1}
-                totalPages={stock.totalPages}
-                buildHref={(p) =>
-                  p > 1 ? `/dealers/${dealer.slug}?page=${p}` : `/dealers/${dealer.slug}`
-                }
-                emptyTitle="Nothing in stock right now"
-                emptyBody="This dealership has no live listings at the moment. Stock changes daily, and there is plenty from other verified dealerships in the meantime."
-                emptyAction="Browse all stock"
-              />
-            </div>
-          </div>
-
-          <aside className="space-y-6">
-            <section
-              aria-labelledby="branches-heading"
-              className="rounded-lg border border-line p-5"
-            >
-              <h2 id="branches-heading" className="text-lg">
-                {branches.docs.length === 1 ? "Where they are" : "Branches"}
-              </h2>
-
-              {branches.docs.map((branch) => (
-                <div
-                  key={branch.id}
-                  className="mt-4 border-t border-line pt-4 first:border-0 first:pt-0"
-                >
-                  {branches.docs.length > 1 ? (
-                    <h3 className="text-sm font-bold">{branch.name}</h3>
-                  ) : null}
-
-                  <address className="mt-1.5 space-y-2 text-sm not-italic text-ink-secondary">
-                    <span className="flex items-start gap-2">
-                      <MapPin
-                        aria-hidden="true"
-                        className="mt-0.5 size-4 shrink-0 text-ink-muted"
-                      />
-                      <span>
-                        {branch.addressLine1}
-                        {branch.suburb ? <>, {branch.suburb}</> : null}
-                        <br />
-                        {relName(branch.city)}
-                        {relName(branch.province) ? `, ${relName(branch.province)}` : ""}
-                        {branch.postalCode ? ` ${branch.postalCode}` : ""}
-                      </span>
-                    </span>
-
-                    {branch.phone ? (
-                      <span className="flex items-center gap-2">
-                        <Phone aria-hidden="true" className="size-4 shrink-0 text-ink-muted" />
-                        <a
-                          href={`tel:${branch.phone.replace(/[^0-9+]/g, "")}`}
-                          className="tabular hover:text-accent"
-                        >
-                          {branch.phone}
-                        </a>
-                      </span>
-                    ) : null}
-
-                    {branch.email ? (
-                      <span className="flex items-center gap-2">
-                        <Mail aria-hidden="true" className="size-4 shrink-0 text-ink-muted" />
-                        <a href={`mailto:${branch.email}`} className="break-all hover:text-accent">
-                          {branch.email}
-                        </a>
-                      </span>
-                    ) : null}
-                  </address>
-
-                  {branch.tradingHours && branch.tradingHours.length > 0 ? (
-                    <details className="mt-3">
-                      <summary className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium">
-                        <Clock aria-hidden="true" className="size-4 text-ink-muted" />
-                        Trading hours
-                      </summary>
-                      <dl className="mt-1 space-y-0.5 text-xs">
-                        {DAYS.map((day) => {
-                          const hours = branch.tradingHours?.find((h) => h.day === day);
-                          if (!hours) return null;
-                          return (
-                            <div key={day} className="flex justify-between gap-4 py-0.5">
-                              <dt className="text-ink-muted">{DAY_LABEL[day]}</dt>
-                              <dd className="tabular">
-                                {hours.closed ? "Closed" : `${hours.opensAt} to ${hours.closesAt}`}
-                              </dd>
-                            </div>
-                          );
-                        })}
-                      </dl>
-                    </details>
-                  ) : null}
-                </div>
-              ))}
-            </section>
-
-            {/*
-              No reviews section. The dealership has none, and an empty "Reviews (0)" panel
-              invites the question of whether the platform has any at all. It appears when
-              there is something in it.
-            */}
-          </aside>
         </div>
-      </div>
+      </section>
+
+      <section
+        aria-labelledby="branches-heading"
+        className="container-page py-[var(--section-base)]"
+      >
+        <h2 id="branches-heading" className="rn-label text-ink-muted">
+          {branches.docs.length === 1 ? "Where they are" : "Branches"}
+        </h2>
+
+        <div className="mt-4 grid border-t border-line md:grid-cols-2 md:gap-x-12 xl:grid-cols-3">
+          {branches.docs.map((branch) => (
+            <div key={branch.id} className="border-b border-line py-6">
+              {branches.docs.length > 1 ? (
+                <h3 className="font-display text-base font-bold">{branch.name}</h3>
+              ) : null}
+
+              <address className="mt-2 text-sm not-italic text-ink-secondary">
+                {branch.addressLine1}
+                {branch.suburb ? <>, {branch.suburb}</> : null}
+                <br />
+                {relName(branch.city)}
+                {relName(branch.province) ? `, ${relName(branch.province)}` : ""}
+                {branch.postalCode ? ` ${branch.postalCode}` : ""}
+              </address>
+
+              {branch.phone ? (
+                <p className="mt-3">
+                  <a
+                    href={`tel:${branch.phone.replace(/[^0-9+]/g, "")}`}
+                    className="rn-label inline-flex min-h-11 items-center tabular text-ink underline decoration-line-interactive underline-offset-4 hover:decoration-ink"
+                  >
+                    {branch.phone}
+                  </a>
+                </p>
+              ) : null}
+
+              {branch.email ? (
+                /* `break-all` was breaking the address mid-word: it rendered as "...exam / ple".
+                   `break-words` breaks at the longest opportunity the string offers and only
+                   splits a word when there is no other choice. */
+                <p className="mt-1">
+                  <a
+                    href={`mailto:${branch.email}`}
+                    className="break-words text-sm text-ink-secondary underline decoration-line-interactive underline-offset-4 hover:text-ink hover:decoration-ink"
+                  >
+                    {branch.email}
+                  </a>
+                </p>
+              ) : null}
+
+              {branch.tradingHours && branch.tradingHours.length > 0 ? (
+                <details className="group mt-4 border-t border-line">
+                  {/* It rendered identically to the static lines above it and gave no sign at
+                      all that it opened. Same fix as the specification groups on a vehicle. */}
+                  <summary className="rn-label flex min-h-11 cursor-pointer items-center justify-between gap-3 text-ink-muted transition-colors duration-[var(--duration-micro)] [&::-webkit-details-marker]:hidden [&::marker]:content-[''] hover:text-ink">
+                    Trading hours
+                    <span aria-hidden="true" className="w-3 text-center">
+                      <span className="group-open:hidden">+</span>
+                      <span className="hidden group-open:inline">-</span>
+                    </span>
+                  </summary>
+                  <dl className="pb-3 text-xs">
+                    {DAYS.map((day) => {
+                      const hours = branch.tradingHours?.find((h) => h.day === day);
+                      if (!hours) return null;
+                      return (
+                        <div key={day} className="flex justify-between gap-4 py-1">
+                          <dt className="text-ink-muted">{DAY_LABEL[day]}</dt>
+                          <dd className="tabular">
+                            {hours.closed ? "Closed" : `${hours.opensAt} to ${hours.closesAt}`}
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </details>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/*
+        The stock, at the full width of the container rather than in a column beside an empty
+        one. This is what the page is for.
+
+        No reviews section. The dealership has none, and an empty "Reviews (0)" panel invites
+        the question of whether the platform has any at all. It appears when there is something
+        in it.
+      */}
+      <section aria-labelledby="stock-heading" className="container-page pb-[var(--section-base)]">
+        <h2 id="stock-heading" className="rn-head">
+          Their stock
+        </h2>
+        <hr className="rn-rule mt-6" />
+
+        <div className="mt-8">
+          <ResultsGrid
+            vehicles={stock.docs.map(toCard)}
+            page={stock.page ?? 1}
+            totalPages={stock.totalPages}
+            buildHref={(p) =>
+              p > 1 ? `/dealers/${dealer.slug}?page=${p}` : `/dealers/${dealer.slug}`
+            }
+            emptyTitle="Nothing in stock right now"
+            emptyBody="This dealership has no live listings at the moment. Stock changes daily, and there is plenty from other verified dealerships in the meantime."
+            emptyAction="Browse all stock"
+          />
+        </div>
+      </section>
     </>
   );
 }
