@@ -1,11 +1,12 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { CheckCircle2, Mail, X } from "lucide-react";
+import { Mail, X } from "lucide-react";
 import * as React from "react";
 import { useActionState } from "react";
 
 import { submitEnquiry } from "@/app/actions/enquiry";
+import { INPUT_CLASS, LABEL_CLASS } from "@/components/forms/multi-step";
 import { Button } from "@/components/ui/button";
 import type { EnquiryState } from "@/lib/enquiry-schema";
 
@@ -58,8 +59,16 @@ export function EnquiryDialog({
   const fieldError = (name: string) =>
     state.status === "error" ? state.fieldErrors?.[name] : undefined;
 
-  const inputClass =
-    "mt-1 min-h-11 w-full rounded-md border border-line-interactive bg-surface px-3 text-sm";
+  /*
+   * The shared primitive, not a fifth copy of the old one.
+   *
+   * This dialog kept its own boxed input while both multi-step forms were rebuilt on ruled
+   * lines, so the one form a buyer fills in to actually buy a car was the last boxed form on
+   * the site. Same class of drift as the three copies of `toCard` and the agency form's own
+   * `Field`, and the same fix.
+   */
+  const inputClass = INPUT_CLASS;
+  const labelClass = LABEL_CLASS;
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -71,14 +80,29 @@ export function EnquiryDialog({
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-black/50 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[var(--z-modal)] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-line bg-surface p-6 shadow-(--rn-shadow-4) max-h-[calc(100vh-2rem)]">
+        {/*
+          A flat scrim and a sheet opened by a rule, not a bordered card floating on a smear.
+          ---------------------------------------------------------------------------------
+          The panel was `rounded-lg border border-line ... shadow-(--rn-shadow-4)` over a
+          `backdrop-blur-sm` scrim: a container drawn around content, hovering over a page that
+          had been smeared. Every part of that is the pre-redraw site, and it is the surface a
+          buyer completes a purchase enquiry on.
+
+          The blur also costs a full-viewport readback on every frame, which is exactly what the
+          mobile action bar on the same page refuses for the same reason.
+
+          The opening edge is INK, not red. Send Enquiry is the one red object in this viewport,
+          and a red edge four pixels thick at the top of the sheet competes with the thing it is
+          meant to be leading the eye to.
+        */}
+        <Dialog.Overlay className="fixed inset-0 z-[var(--z-overlay)] bg-black/70" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-[var(--z-modal)] max-h-[calc(100svh-2rem)] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto border-t-4 border-ink bg-surface p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <Dialog.Title className="font-display text-xl font-bold">
+              <Dialog.Title className="font-display text-2xl font-extrabold leading-tight [font-variation-settings:'wdth'_112]">
                 Enquire about this vehicle
               </Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-ink-secondary">
+              <Dialog.Description className="rn-label rn-label--light mt-2 text-ink-muted">
                 {vehicleTitle}, at {dealerName}.
               </Dialog.Description>
             </div>
@@ -86,7 +110,7 @@ export function EnquiryDialog({
               <button
                 type="button"
                 aria-label="Close"
-                className="flex size-11 shrink-0 items-center justify-center rounded-md hover:bg-surface-sunken"
+                className="flex size-11 shrink-0 items-center justify-center transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
               >
                 <X aria-hidden="true" className="size-5" />
               </button>
@@ -94,10 +118,14 @@ export function EnquiryDialog({
           </div>
 
           {state.status === "success" ? (
-            <div role="status" className="mt-6 rounded-md bg-success-subtle p-5 text-center">
-              <CheckCircle2 aria-hidden="true" className="mx-auto size-8 text-success" />
-              <p className="mt-3 font-display text-base font-bold">{state.message}</p>
-              <p className="mt-2 text-sm text-ink-secondary">
+            /* Ranged left, on a rule, with no tick. A centred green glyph is the generic
+               thank-you every form builder emits, and green is a colour this palette does not
+               otherwise use. */
+            <div role="status" className="mt-8 border-t-2 border-ink pt-6">
+              <p className="font-display text-xl font-extrabold leading-tight [font-variation-settings:'wdth'_112]">
+                {state.message}
+              </p>
+              <p className="mt-3 text-sm text-ink-secondary">
                 Most dealerships come back within a working day. If it is urgent, the phone number
                 is on the listing.
               </p>
@@ -140,16 +168,13 @@ export function EnquiryDialog({
               </div>
 
               {state.status === "error" ? (
-                <p
-                  role="alert"
-                  className="rounded-md border border-danger bg-danger-subtle p-3 text-sm text-danger"
-                >
+                <p role="alert" className="border-t-2 border-danger pt-3 text-sm text-danger">
                   {state.message}
                 </p>
               ) : null}
 
               <div>
-                <label htmlFor="enq-name" className="block text-sm font-medium">
+                <label htmlFor="enq-name" className={labelClass}>
                   Your name
                 </label>
                 <input
@@ -171,7 +196,7 @@ export function EnquiryDialog({
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="enq-email" className="block text-sm font-medium">
+                  <label htmlFor="enq-email" className={labelClass}>
                     Email
                   </label>
                   <input
@@ -193,7 +218,7 @@ export function EnquiryDialog({
                 </div>
 
                 <div>
-                  <label htmlFor="enq-phone" className="block text-sm font-medium">
+                  <label htmlFor="enq-phone" className={labelClass}>
                     Phone
                   </label>
                   <input
@@ -220,7 +245,7 @@ export function EnquiryDialog({
               </div>
 
               <div>
-                <label htmlFor="enq-type" className="block text-sm font-medium">
+                <label htmlFor="enq-type" className={labelClass}>
                   What would you like
                 </label>
                 <select id="enq-type" name="type" defaultValue="enquiry" className={inputClass}>
@@ -232,14 +257,14 @@ export function EnquiryDialog({
               </div>
 
               <div>
-                <label htmlFor="enq-message" className="block text-sm font-medium">
+                <label htmlFor="enq-message" className={labelClass}>
                   Anything to add <span className="font-normal text-ink-muted">(optional)</span>
                 </label>
                 <textarea
                   id="enq-message"
                   name="message"
                   rows={3}
-                  className="mt-1 w-full rounded-md border border-line-interactive bg-surface p-3 text-sm"
+                  className={`${inputClass} min-h-24 resize-y py-3`}
                 />
               </div>
 
