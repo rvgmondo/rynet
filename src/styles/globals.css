@@ -403,6 +403,119 @@
   letter-spacing: -0.28em;
 }
 
+/* ============================================================================
+ * A DOCUMENT
+ *
+ * The four legal notices and the accessibility statement are the only pages on this site that
+ * are nothing but running text, and they were the only surface the type system never reached:
+ * Archivo throughout, disc bullets, and thirteen headings at the default scale.
+ *
+ * This is a class rather than a stack of Tailwind arbitrary variants because the arbitrary
+ * variant cannot compose a custom class. `[&_p]:rn-prose` looks like it sets the prose face and
+ * generates nothing at all, which is exactly how the first attempt at this shipped looking
+ * unchanged. Descendant rules in CSS are the honest way to style a document whose markup is
+ * plain h2, p and ul.
+ * ========================================================================= */
+
+.rn-doc > p {
+  font-family: var(--rn-font-prose);
+  font-size: var(--rn-text-base);
+  line-height: var(--leading-prose);
+  margin-top: 1.25rem;
+  color: var(--rn-ink-secondary);
+}
+
+/*
+ * No drop cap here, and it was tried.
+ *
+ * A drop cap on the first paragraph after every h2 gives a long read an entry point, which is
+ * why the home page and the verification page use one. In a legal notice it fires eleven times,
+ * and several of those sections open with a two-line paragraph, where a floated capital leaves a
+ * hole beside a single line. Worse, a narrow letter reads as a stray rule on a page whose whole
+ * structure is rules: the "If something goes wrong" and "Changes" sections both opened with a
+ * capital I that looked like a mistake. The section rules and the 56px headings are entry point
+ * enough.
+ */
+
+.rn-doc > h2 {
+  font-family: var(--rn-font-display);
+  font-weight: 800;
+  font-variation-settings: "wdth" 112;
+  font-size: var(--rn-text-head);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+  max-width: 18ch;
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--rn-ink);
+  /* So a jump from the contents index does not land the heading under the masthead. */
+  scroll-margin-top: 6rem;
+}
+
+.rn-doc > h3,
+.rn-doc h3 {
+  font-family: var(--rn-font-display);
+  font-size: var(--rn-text-lg);
+  font-weight: 700;
+  line-height: var(--leading-snug);
+  margin-top: 2.5rem;
+}
+
+.rn-doc p {
+  font-family: var(--rn-font-prose);
+  font-size: var(--rn-text-base);
+  line-height: var(--leading-prose);
+  margin-top: 1.25rem;
+  color: var(--rn-ink-secondary);
+}
+
+/* Ruled rows, like every other list on the site. Disc bullets were the last browser default
+   left anywhere on the marketplace. */
+.rn-doc ul {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--rn-hairline);
+  list-style: none;
+  padding: 0;
+}
+
+.rn-doc ul > li {
+  border-bottom: 1px solid var(--rn-hairline);
+  padding-block: 0.75rem;
+  color: var(--rn-ink-secondary);
+}
+
+.rn-doc ol {
+  margin-top: 1.25rem;
+  border-top: 1px solid var(--rn-hairline);
+  padding-inline-start: 1.5rem;
+}
+
+.rn-doc ol > li {
+  border-bottom: 1px solid var(--rn-hairline);
+  padding-block: 0.75rem;
+  color: var(--rn-ink-secondary);
+}
+
+.rn-doc strong {
+  font-weight: 600;
+  color: var(--rn-ink);
+}
+
+/*
+ * A note inside a document is not part of the document.
+ *
+ * The legal-review banner is passed in as a child, so every descendant rule above reaches it,
+ * and the one block on these pages that is supposed to shout was being repainted in the same
+ * serif at the same size as the notice it warns about. It keeps the interface face.
+ */
+.rn-doc [role="note"] p {
+  font-family: var(--rn-font-body);
+  font-size: var(--rn-text-sm);
+  line-height: var(--leading-normal);
+  margin-top: 0.75rem;
+}
+
 /* Running prose, and the only place Newsreader is allowed. */
 .rn-prose {
   font-family: var(--rn-font-prose);
