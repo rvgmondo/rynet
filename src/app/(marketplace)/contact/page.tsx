@@ -1,4 +1,3 @@
-import { Mail, MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -20,6 +19,12 @@ export const metadata: Metadata = {
  * No general contact form. The enquiry form on a listing exists because it attaches to a
  * vehicle and a dealership; a general one would be a second surface to rate-limit,
  * spam-check and monitor, for no gain over an email address.
+ *
+ * REDRAWN. This was four bordered boxes in a two-column grid on one flat band, at the default
+ * type scale, with an envelope glyph in front of every address. It is the end of the "List your
+ * stock" link in the footer and of the verification page's own call to action, so a dealership
+ * that has read two pages of argument about why Rynet is careful arrives at the page that was
+ * least careful. The four routes are a ruled index now, which is what a list of four things is.
  */
 export default function ContactPage() {
   const routes = [
@@ -46,44 +51,62 @@ export default function ContactPage() {
   ];
 
   return (
-    <div className="container-page py-[var(--section-tight)]">
-      <Breadcrumbs trail={[{ href: "/contact", label: "Contact" }]} />
+    <>
+      <section className="rn-columns border-b border-line bg-surface-sunken">
+        <div className="container-page py-[var(--section-tight)]">
+          <Breadcrumbs trail={[{ href: "/contact", label: "Contact" }]} />
 
-      <div className="measure mt-6">
-        <h1 className="text-4xl">Contact us</h1>
-        <p className="mt-4 text-lg text-ink-secondary">
-          Four addresses rather than one, so your message reaches whoever can actually deal with it.
-        </p>
-      </div>
+          <h1 className="rn-head mt-8 max-w-[10ch]">Contact us</h1>
+          <p className="measure mt-6 text-lg text-ink-secondary">
+            Four addresses rather than one, so your message reaches whoever can actually deal with
+            it.
+          </p>
+        </div>
+      </section>
 
-      <ul className="mt-10 grid gap-6 md:grid-cols-2">
-        {routes.map((route) => (
-          <li key={route.email} className="rounded-lg border border-line p-6">
-            <h2 className="text-lg">{route.title}</h2>
-            <p className="mt-2 text-sm text-ink-secondary">{route.body}</p>
-            <a
-              href={`mailto:${route.email}`}
-              className="mt-4 inline-flex min-h-11 items-center gap-2 font-semibold text-accent hover:underline"
+      {/*
+        A ruled index, not four cards.
+        ------------------------------
+        The address is the only thing on each row anybody is here for, so it is set at the row's
+        leading edge in the display face rather than at the end of a paragraph behind an envelope
+        glyph. The glyphs are gone: four envelopes beside four email addresses label a thing that
+        is already labelled, in the one place on the page where red was being spent.
+      */}
+      <section className="container-page py-[var(--section-base)]">
+        <ul className="border-t border-line">
+          {routes.map((route) => (
+            <li
+              key={route.email}
+              className="grid gap-3 border-b border-line py-8 lg:grid-cols-[20rem_1fr] lg:gap-12"
             >
-              <Mail aria-hidden="true" className="size-4" />
-              {route.email}
-            </a>
-          </li>
-        ))}
-      </ul>
+              <div>
+                <h2 className="font-display text-xl font-bold leading-snug">{route.title}</h2>
+                <a
+                  href={`mailto:${route.email}`}
+                  className="rn-label mt-3 inline-flex min-h-11 items-center text-ink-muted underline decoration-line-interactive underline-offset-4 hover:text-ink hover:decoration-ink"
+                >
+                  {route.email}
+                </a>
+              </div>
+              <p className="rn-prose text-ink-secondary">{route.body}</p>
+            </li>
+          ))}
+        </ul>
 
-      <div className="mt-10 flex items-start gap-2 text-sm text-ink-secondary">
-        <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-muted" />
-        <address className="not-italic">Pretoria, Gauteng, South Africa</address>
-      </div>
-
-      <p className="mt-8 text-sm text-ink-secondary">
-        If something on the site is difficult to use, there is a separate address on the{" "}
-        <Link href="/accessibility" className="font-semibold text-accent hover:underline">
-          accessibility page
-        </Link>
-        .
-      </p>
-    </div>
+        <div className="mt-12 grid gap-8 lg:grid-cols-[20rem_1fr] lg:gap-12">
+          <div>
+            <p className="rn-label text-ink-muted">Where we are</p>
+            <address className="rn-label mt-3 not-italic text-ink">
+              Pretoria, Gauteng, South Africa
+            </address>
+          </div>
+          <p className="rn-prose text-ink-secondary">
+            If something on the site is difficult to use, there is a separate address on the{" "}
+            <Link href="/accessibility">accessibility page</Link>, which goes to the person who can
+            change it rather than to a queue.
+          </p>
+        </div>
+      </section>
+    </>
   );
 }

@@ -334,7 +334,7 @@
     "htmlLimitedBots": "[\\w-]+-Google|Google-[\\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight",
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.ts",
-    "deploymentId": "cb3a58302208d59423bdfc90f139bf3d4faf8dd4",
+    "deploymentId": "149d1cc19660ed3a3281ef7d3fbf0354c868b1aa",
     "outputFileTracingExcludes": {
       "**/*": [
         "drizzle-kit",
