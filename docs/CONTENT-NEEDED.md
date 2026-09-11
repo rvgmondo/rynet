@@ -41,9 +41,10 @@ They are not real cars and none of them is for sale.
 
 `src/seed/photos/`, sourced by `npm run fetch:photos` and attached by `npm run seed:photos`.
 
-Forty one photographs from Wikimedia Commons, every one under a licence that permits commercial
-use, every one a photograph of the model it is attached to, taken and identified by a named
-photographer. A seeded Hilux carries a photograph of a Hilux.
+Thirty six photographs from Wikimedia Commons, every one under a licence that permits commercial
+use, every one a photograph of the current shape of the model it is attached to, taken and
+identified by a named photographer, and every one looked at before it was accepted. A seeded
+Hilux carries a photograph of a Hilux.
 
 It is not a photograph of THAT Hilux, because that Hilux does not exist. The listing page prints
 "Photograph of this model, not of this car" with the photographer and the licence directly under
@@ -51,6 +52,11 @@ the image, and the demonstration badge on the same page says the listing itself 
 
 One listing in twelve is deliberately left without a photograph, because a dealership that adds
 stock before it photographs it is a real state the site has to handle and be seen handling.
+
+Five models have none at all, and show the colour plate throughout: Volkswagen Polo Vivo,
+Mahindra Pik Up, Toyota Starlet, Chery Tiggo 4 Pro and Mercedes-Benz A-Class. Commons has
+nothing of the current shape of any of them that is worth putting on a card, and a photograph of
+the wrong generation would break the one claim the page does make.
 
 Every media record carries `isDemonstration: true`.
 
