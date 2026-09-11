@@ -1,5 +1,4 @@
 import config from "@payload-config";
-import { BadgeCheck, Ban, FileText, ShieldCheck, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPayload } from "payload";
@@ -97,42 +96,50 @@ export default async function SellToADealerPage() {
   }));
 
   return (
-    <div className="container-page py-[var(--section-tight)]">
+    <>
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and every question below is visible on this page.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(FAQS)) }}
       />
 
-      <Breadcrumbs trail={[{ href: "/sell-to-a-dealer", label: "Sell to a dealership" }]} />
-
-      <div className="measure mt-6">
-        <h1 className="text-4xl leading-[1.15]">Sell your car to a verified dealership</h1>
-        <p className="mt-5 text-lg text-ink-secondary">
-          Tell us what you are driving and we pass it to verified dealerships near you that buy that
-          kind of car, so they can make you an offer. No strangers at your gate, no waiting for a
-          bank transfer that never arrives.
-        </p>
-      </div>
-
       {/*
-        Rynet has not signed a single dealership yet. Everything on this page describes what
-        happens when it has, and a page that quietly assumes that is a page that takes somebody
-        details on a promise it cannot currently keep. The agency site has the same problem and
-        solves it the same way: say so, in the first thing the reader sees.
+        REDRAWN. This was the longest page on the site and the only one that never changed
+        ground, never drew a rule, never reached for the prose face and never set a heading at
+        full size: four and a half thousand pixels of the same left-aligned column at the default
+        type scale, sitting in the navigation between two pages that had been rebuilt. It is one
+        of the three front doors.
       */}
-      <div role="note" className="measure mt-8 border-l-2 border-warning ps-5">
-        <p className="font-display text-sm font-bold text-warning">
-          We are new, so read this first
-        </p>
-        <p className="mt-2 text-sm text-ink-secondary">
-          Rynet is signing dealerships now, and there may not yet be one in your province that buys
-          your kind of car. If we cannot place it, we will email you and tell you rather than sit on
-          your details. Nothing here costs you anything and nothing obliges you to sell.
-        </p>
-      </div>
+      <section className="rn-columns border-b border-line bg-surface-sunken">
+        <div className="container-page py-[var(--section-tight)]">
+          <Breadcrumbs trail={[{ href: "/sell-to-a-dealer", label: "Sell to a dealership" }]} />
 
-      <div className="mt-12 grid gap-12 lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-16">
+          <h1 className="rn-head mt-8 max-w-[16ch]">Sell your car to a verified dealership</h1>
+          <p className="measure mt-6 text-lg text-ink-secondary">
+            Tell us what you are driving and we pass it to verified dealerships near you that buy
+            that kind of car, so they can make you an offer. No strangers at your gate, no waiting
+            for a bank transfer that never arrives.
+          </p>
+
+          {/*
+            Rynet has not signed a single dealership yet. Everything on this page describes what
+            happens when it has, and a page that quietly assumes that is a page that takes
+            somebody's details on a promise it cannot currently keep. The agency site has the same
+            problem and solves it the same way: say so, in the first thing the reader sees.
+          */}
+          <div role="note" className="measure mt-10 border-t-2 border-warning pt-5">
+            <p className="rn-label text-warning">We are new, so read this first</p>
+            <p className="rn-prose mt-3 text-ink-secondary">
+              Rynet is signing dealerships now, and there may not yet be one in your province that
+              buys your kind of car. If we cannot place it, we will email you and tell you rather
+              than sit on your details. Nothing here costs you anything and nothing obliges you to
+              sell.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div className="container-page grid gap-12 py-[var(--section-base)] lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-16">
         <div>
           <SellForm provinces={options} />
 
@@ -145,7 +152,7 @@ export default async function SellToADealerPage() {
             a statement that a right to complain exists.
           */}
           <section aria-labelledby="popia-heading" className="mt-8 border-t-2 border-ink pt-6">
-            <h2 id="popia-heading" className="text-lg">
+            <h2 id="popia-heading" className="rn-label text-ink-muted">
               What happens to your details
             </h2>
             <p className="mt-2 text-xs text-ink-muted">
@@ -210,10 +217,10 @@ export default async function SellToADealerPage() {
 
         <div className="space-y-10">
           <section aria-labelledby="how-heading">
-            <h2 id="how-heading" className="text-2xl">
+            <h2 id="how-heading" className="rn-head">
               How it works
             </h2>
-            <ol className="mt-5 space-y-4">
+            <ol className="mt-5 border-t border-line">
               {[
                 {
                   title: "You describe the car",
@@ -228,15 +235,17 @@ export default async function SellToADealerPage() {
                   body: "Dealerships deal with you directly, not through us, and any offer is subject to them seeing the car, because nobody can price one properly from a form. If none of them takes it up, you hear that from us.",
                 },
               ].map((step, index) => (
-                <li key={step.title} className="flex gap-4">
+                <li key={step.title} className="flex gap-5 border-b border-line py-5">
+                  {/* A numeral, not a red disc. The disc was a filled circle on a system with no
+                      radius and a second red object in the viewport. */}
                   <span
                     aria-hidden="true"
-                    className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-subtle font-display text-sm font-bold tabular text-accent"
+                    className="font-display text-base font-extrabold tabular text-ink-muted [font-variation-settings:'wdth'_112]"
                   >
-                    {index + 1}
+                    {String(index + 1).padStart(2, "0")}
                   </span>
                   <div>
-                    <h3 className="text-base font-semibold">{step.title}</h3>
+                    <h3 className="font-display text-base font-bold">{step.title}</h3>
                     <p className="mt-1 text-sm text-ink-secondary">{step.body}</p>
                   </div>
                 </li>
@@ -250,36 +259,41 @@ export default async function SellToADealerPage() {
             that forbids private listings has to be unmistakable about the difference.
           */}
           <section aria-labelledby="not-heading">
-            <h2 id="not-heading" className="text-2xl">
+            <h2 id="not-heading" className="rn-head">
               What we do not do
             </h2>
-            <ul className="mt-5 divide-y divide-line border-y-2 border-ink">
+            <ul className="mt-5 border-t-2 border-ink">
               {[
                 {
-                  Icon: Ban,
                   title: "We do not list your car on Rynet",
                   body: "Only registered dealerships list here. A private individual cannot, by any route, and that is deliberate: it is the reason a buyer on Rynet knows who they are dealing with. Selling to a dealership is the door that is open to you.",
                 },
                 {
-                  Icon: Wallet,
                   title: "We do not value your car",
                   body: "We hold no valuation licence, so any figure we put on this page would be invented. You will not see an estimate here. The dealerships make the offers, on the car itself.",
                 },
                 {
-                  Icon: ShieldCheck,
                   title: "We do not buy it, and we take no cut",
                   body: "Rynet is not a party to the sale. Nothing you do here costs you anything, and no commission comes out of what you are paid.",
                 },
                 {
-                  Icon: FileText,
                   title: "We do not pass your details to anyone else",
                   body: `Up to ${MAX_DEALERSHIPS} verified dealerships in your province, for this one purpose. Not sold on, not added to a marketing list, not handed to a lead broker.`,
                 },
-              ].map(({ Icon, title, body }) => (
-                <li key={title} className="flex gap-3">
-                  <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ink-muted" />
+              ].map(({ title, body }, index) => (
+                /* py-7, because these rows had no vertical padding at all: every line of text
+                   was welded to its own separator, with the cap-height of the first touching the
+                   2px rule above it. The glyphs are gone with it, replaced by the numeral this
+                   site uses wherever a list is really an index. */
+                <li key={title} className="flex gap-5 border-b border-line py-7">
+                  <span
+                    aria-hidden="true"
+                    className="font-display text-base font-extrabold tabular text-ink-muted [font-variation-settings:'wdth'_112]"
+                  >
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                   <div>
-                    <h3 className="text-base font-semibold">{title}</h3>
+                    <h3 className="font-display text-base font-bold">{title}</h3>
                     <p className="mt-1 text-sm text-ink-secondary">{body}</p>
                   </div>
                 </li>
@@ -287,33 +301,11 @@ export default async function SellToADealerPage() {
             </ul>
           </section>
 
-          <section aria-labelledby="price-heading">
-            <h2 id="price-heading" className="text-2xl">
-              An honest word about the price
-            </h2>
-            <div className="mt-4 space-y-3 text-sm text-ink-secondary">
-              <p>
-                A dealership will offer you less than you would get selling privately. That is not a
-                trick, it is arithmetic: they have to recondition the car, licence it, carry it on
-                the floor until somebody buys it, and stand behind it afterwards.
-              </p>
-              <p>
-                What you get for that difference is one conversation instead of twenty, nobody
-                unknown coming to your house for a test drive, no risk of a payment reversing after
-                the car has gone, and a settlement handled properly if there is still finance on it.
-              </p>
-              <p>
-                If the money matters more than the hassle, sell privately. We would rather say that
-                than have you find out afterwards.
-              </p>
-            </div>
-          </section>
-
           <section aria-labelledby="papers-heading">
-            <h2 id="papers-heading" className="text-2xl">
+            <h2 id="papers-heading" className="rn-head">
               What to have ready
             </h2>
-            <ul className="mt-4 space-y-2 text-sm text-ink-secondary">
+            <ul className="mt-5 border-t border-line text-sm text-ink-secondary">
               {[
                 "Your identity document, and proof of address.",
                 "The registration certificate, if the car is paid off. If it is not, the bank holds it and the dealership will get a settlement figure.",
@@ -321,9 +313,8 @@ export default async function SellToADealerPage() {
                 "Both keys, and the spare remote if there is one.",
                 "The current licence disc.",
               ].map((item) => (
-                <li key={item} className="flex gap-3">
-                  <BadgeCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent" />
-                  <span>{item}</span>
+                <li key={item} className="border-b border-line py-4">
+                  {item}
                 </li>
               ))}
             </ul>
@@ -335,46 +326,85 @@ export default async function SellToADealerPage() {
         </div>
       </div>
 
-      <section aria-labelledby="faq-heading" className="mt-[var(--section-base)]">
-        <h2 id="faq-heading" className="text-2xl">
+      {/*
+        The page's one tonal break, and it is spent on the paragraph that costs us money.
+        --------------------------------------------------------------------------------
+        Telling somebody they will get less here than selling privately, on the page asking them
+        to sell here, is the most confident thing on this site after the verification limits. It
+        was four small grey paragraphs in the right-hand column. Now it is the band the page is
+        built towards, which is the same device /how-verification-works uses for the same reason.
+      */}
+      <section aria-labelledby="price-heading" className="bg-surface-inverse text-ink-inverse">
+        <div className="container-page py-[var(--section-base)]">
+          <h2 id="price-heading" className="rn-head max-w-[14ch]">
+            An honest word about the price
+          </h2>
+          <hr className="mt-8 h-px border-0 bg-silver" />
+
+          <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+            <p className="rn-prose rn-prose--drop text-lg">
+              A dealership will offer you less than you would get selling privately. That is not a
+              trick, it is arithmetic: they have to recondition the car, licence it, carry it on the
+              floor until somebody buys it, and stand behind it afterwards.
+            </p>
+            <div className="space-y-5">
+              <p className="rn-prose opacity-90">
+                What you get for that difference is one conversation instead of twenty, nobody
+                unknown coming to your house for a test drive, no risk of a payment reversing after
+                the car has gone, and a settlement handled properly if there is still finance on it.
+              </p>
+              <p className="rn-prose opacity-90">
+                If the money matters more than the hassle, sell privately. We would rather say that
+                than have you find out afterwards.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="faq-heading" className="container-page py-[var(--section-base)]">
+        <h2 id="faq-heading" className="rn-head max-w-[18ch]">
           Questions people actually ask
         </h2>
-        <dl className="measure mt-6 divide-y divide-line border-y border-line">
+        <hr className="rn-rule mt-6" />
+        <dl className="grid lg:grid-cols-2 lg:gap-x-12">
           {FAQS.map((faq) => (
-            <div key={faq.question} className="py-5">
-              <dt className="font-semibold">{faq.question}</dt>
-              <dd className="mt-2 text-sm text-ink-secondary">{faq.answer}</dd>
+            <div key={faq.question} className="border-b border-line py-6">
+              <dt className="font-display text-lg font-bold leading-snug">{faq.question}</dt>
+              <dd className="rn-prose mt-3 text-ink-secondary">{faq.answer}</dd>
             </div>
           ))}
         </dl>
       </section>
 
-      <section
-        aria-labelledby="buying-heading"
-        className="mt-[var(--section-base)] border-t-2 border-ink bg-surface-sunken p-8"
-      >
-        <h2 id="buying-heading" className="text-2xl">
-          Buying rather than selling?
-        </h2>
-        <p className="measure mt-3 text-ink-secondary">
-          Every car on Rynet comes from a dealership we have checked. There are no private sellers
-          on the site, which is the whole point of it.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/cars"
-            className="rn-label inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
-          >
-            Browse the stock
-          </Link>
-          <Link
-            href="/how-verification-works"
-            className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 hover:bg-ink hover:text-ink-inverse"
-          >
-            How we verify dealerships
-          </Link>
+      <section aria-labelledby="buying-heading" className="container-page pb-[var(--section-base)]">
+        <hr className="rn-rule rn-rule--brand" />
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
+          <h2 id="buying-heading" className="rn-head max-w-[12ch]">
+            Buying rather than selling?
+          </h2>
+          <div>
+            <p className="rn-prose text-ink-secondary">
+              Every car on Rynet comes from a dealership we have checked. There are no private
+              sellers on the site, which is the whole point of it.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                href="/cars"
+                className="rn-label inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
+              >
+                Browse the stock
+              </Link>
+              <Link
+                href="/how-verification-works"
+                className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 hover:bg-ink hover:text-ink-inverse"
+              >
+                How we verify dealerships
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
-    </div>
+    </>
   );
 }
