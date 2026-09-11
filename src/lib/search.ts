@@ -180,7 +180,37 @@ export function toCard(doc: Vehicle): VehicleCardData {
 
 export const PER_PAGE = 24;
 
-export async function searchVehicles(filters: SearchFilters) {
+/**
+ * The highest page number anyone is allowed to ask for.
+ *
+ * `Math.max(1, n)` clamped the floor and nothing clamped the ceiling, so
+ * `/cars?page=999999999999999999999` reached SQLite as an offset and threw, and the marketplace
+ * answered 500. A crawler following a malformed link, or anybody editing the address bar, could
+ * take the search page down. Ten thousand pages is 240 000 listings, which is far past anything
+ * this platform holds before the index table in ARCHITECTURE.md exists.
+ */
+const MAX_PAGE = 10_000;
+
+export function safePage(value: unknown): number {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(n, MAX_PAGE);
+}
+
+/**
+ * One clause builder, for every query that answers a question about the same set.
+ *
+ * There were two. `searchVehicles` resolved eight dimensions and `priceRange` resolved three, so
+ * the price range printed on a landing page was the range of a DIFFERENT set from the cars
+ * underneath it. Every province, city, fuel and condition page therefore quoted the whole
+ * catalogue: /cars/in/limpopo, which holds no cars at all, told a buyer it had stock "from
+ * R 83 300 to R 1 489 600". That is not a design slip. It is forty-odd indexable pages stating
+ * something untrue about price, which is the one number this market checks.
+ *
+ * So the clause set lives here once and both callers take it. A dimension added to search now
+ * reaches the range by construction rather than by somebody remembering.
+ */
+export async function buildVehicleWhere(filters: SearchFilters): Promise<Record<string, unknown>> {
   const payload = await getPayload({ config });
 
   const [makeId, modelId, variantId, bodyId, fuelId, transmissionId, provinceId, cityId] =
@@ -198,10 +228,15 @@ export async function searchVehicles(filters: SearchFilters) {
   // Location filters through the branch, so they need the matching branch ids first.
   let branchIds: number[] | undefined;
   if (provinceId || cityId) {
-    const where: Where = cityId
+    const branchWhere: Where = cityId
       ? { city: { equals: cityId } }
       : { province: { equals: provinceId } };
-    const branches = await payload.find({ collection: "branches", where, limit: 500, depth: 0 });
+    const branches = await payload.find({
+      collection: "branches",
+      where: branchWhere,
+      limit: 500,
+      depth: 0,
+    });
     branchIds = branches.docs.map((b) => b.id);
     // A location with no branches means no stock, and an empty `in` clause would otherwise
     // match everything rather than nothing.
@@ -224,12 +259,31 @@ export async function searchVehicles(filters: SearchFilters) {
     };
   }
 
+  return where;
+}
+
+export async function searchVehicles(filters: SearchFilters) {
+  const payload = await getPayload({ config });
+
+  // Resolved a second time only to report which slugs were unknown, so a caller can 404 rather
+  // than silently ignoring a filter. The clauses themselves come from buildVehicleWhere.
+  const [makeId, modelId, bodyId, fuelId, provinceId, cityId] = await Promise.all([
+    resolveSlug("makes", filters.make),
+    resolveSlug("models", filters.model),
+    resolveSlug("body-types", filters.body),
+    resolveSlug("fuel-types", filters.fuel),
+    resolveSlug("provinces", filters.province),
+    resolveSlug("cities", filters.city),
+  ]);
+
+  const where = await buildVehicleWhere(filters);
+
   const results = await payload.find({
     collection: "vehicles",
     where: where as never,
     sort: SORTS[filters.sort ?? "newest"] ?? SORTS.newest,
     limit: PER_PAGE,
-    page: Math.max(1, filters.page ?? 1),
+    page: safePage(filters.page ?? 1),
     depth: 2,
   });
 
@@ -250,21 +304,17 @@ export async function searchVehicles(filters: SearchFilters) {
   };
 }
 
-/** Price range across a filtered set, for the copy on a landing page. */
+/**
+ * Price range across a filtered set, for the copy on a landing page.
+ *
+ * Takes the same clause set as the search underneath it. See buildVehicleWhere for what happened
+ * for as long as it did not.
+ */
 export async function priceRange(
   filters: SearchFilters,
 ): Promise<{ min: number; max: number } | null> {
   const payload = await getPayload({ config });
-  const [makeId, modelId, bodyId] = await Promise.all([
-    resolveSlug("makes", filters.make),
-    resolveSlug("models", filters.model),
-    resolveSlug("body-types", filters.body),
-  ]);
-
-  const where: Record<string, unknown> = { status: { equals: "live" } };
-  if (makeId) where.make = { equals: makeId };
-  if (modelId) where.model = { equals: modelId };
-  if (bodyId) where.bodyType = { equals: bodyId };
+  const where = await buildVehicleWhere(filters);
 
   const [cheapest, dearest] = await Promise.all([
     payload.find({

@@ -8,7 +8,7 @@ import { ResultsGrid } from "@/components/vehicles/results-grid";
 import { ResultsHeader } from "@/components/vehicles/results-header";
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { formatRand } from "@/lib/format";
-import { resolveQuery, toCard } from "@/lib/search";
+import { resolveQuery, safePage, toCard } from "@/lib/search";
 
 export const metadata: Metadata = {
   title: "Cars for sale from verified dealerships",
@@ -124,7 +124,9 @@ export default async function CarsPage({ searchParams }: { searchParams: SearchP
   const params = await searchParams;
   const payload = await getPayload({ config });
 
-  const page = Math.max(1, Number(one(params.page) ?? 1) || 1);
+  // Clamped at both ends. The floor was clamped and the ceiling was not, so a page number past
+  // the safe integer range reached SQLite as an offset and this route answered 500.
+  const page = safePage(one(params.page) ?? 1);
   const sort = one(params.sort) ?? "newest";
 
   /*
