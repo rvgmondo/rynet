@@ -32,7 +32,15 @@ const NAV = [
  */
 export function AgencyHeader() {
   return (
-    <header className="sticky top-0 z-[var(--z-header)] border-b border-line bg-surface/95 backdrop-blur-sm">
+    /*
+     * Solid, and closed by the 2px ink rule, exactly as the marketplace masthead is.
+     *
+     * This was `bg-surface/95 backdrop-blur-sm` with a hairline under it, which is the old
+     * site: scrolled, grey ghosts of the page bled through the bar behind the wordmark, so
+     * RYNET DIGITAL sat on a mottled ground. It is also a full-viewport readback on every
+     * frame, which is the cost the vehicle page's action bar refuses for the same reason.
+     */
+    <header className="sticky top-0 z-[var(--z-header)] border-b-2 border-ink bg-surface">
       <div className="container-page flex h-16 items-center gap-3 sm:gap-6">
         <Link
           href="/digital"
@@ -88,14 +96,14 @@ export function AgencyHeader() {
 
             <nav
               aria-label="Main"
-              className="absolute inset-x-0 top-16 border-b border-line bg-surface p-4 shadow-(--rn-shadow-2)"
+              className="absolute inset-x-0 top-16 border-b-2 border-ink bg-surface py-2"
             >
               <ul className="container-page flex flex-col gap-1">
                 {NAV.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      className="flex min-h-11 items-center border-b border-line px-3 font-medium text-ink-secondary hover:text-accent"
+                      className="rn-label flex min-h-12 items-center border-b border-line px-1 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
                     >
                       {item.label}
                     </Link>
@@ -112,13 +120,17 @@ export function AgencyHeader() {
                 <li className="mt-2 border-t border-line pt-2">
                   <Link
                     href="/"
-                    className="flex min-h-11 items-center gap-2 px-3 text-sm text-ink-secondary hover:text-accent"
+                    className="rn-label flex min-h-12 items-center gap-2 px-1 text-ink-muted transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
                   >
                     <ArrowLeft aria-hidden="true" className="size-4" />
                     Rynet Showroom, buy a car
                   </Link>
                 </li>
-                <li className="pt-2">
+                {/* Captioned row, the way the marketplace menu does it. On its own the
+                    fieldset stretched to the full menu width and left its three 40px segments
+                    crammed against the left end with 253px of empty border beside them. */}
+                <li className="flex items-center justify-between gap-4 px-1 pt-4">
+                  <span className="rn-label text-ink-muted">Colour theme</span>
                   <ThemeToggle name="theme-menu" />
                 </li>
               </ul>

@@ -105,7 +105,7 @@ export function SiteHeader() {
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        className="flex min-h-12 items-center border-b border-line text-base font-medium hover:text-accent"
+                        className="rn-label flex min-h-12 items-center border-b border-line px-1 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
                       >
                         {item.label}
                       </Link>

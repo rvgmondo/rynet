@@ -49,7 +49,9 @@ export function ThemeToggle({ name = "theme" }: { name?: string }) {
   const current = theme ?? "system";
 
   return (
-    <fieldset className="flex h-11 items-center border border-line-interactive">
+    /* `w-fit`, because a fieldset is a block and stretches. In the agency drawer it ran the
+       full menu width with its three 40px segments crammed against the left end. */
+    <fieldset className="flex h-11 w-fit items-center border border-line-interactive">
       <legend className="sr-only">Colour theme</legend>
       {OPTIONS.map(({ value, label, Icon }) => {
         const id = `${name}-${value}`;

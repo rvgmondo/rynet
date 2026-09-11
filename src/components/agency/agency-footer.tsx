@@ -18,7 +18,7 @@ const RYNET_LINKS = [
 
 export function AgencyFooter() {
   return (
-    <footer className="mt-[var(--section-base)] border-t border-line bg-surface-sunken">
+    <footer className="mt-[var(--section-base)] border-t-2 border-ink bg-surface-sunken">
       <div className="container-page py-[var(--section-tight)]">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
           <div className="max-w-xs">
@@ -44,7 +44,7 @@ export function AgencyFooter() {
           <nav aria-labelledby="footer-services">
             <h2
               id="footer-services"
-              className="font-display text-2xs font-bold uppercase tracking-[var(--tracking-widest)] text-ink-muted"
+              className="rn-label text-ink-muted"
             >
               Services
             </h2>
@@ -53,7 +53,7 @@ export function AgencyFooter() {
                 <li key={service.slug}>
                   <Link
                     href={`/digital/services/${service.slug}`}
-                    className="flex min-h-11 items-center text-sm text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:text-accent"
+                    className="flex min-h-11 items-center border-b border-line text-sm text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:text-accent"
                   >
                     {service.name}
                   </Link>
@@ -65,7 +65,7 @@ export function AgencyFooter() {
           <nav aria-labelledby="footer-rynet">
             <h2
               id="footer-rynet"
-              className="font-display text-2xs font-bold uppercase tracking-[var(--tracking-widest)] text-ink-muted"
+              className="rn-label text-ink-muted"
             >
               Rynet
             </h2>
@@ -74,7 +74,7 @@ export function AgencyFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="flex min-h-11 items-center text-sm text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:text-accent"
+                    className="flex min-h-11 items-center border-b border-line text-sm text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:text-accent"
                   >
                     {link.label}
                   </Link>
