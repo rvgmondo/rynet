@@ -51,9 +51,3 @@ export function vehicleAlt(parts: {
       : "";
   return `${name || "Vehicle"}${colour}${position}`;
 }
-
-/** Turns a price drop into the sentence a buyer actually wants: how much came off. */
-export function priceDrop(current: number, previous?: number | null): string | null {
-  if (!previous || previous <= current) return null;
-  return `${formatRand(previous - current)} off`;
-}

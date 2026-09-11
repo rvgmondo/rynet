@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatCc, formatKm, formatMonthly, formatRand, priceDrop, vehicleAlt } from "./format";
+import { formatCc, formatKm, formatMonthly, formatRand, vehicleAlt } from "./format";
 
 /**
  * Formatting.
@@ -57,25 +57,6 @@ describe("formatKm and formatCc", () => {
 
   it("formats engine capacity the same way", () => {
     expect(formatCc(2755)).toBe("2 755 cc");
-  });
-});
-
-describe("priceDrop", () => {
-  it("says how much came off, which is what a buyer wants to know", () => {
-    expect(priceDrop(280000, 300000)).toBe("R 20 000 off");
-  });
-
-  it("says nothing when there is no previous price", () => {
-    expect(priceDrop(280000, null)).toBeNull();
-    expect(priceDrop(280000, undefined)).toBeNull();
-  });
-
-  it("says nothing when the price went UP, rather than reporting a negative drop", () => {
-    expect(priceDrop(300000, 280000)).toBeNull();
-  });
-
-  it("says nothing when the price is unchanged", () => {
-    expect(priceDrop(280000, 280000)).toBeNull();
   });
 });
 

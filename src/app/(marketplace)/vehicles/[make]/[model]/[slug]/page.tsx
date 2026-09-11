@@ -210,7 +210,20 @@ export default async function VehiclePage({ params }: { params: Params }) {
             </div>
           </div>
 
-          <div className="lg:sticky lg:top-20 lg:self-start">
+          {/*
+            Sticky, and it has to FIT to be sticky.
+            --------------------------------------
+            The column measured 801px. On a 1366 by 768 laptop, which is still the commonest
+            desktop screen in this market, that is taller than the viewport, so the browser stops
+            honouring `sticky` partway down and the primary call to action scrolls away with it.
+            A sticky element taller than its window is just a slow element.
+
+            Capping it at the viewport minus the masthead restores the behaviour at every height,
+            and the overflow is the escape hatch for the rare case where it is genuinely too long
+            to hold: it never scrolls at 900 and above, and it scrolls a few pixels below that
+            rather than dragging the enquiry button off the screen.
+          */}
+          <div className="lg:sticky lg:top-20 lg:max-h-[calc(100svh-6rem)] lg:self-start lg:overflow-y-auto">
             <PriceRail vehicle={vehicle} sold={sold} />
             <div className="mt-4">
               <DealerCard dealer={dealer} branch={branch} />

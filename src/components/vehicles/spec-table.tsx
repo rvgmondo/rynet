@@ -53,10 +53,30 @@ function Group({
   if (present.length === 0) return null;
 
   return (
-    <details open={defaultOpen} className="border-b border-line">
-      <summary className="flex min-h-12 cursor-pointer items-center justify-between font-display text-base font-bold">
+    <details open={defaultOpen} className="group border-b border-line">
+      {/*
+        A disclosure that says it is one.
+        ---------------------------------
+        The marker was removed and nothing replaced it, so "History and paperwork" rendered as a
+        bold line with a number beside it and gave no sign at all that it opened. On a page where
+        three of the four spec groups are open by default, the one that is closed is the one
+        nobody could tell was closed.
+
+        A plus that becomes a minus, set in the label face at the right edge beside the count,
+        with the ink flip the rest of the site uses for an interactive row. `list-style: none`
+        on the summary is what takes the native triangle off in every engine.
+      */}
+      <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-1 font-display text-base font-bold transition-colors duration-[var(--duration-micro)] [&::-webkit-details-marker]:hidden [&::marker]:content-[''] hover:bg-ink hover:text-ink-inverse">
         {title}
-        <span className="text-xs font-medium text-ink-muted">{present.length}</span>
+        <span className="flex items-center gap-3">
+          <span className="rn-label text-ink-muted group-hover:text-ink-inverse">
+            {present.length}
+          </span>
+          <span aria-hidden="true" className="rn-label w-3 text-center">
+            <span className="group-open:hidden">+</span>
+            <span className="hidden group-open:inline">-</span>
+          </span>
+        </span>
       </summary>
       <dl className="grid gap-x-8 gap-y-0 pb-4 sm:grid-cols-2">
         {present.map((row) => (

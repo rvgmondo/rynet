@@ -1,3 +1,4 @@
+import { RandFigure } from "@/components/vehicles/rand-figure";
 import { calculateFinance } from "@/lib/finance";
 import { formatRand } from "@/lib/format";
 import type { FinanceDefault } from "@/payload-types";
@@ -48,36 +49,41 @@ export function FinancePanel({ price, defaults }: { price: number; defaults: Fin
 
   return (
     <section aria-labelledby="finance-heading" className="border-t-2 border-ink pt-6">
-      <h2 id="finance-heading" className="text-2xl">
+      <h2 id="finance-heading" className="rn-head">
         What it might cost a month
       </h2>
-      <p className="measure mt-1 text-sm text-ink-secondary">
+      <p className="measure mt-3 text-sm text-ink-secondary">
         An estimate, not a quotation. What you are actually offered depends on a credit assessment.
       </p>
 
-      <div className="mt-5 grid gap-5 sm:grid-cols-2">
-        <div className="bg-surface-sunken p-4">
-          <p className="text-xs font-medium uppercase tracking-[var(--tracking-wide)] text-ink-muted">
-            Estimated instalment
-          </p>
-          <p className="mt-1 font-display text-3xl font-extrabold tabular">
-            {formatRand(estimate.monthlyInstalment)}
-            <span className="ml-1 text-base font-bold text-ink-secondary">pm</span>
-          </p>
+      {/*
+        Two figures on one ruled band, not two grey boxes.
+        -------------------------------------------------
+        They were filled panels with the figures set in a fourth price style, so a page that
+        already had the asking price, the instalment and the card prices carried four different
+        ways of writing a rand amount. They take RandFigure now, which is the one the whole
+        platform uses, and the divider is a hairline rather than a gap between two fills.
+
+        The two are still the same weight, deliberately. Putting the cost of credit in a footnote
+        is how a monthly figure gets to look like the whole story.
+      */}
+      <div className="mt-8 grid border-y-2 border-ink sm:grid-cols-2 sm:divide-x sm:divide-line-strong">
+        <div className="py-6 sm:pe-8 [container-type:inline-size]">
+          <p className="rn-label text-ink-muted">Estimated instalment</p>
+          <div className="mt-2 flex items-baseline gap-2">
+            <RandFigure value={estimate.monthlyInstalment} />
+            <span className="rn-label text-ink-secondary">pm</span>
+          </div>
         </div>
 
-        {/*
-          Same visual weight as the instalment, deliberately. Putting the cost of credit in
-          a footnote is how a monthly figure gets to look like the whole story.
-        */}
-        <div className="bg-surface-sunken p-4">
-          <p className="text-xs font-medium uppercase tracking-[var(--tracking-wide)] text-ink-muted">
-            Total cost of the credit
+        <div className="border-t border-line py-6 sm:border-t-0 sm:ps-8 [container-type:inline-size]">
+          <p className="rn-label text-ink-muted">Total cost of the credit</p>
+          <div className="mt-2">
+            <RandFigure value={estimate.totalCostOfCredit} />
+          </div>
+          <p className="rn-label rn-label--light mt-2 text-ink-muted">
+            On top of the {formatRand(price)} price
           </p>
-          <p className="mt-1 font-display text-3xl font-extrabold tabular">
-            {formatRand(estimate.totalCostOfCredit)}
-          </p>
-          <p className="mt-1 text-xs text-ink-muted">On top of the {formatRand(price)} price</p>
         </div>
       </div>
 
