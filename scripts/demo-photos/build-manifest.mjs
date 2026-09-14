@@ -26,9 +26,10 @@ import sharp from "sharp";
  * register the photographs on the live host without sharp or a build step there: it writes the
  * media rows directly rather than processing uploads.
  *
- * Only originals are shipped, no derivatives. Every photograph on the site is drawn through
- * next/image, which resizes for the viewport regardless, so a 320px and a 640px copy of each
- * would add weight to every deploy for nothing.
+ * Two widths of each: the 1280px original for the listing gallery, and a 640px copy for every
+ * card. The host never resizes anything on request (see `images.unoptimized` in next.config.ts),
+ * so the card copy is not an optimisation, it is the only thing standing between a results page
+ * and the browser downloading twenty four 1280px photographs.
  */
 
 const CANDIDATES = process.argv[2];
@@ -73,6 +74,15 @@ for (const [key, list] of Object.entries(picks)) {
     const filesize = statSync(target).size;
     bytes += filesize;
 
+    const cardFile = `${slug}--${n}-640.webp`;
+    const cardTarget = path.join(OUT, cardFile);
+    const card = await sharp(target)
+      .resize({ width: 640 })
+      .webp({ quality: 72, effort: 6 })
+      .toFile(cardTarget);
+    const cardFilesize = statSync(cardTarget).size;
+    bytes += cardFilesize;
+
     manifest.push({
       make: source.make,
       model: source.model,
@@ -81,6 +91,7 @@ for (const [key, list] of Object.entries(picks)) {
       width: info.width,
       height: info.height,
       filesize,
+      card: { file: cardFile, width: card.width, height: card.height, filesize: cardFilesize },
       title: source.title,
       licence: source.licence,
       author: source.author,

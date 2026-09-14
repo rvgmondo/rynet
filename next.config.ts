@@ -75,7 +75,21 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   images: {
-    formats: ["image/avif", "image/webp"],
+    /*
+     * The origin never resizes an image on request.
+     *
+     * It is a shared CloudLinux account with a hard cap on processes and CPU. With the optimiser
+     * on, one browser loading the results page queued two dozen AVIF encodes of 1280px
+     * photographs, the account hit its limit, and the live site answered every request with
+     * "503 Service Unavailable" for minutes afterwards. The optimiser's cache also lives inside
+     * .next, which every deploy replaces, so that was going to happen after every deploy.
+     *
+     * Payload writes the renditions once, at upload (thumbnail, card, gallery, hero in
+     * src/collections/Media.ts), the demonstration photographs ship with a 640px card copy, and
+     * the components ask for the rendition that fits through pick() in src/lib/vehicle-photo.ts.
+     * So nothing is lost but on-the-fly format conversion, which this host cannot afford.
+     */
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "rynet.co.za" },
       { protocol: "https", hostname: "**.rynet.co.za" },

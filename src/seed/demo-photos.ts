@@ -21,9 +21,10 @@ import manifest from "./photos/manifest.json";
  *
  * A normal upload goes through sharp to make derivatives. Doing that for 134 photographs inside
  * a migration, at boot, on a shared CloudLinux account, is how a deploy times out its own health
- * check. The committed photographs are already sized (scripts/demo-photos/build-manifest.mjs)
- * and the manifest carries their dimensions, so this copies the files and writes the media
- * rows directly. next/image resizes for the viewport on every page regardless.
+ * check. The committed photographs are already sized (scripts/demo-photos/build-manifest.mjs),
+ * a 1280px original and a 640px card copy of each, and the manifest carries their dimensions, so
+ * this copies the files and writes the media rows directly, with the card copy recorded as the
+ * `card` and `thumbnail` renditions.
  *
  * WHAT IS AND IS NOT CLAIMED
  *
@@ -47,6 +48,7 @@ export type ManifestEntry = {
   width: number;
   height: number;
   filesize: number;
+  card: { file: string; width: number; height: number; filesize: number };
   title: string;
   licence: string;
   author: string;
@@ -76,6 +78,84 @@ const photosDir = () => path.join(process.cwd(), "src", "seed", "photos");
 type Relation = number | { id: number } | null | undefined;
 const idOf = (value: Relation): number | null =>
   value === null || value === undefined ? null : typeof value === "object" ? value.id : value;
+
+/** Both widths of one photograph into the media directory, leaving any that are already there. */
+async function copyPhotoFiles(entry: ManifestEntry, staticDir: string): Promise<void> {
+  for (const file of [entry.file, entry.card.file]) {
+    const target = path.join(staticDir, `${DEMO_PREFIX}${file}`);
+    const already = await stat(target).catch(() => null);
+    if (!already) await copyFile(path.join(photosDir(), file), target);
+  }
+}
+
+/**
+ * The card copy, recorded as the renditions a card and a thumbnail ask for.
+ *
+ * The host never resizes on request, so without these a results page would send every buyer
+ * the 1280px original twenty four times over.
+ */
+function cardSizes(entry: ManifestEntry) {
+  const filename = `${DEMO_PREFIX}${entry.card.file}`;
+  const rendition = {
+    url: `/api/media/file/${filename}`,
+    width: entry.card.width,
+    height: entry.card.height,
+    mimeType: "image/webp",
+    filesize: entry.card.filesize,
+    filename,
+  };
+  return { card: rendition, thumbnail: rendition };
+}
+
+/**
+ * Adds the card copies to demonstration photographs registered before they existed.
+ *
+ * The first set to reach the live site had originals only and relied on next/image to resize
+ * them on request. On the shared host that took the site down: a single browser loading the
+ * results page queued two dozen image encodes, the account hit its process limit, and every
+ * request after it was answered 503. Returns how many records it updated.
+ */
+export async function addDemoCardSizes(
+  payload: Payload,
+  options: { req?: Partial<PayloadRequest> } = {},
+): Promise<number> {
+  const { req } = options;
+  const upload = payload.collections.media?.config.upload;
+  if (!upload || typeof upload !== "object" || upload.disableLocalStorage) return 0;
+  const staticDir = path.resolve(process.cwd(), upload.staticDir ?? "media");
+
+  const byFilename = new Map(
+    (manifest as ManifestEntry[]).map((entry) => [`${DEMO_PREFIX}${entry.file}`, entry]),
+  );
+  const media = await payload.find({
+    collection: "media",
+    where: { isDemonstration: { equals: true } },
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+    req,
+  });
+
+  let updated = 0;
+  for (const doc of media.docs as {
+    id: number;
+    filename?: string | null;
+    sizes?: { card?: { url?: string | null } };
+  }[]) {
+    const entry = doc.filename ? byFilename.get(doc.filename) : undefined;
+    if (!entry || doc.sizes?.card?.url) continue;
+    await copyPhotoFiles(entry, staticDir);
+    await payload.db.updateOne({
+      collection: "media",
+      id: doc.id,
+      data: { sizes: cardSizes(entry) },
+      req,
+    });
+    updated += 1;
+  }
+  return updated;
+}
 
 export async function installDemoPhotos(
   payload: Payload,
@@ -141,9 +221,7 @@ export async function installDemoPhotos(
   const mediaIdByFile = new Map<string, number>();
   for (const entry of entries) {
     const filename = `${DEMO_PREFIX}${entry.file}`;
-    const target = path.join(staticDir, filename);
-    const already = await stat(target).catch(() => null);
-    if (!already) await copyFile(path.join(photosDir(), entry.file), target);
+    await copyPhotoFiles(entry, staticDir);
 
     const created = await payload.db.create({
       collection: "media",
@@ -163,6 +241,7 @@ export async function installDemoPhotos(
         url: `/api/media/file/${filename}`,
         focalX: 50,
         focalY: 50,
+        sizes: cardSizes(entry),
       },
       req,
     });

@@ -4,6 +4,7 @@ import * as migration_20260908_121058_two_factor from './20260908_121058_two_fac
 import * as migration_20260909_062425_trade_in_distribution from './20260909_062425_trade_in_distribution';
 import * as migration_20260914_081942_media_demonstration_flag from './20260914_081942_media_demonstration_flag';
 import * as migration_20260914_081943_demo_photographs from './20260914_081943_demo_photographs';
+import * as migration_20260914_110000_demo_photo_card_sizes from './20260914_110000_demo_photo_card_sizes';
 
 export const migrations = [
   {
@@ -35,5 +36,10 @@ export const migrations = [
     up: migration_20260914_081943_demo_photographs.up,
     down: migration_20260914_081943_demo_photographs.down,
     name: '20260914_081943_demo_photographs',
+  },
+  {
+    up: migration_20260914_110000_demo_photo_card_sizes.up,
+    down: migration_20260914_110000_demo_photo_card_sizes.down,
+    name: '20260914_110000_demo_photo_card_sizes',
   },
 ];
