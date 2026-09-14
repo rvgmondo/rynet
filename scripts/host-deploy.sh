@@ -68,6 +68,40 @@ fi
 say "deploying $INCOMING_SHA (was ${CURRENT_SHA:-nothing})"
 mkdir -p "$APP"
 
+# ----------------------------------------------------------------- the database, first
+#
+# The app now applies pending migrations to itself when it boots (src/lib/migrate-on-boot.ts),
+# so the restart at the end of this script can change the database. A code rollback is one
+# rename; a database rollback is only possible if a copy exists from before the restart. So a
+# copy is taken on every deploy, before anything else is touched, and a deploy that cannot take
+# one does not happen.
+#
+# sqlite3's .backup when the host has it, because it is consistent even while the app is
+# writing. Otherwise the file and its WAL sidecars together, which is consistent enough on a
+# site where a write is a dealer saving a listing. The ten most recent are kept.
+DB="${RYNET_DB:-$APP/rynet.db}"
+if [ -s "$DB" ]; then
+  mkdir -p "$APP/backups"
+  STAMP="$(date -u '+%Y%m%d-%H%M%S')"
+  BACKUP="$APP/backups/rynet-$STAMP-$INCOMING_SHA.db"
+  if command -v sqlite3 > /dev/null 2>&1; then
+    sqlite3 "$DB" ".backup '$BACKUP'" || die "could not back up $DB with sqlite3, most likely disk quota. Nothing has been changed."
+  else
+    cp "$DB" "$BACKUP" || die "could not copy $DB to $BACKUP, most likely disk quota. Nothing has been changed."
+    for sidecar in -wal -shm; do
+      if [ -f "$DB$sidecar" ]; then cp "$DB$sidecar" "$BACKUP$sidecar" || true; fi
+    done
+  fi
+  [ -s "$BACKUP" ] || die "the database backup is empty. Nothing has been changed."
+  say "database backed up to $BACKUP"
+  # Oldest first, keep ten. `ls -t` rather than a glob sort, so the stamp format can change.
+  ls -1t "$APP"/backups/rynet-*.db 2>/dev/null | tail -n +11 | while read -r old; do
+    rm -f "$old" "$old-wal" "$old-shm"
+  done
+else
+  say "no database at $DB yet, so there is nothing to back up"
+fi
+
 # ------------------------------------------------------------------- stage, then swap
 #
 # The build is roughly 90MB across 1100 files. Copying it straight over the live directory
@@ -151,6 +185,11 @@ rollback() {
   echo "rolled back from $INCOMING_SHA" >> "$APP/DEPLOYED.txt"
   touch "$APP/tmp/restart.txt"
   say "rolled back. The failed build is in $APP/.next.failed"
+  # The database is deliberately NOT restored. Migrations so far only add, so the older build
+  # reads the migrated database fine, and restoring it would throw away anything written since.
+  if [ -n "${BACKUP:-}" ]; then
+    say "if the database itself is the problem, the copy from before this deploy is $BACKUP"
+  fi
   exit 1
 }
 
@@ -159,7 +198,10 @@ if ! command -v curl > /dev/null 2>&1; then
   exit 0
 fi
 
-for attempt in 1 2 3 4 5 6; do
+# Twelve, not six. The first boot after a deploy can apply migrations before it answers, and
+# the demonstration photographs took about thirty seconds on a fast machine. A shared host is
+# slower, and a health check that gives up first rolls back a deploy that was about to work.
+for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
   sleep 5
   # curl already prints 000 when it cannot connect, so the fallback only covers curl itself
   # failing to run. Appending another one produced "000000" in the log, which reads like a

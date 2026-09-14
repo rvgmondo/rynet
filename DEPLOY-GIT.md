@@ -318,14 +318,22 @@ git push
 Wait roughly five minutes. Check `~/deploy.log`, or `~/rynet/DEPLOYED.txt`, which carries the
 timestamp, the commit and the build id.
 
-### The two steps that are still deliberately manual
+### Migrations are applied by the app itself
+
+The app applies any pending migrations to its own database when it starts
+(`src/lib/migrate-on-boot.ts`), and `scripts/host-deploy.sh` copies the database into
+`~/rynet/backups/` before every restart, keeping the ten most recent. So a schema change deploys
+like any other change. It does not do this on a database that was ever pushed in development mode,
+and says so in the app log; `RYNET_MIGRATE_ON_BOOT=false` in the Node.js app's environment turns
+it off.
+
+### The one step that is still deliberately manual
 
 **`npm install --omit=dev`**, only when dependencies changed. It takes minutes and a half-finished
 one leaves the app unable to start, so it must not happen as a side effect of a content deploy.
 
-**`npx payload migrate`**, only when the schema changed. It writes to the live database, so it
-should be a decision. It also asks a confirmation question on a database that was ever created in
-dev mode, which means it would hang forever inside a cron job.
+**`npx payload migrate`** by hand is still possible, and only needed for a database the app
+refused to migrate itself.
 
 Both from `~/rynet`, inside the virtual environment:
 
