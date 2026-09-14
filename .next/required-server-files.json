@@ -49,7 +49,6 @@
       "disableStaticImages": false,
       "minimumCacheTTL": 14400,
       "formats": [
-        "image/avif",
         "image/webp"
       ],
       "maximumRedirects": 3,
@@ -77,7 +76,7 @@
       "qualities": [
         75
       ],
-      "unoptimized": false,
+      "unoptimized": true,
       "customCacheHandler": false
     },
     "devIndicators": {
@@ -334,7 +333,7 @@
     "htmlLimitedBots": "[\\w-]+-Google|Google-[\\w-]+|Chrome-Lighthouse|Slurp|DuckDuckBot|baiduspider|yandex|sogou|bitlybot|tumblr|vkShare|quora link preview|redditbot|ia_archiver|Bingbot|BingPreview|applebot|facebookexternalhit|facebookcatalog|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|SkypeUriPreview|Yeti|googleweblight",
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.ts",
-    "deploymentId": "defbd0d0faee8b05b33cbd21f03a798ed387414d",
+    "deploymentId": "464a2b9d8d0e4bde89db9d07a4c503f3005181a3",
     "outputFileTracingExcludes": {
       "**/*": [
         "drizzle-kit",
