@@ -23,21 +23,28 @@
  * Hilux is a Hilux. It is not THAT Hilux, which is why every seeded listing says so on its own
  * card, but it is not a picture of a different car pretending to be this one either.
  *
+ * WHAT IT PRODUCES NOW
+ *
+ * Candidates, not the photo set. It used to pick one photograph per model and write it straight
+ * into src/seed/photos, and the result was the same black Hilux on eleven cards of the bakkie
+ * page. So it now gathers up to ten candidates per model that pass every rule below, into a
+ * scratch directory, for a person to look at. The chosen ones go in
+ * scripts/demo-photos/picks.json and scripts/demo-photos/build-manifest.mjs turns them into
+ * the committed set.
+ *
  * Usage:
- *   npx tsx scripts/fetch-demo-photos.ts            # fetch anything missing
- *   npx tsx scripts/fetch-demo-photos.ts --refresh  # re-fetch everything
+ *   npx tsx scripts/fetch-demo-photos.ts <out-dir>                       # every model
+ *   npx tsx scripts/fetch-demo-photos.ts <out-dir> "Toyota Hilux" ...    # just these
  */
 
 import { createWriteStream } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { MAKES } from "../src/seed/data/vehicles";
 
-const OUT_DIR = path.join(process.cwd(), "src", "seed", "photos");
-const MANIFEST = path.join(OUT_DIR, "manifest.json");
 const API = "https://commons.wikimedia.org/w/api.php";
 
 /**
@@ -289,17 +296,6 @@ type Candidate = {
   taken: string;
 };
 
-type Entry = {
-  make: string;
-  model: string;
-  body: string;
-  file: string;
-  title: string;
-  licence: string;
-  author: string;
-  source: string;
-};
-
 const stripTags = (value: string) =>
   value
     .replace(/<[^>]+>/g, "")
@@ -445,12 +441,6 @@ function score(candidate: Candidate, _make: string, model: string): number {
   return points;
 }
 
-function best(candidates: Candidate[], make: string, model: string): Candidate | undefined {
-  const usableOnes = candidates.filter((candidate) => usable(candidate, make, model));
-  if (usableOnes.length === 0) return undefined;
-  return usableOnes.sort((a, b) => score(b, make, model) - score(a, make, model))[0];
-}
-
 async function download(url: string, destination: string): Promise<void> {
   const response = await fetch(url, {
     headers: { "user-agent": "rynet-demo-photos/1.0 (https://rynet.co.za; demo seed data)" },
@@ -459,94 +449,79 @@ async function download(url: string, destination: string): Promise<void> {
   await pipeline(Readable.fromWeb(response.body as never), createWriteStream(destination));
 }
 
+/** How many candidates to keep per model for the contact sheet. */
+const PER_MODEL = 10;
+
 async function main() {
-  const refresh = process.argv.includes("--refresh");
-  await mkdir(OUT_DIR, { recursive: true });
-
-  let existing: Entry[] = [];
-  if (!refresh) {
-    try {
-      existing = JSON.parse(await readFile(MANIFEST, "utf8")) as Entry[];
-    } catch {
-      existing = [];
-    }
+  const [outDir, ...only] = process.argv.slice(2);
+  if (!outDir) {
+    console.error('usage: npx tsx scripts/fetch-demo-photos.ts <out-dir> ["Make Model" ...]');
+    process.exit(1);
   }
-  const have = new Set(existing.map((entry) => `${entry.make}|${entry.model}`));
+  await mkdir(outDir, { recursive: true });
 
-  const wanted: { make: string; model: string; body: string }[] = [];
+  const out: Record<string, unknown>[] = [];
+
   for (const make of MAKES) {
     for (const model of make.models) {
-      wanted.push({ make: make.name, model: model.name, body: model.body });
+      const key = `${make.name} ${model.name}`;
+      if (only.length > 0 && !only.includes(key)) continue;
+
+      // Several phrasings, pooled. Commons search ranks by text relevance, and the photograph
+      // worth having is often only reachable through the colour or the facelift year.
+      const pool = new Map<string, Candidate>();
+      for (const query of [
+        key,
+        `${key} front`,
+        `${key} 2022`,
+        `${key} 2024`,
+        `${key} facelift`,
+        `${key} white`,
+      ]) {
+        const found = (await withRetry(() => search(query), key)) ?? [];
+        for (const candidate of found) pool.set(candidate.title, candidate);
+        // Commons asks for a gentle rate.
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+
+      const ranked = [...pool.values()]
+        .filter((candidate) => usable(candidate, make.name, model.name))
+        .sort((a, b) => score(b, make.name, model.name) - score(a, make.name, model.name))
+        .slice(0, PER_MODEL);
+
+      const slug = key
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+      let n = 0;
+      for (const candidate of ranked) {
+        n += 1;
+        const file = `${slug}--${n}.jpg`;
+        const ok = await withRetry(
+          () => download(candidate.url, path.join(outDir, file)),
+          `${key} ${n}`,
+        );
+        if (ok === null) continue;
+        out.push({
+          make: make.name,
+          model: model.name,
+          file,
+          title: candidate.title.replace(/^File:/, ""),
+          licence: candidate.licence,
+          author: candidate.author,
+          source: candidate.descriptionUrl,
+          width: candidate.width,
+          height: candidate.height,
+        });
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+
+      console.log(`${key}: ${ranked.length} candidates from a pool of ${pool.size}`);
+      // After every model, so a network failure part way keeps what was already fetched.
+      await writeFile(path.join(outDir, "candidates.json"), `${JSON.stringify(out, null, 2)}\n`);
     }
   }
-
-  console.log(`${wanted.length} models, ${have.size} already have a photo`);
-
-  const results: Entry[] = [...existing];
-  let fetched = 0;
-  let missed = 0;
-
-  for (const item of wanted) {
-    const key = `${item.make}|${item.model}`;
-    if (have.has(key)) continue;
-
-    // Two passes: the specific query first, then the make on its own, because a model that is
-    // only sold in South Africa may have nothing on Commons under that exact name.
-    /*
-     * Three queries, all of them naming the model. The old third pass asked for the make and
-     * the body type, which cannot satisfy a rule that the model be in the filename and was
-     * only ever a way of talking the search into an answer it did not have.
-     */
-    const first = (await withRetry(() => search(`${item.make} ${item.model}`), key)) ?? [];
-    const second = (await withRetry(() => search(`${item.make} ${item.model} front`), key)) ?? [];
-    const third = (await withRetry(() => search(`${item.make} ${item.model} 2022`), key)) ?? [];
-    const pick = best([...first, ...second, ...third], item.make, item.model);
-
-    if (!pick) {
-      console.log(`  no usable photo: ${item.make} ${item.model}`);
-      missed += 1;
-      continue;
-    }
-
-    const slug = `${item.make}-${item.model}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    const file = `${slug}.jpg`;
-
-    try {
-      const ok = await withRetry(
-        () => download(pick.url, path.join(OUT_DIR, file)),
-        `${key} download`,
-      );
-      if (ok === null) throw new Error("download failed after three attempts");
-      results.push({
-        make: item.make,
-        model: item.model,
-        body: item.body,
-        file,
-        title: pick.title.replace(/^File:/, ""),
-        licence: pick.licence,
-        author: pick.author,
-        source: pick.descriptionUrl,
-      });
-      fetched += 1;
-      console.log(`  ${item.make} ${item.model}  <-  ${pick.title.slice(5, 60)} (${pick.licence})`);
-      // Written after every success, not at the end. The first run lost seventeen downloads
-      // to a DNS blip on the eighteenth, because the manifest was only written once the whole
-      // list had been walked.
-      await writeFile(MANIFEST, `${JSON.stringify(results, null, 2)}\n`);
-    } catch (error) {
-      console.log(`  download failed: ${item.make} ${item.model}: ${(error as Error).message}`);
-      missed += 1;
-    }
-
-    // Commons asks for a gentle rate. This runs once.
-    await new Promise((resolve) => setTimeout(resolve, 400));
-  }
-
-  await writeFile(MANIFEST, `${JSON.stringify(results, null, 2)}\n`);
-  console.log(`\nfetched ${fetched}, missed ${missed}, manifest holds ${results.length}`);
 }
 
 main().catch((error) => {

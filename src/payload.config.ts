@@ -20,6 +20,7 @@ import { TAXONOMY_COLLECTIONS } from "./collections/taxonomies";
 import { Users } from "./collections/Users";
 import { Vehicles } from "./collections/Vehicles";
 import { FinanceDefaults } from "./globals/FinanceDefaults";
+import { migrateOnBoot } from "./lib/migrate-on-boot";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -91,6 +92,9 @@ const storagePlugins = r2Configured
   : [];
 
 export default buildConfig({
+  // Pending migrations, applied by the live app to itself. See src/lib/migrate-on-boot.ts.
+  onInit: migrateOnBoot,
+
   admin: {
     // The Payload admin is for platform staff. Dealers use /portal, which is a normal
     // Next route group talking to Payload through the Local API. Bending this admin into

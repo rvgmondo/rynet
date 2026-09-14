@@ -33,14 +33,21 @@ export type VehiclePhoto = {
   count: number;
 };
 
-type Size = "thumbnail" | "card" | "gallery" | "hero";
+export type Size = "thumbnail" | "card" | "gallery" | "hero";
 
-/** The order to fall back through, per requested size, largest-first after the ask. */
-const FALLBACK: Record<Size, Size[]> = {
-  thumbnail: ["thumbnail", "card", "gallery", "hero"],
-  card: ["card", "gallery", "hero", "thumbnail"],
-  gallery: ["gallery", "hero", "card", "thumbnail"],
-  hero: ["hero", "gallery", "card", "thumbnail"],
+/**
+ * The order to fall back through, per requested size.
+ *
+ * Bigger before smaller, and the original before anything smaller than the ask: a listing hero
+ * drawn from the 640px card copy is visibly soft, while one drawn from the original is only
+ * heavier, and next/image resizes it for the viewport anyway. Demonstration photographs have no
+ * derivatives at all, so for them this is always the original.
+ */
+const FALLBACK: Record<Size, (Size | "original")[]> = {
+  thumbnail: ["thumbnail", "card", "gallery", "hero", "original"],
+  card: ["card", "gallery", "hero", "original", "thumbnail"],
+  gallery: ["gallery", "hero", "original", "card", "thumbnail"],
+  hero: ["hero", "gallery", "original", "card", "thumbnail"],
 };
 
 /**
@@ -65,21 +72,32 @@ function samePath(url: string): string {
   }
 }
 
-function pick(media: Media, size: Size): { url: string; width: number; height: number } | null {
+/**
+ * The best available rendition of a media record at a size, or null.
+ *
+ * Payload stores a size it skipped as an object whose url is null, not as a missing key. A
+ * source narrower than the hero size (1920) never gets a hero, so `sizes.hero ?? sizes.gallery`
+ * takes that empty hero, finds no url, and gives up. That exact line in the listing gallery put
+ * the colour plate on every one of the 242 photographed listings while their cards, which used
+ * this function, showed the photograph. So everything that draws a media record asks here.
+ */
+export function pick(
+  media: Media,
+  size: Size,
+): { url: string; width: number; height: number } | null {
   const sizes = media.sizes as
     | Record<string, { url?: string | null; width?: number | null; height?: number | null }>
     | undefined;
 
   for (const candidate of FALLBACK[size]) {
-    const derivative = sizes?.[candidate];
-    if (derivative?.url && derivative.width && derivative.height) {
-      return { url: samePath(derivative.url), width: derivative.width, height: derivative.height };
+    const rendition =
+      candidate === "original"
+        ? { url: media.url, width: media.width, height: media.height }
+        : sizes?.[candidate];
+    // A url, not merely an object: see the note above.
+    if (rendition?.url && rendition.width && rendition.height) {
+      return { url: samePath(rendition.url), width: rendition.width, height: rendition.height };
     }
-  }
-
-  // The original, which always exists on an upload that succeeded.
-  if (media.url && media.width && media.height) {
-    return { url: samePath(media.url), width: media.width, height: media.height };
   }
   return null;
 }

@@ -39,12 +39,15 @@ They are not real cars and none of them is for sale.
 
 ## 2b. The photographs illustrate the model, not the car
 
-`src/seed/photos/`, sourced by `npm run fetch:photos` and attached by `npm run seed:photos`.
+`src/seed/photos/`. Candidates gathered by `npx tsx scripts/fetch-demo-photos.ts <dir>`, chosen by a
+person in `scripts/demo-photos/picks.json`, built by `scripts/demo-photos/build-manifest.mjs`, and
+attached by `npm run seed:photos` locally or by the `demo_photographs` migration on the live host.
 
-Thirty six photographs from Wikimedia Commons, every one under a licence that permits commercial
-use, every one a photograph of the current shape of the model it is attached to, taken and
-identified by a named photographer, and every one looked at before it was accepted. A seeded
-Hilux carries a photograph of a Hilux.
+A hundred and thirty four photographs from Wikimedia Commons, up to four per model, every one under
+a licence that permits commercial use, every one a photograph of the current shape of the model it
+is attached to, taken and identified by a named photographer, and every one looked at on a contact
+sheet before it was accepted. A seeded Hilux carries a photograph of a Hilux, in the listing's own
+colour where one exists, and never the same photograph as the Hilux listed next to it.
 
 It is not a photograph of THAT Hilux, because that Hilux does not exist. The listing page prints
 "Photograph of this model, not of this car" with the photographer and the licence directly under
@@ -53,15 +56,17 @@ the image, and the demonstration badge on the same page says the listing itself 
 One listing in twelve is deliberately left without a photograph, because a dealership that adds
 stock before it photographs it is a real state the site has to handle and be seen handling.
 
-Five models have none at all, and show the colour plate throughout: Volkswagen Polo Vivo,
-Mahindra Pik Up, Toyota Starlet, Chery Tiggo 4 Pro and Mercedes-Benz A-Class. Commons has
-nothing of the current shape of any of them that is worth putting on a card, and a photograph of
-the wrong generation would break the one claim the page does make.
+Four models have none at all, and show the colour plate throughout: Volkswagen Polo Vivo,
+Mahindra Pik Up, Toyota Starlet and Chery Tiggo 4 Pro. Commons has nothing of the current shape
+of any of them that is worth putting on a card, and a photograph of the wrong generation would
+break the one claim the page does make.
 
-Every media record carries `isDemonstration: true`.
+Every media record carries `isDemonstration: true`, and the install refuses outright on a
+platform with any real stock on it.
 
 **Needed:** the dealership's own photographs of its own stock, through the portal.
-**To remove all of it:** `npm run seed:photos -- --clear`.
+**To remove all of it:** `npm run seed:photos -- --clear` locally. On the live host, deleting the
+demonstration media from the admin does the same.
 
 ## 3. Plan prices are placeholders
 

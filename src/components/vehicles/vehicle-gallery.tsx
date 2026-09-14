@@ -2,7 +2,7 @@ import Image from "next/image";
 
 import { ColourPlate } from "@/components/vehicles/colour-plate";
 import { populated, relName } from "@/lib/relations";
-import { photoCredit } from "@/lib/vehicle-photo";
+import { photoCredit, pick } from "@/lib/vehicle-photo";
 import type { Media, Vehicle } from "@/payload-types";
 
 /**
@@ -42,28 +42,18 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
     .map((row) => {
       const media = populated(row.image as number | Media | null);
       if (!media) return null;
-      const sizes = media.sizes as
-        | Record<string, { url?: string | null; width?: number | null; height?: number | null }>
-        | undefined;
-      const big = sizes?.hero ?? sizes?.gallery ?? sizes?.card;
-      const small = sizes?.thumbnail ?? sizes?.card;
-      if (!big?.url || !big.width || !big.height) return null;
-
-      const path = (url: string) => {
-        try {
-          const parsed = new URL(url);
-          return parsed.pathname.startsWith("/api/media/") ? parsed.pathname : url;
-        } catch {
-          return url;
-        }
-      };
+      // Through pick(), never `sizes.hero ?? sizes.gallery`: see the note on pick() for the
+      // bug that line caused on every photographed listing.
+      const big = pick(media, "gallery");
+      const small = pick(media, "thumbnail");
+      if (!big) return null;
 
       return {
         id: media.id,
-        url: path(big.url),
+        url: big.url,
         width: big.width,
         height: big.height,
-        thumb: small?.url ? path(small.url) : path(big.url),
+        thumb: small?.url ?? big.url,
         alt:
           row.alt?.trim() ||
           media.alt?.trim() ||
