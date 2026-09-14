@@ -578,7 +578,7 @@ export function QualificationForm() {
       */}
       <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-line pt-6">
         {step > 0 ? (
-          <Button key="nav-back" type="button" variant="secondary" onClick={() => goTo(step - 1)}>
+          <Button key="nav-back" type="button" variant="outline" onClick={() => goTo(step - 1)}>
             <ArrowLeft aria-hidden="true" />
             Back
           </Button>

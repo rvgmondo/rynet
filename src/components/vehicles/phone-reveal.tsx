@@ -51,7 +51,7 @@ export function PhoneReveal({
 
   return (
     <Button
-      variant="secondary"
+      variant="outline"
       size={compact ? "md" : "lg"}
       block={!compact}
       onClick={() => {

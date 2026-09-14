@@ -87,10 +87,10 @@ test.describe("responsive", () => {
   }
 });
 
-// The two grounds, from --rn-paper in each theme. Plaster and near-black, not pure
-// white and brand navy: see docs/DESIGN-STOCKLIST.md for why the grounds moved.
-const LIGHT = "rgb(237, 237, 234)";
-const DARK = "rgb(8, 13, 20)";
+// The two page grounds, --rn-page in each theme: a cool light grey and a deep navy. See
+// docs/DESIGN-SHOWROOM.md.
+const LIGHT = "rgb(245, 247, 250)";
+const DARK = "rgb(8, 22, 41)";
 
 const bodyBg = (page: import("@playwright/test").Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -175,8 +175,8 @@ test.describe("search", () => {
 
     // Prices ascend.
     const prices = await page
-      // Prices are .rn-figure now: expanded, tabular, and sized from their container.
-      .locator("article .rn-figure")
+      // Every price is a PriceTag: .rn-price, semibold and tabular.
+      .locator("article .rn-price")
       .allTextContents()
       .then((texts) => texts.map((t) => Number(t.replace(/[^\d]/g, ""))));
     expect(prices.length).toBeGreaterThan(0);

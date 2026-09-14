@@ -1,124 +1,163 @@
-import { Menu, X } from "lucide-react";
+import { ChevronRight, Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 
-import { RynetMark } from "@/components/brand/rynet-mark";
+import { RynetLockup } from "@/components/brand/rynet-mark";
+import { HeaderSearch } from "@/components/layout/header-search";
+import { MobileMenu } from "@/components/layout/mobile-menu";
+import { NavLink } from "@/components/layout/nav-link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { buttonClasses } from "@/components/ui/button-classes";
 
 /*
- * Only routes that exist. A nav item pointing at a 404 reads as an abandoned site rather
- * than an early one, and there is no version of that which helps.
+ * Only routes that exist. A nav item pointing at a 404 reads as an abandoned site.
  *
- * Removed until built: /finance-calculator, /value-my-car, /guides, /sign-in,
- * /dealer-login. Each goes back the moment its page is real.
+ * `match` lists the path prefixes that make an item current: "Buy a car" owns /cars, every facet
+ * page under it, and /vehicles, where a single listing lives.
  */
 const NAV = [
-  { href: "/cars", label: "Find a car" },
-  // "Sell to a dealer", never "sell your car". A private individual cannot list here and the
-  // navigation must not hint otherwise. The route is on the safe side of the hard-rule test.
-  { href: "/sell-to-a-dealer", label: "Sell to a dealer" },
-  { href: "/dealers", label: "Dealerships" },
-  { href: "/how-verification-works", label: "How we verify" },
+  { href: "/cars", label: "Buy a car", match: ["/cars", "/vehicles"] },
+  { href: "/dealers", label: "Dealerships", match: ["/dealers"] },
+  { href: "/how-verification-works", label: "How we verify", match: ["/how-verification-works"] },
 ] as const;
+
+/*
+ * The seller route is /sell-to-a-dealer and nothing else. A private individual cannot list on
+ * Rynet: the button offers the car TO dealerships, which is what that page explains, and no
+ * route of the "sell-your-car" or "place-an-ad" shape exists (e2e/smoke.spec.ts).
+ */
+const SELL = { href: "/sell-to-a-dealer", label: "Sell your car" } as const;
+const FOR_DEALERS = { href: "/digital", label: "For dealers" } as const;
 
 /**
  * The marketplace header.
  *
- * The first version of this hid the navigation behind `lg:block` with nothing to open it,
- * which left every mobile visitor with no navigation at all, and overflowed the page by
- * 58px at 320px because the sign-in cluster would not fit. Most traffic to a South African
- * car marketplace is mobile, so that was the majority case, not an edge case.
+ * White, sticky, 64px. The lockup on the left; the three buyer destinations with a current-page
+ * state; on the right a compact search (from 1280px, and never on a page that is already a
+ * search), a "For dealers" link and the one red action on the page. The theme switch is not
+ * here: it is in the footer and at the bottom of the menu.
  *
- * The menu is a native `<details>` disclosure. That buys keyboard operation, correct
- * expanded state announcement, and working behaviour before hydration and without
- * JavaScript, none of which a div with an onClick gets for free.
+ * Below 1024px everything but the lockup and the red action moves into a full-height sheet with
+ * a scrim. It is a native <details> (works before hydration and without JavaScript) with a small
+ * client island that closes it on navigation, on Escape and on a tap on the scrim.
  *
- * `sticky` needs care under WCAG 2.2 SC 2.4.11: a focused element must not end up hidden
- * behind it. The header is 4rem, and `scroll-margin-top` on headings accounts for it.
- *
- * There is no sign-in or dealer login yet, so neither is linked. They return with the
- * accounts and the portal.
- *
- * The bar is SOLID, never a backdrop blur. A sticky bar has the page scrolling under it by
- * definition, so a blur there is a full-viewport readback on every frame, on exactly the
- * mid-range Android this platform is mostly viewed on. It is separated by a 2px rule, which
- * is the same rule that opens every section below it.
+ * The bar is solid, never a backdrop blur: a sticky bar has the page scrolling under it by
+ * definition, and a blur there is a full-viewport readback on every frame on a mid-range phone.
  */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-[var(--z-header)] border-b-2 border-ink bg-surface">
-      <div className="container-page flex h-16 items-center gap-3 sm:gap-6">
+    <header className="rn-header">
+      <div className="container-page rn-header__bar">
         <Link
           href="/"
-          className="flex shrink-0 items-center gap-2"
           aria-label="Rynet Showroom, home"
+          className="-ml-1 flex shrink-0 items-center rounded-md p-1"
         >
-          <RynetMark className="h-7 w-auto sm:h-8" />
-          <span className="font-display text-base font-extrabold tracking-tight [font-variation-settings:'wdth'_112] sm:text-lg">
-            RYNET
-          </span>
+          <RynetLockup className="h-6 w-auto sm:h-7" />
         </Link>
 
-        {/* Desktop navigation. */}
-        <nav aria-label="Main" className="hidden lg:block">
+        <nav aria-label="Main" className="ml-6 hidden lg:block">
           <ul className="flex items-center gap-1">
             {NAV.map((item) => (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="rn-label flex min-h-11 items-center px-3 text-ink-muted transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
-                >
+                <NavLink href={item.href} match={item.match} className="rn-navlink">
                   {item.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="hidden lg:block">
-            <ThemeToggle name="theme-bar" />
-          </div>
+          <HeaderSearch className="mr-2 hidden xl:block" />
 
-          {/*
-            Mobile menu. `details`/`summary` rather than a button plus state, so it opens
-            with the keyboard, announces its expanded state, and works before hydration.
-            `group` styling swaps the icon on open without any JavaScript at all.
-          */}
-          <details className="group lg:hidden">
+          <NavLink
+            href={FOR_DEALERS.href}
+            match={["/digital"]}
+            className="rn-navlink hidden lg:inline-flex"
+          >
+            {FOR_DEALERS.label}
+          </NavLink>
+
+          <Link
+            href={SELL.href}
+            className={buttonClasses({
+              variant: "primary",
+              size: "sm",
+              className: "hidden min-[22.5rem]:inline-flex",
+            })}
+          >
+            {SELL.label}
+          </Link>
+
+          <MobileMenu className="lg:hidden">
             <summary
-              className="flex size-11 cursor-pointer list-none items-center justify-center border border-line-interactive [&::-webkit-details-marker]:hidden"
               aria-label="Open menu"
+              className="flex size-11 cursor-pointer items-center justify-center rounded-lg text-heading hover:bg-subtle"
             >
-              <Menu aria-hidden="true" className="size-5 group-open:hidden" />
-              <X aria-hidden="true" className="hidden size-5 group-open:block" />
+              <Menu aria-hidden="true" className="size-6 group-open:hidden" />
+              <X aria-hidden="true" className="hidden size-6 group-open:block" />
             </summary>
 
-            {/*
-              Labelled "Menu", not "Main". Two navigation landmarks sharing a name is an
-              accessibility problem in its own right: a screen reader lists both as "Main
-              navigation" with no way to tell them apart.
-            */}
-            <div className="absolute inset-x-0 top-16 border-b-2 border-ink bg-surface">
-              <nav aria-label="Menu" className="container-page py-2">
+            <div className="rn-menu__scrim" data-menu-close="" aria-hidden="true" />
+
+            <div className="rn-menu__sheet">
+              <search>
+                <form method="get" action="/cars" className="relative p-4 pb-2">
+                  <label htmlFor="menu-q" className="sr-only">
+                    Search cars for sale
+                  </label>
+                  <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-1/2 left-7.5 mt-1 size-5 -translate-y-1/2 text-muted"
+                  />
+                  <input
+                    id="menu-q"
+                    name="q"
+                    type="search"
+                    autoComplete="off"
+                    placeholder="Search make or model"
+                    className="rn-input h-12 rounded-full bg-subtle pl-11 shadow-none"
+                  />
+                </form>
+              </search>
+
+              {/*
+                Labelled "Menu", not "Main". Two navigation landmarks sharing a name are listed
+                identically by a screen reader with no way to tell them apart.
+              */}
+              <nav aria-label="Menu" className="px-2 pb-2">
                 <ul>
                   {NAV.map((item) => (
                     <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className="rn-label flex min-h-12 items-center border-b border-line px-1 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
-                      >
+                      <NavLink href={item.href} match={item.match} className="rn-menu__link">
                         {item.label}
-                      </Link>
+                        <ChevronRight aria-hidden="true" />
+                      </NavLink>
                     </li>
                   ))}
+                  <li>
+                    <NavLink href={FOR_DEALERS.href} match={["/digital"]} className="rn-menu__link">
+                      For dealers: Rynet Digital
+                      <ChevronRight aria-hidden="true" />
+                    </NavLink>
+                  </li>
                 </ul>
-                <div className="flex items-center justify-between gap-4 py-4">
-                  <span className="rn-label text-ink-muted">Colour theme</span>
+              </nav>
+
+              <div className="mt-auto border-t border-line px-4 py-4">
+                <Link
+                  href={SELL.href}
+                  className={buttonClasses({ variant: "primary", size: "lg", block: true })}
+                >
+                  {SELL.label}
+                </Link>
+                <div className="mt-4 flex items-center justify-between gap-4">
+                  <span className="text-sm text-muted">Colour theme</span>
                   <ThemeToggle name="theme-menu" />
                 </div>
-              </nav>
+              </div>
             </div>
-          </details>
+          </MobileMenu>
         </div>
       </div>
     </header>

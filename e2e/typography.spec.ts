@@ -26,7 +26,9 @@ test.describe("the numerals every price depends on", () => {
     const css = await (await request.get(href as string)).text();
     expect(css, "no @font-face rules were emitted at all").toContain("@font-face");
     expect(css, "the display face is not declared").toMatch(/font-family:\s*Archivo/);
-    expect(css, "the prose face is not declared").toMatch(/font-family:\s*Newsreader/);
+    // One family. Newsreader was the previous design's prose serif and must not creep back in,
+    // because a second family is another font download on every page.
+    expect(css, "a second family is declared").not.toMatch(/font-family:\s*Newsreader/);
 
     /*
      * The url() carries a `?dpl=` cache-busting query, and the path is relative to the
@@ -49,7 +51,7 @@ test.describe("the numerals every price depends on", () => {
     await page.goto("/cars", { waitUntil: "networkidle" });
 
     const family = await page
-      .locator(".rn-figure")
+      .locator(".rn-price")
       .first()
       .evaluate((el) => getComputedStyle(el).fontFamily);
     expect(family, "prices are not set in the display face").toMatch(/Archivo/i);
@@ -74,9 +76,8 @@ test.describe("the numerals every price depends on", () => {
         // Longhand, never the `font` shorthand: the shorthand resets font-variant-numeric to
         // normal, which would strip the very feature this test exists to prove.
         el.style.cssText =
-          `font-family:${fontFamily};font-weight:800;font-size:40px;line-height:1;` +
+          `font-family:${fontFamily};font-weight:700;font-size:40px;line-height:1;` +
           `font-variant-numeric:${tabular ? "tabular-nums" : "normal"};` +
-          "font-variation-settings:'wdth' 118;" +
           "position:absolute;visibility:hidden;white-space:pre";
         el.textContent = text;
         document.body.append(el);
@@ -114,7 +115,7 @@ test.describe("the numerals every price depends on", () => {
 
   test("every price on a results page is set in tabular figures", async ({ page }) => {
     await page.goto("/cars");
-    const figures = page.locator(".rn-figure");
+    const figures = page.locator(".rn-price");
     await expect(figures.first()).toBeVisible();
 
     const settings = await figures.evaluateAll((nodes) =>
@@ -125,12 +126,13 @@ test.describe("the numerals every price depends on", () => {
   });
 });
 
-test.describe("the display headline fills its measure without overflowing it", () => {
+test.describe("the page headline never overflows", () => {
   /*
-   * The hero is sized from its container divided by the longest line's own character count,
-   * because a viewport clamp has no idea how many characters are on the line. That is
-   * exactly the kind of arithmetic that is right at one width and wrong at the next, so
-   * every breakpoint the design names is checked.
+   * The previous design sized an expanded display headline from its container, and this test
+   * held it to filling at least 80 percent of the measure. SHOWROOM sets headings on a fixed fluid
+   * scale at normal width, so filling the measure is no longer the intent. What is still worth
+   * failing the build for is a headline that escapes its column or pushes the page sideways at
+   * any breakpoint the design names.
    */
   for (const width of [320, 375, 480, 768, 900, 1024, 1440, 1920]) {
     test(`at ${width}px it stays inside the page`, async ({ page }) => {
@@ -143,19 +145,16 @@ test.describe("the display headline fills its measure without overflowing it", (
       });
       expect(overflow.scroll, "the page scrolls sideways").toBeLessThanOrEqual(overflow.client + 1);
 
-      const headline = page.locator("h1.rn-display");
+      const headline = page.locator("main h1").first();
       const box = await headline.boundingBox();
-      const container = await headline.evaluate(
-        (el) => (el.parentElement as HTMLElement).getBoundingClientRect().width,
+      const container = await headline.evaluate((el) =>
+        (el.parentElement as HTMLElement).getBoundingClientRect(),
       );
-      expect(box, "no display headline on the home page").not.toBeNull();
+      expect(box, "no headline on the home page").not.toBeNull();
       if (!box) return;
 
-      // Filling the measure is the whole point of the width axis, so under-filling badly is
-      // as much a failure as overflowing. Below 480px the axis narrows and the ceiling of
-      // the clamp takes over, so only the wide breakpoints are held to the lower bound.
-      expect(box.width).toBeLessThanOrEqual(container + 1);
-      if (width >= 900) expect(box.width / container).toBeGreaterThan(0.8);
+      expect(box.x).toBeGreaterThanOrEqual(container.x - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(container.x + container.width + 1);
     });
   }
 });

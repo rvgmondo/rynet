@@ -1,81 +1,47 @@
 "use client";
 
 import { Slot, Slottable } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import * as React from "react";
 
-import { cn } from "@/lib/cn";
+import {
+  type ButtonBlock,
+  type ButtonSize,
+  type ButtonVariant,
+  buttonClasses,
+} from "@/components/ui/button-classes";
 
 /**
  * Button.
  *
- * Every state the design system requires is here and none of them are optional: default,
- * hover, focus-visible, active, disabled and loading. Three details are deliberate.
+ *   primary    solid red (#C81E2B, white text at 5.71:1). The one action that matters.
+ *   secondary  solid navy.
+ *   outline    white with a 3:1 border. The tertiary action.
+ *   ghost      no fill until hovered.
+ *   link       an underlined red word, for inline actions.
  *
- * 1. **The minimum height is the 44px target, not the visual height.** Small buttons look
- *    smaller but keep a 44px hit area through padding, because WCAG 2.2 SC 2.5.8 measures
- *    the target, not the paint.
+ * Sizes sm, md and lg are 44, 48 and 56px tall, so every size meets the 44px target. Pass
+ * `block="mobile"` for a primary action that should run full width on a phone.
  *
- * 2. **Loading disables without collapsing.** `aria-busy` announces the state, the label
- *    stays in the flow so the button does not change width mid-click, and the spinner
- *    replaces the icon slot rather than the text. A button that shrinks to a spinner moves
- *    everything around it.
+ * Three details are deliberate and predate this design:
  *
- * 3. **Disabled uses aria-disabled, not the disabled attribute, on non-submit variants.**
- *    A `disabled` button is removed from the tab order entirely, so a keyboard user cannot
- *    reach it to discover why it is unavailable. Where the button must genuinely block
- *    submission we pass `disabled` too, but the default keeps it focusable.
+ * 1. Loading disables without collapsing. `aria-busy` announces the state, the label stays in
+ *    the flow so the button does not change width, and the spinner takes the icon slot.
+ * 2. Disabled uses aria-disabled as well as the attribute, so a keyboard user can still reach a
+ *    non-submit button and discover why it is unavailable.
+ * 3. `asChild` renders the child element (a Link) with the button's classes. A server component
+ *    that does not need the ref can use `buttonClasses()` directly and skip the client boundary.
  */
-const buttonVariants = cva(
-  [
-    // Never nowrap. A label-caps button carries a long label sometimes ("Enquire about this
-    // vehicle") and a fixed-width column is not going to grow for it, so the text wraps and
-    // centres rather than running out past the fill.
-    "inline-flex items-center justify-center gap-2 text-center text-balance",
-    // Tracking is 0.1em rather than the 0.16em of a field label. Letterspacing that wide is
-    // right for a four character stamp and wrong for a sentence.
-    "font-display text-label font-bold uppercase tracking-[0.1em] [font-variation-settings:'wdth'_100]",
-    "transition-[background-color,border-color,color] duration-[var(--duration-micro)] ease-[var(--rn-ease-out)]",
-    "disabled:pointer-events-none disabled:opacity-45",
-    "aria-disabled:cursor-not-allowed aria-disabled:opacity-45",
-    "[&_svg]:size-[1.15em] [&_svg]:shrink-0",
-  ].join(" "),
-  {
-    variants: {
-      variant: {
-        primary: "bg-accent-solid text-ink-on-accent hover:bg-accent-solid-hover",
-        secondary:
-          "bg-transparent text-ink border border-line-interactive hover:bg-ink hover:text-ink-inverse",
-        ghost: "bg-transparent text-ink hover:bg-ink hover:text-ink-inverse",
-        link: "bg-transparent text-accent underline underline-offset-4 hover:text-accent-hover hover:decoration-2 normal-case tracking-normal text-sm",
-        danger: "bg-danger text-ink-on-accent hover:opacity-90",
-      },
-      size: {
-        // min-h keeps the 44px target even where the visual box is shorter.
-        sm: "min-h-11 px-3 py-1.5",
-        md: "min-h-11 px-5 py-2.5",
-        lg: "min-h-14 px-7 py-3",
-        // Icon-only buttons are square and must still meet the target.
-        icon: "size-11 p-0",
-      },
-      block: { true: "w-full", false: "" },
-    },
-    defaultVariants: { variant: "primary", size: "md", block: false },
-  },
-);
-
-export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
-  VariantProps<typeof buttonVariants> & {
-    /** Render as the child element, for links that should look like buttons. */
-    asChild?: boolean;
-    isLoading?: boolean;
-    /**
-     * Announced while loading. Without it a screen reader hears nothing change, because the
-     * visible label has not changed.
-     */
-    loadingLabel?: string;
-  };
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  block?: ButtonBlock;
+  /** Render as the child element, for links that should look like buttons. */
+  asChild?: boolean;
+  isLoading?: boolean;
+  /** Announced while loading. Without it a screen reader hears nothing change. */
+  loadingLabel?: string;
+};
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
@@ -97,7 +63,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
   return (
     <Comp
       ref={ref}
-      className={cn(buttonVariants({ variant, size, block }), className)}
+      className={buttonClasses({ variant, size, block, className })}
       aria-busy={isLoading || undefined}
       aria-disabled={isLoading || disabled || undefined}
       disabled={asChild ? undefined : disabled}
@@ -109,15 +75,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
           <span className="sr-only">{loadingLabel}</span>
         </>
       ) : null}
-      {/*
-        Slottable, not a bare {children}. With asChild the outer element is a Slot, and a
-        Slot needs to know which child to merge onto. Handing it the spinner and the child
-        as plain siblings throws "Expected a single React element child", which it did.
-        Slottable marks the real child and reparents the siblings into it.
-      */}
+      {/* Slottable, not a bare {children}: with asChild the Slot needs to know which child is
+          the real element, or it throws "Expected a single React element child". */}
       <Slottable>{children}</Slottable>
     </Comp>
   );
 });
 
-export { buttonVariants };
+export { buttonClasses };

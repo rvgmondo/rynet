@@ -1,5 +1,9 @@
 # DESIGN SYSTEM (proposal, Phase 0)
 
+> **SUPERSEDED, September 2026. The authority is [DESIGN-SHOWROOM.md](DESIGN-SHOWROOM.md).**
+> STOCKLIST, described below and in DESIGN-STOCKLIST.md, was replaced by a full redesign once the
+> owner judged the live site cheap. Read this file only for history.
+
 > **Superseded in part, September 2026.** Direction A "Forecourt" shipped first and the
 > client's verdict on it was that the site looked cheap. He was right, and the diagnosis was
 > specific: with no vehicle photography, every element had to declare itself with a thin grey

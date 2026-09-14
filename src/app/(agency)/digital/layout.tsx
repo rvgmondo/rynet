@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Newsreader } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AgencyFooter } from "@/components/agency/agency-footer";
 import { AgencyHeader } from "@/components/agency/agency-header";
 import { SkipLink } from "@/components/layout/skip-link";
-
 import { displayFontUrl } from "@/lib/font-preload";
+import { archivo } from "@/lib/fonts";
 
 import "@/styles/globals.css";
 
@@ -18,34 +17,9 @@ import "@/styles/globals.css";
  * dealer principal reading about stock feeds should never see a header offering to help
  * them find a bakkie.
  *
- * The fonts are declared again because each root layout owns its own `<html>`, so the CSS
- * variables have to be applied here too. next/font deduplicates the actual files.
+ * The font comes from src/lib/fonts.ts, applied again here because each root layout owns its
+ * own <html>. next/font deduplicates the files.
  */
-const archivo = Archivo({
-  subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
-  display: "swap",
-  preload: true,
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  /*
-   * No `axes: ["opsz"]`.
-   *
-   * The optical size axis was requested and then never used: nothing on either front door
-   * sets `font-optical-sizing` or an `opsz` variation, so the only thing the axis did was
-   * keep a second variable dimension in every file. It cost 128.8 KB across the four faces
-   * for a difference no rule on this site asks for. Weight still varies, because weight is
-   * the default axis and is not what was removed.
-   */
-  style: ["normal", "italic"],
-  variable: "--font-newsreader",
-  display: "swap",
-  preload: false,
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"),
   title: {
@@ -67,8 +41,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ededea" },
-    { media: "(prefers-color-scheme: dark)", color: "#080d14" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f2139" },
   ],
 };
 
@@ -80,11 +54,7 @@ export default async function AgencyLayout({ children }: { children: React.React
   const displayFont = await displayFontUrl();
 
   return (
-    <html
-      lang="en-ZA"
-      suppressHydrationWarning
-      className={`${archivo.variable} ${newsreader.variable}`}
-    >
+    <html lang="en-ZA" suppressHydrationWarning className={archivo.variable}>
       {/*
         A real element in a real head, not ReactDOM.preload.
         ------------------------------------------------------------------

@@ -148,7 +148,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
               />
             </Field>
           </div>
-          <Button type="submit" variant="secondary" className="mt-4" disabled={regenerating}>
+          <Button type="submit" variant="outline" className="mt-4" disabled={regenerating}>
             <KeyRound aria-hidden="true" />
             {regenerating ? "Working" : "Generate new codes"}
           </Button>
@@ -185,7 +185,7 @@ export function TwoFactorPanel({ status }: { status: TwoFactorStatus }) {
                   />
                 </Field>
               </div>
-              <Button type="submit" variant="secondary" className="mt-4" disabled={disabling}>
+              <Button type="submit" variant="outline" className="mt-4" disabled={disabling}>
                 {disabling ? "Working" : "Turn it off"}
               </Button>
             </>

@@ -130,7 +130,7 @@ export function EnquiryDialog({
                 is on the listing.
               </p>
               <Dialog.Close asChild>
-                <Button variant="secondary" className="mt-5">
+                <Button variant="outline" className="mt-5">
                   Close
                 </Button>
               </Dialog.Close>

@@ -150,216 +150,126 @@ function resolve(name: string, tokens: Map<string, string>, seen = new Set<strin
 
 // ------------------------------------------------------------------- the pairs
 
-const PAIRS: Pair[] = [
-  {
-    label: "Body text on surface",
-    fg: "--rn-text-primary",
-    bg: "--rn-surface",
-    kind: "text",
-  },
-  {
-    label: "Body text on raised surface",
-    fg: "--rn-text-primary",
-    bg: "--rn-surface-raised",
-    kind: "text",
-  },
-  {
-    label: "Body text on sunken surface",
-    fg: "--rn-text-primary",
-    bg: "--rn-surface-sunken",
-    kind: "text",
-  },
-  {
-    label: "Secondary text on surface",
-    fg: "--rn-text-secondary",
-    bg: "--rn-surface",
-    kind: "text",
-  },
-  {
-    label: "Secondary text on raised surface",
-    fg: "--rn-text-secondary",
-    bg: "--rn-surface-raised",
-    kind: "text",
-  },
-  { label: "Muted text on surface", fg: "--rn-text-muted", bg: "--rn-surface", kind: "text" },
-  {
-    label: "Muted text on raised surface",
-    fg: "--rn-text-muted",
-    bg: "--rn-surface-raised",
-    kind: "text",
-  },
-  {
-    label: "Muted text on sunken surface",
-    fg: "--rn-text-muted",
-    bg: "--rn-surface-sunken",
-    kind: "text",
-  },
-  {
-    label: "Inverse text on inverse surface",
-    fg: "--rn-text-inverse",
-    bg: "--rn-surface-inverse",
-    kind: "text",
-  },
-  {
-    label: "Accent link on surface",
-    fg: "--rn-accent",
-    bg: "--rn-surface",
-    kind: "text",
-    note: "Brand red-500 is 4.60 here, which clears AA by 0.10. This uses red-600 instead.",
-  },
-  {
-    label: "Accent link hover on surface",
-    fg: "--rn-accent-hover",
-    bg: "--rn-surface",
-    kind: "text",
-  },
-  {
-    label: "Accent link on raised surface",
-    fg: "--rn-accent",
-    bg: "--rn-surface-raised",
-    kind: "text",
-  },
-  {
-    label: "Accent link on subtle accent",
-    fg: "--rn-accent",
-    bg: "--rn-accent-subtle",
-    kind: "text",
-  },
-  {
-    label: "Label on solid accent button",
-    fg: "--rn-text-on-accent",
-    bg: "--rn-accent-solid",
-    kind: "text",
-  },
-  {
-    label: "Label on solid accent button, hover",
-    fg: "--rn-text-on-accent",
-    bg: "--rn-accent-solid-hover",
-    kind: "text",
-  },
-  { label: "Success on surface", fg: "--rn-success", bg: "--rn-surface", kind: "text" },
-  { label: "Warning on surface", fg: "--rn-warning", bg: "--rn-surface", kind: "text" },
-  { label: "Danger on surface", fg: "--rn-danger", bg: "--rn-surface", kind: "text" },
-  { label: "Info on surface", fg: "--rn-info", bg: "--rn-surface", kind: "text" },
-  {
-    label: "Success on subtle success",
-    fg: "--rn-success",
-    bg: "--rn-success-subtle",
-    kind: "text",
-  },
-  {
-    label: "Warning on subtle warning",
-    fg: "--rn-warning",
-    bg: "--rn-warning-subtle",
-    kind: "text",
-  },
-  {
-    label: "Danger on subtle danger",
-    fg: "--rn-danger",
-    bg: "--rn-danger-subtle",
-    kind: "text",
-  },
-  { label: "Info on subtle info", fg: "--rn-info", bg: "--rn-info-subtle", kind: "text" },
-  {
-    label: "Input border on surface",
-    fg: "--rn-border-interactive",
-    bg: "--rn-surface",
-    kind: "interactive",
-    note: "SC 1.4.11. This is the boundary that IS the control.",
-  },
-  {
-    label: "Input border on raised surface",
-    fg: "--rn-border-interactive",
-    bg: "--rn-surface-raised",
-    kind: "interactive",
-  },
-  {
-    label: "Strong border on surface",
-    fg: "--rn-border-strong",
-    bg: "--rn-surface",
-    kind: "interactive",
-  },
-  {
-    label: "Focus ring on surface",
-    fg: "--rn-focus-ring",
-    bg: "--rn-surface",
-    kind: "interactive",
-  },
-  {
-    label: "Inverse focus ring on inverse surface",
-    fg: "--rn-focus-ring-inverse",
-    bg: "--rn-surface-inverse",
-    kind: "interactive",
-    note: "An inverse panel carries the other theme's ground, so it needs the other theme's ring. One ring token cannot serve both.",
-  },
-  {
-    label: "Focus ring on solid accent",
-    fg: "--rn-focus-ring",
-    bg: "--rn-accent-solid",
-    kind: "decorative",
-    note: "The ring sits on the surface-coloured offset, not directly on the button. Recorded for visibility.",
-  },
-  {
-    label: "Subtle divider on surface",
-    fg: "--rn-border-subtle",
-    bg: "--rn-surface",
-    kind: "decorative",
-    note: "Decorative only. Never the sole indicator of a control, so no minimum applies.",
-  },
-  {
-    label: "Subtle divider on raised surface",
-    fg: "--rn-border-subtle",
-    bg: "--rn-surface-raised",
-    kind: "decorative",
-  },
+const t = (label: string, fg: string, bg: string, note?: string): Pair => ({
+  label,
+  fg,
+  bg,
+  kind: "text",
+  note,
+});
+const ui = (label: string, fg: string, bg: string, note?: string): Pair => ({
+  label,
+  fg,
+  bg,
+  kind: "interactive",
+  note,
+});
+const deco = (label: string, fg: string, bg: string, note?: string): Pair => ({
+  label,
+  fg,
+  bg,
+  kind: "decorative",
+  note,
+});
 
-  /*
-   * The ink flip. A card, a register row and a browse tile all invert on hover and on
-   * focus-within, so the flipped state carries its own full set of text pairs. It is the
-   * only interactive feedback in a design with no shadows and no borders, which makes these
-   * three rows as load-bearing as the rest state.
-   */
-  {
-    label: "Muted text on a flipped card",
-    fg: "--rn-text-muted-inverse",
-    bg: "--rn-surface-inverse",
-    kind: "text",
-    note: "The hover and focus state inverts the whole card, so muted copy needs its own value there.",
-  },
-  {
-    label: "Accent text on a flipped card",
-    fg: "--rn-red-text-inverse",
-    bg: "--rn-surface-inverse",
-    kind: "text",
-  },
-  {
-    label: "Interactive boundary on sunken surface",
-    fg: "--rn-border-interactive",
-    bg: "--rn-surface-sunken",
-    kind: "interactive",
-    note: "The filter rail sits on the sunken ground, and its checkboxes are boundary-only controls.",
-  },
-  {
-    label: "Strong hairline on surface",
-    fg: "--rn-hairline-strong",
-    bg: "--rn-surface",
-    kind: "decorative",
-    note: "Section openers and the ruled VERIFIED stamp. A rule that frames a word carries no information the word does not.",
-  },
-  {
-    label: "Brand silver on the ink band",
-    fg: "--rn-silver",
-    bg: "--rn-surface-inverse",
-    kind: "decorative",
-    note: "Silver's only job on a light theme. It is never used on paper.",
-  },
-  {
-    label: "Brand red as a graphic mark",
-    fg: "--rn-red",
-    bg: "--rn-surface",
-    kind: "decorative",
-    note: "Registered decorative on purpose. Brand red carries no text and no text sits on it, so it has no contrast obligation. If anyone ever needs it as text it must be re-registered as large-text with the size class documented, rather than the token being weakened to suit.",
-  },
+/*
+ * The SHOWROOM pairs. Every ground a piece of text or a control can sit on, per theme. See
+ * docs/DESIGN-SHOWROOM.md for which component uses which pair.
+ */
+const PAIRS: Pair[] = [
+  // Ink on the three grounds
+  t("Heading on page", "--rn-heading", "--rn-page"),
+  t("Heading on card", "--rn-heading", "--rn-card"),
+  t("Heading on subtle panel", "--rn-heading", "--rn-subtle"),
+  t("Body on page", "--rn-body", "--rn-page"),
+  t("Body on card", "--rn-body", "--rn-card"),
+  t("Body on subtle panel", "--rn-body", "--rn-subtle"),
+  t("Muted on page", "--rn-muted", "--rn-page"),
+  t("Muted on card", "--rn-muted", "--rn-card"),
+  t("Muted on subtle panel", "--rn-muted", "--rn-subtle"),
+
+  // The navy band (footer, brand panels)
+  t("On-navy text on navy band", "--rn-on-navy", "--rn-navy"),
+  t("On-navy muted text on navy band", "--rn-on-navy-muted", "--rn-navy"),
+  t("On-navy muted text on raised navy", "--rn-on-navy-muted", "--rn-navy-raised"),
+  ui(
+    "Focus ring on navy band",
+    "--rn-focus-ring-on-navy",
+    "--rn-navy",
+    "The footer and any navy panel draw their ring in this lighter blue.",
+  ),
+
+  // Actions
+  t(
+    "White on primary button",
+    "--rn-on-primary",
+    "--rn-primary",
+    "Brand red #E32432 carries white at only 4.60:1, so every solid red button is #C81E2B.",
+  ),
+  t("White on primary button, hover", "--rn-on-primary", "--rn-primary-hover"),
+  t("White on secondary button", "--rn-on-secondary", "--rn-secondary"),
+  t("White on secondary button, hover", "--rn-on-secondary", "--rn-secondary-hover"),
+  t("Accent words on page", "--rn-accent", "--rn-page"),
+  t("Accent words on card", "--rn-accent", "--rn-card"),
+  t("Accent hover on card", "--rn-accent-hover", "--rn-card"),
+  t("Accent words on subtle accent", "--rn-accent", "--rn-accent-subtle"),
+
+  // Status: badges and notices put the status colour on its own subtle ground
+  t("Success on card", "--rn-success", "--rn-card"),
+  t("Success on subtle success", "--rn-success", "--rn-success-subtle"),
+  t("Warning on card", "--rn-warning", "--rn-card"),
+  t("Warning on subtle warning", "--rn-warning", "--rn-warning-subtle"),
+  t("Danger on card", "--rn-danger", "--rn-card"),
+  t("Danger on subtle danger", "--rn-danger", "--rn-danger-subtle"),
+  t("Info on card", "--rn-info", "--rn-card"),
+  t("Info on subtle info", "--rn-info", "--rn-info-subtle"),
+  t("Body on subtle info (notice text)", "--rn-body", "--rn-info-subtle"),
+  t("Body on subtle warning (notice text)", "--rn-body", "--rn-warning-subtle"),
+  t("Heading on subtle info (notice title)", "--rn-heading", "--rn-info-subtle"),
+  t("Heading on subtle warning (notice title)", "--rn-heading", "--rn-warning-subtle"),
+
+  // Controls (SC 1.4.11)
+  ui(
+    "Control border on card",
+    "--rn-line-control",
+    "--rn-card",
+    "SC 1.4.11. Inputs, selects, checkboxes and outline buttons are drawn with this, and it is the boundary that IS the control.",
+  ),
+  ui("Control border on page", "--rn-line-control", "--rn-page"),
+  ui("Control border on subtle panel", "--rn-line-control", "--rn-subtle"),
+  ui(
+    "Checked checkbox or radio fill on card",
+    "--rn-control-checked",
+    "--rn-card",
+    "The checked state is carried by the fill, so the fill is held to the non-text minimum.",
+  ),
+  ui("Checked checkbox or radio fill on subtle panel", "--rn-control-checked", "--rn-subtle"),
+  ui("Focus ring on page", "--rn-focus-ring", "--rn-page"),
+  ui("Focus ring on card", "--rn-focus-ring", "--rn-card"),
+  ui("Focus ring on subtle panel", "--rn-focus-ring", "--rn-subtle"),
+
+  // The older inverse pair, which flips with the theme
+  t("Inverse text on inverse ground", "--rn-text-inverse", "--rn-surface-inverse"),
+  t("Inverse muted text on inverse ground", "--rn-text-muted-inverse", "--rn-surface-inverse"),
+  t("Inverse accent words on inverse ground", "--rn-red-text-inverse", "--rn-surface-inverse"),
+  ui("Inverse focus ring on inverse ground", "--rn-focus-ring-inverse", "--rn-surface-inverse"),
+
+  // Decorative
+  deco(
+    "Divider on card",
+    "--rn-line",
+    "--rn-card",
+    "Decorative only. Never the sole indicator of a control, so no minimum applies.",
+  ),
+  deco("Strong divider on page", "--rn-line-strong", "--rn-page"),
+  deco("Divider on navy band", "--rn-line-on-navy", "--rn-navy"),
+  deco(
+    "Brand red as a graphic mark",
+    "--rn-brand-red",
+    "--rn-card",
+    "Registered decorative on purpose. Brand red carries no text and no text sits on it. If it is ever needed as text it must be re-registered with its size class, rather than the token being weakened to suit.",
+  ),
+  deco("Brand mark ink on card", "--rn-mark-ink", "--rn-card"),
 ];
 
 /*
@@ -478,10 +388,10 @@ absent because the token set does not allow them. For the record:
 
 | Pair | Ratio | Verdict |
 |---|---:|---|
-| Brand red \`#E32432\` on white | ${contrast("#E32432", "#FFFFFF").toFixed(2)} | Clears AA by 0.10. Too thin to build on, so links use red-600. |
-| Brand red \`#E32432\` on brand navy | ${contrast("#E32432", "#001123").toFixed(2)} | Fails. Dark-theme accents use red-300. |
+| White on brand red \`#E32432\` | ${contrast("#E32432", "#FFFFFF").toFixed(2)} | Clears AA by 0.10. Too thin to build on, so solid buttons use \`#C81E2B\` and red words use \`#B81B29\`. |
+| Brand red \`#E32432\` on brand navy | ${contrast("#E32432", "#001123").toFixed(2)} | Fails as text. Dark-theme red words use \`#FF7079\`. |
 | Brand silver \`#B1B4BB\` on white | ${contrast("#B1B4BB", "#FFFFFF").toFixed(2)} | Fails everything, including the 3:1 non-text minimum. Decorative rules only on light. |
-| Brand silver \`#B1B4BB\` on brand navy | ${contrast("#B1B4BB", "#001123").toFixed(2)} | Passes comfortably. This is silver's real job: dark-theme muted text. |
+| Brand silver \`#B1B4BB\` on brand navy | ${contrast("#B1B4BB", "#001123").toFixed(2)} | Passes comfortably. Silver belongs on navy, which is where the dark-theme mark uses it. |
 `;
 
   writeFileSync(path.join(root, "docs/contrast-report.md"), report, "utf8");

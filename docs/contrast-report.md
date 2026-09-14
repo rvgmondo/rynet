@@ -13,43 +13,56 @@ border tokens rather than one.
 
 | Pair | Foreground | Background | Ratio | Required | Result |
 |---|---|---|---:|---:|---|
-| Body text on surface | `#0a1017` | `#ededea` | 16.28 | 4.5 | pass |
-| Body text on raised surface | `#0a1017` | `#f7f7f5` | 17.81 | 4.5 | pass |
-| Body text on sunken surface | `#0a1017` | `#e2e2de` | 14.71 | 4.5 | pass |
-| Secondary text on surface | `#232a33` | `#ededea` | 12.34 | 4.5 | pass |
-| Secondary text on raised surface | `#232a33` | `#f7f7f5` | 13.50 | 4.5 | pass |
-| Muted text on surface | `#545e6a` | `#ededea` | 5.62 | 4.5 | pass |
-| Muted text on raised surface | `#545e6a` | `#f7f7f5` | 6.14 | 4.5 | pass |
-| Muted text on sunken surface | `#545e6a` | `#e2e2de` | 5.07 | 4.5 | pass |
-| Inverse text on inverse surface | `#ededea` | `#0a1017` | 16.28 | 4.5 | pass |
-| Accent link on surface | `#b81b29` | `#ededea` | 5.55 | 4.5 | pass |
-| Accent link hover on surface | `#93131f` | `#ededea` | 7.61 | 4.5 | pass |
-| Accent link on raised surface | `#b81b29` | `#f7f7f5` | 6.07 | 4.5 | pass |
-| Accent link on subtle accent | `#b81b29` | `#f2e2e3` | 5.19 | 4.5 | pass |
-| Label on solid accent button | `#ffffff` | `#cc2231` | 5.47 | 4.5 | pass |
-| Label on solid accent button, hover | `#ffffff` | `#aa1f2e` | 7.13 | 4.5 | pass |
-| Success on surface | `#0f7a3d` | `#ededea` | 4.62 | 4.5 | pass |
-| Warning on surface | `#7d5100` | `#ededea` | 5.87 | 4.5 | pass |
-| Danger on surface | `#b81b29` | `#ededea` | 5.55 | 4.5 | pass |
-| Info on surface | `#0b5fa5` | `#ededea` | 5.60 | 4.5 | pass |
-| Success on subtle success | `#0f7a3d` | `#e0efe6` | 4.56 | 4.5 | pass |
-| Warning on subtle warning | `#7d5100` | `#f4ecda` | 5.86 | 4.5 | pass |
-| Danger on subtle danger | `#b81b29` | `#f2e2e3` | 5.19 | 4.5 | pass |
-| Info on subtle info | `#0b5fa5` | `#e0ebf4` | 5.43 | 4.5 | pass |
-| Input border on surface | `#69727e` | `#ededea` | 4.15 | 3.0 | pass |
-| Input border on raised surface | `#69727e` | `#f7f7f5` | 4.54 | 3.0 | pass |
-| Strong border on surface | `#69727e` | `#ededea` | 4.15 | 3.0 | pass |
-| Focus ring on surface | `#b81b29` | `#ededea` | 5.55 | 3.0 | pass |
-| Inverse focus ring on inverse surface | `#f4626b` | `#0a1017` | 6.19 | 3.0 | pass |
-| Focus ring on solid accent | `#b81b29` | `#cc2231` | 1.19 | n/a | pass |
-| Subtle divider on surface | `#a2a29a` | `#ededea` | 2.19 | n/a | pass |
-| Subtle divider on raised surface | `#a2a29a` | `#f7f7f5` | 2.40 | n/a | pass |
-| Muted text on a flipped card | `#9ba3ad` | `#0a1017` | 7.49 | 4.5 | pass |
-| Accent text on a flipped card | `#f4626b` | `#0a1017` | 6.19 | 4.5 | pass |
-| Interactive boundary on sunken surface | `#69727e` | `#e2e2de` | 3.75 | 3.0 | pass |
-| Strong hairline on surface | `#a2a29a` | `#ededea` | 2.19 | n/a | pass |
-| Brand silver on the ink band | `#b1b4bb` | `#0a1017` | 9.20 | n/a | pass |
-| Brand red as a graphic mark | `#e32432` | `#ededea` | 3.92 | n/a | pass |
+| Heading on page | `#001123` | `#f5f7fa` | 17.72 | 4.5 | pass |
+| Heading on card | `#001123` | `#ffffff` | 19.01 | 4.5 | pass |
+| Heading on subtle panel | `#001123` | `#eef2f6` | 16.90 | 4.5 | pass |
+| Body on page | `#26324a` | `#f5f7fa` | 11.95 | 4.5 | pass |
+| Body on card | `#26324a` | `#ffffff` | 12.82 | 4.5 | pass |
+| Body on subtle panel | `#26324a` | `#eef2f6` | 11.40 | 4.5 | pass |
+| Muted on page | `#5b6678` | `#f5f7fa` | 5.41 | 4.5 | pass |
+| Muted on card | `#5b6678` | `#ffffff` | 5.81 | 4.5 | pass |
+| Muted on subtle panel | `#5b6678` | `#eef2f6` | 5.16 | 4.5 | pass |
+| On-navy text on navy band | `#f3f6fa` | `#001123` | 17.54 | 4.5 | pass |
+| On-navy muted text on navy band | `#aeb9c9` | `#001123` | 9.58 | 4.5 | pass |
+| On-navy muted text on raised navy | `#aeb9c9` | `#0b2340` | 7.96 | 4.5 | pass |
+| Focus ring on navy band | `#8db4ff` | `#001123` | 9.15 | 3.0 | pass |
+| White on primary button | `#ffffff` | `#c81e2b` | 5.71 | 4.5 | pass |
+| White on primary button, hover | `#ffffff` | `#a81825` | 7.44 | 4.5 | pass |
+| White on secondary button | `#ffffff` | `#001123` | 19.01 | 4.5 | pass |
+| White on secondary button, hover | `#ffffff` | `#0b2340` | 15.81 | 4.5 | pass |
+| Accent words on page | `#b81b29` | `#f5f7fa` | 6.06 | 4.5 | pass |
+| Accent words on card | `#b81b29` | `#ffffff` | 6.51 | 4.5 | pass |
+| Accent hover on card | `#93131f` | `#ffffff` | 8.92 | 4.5 | pass |
+| Accent words on subtle accent | `#b81b29` | `#fdecee` | 5.71 | 4.5 | pass |
+| Success on card | `#0f7a3d` | `#ffffff` | 5.42 | 4.5 | pass |
+| Success on subtle success | `#0f7a3d` | `#e7f5ec` | 4.82 | 4.5 | pass |
+| Warning on card | `#8a5300` | `#ffffff` | 6.33 | 4.5 | pass |
+| Warning on subtle warning | `#8a5300` | `#fff4dd` | 5.80 | 4.5 | pass |
+| Danger on card | `#b81b29` | `#ffffff` | 6.51 | 4.5 | pass |
+| Danger on subtle danger | `#b81b29` | `#fdecee` | 5.71 | 4.5 | pass |
+| Info on card | `#0b5fa5` | `#ffffff` | 6.57 | 4.5 | pass |
+| Info on subtle info | `#0b5fa5` | `#e8f1fb` | 5.76 | 4.5 | pass |
+| Body on subtle info (notice text) | `#26324a` | `#e8f1fb` | 11.24 | 4.5 | pass |
+| Body on subtle warning (notice text) | `#26324a` | `#fff4dd` | 11.75 | 4.5 | pass |
+| Heading on subtle info (notice title) | `#001123` | `#e8f1fb` | 16.67 | 4.5 | pass |
+| Heading on subtle warning (notice title) | `#001123` | `#fff4dd` | 17.42 | 4.5 | pass |
+| Control border on card | `#748196` | `#ffffff` | 3.95 | 3.0 | pass |
+| Control border on page | `#748196` | `#f5f7fa` | 3.68 | 3.0 | pass |
+| Control border on subtle panel | `#748196` | `#eef2f6` | 3.51 | 3.0 | pass |
+| Checked checkbox or radio fill on card | `#001123` | `#ffffff` | 19.01 | 3.0 | pass |
+| Checked checkbox or radio fill on subtle panel | `#001123` | `#eef2f6` | 16.90 | 3.0 | pass |
+| Focus ring on page | `#1d5bd6` | `#f5f7fa` | 5.56 | 3.0 | pass |
+| Focus ring on card | `#1d5bd6` | `#ffffff` | 5.97 | 3.0 | pass |
+| Focus ring on subtle panel | `#1d5bd6` | `#eef2f6` | 5.30 | 3.0 | pass |
+| Inverse text on inverse ground | `#f3f6fa` | `#001123` | 17.54 | 4.5 | pass |
+| Inverse muted text on inverse ground | `#aeb9c9` | `#001123` | 9.58 | 4.5 | pass |
+| Inverse accent words on inverse ground | `#ff7079` | `#001123` | 7.10 | 4.5 | pass |
+| Inverse focus ring on inverse ground | `#8db4ff` | `#001123` | 9.15 | 3.0 | pass |
+| Divider on card | `#e3e8ef` | `#ffffff` | 1.23 | n/a | pass |
+| Strong divider on page | `#cdd5df` | `#f5f7fa` | 1.38 | n/a | pass |
+| Divider on navy band | `#1d3350` | `#001123` | 1.49 | n/a | pass |
+| Brand red as a graphic mark | `#e32432` | `#ffffff` | 4.60 | n/a | pass |
+| Brand mark ink on card | `#001123` | `#ffffff` | 19.01 | n/a | pass |
 | Plate ink on the worst of all 360 hues (H 163) | `#EDEDEA` | `#03563A` | 7.47 | 4.5 | pass |
 | Plate ink on the lightest neutral plate | `#EDEDEA` | `#595E63` | 5.58 | 4.5 | pass |
 | Plate ink on the darkest neutral plate | `#EDEDEA` | `#25292E` | 12.47 | 4.5 | pass |
@@ -60,43 +73,56 @@ border tokens rather than one.
 
 | Pair | Foreground | Background | Ratio | Required | Result |
 |---|---|---|---:|---:|---|
-| Body text on surface | `#f7f7f5` | `#080d14` | 18.16 | 4.5 | pass |
-| Body text on raised surface | `#f7f7f5` | `#121821` | 16.61 | 4.5 | pass |
-| Body text on sunken surface | `#f7f7f5` | `#05080d` | 18.70 | 4.5 | pass |
-| Secondary text on surface | `#e3e3df` | `#080d14` | 15.14 | 4.5 | pass |
-| Secondary text on raised surface | `#e3e3df` | `#121821` | 13.85 | 4.5 | pass |
-| Muted text on surface | `#99a0a9` | `#080d14` | 7.38 | 4.5 | pass |
-| Muted text on raised surface | `#99a0a9` | `#121821` | 6.75 | 4.5 | pass |
-| Muted text on sunken surface | `#99a0a9` | `#05080d` | 7.60 | 4.5 | pass |
-| Inverse text on inverse surface | `#080d14` | `#f7f7f5` | 18.16 | 4.5 | pass |
-| Accent link on surface | `#f4626b` | `#080d14` | 6.31 | 4.5 | pass |
-| Accent link hover on surface | `#f89aa0` | `#080d14` | 9.39 | 4.5 | pass |
-| Accent link on raised surface | `#f4626b` | `#121821` | 5.78 | 4.5 | pass |
-| Accent link on subtle accent | `#f4626b` | `#1c1013` | 6.01 | 4.5 | pass |
-| Label on solid accent button | `#ffffff` | `#cc2231` | 5.47 | 4.5 | pass |
-| Label on solid accent button, hover | `#ffffff` | `#aa1f2e` | 7.13 | 4.5 | pass |
-| Success on surface | `#4fcb86` | `#080d14` | 9.48 | 4.5 | pass |
-| Warning on surface | `#f0b44a` | `#080d14` | 10.51 | 4.5 | pass |
-| Danger on surface | `#f4626b` | `#080d14` | 6.31 | 4.5 | pass |
-| Info on surface | `#66b6f2` | `#080d14` | 8.85 | 4.5 | pass |
-| Success on subtle success | `#4fcb86` | `#0a1f14` | 8.38 | 4.5 | pass |
-| Warning on subtle warning | `#f0b44a` | `#1f1808` | 9.50 | 4.5 | pass |
-| Danger on subtle danger | `#f4626b` | `#1c1013` | 6.01 | 4.5 | pass |
-| Info on subtle info | `#66b6f2` | `#081724` | 8.23 | 4.5 | pass |
-| Input border on surface | `#7d8691` | `#080d14` | 5.28 | 3.0 | pass |
-| Input border on raised surface | `#7d8691` | `#121821` | 4.83 | 3.0 | pass |
-| Strong border on surface | `#7d8691` | `#080d14` | 5.28 | 3.0 | pass |
-| Focus ring on surface | `#f4626b` | `#080d14` | 6.31 | 3.0 | pass |
-| Inverse focus ring on inverse surface | `#b81b29` | `#f7f7f5` | 6.07 | 3.0 | pass |
-| Focus ring on solid accent | `#f4626b` | `#cc2231` | 1.77 | n/a | pass |
-| Subtle divider on surface | `#262d37` | `#080d14` | 1.40 | n/a | pass |
-| Subtle divider on raised surface | `#262d37` | `#121821` | 1.28 | n/a | pass |
-| Muted text on a flipped card | `#545e6a` | `#f7f7f5` | 6.14 | 4.5 | pass |
-| Accent text on a flipped card | `#b81b29` | `#f7f7f5` | 6.07 | 4.5 | pass |
-| Interactive boundary on sunken surface | `#7d8691` | `#05080d` | 5.44 | 3.0 | pass |
-| Strong hairline on surface | `#3b434f` | `#080d14` | 1.95 | n/a | pass |
-| Brand silver on the ink band | `#b1b4bb` | `#f7f7f5` | 1.94 | n/a | pass |
-| Brand red as a graphic mark | `#e32432` | `#080d14` | 4.23 | n/a | pass |
+| Heading on page | `#f3f6fa` | `#081629` | 16.74 | 4.5 | pass |
+| Heading on card | `#f3f6fa` | `#0f2139` | 14.94 | 4.5 | pass |
+| Heading on subtle panel | `#f3f6fa` | `#0b1b31` | 15.94 | 4.5 | pass |
+| Body on page | `#d3dbe6` | `#081629` | 13.00 | 4.5 | pass |
+| Body on card | `#d3dbe6` | `#0f2139` | 11.60 | 4.5 | pass |
+| Body on subtle panel | `#d3dbe6` | `#0b1b31` | 12.38 | 4.5 | pass |
+| Muted on page | `#9dabbf` | `#081629` | 7.79 | 4.5 | pass |
+| Muted on card | `#9dabbf` | `#0f2139` | 6.95 | 4.5 | pass |
+| Muted on subtle panel | `#9dabbf` | `#0b1b31` | 7.41 | 4.5 | pass |
+| On-navy text on navy band | `#f3f6fa` | `#040f1e` | 17.74 | 4.5 | pass |
+| On-navy muted text on navy band | `#9dabbf` | `#040f1e` | 8.25 | 4.5 | pass |
+| On-navy muted text on raised navy | `#9dabbf` | `#0f2139` | 6.95 | 4.5 | pass |
+| Focus ring on navy band | `#8db4ff` | `#040f1e` | 9.25 | 3.0 | pass |
+| White on primary button | `#ffffff` | `#c81e2b` | 5.71 | 4.5 | pass |
+| White on primary button, hover | `#ffffff` | `#a81825` | 7.44 | 4.5 | pass |
+| White on secondary button | `#ffffff` | `#24426b` | 10.16 | 4.5 | pass |
+| White on secondary button, hover | `#ffffff` | `#2d5184` | 8.01 | 4.5 | pass |
+| Accent words on page | `#ff7079` | `#081629` | 6.78 | 4.5 | pass |
+| Accent words on card | `#ff7079` | `#0f2139` | 6.05 | 4.5 | pass |
+| Accent hover on card | `#ff9aa1` | `#0f2139` | 8.01 | 4.5 | pass |
+| Accent words on subtle accent | `#ff7079` | `#2a1220` | 6.51 | 4.5 | pass |
+| Success on card | `#4fcb86` | `#0f2139` | 7.88 | 4.5 | pass |
+| Success on subtle success | `#4fcb86` | `#0d2a22` | 7.45 | 4.5 | pass |
+| Warning on card | `#f0b44a` | `#0f2139` | 8.74 | 4.5 | pass |
+| Warning on subtle warning | `#f0b44a` | `#2a2210` | 8.49 | 4.5 | pass |
+| Danger on card | `#ff7079` | `#0f2139` | 6.05 | 4.5 | pass |
+| Danger on subtle danger | `#ff7079` | `#2a1220` | 6.51 | 4.5 | pass |
+| Info on card | `#7cb8f5` | `#0f2139` | 7.73 | 4.5 | pass |
+| Info on subtle info | `#7cb8f5` | `#0e2544` | 7.34 | 4.5 | pass |
+| Body on subtle info (notice text) | `#d3dbe6` | `#0e2544` | 11.01 | 4.5 | pass |
+| Body on subtle warning (notice text) | `#d3dbe6` | `#2a2210` | 11.27 | 4.5 | pass |
+| Heading on subtle info (notice title) | `#f3f6fa` | `#0e2544` | 14.17 | 4.5 | pass |
+| Heading on subtle warning (notice title) | `#f3f6fa` | `#2a2210` | 14.51 | 4.5 | pass |
+| Control border on card | `#6f819c` | `#0f2139` | 4.08 | 3.0 | pass |
+| Control border on page | `#6f819c` | `#081629` | 4.58 | 3.0 | pass |
+| Control border on subtle panel | `#6f819c` | `#0b1b31` | 4.36 | 3.0 | pass |
+| Checked checkbox or radio fill on card | `#8db4ff` | `#0f2139` | 7.79 | 3.0 | pass |
+| Checked checkbox or radio fill on subtle panel | `#8db4ff` | `#0b1b31` | 8.31 | 3.0 | pass |
+| Focus ring on page | `#8db4ff` | `#081629` | 8.73 | 3.0 | pass |
+| Focus ring on card | `#8db4ff` | `#0f2139` | 7.79 | 3.0 | pass |
+| Focus ring on subtle panel | `#8db4ff` | `#0b1b31` | 8.31 | 3.0 | pass |
+| Inverse text on inverse ground | `#081629` | `#f3f6fa` | 16.74 | 4.5 | pass |
+| Inverse muted text on inverse ground | `#4a5669` | `#f3f6fa` | 6.85 | 4.5 | pass |
+| Inverse accent words on inverse ground | `#b81b29` | `#f3f6fa` | 6.00 | 4.5 | pass |
+| Inverse focus ring on inverse ground | `#1d5bd6` | `#f3f6fa` | 5.50 | 3.0 | pass |
+| Divider on card | `#1c3150` | `#0f2139` | 1.24 | n/a | pass |
+| Strong divider on page | `#2a4163` | `#081629` | 1.76 | n/a | pass |
+| Divider on navy band | `#1c3150` | `#040f1e` | 1.47 | n/a | pass |
+| Brand red as a graphic mark | `#e32432` | `#0f2139` | 3.52 | n/a | pass |
+| Brand mark ink on card | `#d7dce3` | `#0f2139` | 11.75 | n/a | pass |
 | Plate ink on the worst of all 360 hues (H 159) | `#EDEDEA` | `#1E6141` | 6.30 | 4.5 | pass |
 | Plate ink on the lightest neutral plate | `#EDEDEA` | `#5F6469` | 5.10 | 4.5 | pass |
 | Plate ink on the darkest neutral plate | `#EDEDEA` | `#2F3338` | 10.84 | 4.5 | pass |
@@ -105,16 +131,12 @@ border tokens rather than one.
 
 ### Notes
 
-- **Accent link on surface.** Brand red-500 is 4.60 here, which clears AA by 0.10. This uses red-600 instead.
-- **Input border on surface.** SC 1.4.11. This is the boundary that IS the control.
-- **Inverse focus ring on inverse surface.** An inverse panel carries the other theme's ground, so it needs the other theme's ring. One ring token cannot serve both.
-- **Focus ring on solid accent.** The ring sits on the surface-coloured offset, not directly on the button. Recorded for visibility.
-- **Subtle divider on surface.** Decorative only. Never the sole indicator of a control, so no minimum applies.
-- **Muted text on a flipped card.** The hover and focus state inverts the whole card, so muted copy needs its own value there.
-- **Interactive boundary on sunken surface.** The filter rail sits on the sunken ground, and its checkboxes are boundary-only controls.
-- **Strong hairline on surface.** Section openers and the ruled VERIFIED stamp. A rule that frames a word carries no information the word does not.
-- **Brand silver on the ink band.** Silver's only job on a light theme. It is never used on paper.
-- **Brand red as a graphic mark.** Registered decorative on purpose. Brand red carries no text and no text sits on it, so it has no contrast obligation. If anyone ever needs it as text it must be re-registered as large-text with the size class documented, rather than the token being weakened to suit.
+- **Focus ring on navy band.** The footer and any navy panel draw their ring in this lighter blue.
+- **White on primary button.** Brand red #E32432 carries white at only 4.60:1, so every solid red button is #C81E2B.
+- **Control border on card.** SC 1.4.11. Inputs, selects, checkboxes and outline buttons are drawn with this, and it is the boundary that IS the control.
+- **Checked checkbox or radio fill on card.** The checked state is carried by the fill, so the fill is held to the non-text minimum.
+- **Divider on card.** Decorative only. Never the sole indicator of a control, so no minimum applies.
+- **Brand red as a graphic mark.** Registered decorative on purpose. Brand red carries no text and no text sits on it. If it is ever needed as text it must be re-registered with its size class, rather than the token being weakened to suit.
 - **Plate ink on the worst of all 360 hues (H 163).** A generated sweep, not a sample. Every chromatic paint any dealership ever enters lands on this one lightness, so passing here means no listing can produce an unreadable plate.
 
 ## What is deliberately not in this table
@@ -124,7 +146,7 @@ absent because the token set does not allow them. For the record:
 
 | Pair | Ratio | Verdict |
 |---|---:|---|
-| Brand red `#E32432` on white | 4.60 | Clears AA by 0.10. Too thin to build on, so links use red-600. |
-| Brand red `#E32432` on brand navy | 4.13 | Fails. Dark-theme accents use red-300. |
+| White on brand red `#E32432` | 4.60 | Clears AA by 0.10. Too thin to build on, so solid buttons use `#C81E2B` and red words use `#B81B29`. |
+| Brand red `#E32432` on brand navy | 4.13 | Fails as text. Dark-theme red words use `#FF7079`. |
 | Brand silver `#B1B4BB` on white | 2.08 | Fails everything, including the 3:1 non-text minimum. Decorative rules only on light. |
-| Brand silver `#B1B4BB` on brand navy | 9.16 | Passes comfortably. This is silver's real job: dark-theme muted text. |
+| Brand silver `#B1B4BB` on brand navy | 9.16 | Passes comfortably. Silver belongs on navy, which is where the dark-theme mark uses it. |

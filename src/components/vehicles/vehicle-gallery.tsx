@@ -79,8 +79,8 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
           condition={vehicle.condition}
         />
         <figcaption className="rn-label rn-label--light mt-3 text-ink-muted">
-          The dealership has not uploaded photographs. This is the car's recorded paint colour and
-          its actual odometer reading, not a photograph.
+          The dealership has not uploaded photographs of this car yet. The colour shown is the one
+          recorded on the listing.
         </figcaption>
       </figure>
     );

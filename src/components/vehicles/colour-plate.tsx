@@ -1,83 +1,45 @@
-import type { CSSProperties } from "react";
-
-import { formatKm } from "@/lib/format";
-import { plateFor, provinceCodeFor, REDLINE_FROM } from "@/lib/vehicle-plate";
-
 /**
- * The colour plate.
+ * The no-photograph state.
  *
- * There is no vehicle photography and there will not be any at launch. The two obvious
- * answers are both bad: a grey rectangle with a car icon looks broken, and a stock
- * photograph of a car that is not this car is a lie on a site whose entire promise is
- * knowing what you are dealing with.
+ * A dealership adds stock before it photographs it, so a listing without photographs is a real
+ * state, and it has to look deliberate rather than broken. This is a light panel with a car
+ * silhouette, a small swatch of the car's RECORDED paint colour beside the manufacturer's name for
+ * it, and "Photos coming soon".
  *
- * So the image area is a field derived from the car's ACTUAL RECORDED PAINT COLOUR, full
- * bleed, carrying the manufacturer's own name for it as a gallery label, the province
- * registration code stamped opposite, and the brand's tachometer drawn across it reading
- * this car's real odometer. A grid of twenty-four reads as a colour wall rather than as a
- * page of missing images.
+ * It replaced the colour plate (a full-bleed field of the paint colour with a mileage gauge drawn
+ * across it). Among photographs that plate read as a failed image load, and at phone width its
+ * text collided with the arc. The name and the props are kept so the listing gallery and the
+ * cards did not have to change their call sites; the plate-only props are accepted and ignored.
  *
- * THE DISCIPLINE RULE, and it is not negotiable: EVERY MARK ON THE PLATE IS A VALUE FROM
- * THE VEHICLE RECORD, OR IT DOES NOT SHIP. This is the most abstract object in the product
- * and therefore the most likely to accumulate decorative flourishes. The moment someone
- * adds a mark that is not a reading, it stops being a colour index and becomes a novelty,
- * and a novelty is cheaper than the plain page it replaced. In particular: no invented
- * score, no second gauge, and never a needle that turns green for good and red for bad,
- * which would be a fabricated rating.
- *
- * HOW IT IS BUILT
- *
- * Four layers and one 400 byte inline SVG. No raster assets, no network requests, no
- * canvas, no client colour maths, sharp at any pixel density, works with JavaScript off.
- * The drawing lives in one shared stylesheet rule and each card contributes four custom
- * properties, so twenty-four of them cost kilobytes rather than twenty-four requests.
- *
- * Both themes are emitted as plain hex on the element. The field is picked by CSS, so
- * nothing has to run in the browser and nothing flickers between server and client.
- *
- * The arc's viewBox is 200 by 125, which is exactly the plate's 16:10, so it scales without
- * distortion at every variant. `pathLength` is 100, so every dash figure is a percentage
- * and the same markup renders in an 88px register thumbnail and at 400px on a vehicle page
- * with no arithmetic anywhere.
- *
- * A PHOTOGRAPH REPLACES IT LATER without anything else changing. The field stays underneath
- * as the loading state and the letterbox fill, so a portrait phone snap of a bakkie sits in
- * a band of its own declared paint rather than in grey bars.
+ * Every mark here is a value from the record or a plain statement of fact. No invented colour:
+ * the swatch is drawn only when the record carries a valid hex value.
  */
-
-const ARC = "M 0 96 A 125 125 0 0 1 200 96";
-
-/** The stagger is capped, because a wave that runs down twenty-four cards reads as a delay. */
-const MAX_STAGGER_INDEX = 8;
-
-/**
- * How many plates skip the entry fade entirely.
- *
- * The fade starts at opacity zero, and Chrome will not treat an element at opacity zero as
- * a largest-contentful-paint candidate. The first plate on a results page IS the largest
- * element, so animating it moved LCP by 850ms on a throttled mid-range Android: 3254ms
- * median against a 2000ms budget, measured over eight paired runs, versus 2408ms with the
- * animation off. Nothing else about the page got faster in that comparison, which is what
- * pins the cost on this rule rather than on the network.
- *
- * So the plates a person can already see do not fade in. The wave still runs down the rest
- * of the grid, which is where it was doing the work anyway.
- */
-const STILL_ABOVE_THE_FOLD = 4;
 
 export type PlateVariant = "card" | "thumb" | "hero";
 
+const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+/** A side-on car silhouette, drawn once, filled with currentColor. */
+function CarSilhouette({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 120 48"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+      fill="currentColor"
+    >
+      <path d="M9 34.5c-2.5 0-4-1.6-4-3.9v-5.2c0-2.4 1.4-4.2 3.7-4.8l14.6-3.7 13.3-8.6C39.4 6.2 42.6 5 46 5h22.8c3.8 0 7.3 1.4 10 4l9.6 9.2 16.4 2.7c5.3.9 9.2 5.5 9.2 10.9v.3c0 1.3-1 2.4-2.3 2.4h-6.3a11.5 11.5 0 0 0-22.8 0H40.4a11.5 11.5 0 0 0-22.8 0zm35.3-26c-2 0-3.9.6-5.5 1.6l-9 5.9h23.5V8.5zm13 0v7.5h25.6l-6.8-6.1a6.3 6.3 0 0 0-4.2-1.4z" />
+      <circle cx="29" cy="36" r="8.5" />
+      <circle cx="88.6" cy="36" r="8.5" />
+    </svg>
+  );
+}
+
 export function ColourPlate({
-  publicRef,
-  mileageKm,
   colourSwatch,
-  colourFamily,
   colourName,
-  provinceName,
-  cityName,
-  condition,
   variant = "card",
-  index = 0,
   className = "",
 }: {
   publicRef?: string | null;
@@ -89,63 +51,34 @@ export function ColourPlate({
   cityName?: string | null;
   condition?: "new" | "demo" | "pre_owned" | null;
   variant?: PlateVariant;
-  /** Position in the grid, for the staggered fade. */
   index?: number;
   className?: string;
 }) {
-  const plate = plateFor({ publicRef, mileageKm, colourSwatch, colourFamily, colourName });
-  const code = provinceCodeFor(provinceName);
-  // Pre-owned is the default and does not need saying, which removes furniture from most
-  // cards. New and demo are the two facts a buyer would want shouted.
-  const conditionMark = condition === "new" ? "New" : condition === "demo" ? "Demo" : null;
+  const swatch = colourSwatch && HEX.test(colourSwatch.trim()) ? colourSwatch.trim() : null;
 
   return (
-    <div
-      className={`rn-plate rn-plate--${variant} ${index < STILL_ABOVE_THE_FOLD ? "rn-plate--still" : ""} ${className}`}
-      style={
-        {
-          "--plate-field": plate.field,
-          "--plate-field-dark": plate.fieldDark,
-          "--plate-grain": plate.grain,
-          "--plate-index": Math.min(index, MAX_STAGGER_INDEX),
-          "--sweep": plate.sweep * 100,
-        } as CSSProperties
-      }
-    >
-      {/*
-        Decorative. The mileage it encodes is printed as text on the plate and again on the
-        card, so a screen reader hearing it a third time would be worse than not hearing it.
-      */}
-      <svg className="rn-plate__gauge" viewBox="0 0 200 125" aria-hidden="true" focusable="false">
-        <title>Mileage gauge</title>
-        <path className="rn-plate__track" d={ARC} pathLength={100} />
-        <path className="rn-plate__value" d={ARC} pathLength={100} />
-        {plate.sweep > REDLINE_FROM ? (
-          <>
-            {/* Redline as stroke weight, never colour: status is never carried by colour
-                alone, and it keeps red off the plates entirely. */}
-            <path className="rn-plate__redline" d={ARC} pathLength={100} />
-            <line className="rn-plate__tick" x1="161.2" y1="72.5" x2="170.7" y2="57.2" />
-          </>
-        ) : null}
-      </svg>
-
-      {conditionMark ? <p className="rn-plate__condition rn-label">{conditionMark}</p> : null}
-
-      <div className="rn-plate__band">
-        <div className="rn-plate__place">
-          {code ? <p className="rn-label rn-plate__code">{code}</p> : null}
-          {cityName ? <p className="rn-label rn-label--light">{cityName}</p> : null}
-        </div>
-        <div className="rn-plate__paint">
-          {/* The plate is a claim about the car's colour, so the manufacturer's name for it
-              is the source of truth and is always printed when there is one. */}
-          <p className="rn-label">{plate.colourName ?? "Colour not supplied"}</p>
-          {mileageKm ? (
-            <p className="rn-label rn-label--light tabular">{formatKm(mileageKm)}</p>
+    <div className={`rn-noimage rn-noimage--${variant} ${className}`}>
+      <CarSilhouette className="rn-noimage__car" />
+      {variant === "thumb" ? null : (
+        <p className="rn-noimage__caption">
+          {colourName ? (
+            <span className="rn-noimage__colour">
+              {swatch ? (
+                <span
+                  className="rn-noimage__swatch"
+                  style={{ backgroundColor: swatch }}
+                  aria-hidden="true"
+                />
+              ) : null}
+              <span>
+                <span className="sr-only">Colour: </span>
+                {colourName}
+              </span>
+            </span>
           ) : null}
-        </div>
-      </div>
+          <span>Photos coming soon</span>
+        </p>
+      )}
     </div>
   );
 }

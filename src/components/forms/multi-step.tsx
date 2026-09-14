@@ -292,7 +292,7 @@ export function StepNav({
   return (
     <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-line pt-6">
       {step > 0 ? (
-        <Button key="nav-back" type="button" variant="secondary" onClick={onBack}>
+        <Button key="nav-back" type="button" variant="outline" onClick={onBack}>
           <ArrowLeft aria-hidden="true" />
           Back
         </Button>

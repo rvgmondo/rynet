@@ -100,25 +100,27 @@ an estimate is a compliance problem rather than a bug.
 
 ## 5. Brand assets
 
-**The logo is a PNG.** `brand/` holds five raster lockups plus an icon and a favicon. The mark
-currently rendering in the header is a geometric reconstruction in
-`src/components/brand/rynet-mark.tsx`, drawn from the tachometer arc rather than traced, because
-tracing a raster produces bloated paths that look soft at small sizes.
+**The logo is a PNG.** `brand/` holds five raster lockups plus an icon and a favicon. The mark and
+lockup rendering on the site (`src/components/brand/rynet-mark.tsx`) were traced from
+`brand/2.png` and `brand/rynet_logo_1.png` in September 2026 and rebuilt as clean vectors: the
+gauge segments and needle hub are fitted circular arcs and the RYNET wordmark is drawn geometry.
+Rendered back at master size they overlap the rasters by 98.9 and 98.2 percent.
 
-**Needed:** the vector source (SVG, AI or EPS). When it arrives, that component is replaced by it
-rather than adjusted.
+**Still needed:** the original vector source (SVG, AI or EPS). When it arrives, the path data in
+that component is replaced by it and the component API stays as it is.
 
 Also needed: a proper favicon set and a social sharing image. The current `favicon.png` is
 468KB, which is roughly two hundred times what a favicon should weigh.
 
 ## 6. Vehicle photography
 
-There is none. The vehicle cards are spec-led and carry no image, which is honest but is not the
-finished design. A grey placeholder rectangle repeated 311 times would look worse than what is
-there now, so nothing was invented.
+Seeded listings are illustrated with Wikimedia Commons photographs of the model (see 2b), and about
+one listing in twelve is deliberately left without one. A listing with no photograph now shows a
+light placeholder with a car silhouette, the recorded paint colour and "Photos coming soon"
+(`src/components/vehicles/colour-plate.tsx`), because some dealers will always upload late.
 
-**Needed:** either real dealer photography, or a decision on what a listing with no photo looks
-like, since some dealers will always upload late.
+**Needed:** real dealer photography, and a per-photo focal point if dealer shots turn out to be
+framed inconsistently (the card crops to 16:10 at `object-position: 50% 55%`).
 
 ## 7. Rynet Digital has no prices
 
@@ -190,3 +192,35 @@ Tracked in full in `docs/QUESTIONS.md`. The ones that block content rather than 
   delivery history to quote from.
 - Whether reviews are collected by us, imported from Google, or omitted from v1.
 - Whether the trade-in estimator uses a licensed valuation source or produces a range and hands off.
+
+## 12. Rynet's own company details
+
+`src/content/company.ts`. Every field below is `null`, and a null field renders nothing. None of
+them is in the database or anywhere else in the code, and none will be invented: a made-up
+registration number or address on a verification platform is worse than a gap.
+
+| Field | Where it appears once set | Why it matters |
+|---|---|---|
+| `legalName`, the registered name exactly as CIPC holds it, with "(Pty) Ltd" | Footer company line | ECT Act section 43; the Companies Act expects the registered name on the company's publications |
+| `registrationNumber`, the CIPC number | Footer company line | Same. The verification page asks dealerships for theirs |
+| `vatNumber`, only if registered | Footer company line | Only shown if it exists |
+| `streetAddress`, a physical address someone could visit | Footer (replaces "Pretoria, Gauteng"), and the POPIA section 18 notice on `/sell-to-a-dealer` | Required by POPIA s18(1)(b) |
+| `postalAddress`, if different | POPIA notice | Same |
+| `phone`, a number that is answered | Footer company line | ECT Act section 43 |
+| `officeHours`, when that phone is answered | Contact page | Do not set hours nobody will staff |
+
+The footer company line renders only when name, registration number, street address and phone are
+ALL set, so a half-filled identity can never ship.
+
+## 13. Copy to restore when the demonstration data is cleared
+
+The footer brand line used to read "Every car on Rynet comes from a registered dealership we have
+checked. No private sellers, no dummy listings, no wondering who you are actually talking to." It
+was untrue while every listing is demonstration data, so it now states how the platform works:
+"Every dealership is checked before it can list, and private sellers cannot list at all." When real
+verified dealerships are live and the seed is cleared, stronger present-tense wording can come back,
+by hand, in `src/components/layout/site-footer.tsx`.
+
+The footer's "Quick searches" row is a fixed list of makes, body types and provinces. It is not
+headed "Popular searches" because nothing has measured what is popular. Once analytics exist, the
+list and the heading can be driven by real search volume.

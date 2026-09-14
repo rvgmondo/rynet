@@ -1,285 +1,335 @@
 /*
- * RYNET DESIGN TOKENS
+ * RYNET DESIGN TOKENS: SHOWROOM
  *
- * Every colour, size, radius, duration and z-index in the platform comes from here.
- * An arbitrary hex value in a component is a review rejection, not a shortcut.
- *
- * ---------------------------------------------------------------------------------
- * THE DIRECTION: STOCKLIST. See docs/DESIGN-STOCKLIST.md.
- *
- * The product has no vehicle photography, so every element used to declare itself with a
- * thin grey border, and three hundred thin grey borders is what cheap looks like. This set
- * removes the ability to do that. There are NO radii, NO shadows and almost no borders:
- * the four shadow tokens resolve to `none` and the four radius tokens to `0`, on purpose.
- * Depth comes from ruled lines and shifts of ground, the way it does on a printed sheet.
- *
- * The grounds are plaster, not white. Pure #FFFFFF was the single largest contributor to
- * the old build reading cheap.
+ * Every colour, size, radius, shadow, duration and z-index on the platform comes from here.
+ * An arbitrary hex value in a component is a review rejection, not a shortcut. The authority on
+ * how these are used is docs/DESIGN-SHOWROOM.md.
  *
  * ---------------------------------------------------------------------------------
- * THE RED RULE. Read this before reaching for a red fill.
+ * THE DIRECTION
  *
- * Red is a MARK, never a surface behind text. --rn-red #E32432 appears in exactly two
- * places on any page: the terminus of the 2px masthead rule, and the Rynet mark. It carries
- * no text and no text sits on it, so it has no contrast obligation and can never fail.
- * Every red FILL is --rn-red-solid #CC2231, with white on it at 5.47. Every red WORD is
- * --rn-red-text. There is never more than one red object in a viewport.
+ * Premium, calm, photograph-led, trustworthy and fast. A light cool-grey ground, white cards
+ * with a soft navy-tinted shadow, navy ink, one family (Archivo) at normal width, and red spent
+ * on the one action that matters. The previous direction (STOCKLIST: plaster, no radii, no
+ * shadows, letterspaced capitals) is superseded.
  *
- * Three findings from the original contrast work still drive this:
+ * ---------------------------------------------------------------------------------
+ * THE RED RULE
  *
- *   1. Brand red on white is 4.60:1, which clears AA body text by 0.10. Too thin to build
- *      on, so link and inline accent text uses a darker red.
- *   2. Brand red on brand navy is 4.13:1 and FAILS. Dark-theme accent text lightens.
- *   3. Brand silver on a light ground is 2.08:1 and fails everything, including the 3:1
- *      minimum for an interactive boundary. Silver is a DARK-theme text colour and a
- *      decorative rule on the ink band. Never body text, never an input border on paper.
+ * Brand red #E32432 carries white text at 4.60:1, which clears AA by a hair and is too thin to
+ * build on. So:
  *
- * Every semantic pair below is verified by scripts/contrast-report.ts, which CI runs on
- * every pull request, and the plate sweep in that script covers all 360 hues.
+ *   --rn-brand-red  #E32432  graphic marks and tiny accents only. Never behind text.
+ *   --rn-primary    #C81E2B  every solid red button. White on it is 5.71:1.
+ *   --rn-accent     #B81B29  red WORDS on light grounds (links, a price increase). 6.51:1 on white.
+ *
+ * Brand silver #B1B4BB fails 3:1 on a light ground, so it is never text or a control border in
+ * the light theme.
+ *
+ * Every semantic pair below is verified by scripts/contrast-report.ts, which CI runs on every
+ * pull request. Change a value here, run `npm run contrast`, commit the report.
+ *
+ * ---------------------------------------------------------------------------------
+ * TWO NAMING LAYERS
+ *
+ * The SHOWROOM names (--rn-page, --rn-card, --rn-heading, --rn-primary...) are canonical and
+ * are what new components use. The older names (--rn-surface, --rn-paper, --rn-ink...) are kept
+ * as aliases pointing at them, so page bodies that have not been redrawn yet still resolve to
+ * the new palette rather than breaking. Do not reach for an alias in new work.
+ *
+ * One alias family keeps its old MEANING on purpose: "inverse" (--rn-surface-inverse,
+ * --rn-text-inverse) still flips with the theme, because `hover:bg-ink hover:text-ink-inverse`
+ * is used across the older page bodies and would vanish in dark otherwise. The theme-stable
+ * dark band is --rn-navy with --rn-on-navy, which is what the footer uses.
  */
 
 :root {
   /* ---------------------------------------------------------------- palette */
-  /* Neutral: cool blue-grey, anchored on brand silver (400) and brand navy (900). */
-  --rn-neutral-0: #ffffff;
-  --rn-neutral-25: #f8f8f9;
-  --rn-neutral-50: #f2f2f3;
-  --rn-neutral-100: #e7e8ea;
-  --rn-neutral-200: #d4d5d9;
-  --rn-neutral-300: #c2c4ca;
-  --rn-neutral-400: #b1b4bb; /* BRAND silver */
-  --rn-neutral-500: #80858d;
-  --rn-neutral-600: #5e656e;
-  --rn-neutral-700: #414952;
-  --rn-neutral-800: #262f39;
-  --rn-neutral-900: #001123; /* BRAND navy */
-  --rn-neutral-950: #000b16;
-
-  /* Red: brand red is 500. Darker for light-theme text, lighter for dark-theme text. */
-  --rn-red-50: #fdf0f1;
-  --rn-red-100: #fbdee0;
-  --rn-red-200: #f7bdc2;
-  --rn-red-300: #f0878e;
-  --rn-red-400: #e9505b;
+  --rn-navy-900: #001123; /* BRAND navy */
+  --rn-navy-800: #0b2340;
+  --rn-navy-700: #24426b;
   --rn-red-500: #e32432; /* BRAND red */
-  --rn-red-600: #cc2231;
-  --rn-red-700: #aa1f2e;
-  --rn-red-800: #841c2c;
-  --rn-red-900: #5f1929;
-
-  /* Status. Tuned per theme below, because no single value passes on both grounds. */
-  --rn-green-600: #0f7a3d;
-  --rn-green-300: #4fcb86;
-  --rn-amber-700: #7d5100;
-  --rn-amber-300: #f0b44a;
-  --rn-blue-600: #0b5fa5;
-  --rn-blue-300: #66b6f2;
+  --rn-red-600: #c81e2b;
+  --rn-red-700: #a81825;
+  --rn-silver-400: #b1b4bb; /* BRAND silver */
 
   /* =============================================================== LIGHT ===== */
 
-  /* Grounds. Plaster, not white. */
-  --rn-paper: #ededea; /* page ground, and the card ground */
-  --rn-paper-raised: #f7f7f5; /* inset panels, used about four times in the product */
-  --rn-paper-sunken: #e2e2de; /* filter rail, register band, table heads */
+  /* Grounds */
+  --rn-page: #f5f7fa; /* the page */
+  --rn-card: #ffffff; /* cards, header, panels, inputs */
+  --rn-subtle: #eef2f6; /* tinted panels, chips, placeholders, table heads */
+  --rn-subtle-hover: #e3e8ef;
 
-  /* Ink. Navy-cast near-black, so the brand survives in the darkest value. */
-  --rn-ink: #0a1017; /* headlines, prices, 2px rules, the inverse band */
-  --rn-ink-body: #232a33; /* running body copy */
-  --rn-ink-muted: #545e6a; /* labels, spec values, counts */
+  /* The navy band. Theme-stable: dark in both themes, so the footer and brand bands never flip. */
+  --rn-navy: #001123;
+  --rn-navy-raised: #0b2340;
+  --rn-on-navy: #f3f6fa;
+  --rn-on-navy-muted: #aeb9c9;
+  --rn-line-on-navy: #1d3350; /* decorative */
 
-  /* Ink for use ON the inverse band and on a hover-flipped card. */
-  --rn-ink-inverse: #ededea;
-  --rn-ink-muted-inverse: #9ba3ad;
+  /* Ink */
+  --rn-heading: #001123;
+  --rn-body: #26324a;
+  --rn-muted: #5b6678;
 
-  /*
-   * Rules. Three, because WCAG asks three different things of them. SC 1.4.11 requires 3:1
-   * only where a boundary is the SOLE indicator of a control. Collapsing these into one
-   * either makes every hairline too dark or leaves real input borders failing.
-   */
-  --rn-hairline: #c8c8c2; /* decorative: grid gutters, row rules */
-  --rn-hairline-strong: #a2a29a; /* decorative: section openers, ruled stamps */
-  --rn-hairline-mobile: #a2a29a; /* what --rn-hairline becomes under 768px */
-  --rn-line-interactive: #69727e; /* the SOLE boundary of a control */
-  --rn-silver: #b1b4bb; /* BRAND silver. Decorative rules on the ink band ONLY */
+  /* Lines. Decorative lines have no contrast obligation. A control border is the SOLE boundary
+     of a control, so it holds 3:1 on every ground a control sits on (SC 1.4.11). */
+  --rn-line: #e3e8ef;
+  --rn-line-strong: #cdd5df;
+  --rn-line-control: #748196;
 
-  /* Red. Rationed to near zero. See the red rule at the top of this file. */
-  --rn-red: var(--rn-red-500); /* GRAPHIC MARKS ONLY, never behind text */
-  --rn-red-solid: var(--rn-red-600); /* the only red fill. White on it: 5.47 */
-  --rn-red-text: #b81b29; /* inline links, price drops */
-  --rn-red-text-inverse: #f4626b; /* the same job on the ink band or a flipped card */
+  /* Actions */
+  --rn-primary: #c81e2b;
+  --rn-primary-hover: #a81825;
+  --rn-on-primary: #ffffff;
+  --rn-secondary: #001123;
+  --rn-secondary-hover: #0b2340;
+  --rn-on-secondary: #ffffff;
 
-  /* The plate. These values ARE the imagery system, mirrored in src/lib/vehicle-plate.ts. */
-  --rn-plate-ink: #ededea; /* the only colour ever drawn on a plate, both themes */
-  --rn-plate-ink-soft: rgb(237 237 234 / 0.72); /* arc track, decorative */
-  --rn-plate-edge: rgb(10 16 23 / 0.16); /* 1px inset frame, decorative */
-  --rn-plate-scrim: rgb(10 16 23 / 0.78); /* the bottom band, for photo day */
-
-  /* ---------------------------------------------- semantic aliases (light) */
-  /*
-   * The names the components and the Tailwind theme already use, pointed at the values
-   * above. Renaming three hundred usages to prove a point would have been the expensive
-   * kind of change rather than the valuable kind.
-   */
-  --rn-surface: var(--rn-paper);
-  --rn-surface-raised: var(--rn-paper-raised);
-  --rn-surface-sunken: var(--rn-paper-sunken);
-  --rn-surface-inverse: var(--rn-ink);
-
-  --rn-text-primary: var(--rn-ink);
-  --rn-text-secondary: var(--rn-ink-body);
-  --rn-text-muted: var(--rn-ink-muted);
-  --rn-text-inverse: var(--rn-ink-inverse);
-  --rn-text-muted-inverse: var(--rn-ink-muted-inverse);
-  --rn-text-on-accent: var(--rn-neutral-0);
-
-  --rn-accent: var(--rn-red-text);
+  /* Red as words, and red as a mark */
+  --rn-accent: #b81b29;
   --rn-accent-hover: #93131f;
-  --rn-accent-solid: var(--rn-red-solid);
-  --rn-accent-solid-hover: var(--rn-red-700);
-  --rn-accent-subtle: #f2e2e3;
+  --rn-accent-subtle: #fdecee;
+  --rn-brand-red: #e32432;
 
-  --rn-border-subtle: var(--rn-hairline);
-  --rn-border-interactive: var(--rn-line-interactive);
-  --rn-border-strong: var(--rn-line-interactive);
+  /* Status */
+  --rn-success: #0f7a3d;
+  --rn-success-subtle: #e7f5ec;
+  --rn-warning: #8a5300;
+  --rn-warning-subtle: #fff4dd;
+  --rn-danger: #b81b29;
+  --rn-danger-subtle: #fdecee;
+  --rn-info: #0b5fa5;
+  --rn-info-subtle: #e8f1fb;
 
-  --rn-success: var(--rn-green-600);
-  --rn-warning: var(--rn-amber-700);
-  --rn-danger: var(--rn-red-text);
-  --rn-info: var(--rn-blue-600);
-  --rn-success-subtle: #e0efe6;
-  --rn-warning-subtle: #f4ecda;
-  --rn-danger-subtle: #f2e2e3;
-  --rn-info-subtle: #e0ebf4;
+  /* Focus. A blue ring reads as focus on every ground the product has, and never as a red CTA. */
+  --rn-focus-ring: #1d5bd6;
+  --rn-focus-ring-on-navy: #8db4ff;
 
-  --rn-focus-ring: var(--rn-red-text);
-  --rn-focus-offset: var(--rn-paper);
-  /* For a ring drawn on an inverse panel, where the ground is the other theme's. */
-  --rn-focus-ring-inverse: var(--rn-red-text-inverse);
-  --rn-focus-offset-inverse: var(--rn-ink);
+  /* Overlays and photographs */
+  --rn-scrim: rgb(0 17 35 / 0.55);
+  --rn-photo-chip: rgb(0 17 35 / 0.72); /* white text on it clears 7:1 even over a white car */
 
-  /*
-   * Depth comes from rules and ground shifts. Nothing else. These four tokens exist only so
-   * that a component asking for elevation gets nothing, rather than reaching around the
-   * system for a hand-written box-shadow.
-   */
-  --rn-shadow-1: none;
-  --rn-shadow-2: none;
-  --rn-shadow-3: none;
-  --rn-shadow-4: none;
+  /* Checkbox and radio: the checked fill is a state indicator, so it holds 3:1 (SC 1.4.11). */
+  --rn-control-checked: #001123;
+  --rn-check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10.5l3.2 3.2L15 7'/%3E%3C/svg%3E");
+
+  /* The brand mark. Navy ink on light, silver on dark, the gauge runs to red in both. */
+  --rn-mark-ink: #001123;
+  --rn-mark-mid-1: #4a1e31;
+  --rn-mark-mid-2: #922131;
+  --rn-wordmark-ink: #001123;
+
+  /* Elevation. Soft, layered, navy-tinted. */
+  --rn-shadow-xs: 0 1px 2px rgb(0 17 35 / 0.05);
+  --rn-shadow-card: 0 1px 2px rgb(0 17 35 / 0.06), 0 6px 20px rgb(0 17 35 / 0.06);
+  --rn-shadow-hover: 0 2px 4px rgb(0 17 35 / 0.06), 0 14px 32px rgb(0 17 35 / 0.11);
+  --rn-shadow-overlay: 0 8px 16px rgb(0 17 35 / 0.08), 0 24px 56px rgb(0 17 35 / 0.18);
+
+  /* ------------------------------------------------ legacy aliases (light) */
+  --rn-surface: var(--rn-page);
+  --rn-surface-raised: var(--rn-card);
+  --rn-surface-sunken: var(--rn-subtle);
+  --rn-surface-inverse: #001123; /* flips with the theme, see the header */
+
+  --rn-text-primary: var(--rn-heading);
+  --rn-text-secondary: var(--rn-body);
+  --rn-text-muted: var(--rn-muted);
+  --rn-text-inverse: #f3f6fa; /* flips with the theme */
+  --rn-text-muted-inverse: #aeb9c9; /* flips with the theme */
+  --rn-text-on-accent: #ffffff;
+
+  --rn-accent-solid: var(--rn-primary);
+  --rn-accent-solid-hover: var(--rn-primary-hover);
+
+  --rn-border-subtle: var(--rn-line);
+  --rn-border-interactive: var(--rn-line-control);
+  --rn-border-strong: var(--rn-line-control);
+
+  --rn-paper: var(--rn-page);
+  --rn-paper-raised: var(--rn-card);
+  --rn-paper-sunken: var(--rn-subtle);
+  --rn-ink: var(--rn-heading);
+  --rn-ink-body: var(--rn-body);
+  --rn-ink-muted: var(--rn-muted);
+  --rn-ink-inverse: var(--rn-text-inverse);
+  --rn-ink-muted-inverse: var(--rn-text-muted-inverse);
+  --rn-hairline: var(--rn-line);
+  --rn-hairline-strong: var(--rn-line-strong);
+  --rn-line-interactive: var(--rn-line-control);
+  --rn-silver: var(--rn-silver-400);
+  --rn-red: var(--rn-brand-red);
+  --rn-red-solid: var(--rn-primary);
+  --rn-red-text: var(--rn-accent);
+  --rn-red-text-inverse: #ff7079; /* red words on the flipping inverse ground */
+  --rn-focus-offset: var(--rn-card);
+  --rn-focus-ring-inverse: #8db4ff;
+  --rn-focus-offset-inverse: #001123;
+
+  --rn-shadow-1: var(--rn-shadow-xs);
+  --rn-shadow-2: var(--rn-shadow-card);
+  --rn-shadow-3: var(--rn-shadow-hover);
+  --rn-shadow-4: var(--rn-shadow-overlay);
+
+  /* The colour wall on the home page still draws plate fields. Mirrored in src/lib/vehicle-plate.ts. */
+  --rn-plate-ink: #ededea;
+  --rn-plate-edge: rgb(0 17 35 / 0.12);
 
   color-scheme: light;
 }
 
-/*
- * Under 768px, structure has to survive a cheap panel in direct sunlight, so the decorative
- * hairline steps up. A token override, not a component rule.
- *
- * It points at a per-theme token rather than at a literal. The literal was a light-theme
- * grey and this block sits BEFORE both dark blocks, so the dark theme overwrote it and the
- * phone hardening never reached dark at all: structure was weakest on a phone in the dark,
- * which is precisely the case the rule exists for.
- */
-@media (max-width: 47.9375rem) {
-  :root {
-    --rn-hairline: var(--rn-hairline-mobile);
-  }
-}
-
 /* ================================================================= DARK ===== */
 /*
- * Not a different design. The same two values, swapped. A screenshot of either theme is
- * obviously the same product.
+ * Deep navy, not black. Surfaces step up in lightness rather than down, and the accents are
+ * re-tuned for the darker ground.
  *
- * Three states, not two. An explicit choice stamps data-theme on the root; the default
- * "system" setting stamps nothing, so only prefers-color-scheme separates the two. Both
- * blocks below redefine ONLY tokens, never component rules, so a colour can never end up
- * defined solely inside a media query.
+ * Three states, not two. An explicit choice stamps data-theme on the root; the default "system"
+ * setting stamps nothing, so only prefers-color-scheme separates the two. Both blocks below
+ * redefine ONLY tokens, never component rules, and they must stay identical.
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --rn-paper: #080d14;
-    --rn-paper-raised: #121821;
-    --rn-paper-sunken: #05080d;
+    --rn-page: #081629;
+    --rn-card: #0f2139;
+    --rn-subtle: #0b1b31;
+    --rn-subtle-hover: #152a47;
 
-    --rn-ink: #f7f7f5;
-    --rn-ink-body: #e3e3df;
-    --rn-ink-muted: #99a0a9;
+    --rn-navy: #040f1e;
+    --rn-navy-raised: #0f2139;
+    --rn-on-navy: #f3f6fa;
+    --rn-on-navy-muted: #9dabbf;
+    --rn-line-on-navy: #1c3150;
 
-    --rn-ink-inverse: #080d14;
-    --rn-ink-muted-inverse: #545e6a;
+    --rn-heading: #f3f6fa;
+    --rn-body: #d3dbe6;
+    --rn-muted: #9dabbf;
 
-    --rn-hairline: #262d37;
-    --rn-hairline-strong: #3b434f;
-    --rn-hairline-mobile: #3b434f;
-    --rn-line-interactive: #7d8691;
-    --rn-silver: #b1b4bb;
+    --rn-line: #1c3150;
+    --rn-line-strong: #2a4163;
+    --rn-line-control: #6f819c;
 
-    --rn-red: var(--rn-red-500);
-    --rn-red-solid: var(--rn-red-600);
-    --rn-red-text: #f4626b;
+    --rn-primary: #c81e2b;
+    --rn-primary-hover: #a81825;
+    --rn-on-primary: #ffffff;
+    --rn-secondary: #24426b;
+    --rn-secondary-hover: #2d5184;
+    --rn-on-secondary: #ffffff;
+
+    --rn-accent: #ff7079;
+    --rn-accent-hover: #ff9aa1;
+    --rn-accent-subtle: #2a1220;
+    --rn-brand-red: #e32432;
+
+    --rn-success: #4fcb86;
+    --rn-success-subtle: #0d2a22;
+    --rn-warning: #f0b44a;
+    --rn-warning-subtle: #2a2210;
+    --rn-danger: #ff7079;
+    --rn-danger-subtle: #2a1220;
+    --rn-info: #7cb8f5;
+    --rn-info-subtle: #0e2544;
+
+    --rn-focus-ring: #8db4ff;
+    --rn-focus-ring-on-navy: #8db4ff;
+
+    --rn-scrim: rgb(1 6 14 / 0.7);
+    --rn-photo-chip: rgb(0 17 35 / 0.72);
+
+    --rn-control-checked: #8db4ff;
+    --rn-check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23081629' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10.5l3.2 3.2L15 7'/%3E%3C/svg%3E");
+
+    --rn-mark-ink: #d7dce3;
+    --rn-mark-mid-1: #cf9ba3;
+    --rn-mark-mid-2: #d9636e;
+    --rn-wordmark-ink: #f3f6fa;
+
+    --rn-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+    --rn-shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.22);
+    --rn-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.3), 0 14px 32px rgb(0 0 0 / 0.36);
+    --rn-shadow-overlay: 0 8px 16px rgb(0 0 0 / 0.35), 0 24px 56px rgb(0 0 0 / 0.5);
+
+    --rn-surface-inverse: #f3f6fa;
+    --rn-text-inverse: #081629;
+    --rn-text-muted-inverse: #4a5669;
     --rn-red-text-inverse: #b81b29;
+    --rn-focus-ring-inverse: #1d5bd6;
+    --rn-focus-offset-inverse: #f3f6fa;
 
-    --rn-plate-ink: #ededea;
-    --rn-plate-ink-soft: rgb(237 237 234 / 0.72);
-    /* Load-bearing: it is what stops a Midnight Black plate melting into a near-black page. */
-    --rn-plate-edge: rgb(237 237 234 / 0.28);
-    --rn-plate-scrim: rgb(8 13 20 / 0.8);
-
-    --rn-accent-hover: #f89aa0;
-    --rn-accent-subtle: #1c1013;
-
-    --rn-success: var(--rn-green-300);
-    --rn-warning: var(--rn-amber-300);
-    --rn-danger: var(--rn-red-text);
-    --rn-info: var(--rn-blue-300);
-    --rn-success-subtle: #0a1f14;
-    --rn-warning-subtle: #1f1808;
-    --rn-info-subtle: #081724;
-    --rn-danger-subtle: #1c1013;
+    --rn-plate-edge: rgb(243 246 250 / 0.2);
 
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --rn-paper: #080d14;
-  --rn-paper-raised: #121821;
-  --rn-paper-sunken: #05080d;
+  --rn-page: #081629;
+  --rn-card: #0f2139;
+  --rn-subtle: #0b1b31;
+  --rn-subtle-hover: #152a47;
 
-  --rn-ink: #f7f7f5;
-  --rn-ink-body: #e3e3df;
-  --rn-ink-muted: #99a0a9;
+  --rn-navy: #040f1e;
+  --rn-navy-raised: #0f2139;
+  --rn-on-navy: #f3f6fa;
+  --rn-on-navy-muted: #9dabbf;
+  --rn-line-on-navy: #1c3150;
 
-  --rn-ink-inverse: #080d14;
-  --rn-ink-muted-inverse: #545e6a;
+  --rn-heading: #f3f6fa;
+  --rn-body: #d3dbe6;
+  --rn-muted: #9dabbf;
 
-  --rn-hairline: #262d37;
-  --rn-hairline-strong: #3b434f;
-  --rn-hairline-mobile: #3b434f;
-  --rn-line-interactive: #7d8691;
-  --rn-silver: #b1b4bb;
+  --rn-line: #1c3150;
+  --rn-line-strong: #2a4163;
+  --rn-line-control: #6f819c;
 
-  --rn-red: var(--rn-red-500);
-  --rn-red-solid: var(--rn-red-600);
-  --rn-red-text: #f4626b;
+  --rn-primary: #c81e2b;
+  --rn-primary-hover: #a81825;
+  --rn-on-primary: #ffffff;
+  --rn-secondary: #24426b;
+  --rn-secondary-hover: #2d5184;
+  --rn-on-secondary: #ffffff;
+
+  --rn-accent: #ff7079;
+  --rn-accent-hover: #ff9aa1;
+  --rn-accent-subtle: #2a1220;
+  --rn-brand-red: #e32432;
+
+  --rn-success: #4fcb86;
+  --rn-success-subtle: #0d2a22;
+  --rn-warning: #f0b44a;
+  --rn-warning-subtle: #2a2210;
+  --rn-danger: #ff7079;
+  --rn-danger-subtle: #2a1220;
+  --rn-info: #7cb8f5;
+  --rn-info-subtle: #0e2544;
+
+  --rn-focus-ring: #8db4ff;
+  --rn-focus-ring-on-navy: #8db4ff;
+
+  --rn-scrim: rgb(1 6 14 / 0.7);
+  --rn-photo-chip: rgb(0 17 35 / 0.72);
+
+  --rn-control-checked: #8db4ff;
+  --rn-check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23081629' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 10.5l3.2 3.2L15 7'/%3E%3C/svg%3E");
+
+  --rn-mark-ink: #d7dce3;
+  --rn-mark-mid-1: #cf9ba3;
+  --rn-mark-mid-2: #d9636e;
+  --rn-wordmark-ink: #f3f6fa;
+
+  --rn-shadow-xs: 0 1px 2px rgb(0 0 0 / 0.3);
+  --rn-shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px rgb(0 0 0 / 0.22);
+  --rn-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.3), 0 14px 32px rgb(0 0 0 / 0.36);
+  --rn-shadow-overlay: 0 8px 16px rgb(0 0 0 / 0.35), 0 24px 56px rgb(0 0 0 / 0.5);
+
+  --rn-surface-inverse: #f3f6fa;
+  --rn-text-inverse: #081629;
+  --rn-text-muted-inverse: #4a5669;
   --rn-red-text-inverse: #b81b29;
+  --rn-focus-ring-inverse: #1d5bd6;
+  --rn-focus-offset-inverse: #f3f6fa;
 
-  --rn-plate-ink: #ededea;
-  --rn-plate-ink-soft: rgb(237 237 234 / 0.72);
-  --rn-plate-edge: rgb(237 237 234 / 0.28);
-  --rn-plate-scrim: rgb(8 13 20 / 0.8);
-
-  --rn-accent-hover: #f89aa0;
-  --rn-accent-subtle: #1c1013;
-
-  --rn-success: var(--rn-green-300);
-  --rn-warning: var(--rn-amber-300);
-  --rn-danger: var(--rn-red-text);
-  --rn-info: var(--rn-blue-300);
-  --rn-success-subtle: #0a1f14;
-  --rn-warning-subtle: #1f1808;
-  --rn-info-subtle: #081724;
-  --rn-danger-subtle: #1c1013;
+  --rn-plate-edge: rgb(243 246 250 / 0.2);
 
   color-scheme: dark;
 }
@@ -287,64 +337,52 @@
 /* --------------------------------------------------------- non-colour tokens */
 :root {
   /*
-   * TYPE. Two families, both variable, both self-hosted, latin only.
-   *
-   * Archivo is a variable grotesque with a real WIDTH axis (wdth 62 to 125) alongside
-   * weight, and that axis is the whole typographic idea. At wdth 118 / wght 800 a headline
-   * fills a twelve column measure edge to edge with no manual tracking hack. The same file
-   * at wdth 100 / wght 700 sets an 11px uppercase label at 0.16em without turning to mush.
-   * One family, two completely different registers. It also ships genuine tabular figures,
-   * which every price on the platform depends on.
-   *
-   * Newsreader does ONE job: running prose. The verification explanation, dealership
-   * descriptions, editorial. Never in a card, never in the search interface, never in a
-   * button. It is what keeps an enormous grotesk reading as restraint rather than as a
-   * student project, because students do not set body copy in an optically sized serif.
+   * TYPE. One family, Archivo, at normal width, self-hosted through next/font. Weight carries
+   * the hierarchy: 700 for page and section headings, 600 for card titles, prices and buttons,
+   * 400 and 500 for reading. It ships real tabular figures, which every price depends on.
    */
-  --rn-font-display: var(--font-archivo), "Archivo", system-ui, sans-serif;
-  --rn-font-body: var(--font-archivo), "Archivo", system-ui, sans-serif;
-  --rn-font-prose: var(--font-newsreader), "Newsreader", Georgia, "Times New Roman", serif;
-  --rn-font-marketing: var(--rn-font-display);
+  --rn-font-sans: var(--font-archivo), "Archivo", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --rn-font-display: var(--rn-font-sans);
+  --rn-font-body: var(--rn-font-sans);
+  /* Prose used to be a serif. It is the same family now; the name stays so older markup resolves. */
+  --rn-font-prose: var(--rn-font-sans);
+  --rn-font-marketing: var(--rn-font-sans);
   --rn-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  /*
-   * The scale. Named steps for the roles this direction actually has, and the old t-shirt
-   * sizes kept as aliases so nothing that already ships has to be rewritten to move.
-   */
-  --rn-text-label: clamp(0.6875rem, 0.665rem + 0.11vw, 0.75rem); /* 11 -> 12 */
-  --rn-text-xs: clamp(0.8125rem, 0.79rem + 0.11vw, 0.875rem); /* 13 -> 14 */
-  --rn-text-sm: clamp(0.9375rem, 0.915rem + 0.11vw, 1rem); /* 15 -> 16 */
-  --rn-text-base: clamp(1rem, 0.955rem + 0.22vw, 1.125rem); /* 16 -> 18 */
-  --rn-text-lead: clamp(1.1875rem, 1.06rem + 0.63vw, 1.5rem); /* 19 -> 24 */
-  --rn-text-price: clamp(1.75rem, 1.32rem + 2.15vw, 2.5rem); /* 28 -> 40 */
-  --rn-text-head: clamp(2rem, 1.45rem + 2.75vw, 3.5rem); /* 32 -> 56 */
-  --rn-text-display: clamp(2.75rem, 1.35rem + 7vw, 7.5rem); /* 44 -> 120 */
-  --rn-text-mega: clamp(3.5rem, 1.2rem + 11.5vw, 11rem); /* 56 -> 176 */
-
-  --rn-text-2xs: var(--rn-text-label);
+  /* The scale. Fixed below 16px, fluid above it. */
+  --rn-text-label: 0.75rem; /* 12, eyebrows and badges */
+  --rn-text-2xs: 0.75rem; /* 12 */
+  --rn-text-xs: 0.8125rem; /* 13 */
+  --rn-text-sm: 0.875rem; /* 14 */
+  --rn-text-base: 1rem; /* 16 */
+  --rn-text-lead: clamp(1.0625rem, 1rem + 0.3vw, 1.25rem); /* 17 -> 20 */
   --rn-text-lg: var(--rn-text-lead);
-  --rn-text-xl: clamp(1.375rem, 1.2rem + 0.88vw, 1.875rem); /* 22 -> 30 */
+  --rn-text-xl: clamp(1.25rem, 1.15rem + 0.45vw, 1.5rem); /* 20 -> 24 */
+  --rn-text-price: clamp(1.5rem, 1.35rem + 0.65vw, 1.875rem); /* 24 -> 30 */
   --rn-text-2xl: var(--rn-text-price);
+  --rn-text-head: clamp(1.75rem, 1.45rem + 1.25vw, 2.5rem); /* 28 -> 40 */
   --rn-text-3xl: var(--rn-text-head);
-  --rn-text-4xl: clamp(2.5rem, 1.6rem + 4.5vw, 5rem); /* 40 -> 80 */
+  --rn-text-4xl: clamp(2rem, 1.55rem + 1.9vw, 3rem); /* 32 -> 48 */
+  --rn-text-display: clamp(2.25rem, 1.6rem + 2.8vw, 3.75rem); /* 36 -> 60 */
   --rn-text-5xl: var(--rn-text-display);
+  --rn-text-mega: clamp(2.75rem, 1.9rem + 3.8vw, 4.5rem); /* 44 -> 72 */
 
-  /* Line height is a token per step, not one global multiplier. */
-  --rn-leading-display: 0.88; /* display and mega only, and they carry padding-block */
-  --leading-tight: 1.04;
-  --leading-snug: 1.24;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.6;
-  --leading-prose: 1.65; /* Newsreader */
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.55;
+  --leading-prose: 1.6;
+  --rn-leading-display: 1.08;
 
-  --tracking-display: -0.03em;
-  --tracking-tighter: -0.032em;
-  --tracking-tight: -0.02em;
-  --tracking-price: -0.015em;
-  --tracking-wide: 0.06em;
-  --tracking-widest: 0.16em;
+  --tracking-display: -0.022em;
+  --tracking-tighter: -0.02em;
+  --tracking-tight: -0.012em;
+  --tracking-price: -0.01em;
+  --tracking-wide: 0.04em;
+  --tracking-widest: 0.08em; /* eyebrows and badges only */
 
-  /* Spacing: 4px base. */
+  /* Spacing: an 8px grid, with 4px half steps for tight component internals. */
   --space-0: 0;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -359,42 +397,31 @@
   --space-20: 5rem;
   --space-24: 6rem;
 
-  /* Section rhythm is its own scale, so the agency can breathe without the
-     marketplace inheriting it. */
-  --section-tight: clamp(2.5rem, 5vw, 4rem);
-  --section-base: clamp(3.5rem, 7vw, 6rem);
-  --section-loose: clamp(4.5rem, 10vw, 9rem);
+  --section-tight: clamp(2.5rem, 5vw, 3.5rem);
+  --section-base: clamp(3rem, 6.5vw, 5rem);
+  --section-loose: clamp(4rem, 9vw, 7rem);
 
-  --container-max: 82.5rem;
-  --container-pad: clamp(1rem, 4vw, 2.5rem);
-  /* PROSE ONLY. Never applied to the results grid: results centred at a text measure on a
-     1920px screen is what makes a marketplace read as a blog. */
-  --measure: 64ch;
+  /* 1280px of content, plus the side padding. */
+  --container-max: 84rem;
+  --container-pad: clamp(1rem, 3.5vw, 2rem);
+  --measure: 68ch;
 
-  /*
-   * No radii. The commitment leaves the design nowhere to hide, which means any component
-   * that has not been redrawn to this system will look pasted in immediately, which is the
-   * point. --rn-radius-full survives for the one pill shape the product has.
-   */
-  --rn-radius-sm: 0;
-  --rn-radius-md: 0;
-  --rn-radius-lg: 0;
-  --rn-radius-xl: 0;
-  --rn-radius-full: 9999px;
+  /* Radius */
+  --rn-radius-xs: 4px;
+  --rn-radius-sm: 8px; /* controls */
+  --rn-radius-md: 12px; /* cards */
+  --rn-radius-lg: 16px; /* large panels */
+  --rn-radius-xl: 24px;
+  --rn-radius-full: 9999px; /* chips, badges */
 
-  /*
-   * Motion. Four movements exist in the whole product and the count is the point: rule
-   * draw, plate fade, ink flip, and the sweep on a vehicle page. Everything animates
-   * transform, opacity or colour. A one-off timing in a component is a review rejection.
-   */
+  /* Motion. Short and calm. Everything animates transform, opacity, colour or shadow. */
   --duration-micro: 120ms;
-  --duration-element: 240ms;
-  --duration-page: 480ms;
-  --rn-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-element: 200ms;
+  --duration-page: 360ms;
+  --rn-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --rn-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  /* Overshoot is the wrong physics for a document, and a springy card is exactly the
-     cheapness this direction exists to remove. Kept as a name, aliased to the real curve. */
   --rn-ease-spring: var(--rn-ease-out);
+  --ease-standard: var(--rn-ease-out);
   --stagger: 24ms;
 
   --z-base: 0;
@@ -407,6 +434,7 @@
   --z-toast: 600;
   --z-tooltip: 700;
 
-  /* Anything touchable is at least this, per WCAG 2.2 SC 2.5.8. */
+  /* Anything touchable is at least 24px (SC 2.5.8); a primary action on a phone is 44px. */
   --target-min: 44px;
+  --header-height: 4rem;
 }

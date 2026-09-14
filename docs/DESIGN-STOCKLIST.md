@@ -1,5 +1,10 @@
 # RYNET SHOWROOM: STOCKLIST
 
+> **SUPERSEDED, September 2026. The authority is [DESIGN-SHOWROOM.md](DESIGN-SHOWROOM.md).**
+> Nothing below is current: the plaster grounds, zero radii and shadows, letterspaced capitals,
+> expanded display type, Newsreader prose, the colour plate and the ink flip are all gone. Kept for
+> the record of what was tried and why it was replaced.
+
 The final direction. Everything below is buildable against the repo as it stands at `C:\CC\rynet`. Existing files that change are named. Every contrast figure was computed against the real hex values with the same maths as `src/lib/contrast.ts`, so the numbers below are what `scripts/contrast-report.ts` will print.
 
 ---
