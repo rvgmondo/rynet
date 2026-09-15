@@ -58,28 +58,33 @@ export function VerificationSteps() {
 
 /**
  * The two other doors: a private seller offering a car to dealerships, and a dealership asking to
- * list. Side by side from 1024px, stacked on a phone.
+ * list. One panel split down the middle from 1024px (a line between them on a phone), not two tall
+ * cards: they are the page's closing routes, not its headline, and two 32px headings side by side
+ * shouted as loud as the sections above them.
  *
- * Nothing here promises a price, a response time or a number of offers. The sell panel says what
+ * Nothing here promises a price, a response time or a number of offers. The sell half says what
  * /sell-to-a-dealer says: no more than five dealerships, no public listing, no cut, and that there
- * may not be a dealership near the seller yet. The dealership panel sends applications to the
+ * may not be a dealership near the seller yet. The dealership half sends applications to the
  * dealer address on /contact, which asks for exactly the details named here.
  */
 export function SellAndListBands() {
   return (
     <div className="rn-defer container-page py-[var(--section-base)]">
-      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+      <div className="rn-panel grid overflow-hidden lg:grid-cols-2">
         <section
           aria-labelledby="sell-heading"
-          className="rn-panel flex flex-col p-6 sm:p-8 lg:p-10"
+          className="flex flex-col p-6 sm:p-8 lg:p-10 xl:p-12"
         >
-          <span className="rn-icon-tile rn-icon-tile--lg">
-            <HandCoins aria-hidden="true" className="size-6" />
-          </span>
-          <h2 id="sell-heading" className="rn-h2 mt-6">
-            Selling your car? Offer it to dealerships
+          <p className="flex items-center gap-3">
+            <span className="rn-icon-tile">
+              <HandCoins aria-hidden="true" className="size-5" />
+            </span>
+            <span className="rn-eyebrow">Selling a car</span>
+          </p>
+          <h2 id="sell-heading" className="rn-h3 mt-5 text-[1.375rem] sm:text-2xl">
+            Offer it to dealerships, not to the public
           </h2>
-          <p className="mt-4 max-w-[34rem] text-body">
+          <p className="mt-3 max-w-[34rem] text-body">
             Tell us what you drive and we pass it to no more than five dealerships in your province
             that buy that kind of car, so they can make you an offer. Your car is never listed on
             the site, and Rynet takes no cut.
@@ -88,7 +93,7 @@ export function SellAndListBands() {
             We are signing dealerships now, so there may not be one near you yet. If we cannot place
             your car, we email you and say so.
           </p>
-          <div className="mt-auto pt-8">
+          <div className="mt-auto pt-7">
             <Link
               href="/sell-to-a-dealer"
               className={buttonClasses({ variant: "secondary", size: "lg", block: "mobile" })}
@@ -101,28 +106,31 @@ export function SellAndListBands() {
 
         <section
           aria-labelledby="list-heading"
-          className="rn-panel flex flex-col p-6 sm:p-8 lg:p-10"
+          className="flex flex-col border-t border-line bg-subtle/60 p-6 sm:p-8 lg:border-t-0 lg:border-l lg:p-10 xl:p-12"
         >
-          <span className="rn-icon-tile rn-icon-tile--lg">
-            <Store aria-hidden="true" className="size-6" />
-          </span>
-          <h2 id="list-heading" className="rn-h2 mt-6">
-            Run a dealership? List your stock on Rynet
+          <p className="flex items-center gap-3">
+            <span className="rn-icon-tile bg-card">
+              <Store aria-hidden="true" className="size-5" />
+            </span>
+            <span className="rn-eyebrow">For dealerships</span>
+          </p>
+          <h2 id="list-heading" className="rn-h3 mt-5 text-[1.375rem] sm:text-2xl">
+            List your stock where every seller is checked
           </h2>
-          <p className="mt-4 max-w-[34rem] text-body">
+          <p className="mt-3 max-w-[34rem] text-body">
             On Rynet every seller is a registered business that has been checked, and a buyer can
             see which dealership they are dealing with before they call. To apply, send us your
             trading name, your CIPC registration number and roughly how many cars you carry.
           </p>
-          <div className="mt-auto flex flex-col gap-4 pt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
+          <div className="mt-auto flex flex-col gap-3 pt-7 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
             <Link
               href="/contact"
-              className={buttonClasses({ variant: "secondary", size: "lg", block: "mobile" })}
+              className={buttonClasses({ variant: "outline", size: "lg", block: "mobile" })}
             >
               Apply to list your stock
             </Link>
             <Link href="/digital" className="rn-link-arrow min-h-11 whitespace-normal">
-              Marketing for dealerships from Rynet Digital
+              Marketing from Rynet Digital
               <ArrowRight aria-hidden="true" />
             </Link>
           </div>

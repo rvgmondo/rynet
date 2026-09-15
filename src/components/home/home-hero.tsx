@@ -11,7 +11,9 @@ import { PriceTag } from "@/components/ui/price-tag";
  * The first screen.
  *
  * FROM 640px: a navy band with the promise on the left and a photographed listing on the right,
- * and the white search panel lifted over the band's lower edge.
+ * and the white search panel lifted over the band's lower edge. The listing is drawn as a spotlight
+ * card: the photograph with nothing on it but the Demo listing badge, and the car's name and price
+ * on a bar under it, so no label ever sits across the car itself.
  *
  * ON A PHONE the order is the one a buyer needs: the heading, one short line, the search (keyword
  * and a full-width Search button inside the first screen), and only then the photograph, on the
@@ -57,21 +59,21 @@ export function HomeHero({
     <section aria-labelledby="hero-heading">
       <div className="on-navy border-b border-line-on-navy">
         <div
-          className={`container-page grid gap-8 pt-6 pb-14 sm:pt-10 sm:pb-20 lg:items-start lg:gap-12 lg:pt-14 lg:pb-28 ${
+          className={`container-page grid gap-8 pt-6 pb-14 sm:pt-10 sm:pb-20 lg:items-center lg:gap-14 lg:pt-12 lg:pb-28 ${
             hero ? "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" : ""
           }`}
         >
-          <div className="max-w-[36rem] lg:pt-8">
+          <div className="max-w-[36rem] lg:pb-6">
             <p className="rn-eyebrow text-on-navy-muted">{eyebrow}</p>
             <h1 id="hero-heading" className="rn-h1 mt-3 text-on-navy">
               Know exactly who is selling you the car
             </h1>
             <p className="rn-lead mt-3 text-on-navy-muted sm:hidden">{shortLead}</p>
-            <p className="rn-lead mt-5 hidden text-on-navy-muted sm:block">{lead}</p>
+            <p className="rn-lead mt-5 hidden max-w-[33rem] text-on-navy-muted sm:block">{lead}</p>
             {secondary ? (
               <Link
                 href={secondary.href}
-                className="rn-link mt-6 hidden min-h-11 items-center gap-1.5 sm:inline-flex"
+                className="rn-link mt-5 hidden min-h-11 items-center gap-1.5 sm:inline-flex"
               >
                 {secondary.label}
                 <ArrowRight aria-hidden="true" className="size-4" />
@@ -132,47 +134,68 @@ function HeroPhoto({ hero, wide }: { hero: HeroListing; wide: boolean }) {
   return (
     <figure className="min-w-0">
       {/*
-        One link for the whole picture. Its name is the title, variant and price in the chip (the
+        One link for the whole card. Its name is the title, variant and price on the bar (the
         image is alt="" inside it, so the car is not announced twice).
       */}
       <Link
         href={hero.href}
-        className={`group relative block aspect-[16/9] overflow-hidden rounded-lg shadow-overlay ${
-          wide ? "bg-navy-raised" : "bg-subtle"
+        className={`group block overflow-hidden rounded-lg ${
+          wide
+            ? "bg-navy-raised shadow-overlay ring-1 ring-line-on-navy"
+            : "border border-line bg-card shadow-card"
         }`}
       >
-        <picture>
-          <source media={wide ? NARROW : WIDE} srcSet={BLANK} />
-          <img
-            src={wide ? photo.url : phone.url}
-            srcSet={wide ? srcSet : undefined}
-            sizes={wide && srcSet ? WIDE_SIZES : undefined}
-            alt=""
-            width={wide ? photo.width : phone.width}
-            height={wide ? photo.height : phone.height}
-            fetchPriority="high"
-            decoding="async"
-            className="size-full object-cover object-[50%_60%] motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.02]"
-          />
-        </picture>
+        <span
+          className={`relative block aspect-[16/9] overflow-hidden ${wide ? "bg-navy" : "bg-subtle"}`}
+        >
+          <picture>
+            <source media={wide ? NARROW : WIDE} srcSet={BLANK} />
+            <img
+              src={wide ? photo.url : phone.url}
+              srcSet={wide ? srcSet : undefined}
+              sizes={wide && srcSet ? WIDE_SIZES : undefined}
+              alt=""
+              width={wide ? photo.width : phone.width}
+              height={wide ? photo.height : phone.height}
+              fetchPriority="high"
+              decoding="async"
+              className="size-full object-cover object-[50%_60%] motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.02]"
+            />
+          </picture>
 
-        <span className="absolute bottom-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-3 rounded-md bg-card px-3 py-2 shadow-overlay sm:bottom-4 sm:left-4 sm:w-[22rem] sm:max-w-[calc(100%-2rem)] sm:p-4">
+          {card.isDemonstration ? (
+            <DemoListingBadge onPhoto className="absolute top-3 left-3 sm:top-4 sm:left-4" />
+          ) : null}
+        </span>
+
+        <span className="flex items-center gap-3 px-4 py-3 sm:gap-4 sm:px-5 sm:py-4">
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold text-heading sm:text-base">
+            <span
+              className={`block truncate font-semibold sm:text-lg ${wide ? "text-on-navy" : "text-heading"}`}
+            >
               {title}
             </span>
             {card.variantName ? (
-              <span className="hidden truncate text-sm text-muted sm:block">
+              <span
+                className={`hidden truncate text-sm sm:block ${wide ? "text-on-navy-muted" : "text-muted"}`}
+              >
                 {card.variantName}
               </span>
             ) : null}
           </span>
-          <PriceTag as="span" value={card.price} size="sm" className="shrink-0" />
+          <PriceTag
+            as="span"
+            value={card.price}
+            size="md"
+            className={`shrink-0 max-sm:text-[1.0625rem] ${wide ? "text-on-navy" : ""}`}
+          />
+          <ArrowRight
+            aria-hidden="true"
+            className={`size-5 shrink-0 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5 ${
+              wide ? "text-on-navy" : "text-accent"
+            }`}
+          />
         </span>
-
-        {card.isDemonstration ? (
-          <DemoListingBadge onPhoto className="absolute top-3 left-3 sm:top-4 sm:left-4" />
-        ) : null}
       </Link>
 
       {hero.credit ? (

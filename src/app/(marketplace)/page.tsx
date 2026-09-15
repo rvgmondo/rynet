@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { BodyTypeTiles, PopularSearches } from "@/components/home/home-browse";
+import { HomeBrowse } from "@/components/home/home-browse";
 import { HomeHero } from "@/components/home/home-hero";
 import { PhotoCredits, SellAndListBands, VerificationSteps } from "@/components/home/home-sections";
 import { getHomeStock } from "@/components/home/home-stock";
@@ -17,11 +17,12 @@ import { organisationJsonLd, websiteJsonLd } from "@/lib/structured-data";
  * The first screen answers the two things a buyer arrives with: are there cars here, and can I
  * search them. So it opens on a navy band with a photographed listing beside the promise, and a
  * white search panel lifted over the band's edge (on a phone the search comes before the
- * photograph). After it, in order: the newest cars as a scroll-snap row, body types as photo tiles,
- * one compact block of quick searches by make and province, the four checks every dealership goes
- * through as a short numbered list, and the two other doors (selling a car to dealerships, and a
- * dealership applying to list). Paint colours are a filter on /cars, not a home page section:
- * nobody shops by a manufacturer's paint name.
+ * photograph). After it, in order: the newest cars as a scroll-snap row, one "Browse cars" section
+ * that switches between body type photo tiles, make tiles, budget bands and provinces (no
+ * JavaScript), the four checks every dealership goes through as a short numbered list, and one
+ * panel with the two other doors (selling a car to dealerships, and a dealership applying to
+ * list). Paint colours are a filter on /cars, not a home page section: nobody shops by a
+ * manufacturer's paint name.
  *
  * Every figure is a live query and nothing is invented: no statistics, no reviews, no logos, no
  * testimonials. The listings are demonstration data today, so the one count the page shows (on
@@ -88,7 +89,7 @@ export default async function HomePage() {
         hero={stock.hero}
         eyebrow="Cars for sale from dealerships only"
         shortLead="Only checked, registered dealerships can list. No private sellers."
-        lead="Only registered dealerships can list on Rynet, and our team checks each one before its first car goes live. No private sellers, and no way to become one."
+        lead="Only registered dealerships can list on Rynet, and our team checks each one before its first car goes live. No private sellers."
         secondary={{
           href: "/sell-to-a-dealer",
           label: "Selling a car instead? Offer it to dealerships",
@@ -160,30 +161,12 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {bodyTiles.length > 0 ? (
-        <section aria-labelledby="body-heading" className="container-page pt-[var(--section-base)]">
-          <SectionHeader
-            id="body-heading"
-            title="Browse by body type"
-            action={{ href: "/cars", label: "Every body type" }}
-          />
-          <div className="mt-6">
-            <BodyTypeTiles tiles={bodyTiles} />
-          </div>
-        </section>
-      ) : null}
-
-      {stock.makes.length > 0 || data.provinces.length > 0 ? (
-        <section
-          aria-labelledby="popular-heading"
-          className="rn-defer container-page py-[var(--section-base)]"
-        >
-          <SectionHeader id="popular-heading" title="Quick searches" />
-          <div className="mt-6">
-            <PopularSearches makes={stock.makes} provinces={data.provinces} />
-          </div>
-        </section>
-      ) : null}
+      <HomeBrowse
+        bodyTiles={bodyTiles}
+        makes={stock.makeTiles}
+        budgets={stock.budgets}
+        provinces={data.provinces}
+      />
 
       <VerificationSteps />
 

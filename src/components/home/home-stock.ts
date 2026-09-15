@@ -44,6 +44,10 @@ export type BodyTypeTile = {
 
 export type StockOption = { slug: string; name: string; count: number };
 export type ModelOption = StockOption & { makeSlug: string };
+/** A make with its best-stocked model names, for the make tiles. */
+export type MakeTile = StockOption & { models: string[] };
+/** A price band with the live count behind the same URL it links to. */
+export type BudgetBand = { label: string; href: string; count: number };
 export type PriceOption = { value: number; label: string };
 export type PhotoCreditLine = { subject: string; credit: string };
 
@@ -53,6 +57,9 @@ export type HomeStock = {
   bodyTypes: BodyTypeTile[];
   /** Alphabetical, for the select. */
   makes: StockOption[];
+  /** Most stocked first, each with its three best-stocked models. */
+  makeTiles: MakeTile[];
+  budgets: BudgetBand[];
   models: ModelOption[];
   prices: PriceOption[];
   /** Every Commons photograph the page shows, so the attribution the licence asks for is on it. */
@@ -78,13 +85,44 @@ function priceOptions(min: number, max: number): PriceOption[] {
 }
 
 /**
+ * Price bands for "Browse by budget". Each count uses exactly the rule /cars applies to the URL
+ * it links to (minPrice is at least, maxPrice is at most), so a tile never promises more cars than
+ * the page it opens. A band with nothing in it is left out.
+ */
+const BUDGETS: { min?: number; max?: number }[] = [
+  { max: 200_000 },
+  { min: 200_000, max: 350_000 },
+  { min: 350_000, max: 600_000 },
+  { min: 600_000 },
+];
+
+function budgetBands(prices: number[]): BudgetBand[] {
+  return BUDGETS.map(({ min, max }) => {
+    const params = new URLSearchParams();
+    if (min) params.set("minPrice", String(min));
+    if (max) params.set("maxPrice", String(max));
+    const label =
+      min && max
+        ? `${formatRand(min)} to ${formatRand(max)}`
+        : max
+          ? `Under ${formatRand(max)}`
+          : `Over ${formatRand(min ?? 0)}`;
+    const count = prices.filter((p) => (!min || p >= min) && (!max || p <= max)).length;
+    return { label, href: `/cars?${params.toString()}`, count };
+  }).filter((band) => band.count > 0);
+}
+
+/**
  * Photographs clean enough to open the site on, in order of preference: the whole car, a plain
  * or showroom ground, and no other company's banners or crowds behind it. Chosen by eye from the
- * demonstration library's contact sheet. The hero is the newest live listing that leads with one
+ * demonstration library's contact sheet. The Audi A3 on a studio plinth against a dark wall is the
+ * one true studio shot in the library, a clean front three-quarter that sits on the navy band as if
+ * it were lit for it; the white Hilux on a show stand follows. The hero is the newest live listing that leads with one
  * of these; with none live it falls back to the newest landscape photograph, as before. When
  * dealerships upload their own studio photography this list stops mattering.
  */
 const HERO_PHOTOS = [
+  "demo-audi-a3--3.webp",
   "demo-toyota-hilux--2.webp",
   "demo-toyota-hilux--3.webp",
   "demo-haval-h6--2.webp",
@@ -400,11 +438,24 @@ async function readHomeStock(): Promise<HomeStock> {
     bodyTypes.push({ slug: body.slug, name: body.name, count, photo });
   }
 
+  const makeTiles: MakeTile[] = [...makes]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "en-ZA"))
+    .map((make) => ({
+      ...make,
+      models: models
+        .filter((model) => model.makeSlug === make.slug)
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "en-ZA"))
+        .slice(0, 3)
+        .map((model) => model.name),
+    }));
+
   return {
     hero,
     featured: featuredDocs.map(toCard),
     bodyTypes,
     makes,
+    makeTiles,
+    budgets: budgetBands(prices),
     models,
     prices: prices.length ? priceOptions(Math.min(...prices), Math.max(...prices)) : [],
     credits: [...credits.values()].sort((a, b) => a.subject.localeCompare(b.subject, "en-ZA")),
