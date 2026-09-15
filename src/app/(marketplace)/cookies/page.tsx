@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LegalReviewNotice, Prose } from "@/components/layout/prose";
+import { LegalDocument } from "@/components/conversion/legal-document";
+import { LEGAL_REVIEWED_AT } from "@/content/legal-review";
 
 export const metadata: Metadata = {
   title: "Cookies",
@@ -13,14 +14,14 @@ export const metadata: Metadata = {
 /**
  * The cookie notice.
  *
- * Short because the answer is short, and it carries the review notice anyway.
+ * Short because the answer is short, and it carries the review marker anyway.
  *
  * The earlier reasoning here was that this page is a factual description of what the site
  * does rather than a legal draft, so it did not need the notice. That was wrong on its own
  * terms: "there is no cookie banner because there is nothing to ask you about" is a
  * conclusion about what POPIA requires, not a description of a script tag, and the brief
  * forbids publishing compliance copy as though it had been reviewed. The privacy notice and
- * the terms both carry it; this is the same kind of claim.
+ * the terms both carry the marker; this is the same kind of claim.
  *
  * There is no consent banner because there is nothing to consent to. POPIA requires
  * non-essential scripts to be blocked BEFORE consent, and the honest way to meet that is not
@@ -29,13 +30,14 @@ export const metadata: Metadata = {
  */
 export default function CookiesPage() {
   return (
-    <Prose
+    <LegalDocument
+      eyebrow="Legal"
       title="Cookies"
       intro="There is no cookie banner on this site because there is nothing to ask you about."
-      updated="26 August 2026"
+      updated="14 September 2026"
+      path="/cookies"
+      reviewedAt={LEGAL_REVIEWED_AT.cookies}
     >
-      <LegalReviewNotice />
-
       <h2>What we do not use</h2>
       <ul>
         <li>No advertising or retargeting cookies.</li>
@@ -57,10 +59,17 @@ export default function CookiesPage() {
           <strong>Your theme choice</strong>, stored in your browser so the site does not flash to
           the wrong one on your next visit. It never leaves your device.
         </li>
+        <li>
+          <strong>A draft of a form you started</strong>, if you begin offering your car to
+          dealerships or enquiring with Rynet Digital and leave before sending. What you typed is
+          kept in your browser so it is there when you come back. It is not sent anywhere until you
+          send the form, and Start again clears it.
+        </li>
       </ul>
       <p>
-        Both are strictly necessary for the thing you asked for, which is why neither needs your
-        consent. Blocking them will sign you out and reset your theme; nothing else will change.
+        Each is strictly necessary for the thing you asked for, which is why none needs your
+        consent. Blocking them will sign you out, reset your theme and stop a half-filled form
+        coming back; nothing else will change.
       </p>
 
       <h2>If that changes</h2>
@@ -73,6 +82,6 @@ export default function CookiesPage() {
       <p>
         More on what we collect and why in the <Link href="/privacy">privacy notice</Link>.
       </p>
-    </Prose>
+    </LegalDocument>
   );
 }

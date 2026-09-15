@@ -1,23 +1,31 @@
 import config from "@payload-config";
+import { Ban, Check, ChevronDown, FileText, HandCoins, Scale } from "lucide-react";
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { getPayload } from "payload";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { SellForm } from "@/components/sell/sell-form";
+import { LegalReviewMarker } from "@/components/layout/legal-review-marker";
+import type { MakeOption } from "@/components/sell/make-model-fields";
+import { type CityOption, type ProvinceOption, SellForm } from "@/components/sell/sell-form";
+import { Notice } from "@/components/ui";
+import { buttonClasses } from "@/components/ui/button-classes";
+import { COMPANY } from "@/content/company";
+import { LEGAL_REVIEWED_AT } from "@/content/legal-review";
 import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 import { faqJsonLd } from "@/lib/structured-data";
 
 /**
- * Rendered on demand. It reads the province list from the database, and prerendering would
- * freeze it at build time and fail the build anywhere there is no database.
+ * Rendered on demand. It reads the provinces, towns, makes and models from the database, and
+ * prerendering would freeze them at build time and fail the build anywhere there is no database.
  */
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sell your car to a verified dealership",
+  title: "Sell your car to a dealership",
   description:
-    "Tell us about your car and verified South African dealerships come back to you with offers. Rynet does not buy cars, does not value cars, and takes no cut.",
+    "Describe your car once and dealerships in your province that buy that kind of car can contact you with an offer. Free, no obligation, and Rynet never buys or values cars.",
   alternates: { canonical: "/sell-to-a-dealer" },
 };
 
@@ -31,38 +39,40 @@ export const metadata: Metadata = {
  * Three things had to be true for this page to be honest, and they shaped all of it.
  *
  * **It shows no valuation.** Rynet has no licensed valuation source, so any figure here would
- * be invented, and this is a number somebody makes a financial decision on. The page says so
- * outright rather than quietly omitting it.
+ * be invented, and this is a number somebody makes a financial decision on. No rand figure
+ * appears anywhere on the page, and e2e/sell.spec.ts fails the build if one does.
  *
  * **It cannot be misread as a listing.** The route is /sell-to-a-dealer, deliberately not
  * /sell-your-car, which is on a forbidden-href list enforced by an end-to-end test precisely
- * because it implies a private ad. There is a section on this page whose entire job is to say
- * that a private individual cannot list here and never will be able to.
+ * because it implies a private ad.
  *
  * **It says the offer will be lower than a private sale.** That is the one thing a seller
- * discovers later and resents, so it is on the page before they fill anything in, with what
- * they get in exchange. No percentage is given, because no citable South African figure was
- * found and inventing one is exactly what the brief forbids.
+ * discovers later and resents, so the comparison is on the page before they send anything.
+ *
+ * SHOWROOM. The form is the hero: on a phone the first field sits inside the first screen, and
+ * on a desktop the form card stands beside the promise. Everything below it answers a question
+ * the form raises, once, instead of repeating the same three facts ten times.
  */
+
 const FAQS = [
   {
     question: "Does Rynet buy my car?",
     answer:
-      "No. Rynet is a marketplace, not a buyer. We pass your details to verified dealerships and they deal with you directly. We take no commission from you and no cut of the sale.",
+      "No. Rynet is a marketplace, not a buyer. We pass your details to dealerships that buy your kind of car, and they deal with you directly. We take no commission from you and no cut of the sale.",
   },
   {
     question: "What is my car worth?",
     answer:
-      "We do not know, and we will not guess. Rynet has no vehicle valuation licence, so any number we showed you would be made up, and you would plan around it. The dealerships make the offers, and they make them on the actual car.",
+      "Rynet does not value cars. Dealerships make offers once they have seen the car, which is the only way to price one properly.",
   },
   {
     question: "Can I list my car on Rynet instead?",
     answer:
-      "No. Only registered, verified dealerships list on Rynet, and there is no way for a private individual to. That rule is the whole reason buyers trust the site, so it is not something we make exceptions to. Selling to a dealership is the route that is open to you.",
+      "No. Only registered dealerships list on Rynet, so buyers always know who they are dealing with. Selling to a dealership is the route open to you.",
   },
   {
     question: "How many dealerships get my details?",
-    answer: `No more than ${MAX_DEALERSHIPS}, all of them verified, all of them in your province, and only ones that buy the kind of car you are selling. You can stop it at any time by emailing privacy@rynet.co.za.`,
+    answer: `No more than ${MAX_DEALERSHIPS}, all in your province, and only ones that buy the kind of car you are selling. Your details are not sold on, not added to a marketing list and not handed to a lead broker. You can stop it at any time by emailing privacy@rynet.co.za.`,
   },
   {
     question: "What if I still owe money on the car?",
@@ -72,7 +82,7 @@ const FAQS = [
   {
     question: "Will I get less than selling privately?",
     answer:
-      "Almost certainly, yes. A dealership has to recondition the car, carry it on the floor until it sells, and stand behind it afterwards, and the offer reflects that. What you get in exchange is one conversation instead of twenty, no strangers at your house, and money that clears.",
+      "Usually, yes. A dealership has to recondition the car, carry it until it sells and stand behind it afterwards, and its offer reflects that. In exchange you deal with one business, nobody comes to your home for a test drive, and the money comes from a registered company.",
   },
   {
     question: "Do I have to accept an offer?",
@@ -81,19 +91,112 @@ const FAQS = [
   },
 ];
 
-export default async function SellToADealerPage() {
-  const payload = await getPayload({ config });
-  const provinces = await payload.find({
-    collection: "provinces",
-    sort: "name",
-    limit: 20,
-    depth: 0,
-  });
+const HOW_IT_WORKS = [
+  {
+    title: "Describe your car",
+    body: "Make, model, year, mileage and condition, then where it is. The first step asks nothing personal.",
+  },
+  {
+    title: `Up to ${MAX_DEALERSHIPS} dealerships see it`,
+    body: "Only checked dealerships in your province that buy that kind of car, and nobody else.",
+  },
+  {
+    title: "They contact you directly",
+    body: "Any offer depends on the dealership seeing the car. If none takes it up, we email you to say so.",
+  },
+];
 
-  const options = provinces.docs.map((province) => ({
-    slug: province.slug,
-    name: province.name,
-  }));
+const REASSURANCES = [
+  "Free to use. Rynet takes no commission and no cut of the sale.",
+  "No obligation. Say no to any offer, or to all of them.",
+  "Still paying it off? You can still sell it.",
+  "Your details are never sold on or added to a marketing list.",
+];
+
+const COMPARISON = [
+  {
+    topic: "Price",
+    dealer: "Usually lower. The dealership has to recondition, licence and stand behind the car.",
+    private: "Usually higher.",
+  },
+  {
+    topic: "Who you deal with",
+    dealer: "One registered business at a time.",
+    private: "Everyone who answers your advert.",
+  },
+  {
+    topic: "Test drives by strangers",
+    dealer: "None.",
+    private: "Usually, and often from your home.",
+  },
+  {
+    topic: "Payment",
+    dealer: "Paid by a registered business.",
+    private: "You make sure the money has cleared before the car goes.",
+  },
+  {
+    topic: "Finance still owing",
+    dealer: "The dealership settles it with your bank.",
+    private: "You arrange the settlement with the buyer and the bank.",
+  },
+];
+
+const PAPERS = [
+  "Your identity document, and proof of address.",
+  "The registration certificate, if the car is paid off. If it is not, the bank holds it.",
+  "The service book, if you have one. A full history usually helps an offer.",
+  "Both keys, and the spare remote if there is one.",
+  "The current licence disc.",
+];
+
+/** Taxonomy for the form. Changes about once a year and is dropped through the `taxonomy` tag. */
+const readFormOptions = unstable_cache(
+  async () => {
+    const payload = await getPayload({ config });
+    const all = { limit: 2000, depth: 0, pagination: false } as const;
+
+    const [provinces, cities, makes, models] = await Promise.all([
+      payload.find({ collection: "provinces", sort: "name", ...all }),
+      payload.find({ collection: "cities", sort: "name", ...all }),
+      payload.find({ collection: "makes", sort: "name", ...all }),
+      payload.find({ collection: "models", sort: "name", ...all }),
+    ]);
+
+    const usable = (doc: { isActive?: boolean | null; mergedInto?: unknown }) =>
+      doc.isActive !== false && !doc.mergedInto;
+
+    const provinceOptions: ProvinceOption[] = provinces.docs
+      .filter(usable)
+      .map((province) => ({ slug: province.slug, name: province.name }));
+
+    const provinceSlug = new Map(provinces.docs.map((province) => [province.id, province.slug]));
+    const cityOptions: CityOption[] = cities.docs.filter(usable).flatMap((city) => {
+      const id = typeof city.province === "object" ? city.province?.id : city.province;
+      const slug = id ? provinceSlug.get(id) : undefined;
+      return slug ? [{ name: city.name, province: slug }] : [];
+    });
+
+    const modelsByMake = new Map<number, string[]>();
+    for (const model of models.docs.filter(usable)) {
+      const id = typeof model.make === "object" ? model.make?.id : model.make;
+      if (!id) continue;
+      modelsByMake.set(id, [...(modelsByMake.get(id) ?? []), model.name]);
+    }
+
+    const makeOptions: MakeOption[] = makes.docs.filter(usable).map((make) => ({
+      name: make.name,
+      aliases: (make.aliases ?? []).filter(Boolean),
+      models: modelsByMake.get(make.id) ?? [],
+    }));
+
+    return { provinces: provinceOptions, cities: cityOptions, makes: makeOptions };
+  },
+  ["sell-form-options"],
+  { revalidate: 3600, tags: ["taxonomy"] },
+);
+
+export default async function SellToADealerPage() {
+  const options = await readFormOptions();
 
   return (
     <>
@@ -102,306 +205,356 @@ export default async function SellToADealerPage() {
         // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and every question below is visible on this page.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(FAQS)) }}
       />
+      <Breadcrumbs trail={[{ href: "/sell-to-a-dealer", label: "Sell to a dealership" }]} />
 
       {/*
-        REDRAWN. This was the longest page on the site and the only one that never changed
-        ground, never drew a rule, never reached for the prose face and never set a heading at
-        full size: four and a half thousand pixels of the same left-aligned column at the default
-        type scale, sitting in the navigation between two pages that had been rebuilt. It is one
-        of the three front doors.
+        The hero IS the form. DOM order is promise, form, explanation, so a phone reads the
+        headline, one sentence, then the first field; from 1024px the grid puts the explanation
+        under the promise and the form card beside both.
       */}
-      <section className="rn-columns border-b border-line bg-surface-sunken">
-        <div className="container-page py-[var(--section-tight)]">
-          <Breadcrumbs trail={[{ href: "/sell-to-a-dealer", label: "Sell to a dealership" }]} />
-
-          <h1 className="rn-head mt-8 max-w-[16ch]">Sell your car to a verified dealership</h1>
-          <p className="measure mt-6 text-lg text-ink-secondary">
-            Tell us what you are driving and we pass it to verified dealerships near you that buy
-            that kind of car, so they can make you an offer. No strangers at your gate, no waiting
-            for a bank transfer that never arrives.
-          </p>
-
-          {/*
-            Rynet has not signed a single dealership yet. Everything on this page describes what
-            happens when it has, and a page that quietly assumes that is a page that takes
-            somebody's details on a promise it cannot currently keep. The agency site has the same
-            problem and solves it the same way: say so, in the first thing the reader sees.
-          */}
-          <div role="note" className="measure mt-10 border-t-2 border-warning pt-5">
-            <p className="rn-label text-warning">We are new, so read this first</p>
-            <p className="rn-prose mt-3 text-ink-secondary">
-              Rynet is signing dealerships now, and there may not yet be one in your province that
-              buys your kind of car. If we cannot place it, we will email you and tell you rather
-              than sit on your details. Nothing here costs you anything and nothing obliges you to
-              sell.
+      <section
+        aria-labelledby="sell-heading"
+        className="border-b border-line bg-[linear-gradient(180deg,var(--rn-card)_0%,var(--rn-page)_22rem)]"
+      >
+        <div className="container-page grid gap-8 py-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,35rem)] lg:gap-x-16 lg:gap-y-10 lg:py-16">
+          <div className="lg:col-start-1 lg:row-start-1">
+            <p className="rn-eyebrow">Sell to a dealership</p>
+            <h1 id="sell-heading" className="rn-h1 mt-3 max-w-[16ch]">
+              Sell your car to a dealership
+            </h1>
+            <p className="rn-lead mt-4 max-w-xl">
+              Describe your car once, and dealerships in your province that buy that kind of car can
+              contact you with an offer. It is free, and you never have to accept.
             </p>
           </div>
-        </div>
-      </section>
 
-      <div className="container-page grid gap-12 py-[var(--section-base)] lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-16">
-        <div>
-          <SellForm provinces={options} />
+          <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            <div className="rn-panel p-5 sm:p-8">
+              <SellForm
+                provinces={options.provinces}
+                cities={options.cities}
+                makes={options.makes}
+              />
+            </div>
+          </div>
 
-          {/*
-            POPIA section 18 requires the data subject to be told these things BEFORE the
-            information is collected, not afterwards and not only behind a link. So it sits
-            under the form on the same screen rather than in the privacy notice alone. The
-            two easiest items to miss are both here: s18(1)(b) asks for an ADDRESS, not only
-            an email, and s18(1)(h)(v) wants the Regulator's own contact details rather than
-            a statement that a right to complain exists.
-          */}
-          <section aria-labelledby="popia-heading" className="mt-8 border-t-2 border-ink pt-6">
-            <h2 id="popia-heading" className="rn-label text-ink-muted">
-              What happens to your details
-            </h2>
-            <p className="mt-2 text-xs text-ink-muted">
-              Required by section 18 of the Protection of Personal Information Act. A draft, not
-              reviewed by an attorney.
-            </p>
+          <div className="min-w-0 space-y-8 lg:col-start-1 lg:row-start-2">
+            <section aria-labelledby="how-heading">
+              <h2 id="how-heading" className="text-lg font-semibold">
+                How it works
+              </h2>
+              <ol className="mt-4 space-y-5">
+                {HOW_IT_WORKS.map((step, index) => (
+                  <li key={step.title} className="flex gap-4">
+                    <span
+                      aria-hidden="true"
+                      className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-on-secondary tabular"
+                    >
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 pt-1">
+                      <h3 className="text-base font-semibold">{step.title}</h3>
+                      <p className="mt-1 text-sm text-body">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
 
-            <dl className="mt-4 space-y-3 text-sm">
-              {[
-                {
-                  term: "Who is asking",
-                  detail:
-                    "Rynet, of Pretoria, Gauteng. Postal and physical address to be confirmed before launch. Contact privacy@rynet.co.za.",
-                },
-                {
-                  term: "What we collect",
-                  detail:
-                    "Your name, email address and phone number, and the details of the car: make, model, year, mileage, transmission, condition, service history, whether finance is owing, and the province and town it is in.",
-                },
-                {
-                  term: "Why",
-                  detail: `To send it to no more than ${MAX_DEALERSHIPS} verified dealerships so they can offer to buy your car. That is the only purpose, and it is the purpose we collect it for rather than something we decide later.`,
-                },
-                {
-                  term: "Do you have to give it",
-                  detail:
-                    "No. It is entirely voluntary. If you do not, we simply cannot pass your car to anyone, which is the only consequence.",
-                },
-                {
-                  term: "Who receives it",
-                  detail:
-                    "Verified, registered dealerships in your province that trade in your kind of vehicle. Once a dealership has your details it decides for itself what it does with them, so it answers for its own use of them and we cannot delete what it holds.",
-                },
-                {
-                  term: "Where it is kept",
-                  detail: "On servers in South Africa. We do not transfer it out of the country.",
-                },
-                {
-                  term: "Your rights",
-                  detail:
-                    "You can ask what we hold and get a copy, have anything wrong corrected, have it deleted, object to the processing, and withdraw your consent at any time. Email privacy@rynet.co.za.",
-                },
-                {
-                  term: "If we get it wrong",
-                  detail:
-                    "You can complain to the Information Regulator (South Africa), JD House, 27 Stiemens Street, Braamfontein, Johannesburg, or enquiries@inforegulator.org.za. You do not have to come to us first.",
-                },
-              ].map((item) => (
-                <div key={item.term}>
-                  <dt className="font-semibold">{item.term}</dt>
-                  <dd className="mt-0.5 text-ink-secondary">{item.detail}</dd>
-                </div>
-              ))}
-            </dl>
-
-            <p className="mt-5 text-sm text-ink-secondary">
-              The full notice, including how long we keep things, is in our{" "}
-              <Link href="/privacy">privacy notice</Link>.
-            </p>
-          </section>
-        </div>
-
-        <div className="space-y-10">
-          <section aria-labelledby="how-heading">
-            <h2 id="how-heading" className="rn-head">
-              How it works
-            </h2>
-            <ol className="mt-5 border-t border-line">
-              {[
-                {
-                  title: "You describe the car",
-                  body: "Make, model, year, mileage, condition and where it is. It takes about two minutes and the first screen asks nothing personal.",
-                },
-                {
-                  title: `We send it to no more than ${MAX_DEALERSHIPS} dealerships`,
-                  body: "Verified, registered dealerships in your province that trade in that kind of vehicle. Nobody else, and never more than five.",
-                },
-                {
-                  title: "They contact you, or we tell you nobody did",
-                  body: "Dealerships deal with you directly, not through us, and any offer is subject to them seeing the car, because nobody can price one properly from a form. If none of them takes it up, you hear that from us.",
-                },
-              ].map((step, index) => (
-                <li key={step.title} className="flex gap-5 border-b border-line py-5">
-                  {/* A numeral, not a red disc. The disc was a filled circle on a system with no
-                      radius and a second red object in the viewport. */}
+            <ul className="grid gap-3 border-t border-line pt-6 sm:grid-cols-2">
+              {REASSURANCES.map((item) => (
+                <li key={item} className="flex gap-2.5 text-sm text-body">
                   <span
                     aria-hidden="true"
-                    className="font-display text-base font-extrabold tabular text-ink-muted [font-variation-settings:'wdth'_112]"
+                    className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-success-subtle text-success"
                   >
-                    {String(index + 1).padStart(2, "0")}
+                    <Check className="size-3.5" strokeWidth={3} />
                   </span>
-                  <div>
-                    <h3 className="font-display text-base font-bold">{step.title}</h3>
-                    <p className="mt-1 text-sm text-ink-secondary">{step.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-
-          {/*
-            The section that makes the rest believable, and the one that keeps the platform's
-            hard rule intact. A page inviting private individuals to "sell your car" on a site
-            that forbids private listings has to be unmistakable about the difference.
-          */}
-          <section aria-labelledby="not-heading">
-            <h2 id="not-heading" className="rn-head">
-              What we do not do
-            </h2>
-            <ul className="mt-5 border-t-2 border-ink">
-              {[
-                {
-                  title: "We do not list your car on Rynet",
-                  body: "Only registered dealerships list here. A private individual cannot, by any route, and that is deliberate: it is the reason a buyer on Rynet knows who they are dealing with. Selling to a dealership is the door that is open to you.",
-                },
-                {
-                  title: "We do not value your car",
-                  body: "We hold no valuation licence, so any figure we put on this page would be invented. You will not see an estimate here. The dealerships make the offers, on the car itself.",
-                },
-                {
-                  title: "We do not buy it, and we take no cut",
-                  body: "Rynet is not a party to the sale. Nothing you do here costs you anything, and no commission comes out of what you are paid.",
-                },
-                {
-                  title: "We do not pass your details to anyone else",
-                  body: `Up to ${MAX_DEALERSHIPS} verified dealerships in your province, for this one purpose. Not sold on, not added to a marketing list, not handed to a lead broker.`,
-                },
-              ].map(({ title, body }, index) => (
-                /* py-7, because these rows had no vertical padding at all: every line of text
-                   was welded to its own separator, with the cap-height of the first touching the
-                   2px rule above it. The glyphs are gone with it, replaced by the numeral this
-                   site uses wherever a list is really an index. */
-                <li key={title} className="flex gap-5 border-b border-line py-7">
-                  <span
-                    aria-hidden="true"
-                    className="font-display text-base font-extrabold tabular text-ink-muted [font-variation-settings:'wdth'_112]"
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <div>
-                    <h3 className="font-display text-base font-bold">{title}</h3>
-                    <p className="mt-1 text-sm text-ink-secondary">{body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section aria-labelledby="papers-heading">
-            <h2 id="papers-heading" className="rn-head">
-              What to have ready
-            </h2>
-            <ul className="mt-5 border-t border-line text-sm text-ink-secondary">
-              {[
-                "Your identity document, and proof of address.",
-                "The registration certificate, if the car is paid off. If it is not, the bank holds it and the dealership will get a settlement figure.",
-                "The service book, if you have it. It is worth real money at this point.",
-                "Both keys, and the spare remote if there is one.",
-                "The current licence disc.",
-              ].map((item) => (
-                <li key={item} className="border-b border-line py-4">
                   {item}
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs text-ink-muted">
-              Nothing here is legal advice, and the requirements for transferring a vehicle are set
-              by your provincial licensing authority rather than by us.
-            </p>
-          </section>
+
+            <Notice title="We are new, so read this first">
+              Rynet is signing dealerships now, and there may not yet be one in your province that
+              buys your kind of car. If we cannot place it, we will email you and tell you rather
+              than sit on your details.
+            </Notice>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/*
-        The page's one tonal break, and it is spent on the paragraph that costs us money.
-        --------------------------------------------------------------------------------
-        Telling somebody they will get less here than selling privately, on the page asking them
-        to sell here, is the most confident thing on this site after the verification limits. It
-        was four small grey paragraphs in the right-hand column. Now it is the band the page is
-        built towards, which is the same device /how-verification-works uses for the same reason.
-      */}
-      <section aria-labelledby="price-heading" className="bg-surface-inverse text-ink-inverse">
-        <div className="container-page py-[var(--section-base)]">
-          <h2 id="price-heading" className="rn-head max-w-[14ch]">
-            An honest word about the price
+      {/* ------------------------------------------------------------ three things */}
+      <section aria-labelledby="know-heading" className="container-page py-[var(--section-base)]">
+        <div className="max-w-2xl">
+          <p className="rn-eyebrow">Before you start</p>
+          <h2 id="know-heading" className="rn-h2 mt-2">
+            Three things Rynet does not do
           </h2>
-          <hr className="mt-8 h-px border-0 bg-silver" />
+        </div>
+        <ul className="mt-8 grid gap-4 md:grid-cols-3">
+          {[
+            {
+              icon: Ban,
+              title: "We do not list your car on Rynet",
+              body: "Only registered dealerships list here, so a buyer on Rynet always knows who they are dealing with. Selling to a dealership is the route open to you.",
+            },
+            {
+              icon: Scale,
+              title: "We do not value your car",
+              body: "You will not see an estimate on this page. Dealerships make offers once they have seen the car, which is the only way to price one properly.",
+            },
+            {
+              icon: HandCoins,
+              title: "We do not buy it, and we take no cut",
+              body: "Rynet is not a party to the sale. Nothing here costs you anything, and nothing comes out of what you are paid.",
+            },
+          ].map(({ icon: Icon, title, body }) => (
+            <li key={title} className="rn-card p-6">
+              <span
+                aria-hidden="true"
+                className="grid size-11 place-items-center rounded-sm bg-subtle text-heading"
+              >
+                <Icon className="size-5" />
+              </span>
+              <h3 className="mt-5 text-lg font-semibold">{title}</h3>
+              <p className="mt-2 text-sm text-body">{body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
-            <p className="rn-prose rn-prose--drop text-lg">
-              A dealership will offer you less than you would get selling privately. That is not a
-              trick, it is arithmetic: they have to recondition the car, licence it, carry it on the
-              floor until somebody buys it, and stand behind it afterwards.
-            </p>
-            <div className="space-y-5">
-              <p className="rn-prose opacity-90">
-                What you get for that difference is one conversation instead of twenty, nobody
-                unknown coming to your house for a test drive, no risk of a payment reversing after
-                the car has gone, and a settlement handled properly if there is still finance on it.
+      {/* -------------------------------------------------------------- comparison */}
+      <section aria-labelledby="compare-heading" className="border-y border-line bg-card">
+        <div className="container-page py-[var(--section-base)]">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16">
+            <div>
+              <p className="rn-eyebrow">The trade-off</p>
+              <h2 id="compare-heading" className="rn-h2 mt-2">
+                A dealership or a private sale?
+              </h2>
+              <p className="mt-4 text-body">
+                A dealership will usually offer you less than a private buyer would pay. This is
+                what you get for the difference.
               </p>
-              <p className="rn-prose opacity-90">
-                If the money matters more than the hassle, sell privately. We would rather say that
-                than have you find out afterwards.
+              <p className="mt-4 font-semibold text-heading">
+                If the money matters more than the hassle, sell privately. We would rather say so
+                now.
               </p>
+            </div>
+
+            <div className="min-w-0">
+              {/* A table from 640px. On a phone the same rows stack, so nothing scrolls sideways. */}
+              <div className="hidden overflow-hidden rounded-md border border-line sm:block">
+                <table className="w-full text-left text-sm">
+                  <caption className="sr-only">
+                    Selling to a dealership compared with selling privately
+                  </caption>
+                  <thead className="bg-subtle">
+                    <tr>
+                      <th scope="col" className="w-[28%] px-5 py-3.5 font-semibold text-muted">
+                        <span className="sr-only">Topic</span>
+                      </th>
+                      <th scope="col" className="px-5 py-3.5 font-semibold text-heading">
+                        Selling to a dealership
+                      </th>
+                      <th scope="col" className="px-5 py-3.5 font-semibold text-heading">
+                        Selling privately
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {COMPARISON.map((row) => (
+                      <tr key={row.topic} className="align-top">
+                        <th scope="row" className="px-5 py-4 font-semibold text-heading">
+                          {row.topic}
+                        </th>
+                        <td className="px-5 py-4 text-body">{row.dealer}</td>
+                        <td className="px-5 py-4 text-body">{row.private}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <ul className="space-y-3 sm:hidden">
+                {COMPARISON.map((row) => (
+                  <li key={row.topic} className="rounded-md border border-line p-4">
+                    <p className="font-semibold text-heading">{row.topic}</p>
+                    <dl className="mt-2 space-y-2 text-sm">
+                      <div>
+                        <dt className="text-muted">Selling to a dealership</dt>
+                        <dd className="text-body">{row.dealer}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted">Selling privately</dt>
+                        <dd className="text-body">{row.private}</dd>
+                      </div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      <section aria-labelledby="faq-heading" className="container-page py-[var(--section-base)]">
-        <h2 id="faq-heading" className="rn-head max-w-[18ch]">
-          Questions people actually ask
-        </h2>
-        <hr className="rn-rule mt-6" />
-        <dl className="grid lg:grid-cols-2 lg:gap-x-12">
-          {FAQS.map((faq) => (
-            <div key={faq.question} className="border-b border-line py-6">
-              <dt className="font-display text-lg font-bold leading-snug">{faq.question}</dt>
-              <dd className="rn-prose mt-3 text-ink-secondary">{faq.answer}</dd>
+      {/* ------------------------------------------------------ questions and papers */}
+      <section className="container-page py-[var(--section-base)]">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-16">
+          <div className="min-w-0">
+            <h2 id="faq-heading" className="rn-h2">
+              Common questions
+            </h2>
+            <div className="mt-6 divide-y divide-line rounded-md border border-line bg-card shadow-card">
+              {FAQS.map((faq) => (
+                <details key={faq.question} className="group">
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold text-heading [&::-webkit-details-marker]:hidden">
+                    <h3 className="text-base font-semibold">{faq.question}</h3>
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="size-5 shrink-0 text-muted transition-transform duration-[var(--duration-micro)] group-open:rotate-180 motion-reduce:transition-none"
+                    />
+                  </summary>
+                  <p className="px-5 pb-5 text-body">{faq.answer}</p>
+                </details>
+              ))}
             </div>
-          ))}
-        </dl>
+          </div>
+
+          <section aria-labelledby="papers-heading" className="min-w-0">
+            <div className="rn-card p-6">
+              <h2 id="papers-heading" className="rn-h3">
+                What to have ready
+              </h2>
+              <ul className="mt-4 space-y-3">
+                {PAPERS.map((item) => (
+                  <li key={item} className="flex gap-3 text-sm text-body">
+                    <FileText aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 border-t border-line pt-4 text-xs text-muted">
+                Not legal advice. What a vehicle transfer needs is set by your provincial licensing
+                authority, not by Rynet.
+              </p>
+            </div>
+          </section>
+        </div>
       </section>
 
-      <section aria-labelledby="buying-heading" className="container-page pb-[var(--section-base)]">
-        <hr className="rn-rule rn-rule--brand" />
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-          <h2 id="buying-heading" className="rn-head max-w-[12ch]">
-            Buying rather than selling?
-          </h2>
+      {/*
+        POPIA section 18 requires the data subject to be told these things BEFORE the information
+        is collected, not afterwards and not only behind a link. The consent box carries a short
+        version and a link here; this is the whole notice, always open. The two easiest items to
+        miss are both here: s18(1)(b) asks for an ADDRESS, not only an email, and s18(1)(h)(v)
+        wants the Regulator's own contact details rather than a statement that a right exists.
+      */}
+      <section
+        id="popia"
+        aria-labelledby="popia-heading"
+        className="container-page pb-[var(--section-base)]"
+      >
+        <div className="rn-panel grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:gap-12">
           <div>
-            <p className="rn-prose text-ink-secondary">
-              Every car on Rynet comes from a dealership we have checked. There are no private
-              sellers on the site, which is the whole point of it.
+            <p className="rn-eyebrow">POPIA section 18</p>
+            <h2 id="popia-heading" className="rn-h3 mt-2">
+              What happens to your details
+            </h2>
+            <p className="mt-3 text-sm text-body">
+              The Protection of Personal Information Act says you must be told this before you give
+              us anything. This is the whole notice.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/cars"
-                className="rn-label inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
-              >
-                Browse the stock
-              </Link>
-              <Link
-                href="/how-verification-works"
-                className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 hover:bg-ink hover:text-ink-inverse"
-              >
-                How we verify dealerships
-              </Link>
-            </div>
+            <LegalReviewMarker reviewedAt={LEGAL_REVIEWED_AT.sellNotice} className="mt-4" />
+            <p className="mt-4 text-sm text-body">
+              More on how we handle personal information is in our{" "}
+              <Link href="/privacy">privacy notice</Link>.
+            </p>
+          </div>
+
+          <dl className="grid gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
+            {[
+              {
+                term: "Who is asking",
+                /*
+                 * Section 18(1)(b) asks for the responsible party's ADDRESS, so this is a gap the
+                 * law requires us to admit rather than a note to delete. It becomes the real
+                 * address the day COMPANY.streetAddress is set, and not before.
+                 */
+                detail: COMPANY.streetAddress
+                  ? `${COMPANY.legalName ?? COMPANY.tradingName}, ${COMPANY.streetAddress}${COMPANY.postalAddress ? `, postal address ${COMPANY.postalAddress}` : ""}. Contact privacy@rynet.co.za.`
+                  : `${COMPANY.tradingName}, of ${COMPANY.town}. Postal and physical address to be confirmed before launch. Contact privacy@rynet.co.za.`,
+              },
+              {
+                term: "What we collect",
+                detail:
+                  "Your name, email address and phone number, and the details of the car: make, model, year, mileage, transmission, condition, service history, whether finance is owing, and the province and town it is in.",
+              },
+              {
+                term: "Why",
+                detail: `To send it to no more than ${MAX_DEALERSHIPS} verified dealerships so they can offer to buy your car. That is the only purpose, and it is the purpose we collect it for rather than something we decide later.`,
+              },
+              {
+                term: "Do you have to give it",
+                detail:
+                  "No. It is entirely voluntary. If you do not, we simply cannot pass your car to anyone, which is the only consequence.",
+              },
+              {
+                term: "Who receives it",
+                detail:
+                  "Verified, registered dealerships in your province that trade in your kind of vehicle. Once a dealership has your details it decides for itself what it does with them, so it answers for its own use of them and we cannot delete what it holds.",
+              },
+              {
+                term: "Where it is kept",
+                detail: "On servers in South Africa. We do not transfer it out of the country.",
+              },
+              {
+                term: "Your rights",
+                detail:
+                  "You can ask what we hold and get a copy, have anything wrong corrected, have it deleted, object to the processing, and withdraw your consent at any time. Email privacy@rynet.co.za.",
+              },
+              {
+                term: "If we get it wrong",
+                detail:
+                  "You can complain to the Information Regulator (South Africa), JD House, 27 Stiemens Street, Braamfontein, Johannesburg, or enquiries@inforegulator.org.za. You do not have to come to us first.",
+              },
+            ].map((item) => (
+              <div key={item.term} className="min-w-0 border-t border-line pt-4">
+                <dt className="font-semibold text-heading">{item.term}</dt>
+                <dd className="mt-1 break-words text-body">{item.detail}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- buying band */}
+      {/*
+        A rounded navy panel on the page ground, the same shape as the dealer band on /dealers, so
+        it never runs into the navy footer as one block.
+      */}
+      <section aria-labelledby="buying-heading" className="container-page pb-[var(--section-base)]">
+        <div className="on-navy flex flex-col gap-6 rounded-lg px-6 py-10 sm:px-10 lg:flex-row lg:items-center lg:justify-between lg:px-14">
+          <div className="max-w-xl">
+            <h2 id="buying-heading" className="rn-h2">
+              Buying rather than selling?
+            </h2>
+            <p className="mt-3">
+              Every dealership is checked before it can list on Rynet, and there are no private
+              sellers.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/cars" className={buttonClasses({ size: "lg", block: "mobile" })}>
+              Browse cars for sale
+            </Link>
+            <Link
+              href="/how-verification-works"
+              className={buttonClasses({ variant: "outline", size: "lg", block: "mobile" })}
+            >
+              How we verify dealerships
+            </Link>
           </div>
         </div>
       </section>

@@ -11,11 +11,11 @@ import "@/styles/globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"),
   title: {
-    default: "Rynet Showroom | Cars for sale from verified South African dealerships",
+    default: "Rynet Showroom | Cars for sale from South African dealerships",
     template: "%s | Rynet Showroom",
   },
   description:
-    "Every car on Rynet comes from a registered, verified dealership. No private sellers, ever. Search stock across South Africa by make, model, price, area and monthly instalment.",
+    "Cars for sale from South African dealerships only. Every dealership is checked before it can list, and there are no private sellers. Search stock across the country by make, model, price and area.",
   openGraph: {
     type: "website",
     locale: "en_ZA",

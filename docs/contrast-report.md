@@ -34,6 +34,9 @@ border tokens rather than one.
 | Accent words on card | `#b81b29` | `#ffffff` | 6.51 | 4.5 | pass |
 | Accent hover on card | `#93131f` | `#ffffff` | 8.92 | 4.5 | pass |
 | Accent words on subtle accent | `#b81b29` | `#fdecee` | 5.71 | 4.5 | pass |
+| Accent words on subtle panel | `#b81b29` | `#eef2f6` | 5.78 | 4.5 | pass |
+| Accent words on subtle info (links inside a notice) | `#b81b29` | `#e8f1fb` | 5.70 | 4.5 | pass |
+| Muted on subtle info (small print inside a notice) | `#5b6678` | `#e8f1fb` | 5.09 | 4.5 | pass |
 | Success on card | `#0f7a3d` | `#ffffff` | 5.42 | 4.5 | pass |
 | Success on subtle success | `#0f7a3d` | `#e7f5ec` | 4.82 | 4.5 | pass |
 | Warning on card | `#8a5300` | `#ffffff` | 6.33 | 4.5 | pass |
@@ -94,6 +97,9 @@ border tokens rather than one.
 | Accent words on card | `#ff7079` | `#0f2139` | 6.05 | 4.5 | pass |
 | Accent hover on card | `#ff9aa1` | `#0f2139` | 8.01 | 4.5 | pass |
 | Accent words on subtle accent | `#ff7079` | `#2a1220` | 6.51 | 4.5 | pass |
+| Accent words on subtle panel | `#ff7079` | `#0b1b31` | 6.46 | 4.5 | pass |
+| Accent words on subtle info (links inside a notice) | `#ff7079` | `#0e2544` | 5.74 | 4.5 | pass |
+| Muted on subtle info (small print inside a notice) | `#9dabbf` | `#0e2544` | 6.59 | 4.5 | pass |
 | Success on card | `#4fcb86` | `#0f2139` | 7.88 | 4.5 | pass |
 | Success on subtle success | `#4fcb86` | `#0d2a22` | 7.45 | 4.5 | pass |
 | Warning on card | `#f0b44a` | `#0f2139` | 8.74 | 4.5 | pass |

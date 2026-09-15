@@ -85,12 +85,17 @@ tier unlocks.
 
 Nothing in this section may ship as final without a South African attorney signing it off.
 
+Every item below renders the one quiet "Requires legal review" marker until its date is recorded in
+`src/content/legal-review.ts` (or, for the finance disclaimer, `FinanceDefaults.lastReviewedAt`).
+
 | Item | Status |
 |---|---|
-| Finance calculator disclaimer | Drafted in `src/globals/FinanceDefaults.ts`, opens with the words REQUIRES LEGAL REVIEW, and the field cannot be emptied |
-| Privacy notice and POPIA statement | Not written |
-| Terms of use | Not written |
-| Cookie policy | Not written |
+| Finance calculator disclaimer | Drafted in `src/globals/FinanceDefaults.ts`. The stored text still opens with REQUIRES LEGAL REVIEW; the listing page strips that prefix for display and shows the standard marker instead. A migration removing the prefix from the stored value is still to do |
+| Privacy notice (`/privacy`) | Drafted, dated 14 September 2026. Now describes the sell-to-a-dealer flow and sharing with up to five dealerships. A sentence claiming deletion is automatic was removed, because no purge job exists |
+| Terms of use (`/terms`) | Drafted, unreviewed |
+| Cookie notice (`/cookies`) | Drafted, dated 14 September 2026. Now discloses the form drafts kept in the browser |
+| POPIA section 18 notice on `/sell-to-a-dealer` | Drafted, unreviewed, always fully visible |
+| Consent wording: sell form, listing enquiry, Rynet Digital form | Drafted, unreviewed, stored verbatim on every consent record. The consent policy version is now `2026-09-privacy-v2` |
 | Dealer agreement | Not written |
 | Responsible disclosure policy | Not written |
 
@@ -144,6 +149,19 @@ there is an end-to-end test asserting that heading is on the page. The temptatio
 
 The proof used instead is Rynet Showroom itself, which is real, on the same domain, and something
 a dealer principal can open and judge in ten seconds.
+
+The heading now sits as an h3 in a panel under the H2 "Judge us on a site you can open right now";
+the end-to-end locator is unchanged.
+
+**Promises in the agency copy that Ruben must confirm or change** (they are commitments, not facts
+we can check in code):
+
+- "We reply within one working day", which the server action also sends back after a submission
+  and an end-to-end test asserts.
+- "Two to three days" for the written review.
+- "Month to month after three months on thirty days notice", and the durations on `/digital/process`.
+- A WhatsApp number for Rynet Digital, if one exists. None is shown until there is one.
+- Real team names for `/digital/about`, which currently says honestly who you will deal with.
 
 **When there is real client work:**
 
@@ -224,3 +242,39 @@ by hand, in `src/components/layout/site-footer.tsx`.
 The footer's "Quick searches" row is a fixed list of makes, body types and provinces. It is not
 headed "Popular searches" because nothing has measured what is popular. Once analytics exist, the
 list and the heading can be driven by real search volume.
+
+## 14. Owner decisions the September 2026 redesign surfaced
+
+None of these is on the site as a fact. Each is either left out or described as how Rynet works.
+
+- **VAT registration for listing dealerships.** Is it required? If so, `Dealers.vatNumber` should be
+  required with South African VAT number validation, and the verification page can say so.
+- **A seller response timeline.** `/sell-to-a-dealer` promises no timeline, because nobody has
+  committed to one. Once decided, show it in the form, "How it works" and the success state.
+- **An accessibility reply time.** The accessibility statement used to say "five working days",
+  which nobody had agreed to. It was removed.
+- **A retention period for sell-to-a-dealer leads.** The privacy notice has none.
+- **A retention purge job.** The privacy notice claimed automatic deletion; there is no job, so the
+  claim was removed. Build the job, then restore the sentence.
+- **A verification decision trail.** There is no record of who approved a dealership and when
+  (`verifiedBy` and `verifiedAt`, or versions on Dealers). The verification page and the home page
+  no longer claim one. Build it, then say it.
+- **Rynet's company street address**, which the POPIA section 18 notice needs (see section 12).
+- **Dealership registration fields are editable by the dealership.** `legalName`,
+  `registrationNumber`, `vatNumber` and `motorTradeNumber` on Dealers have no field-level update
+  rule, so a dealership can change them after verification. A dealership profile therefore says
+  "as recorded" rather than "checked by Rynet". Lock them to platform staff, then the wording can
+  be stronger.
+- **Suspension does not take stock down.** Vehicles stay publicly readable when their dealership
+  is suspended; only publishing new stock is blocked. The verification page no longer claims
+  otherwise. Filtering public vehicle reads to verified dealerships would make it true.
+- **Dealership About text is not seeded.** `src/seed/data/dealers.ts` has an `about` string per
+  demonstration dealership, but the seed never writes it into `aboutRichText`, so no profile shows
+  an About section today. Real dealerships write their own.
+- **Enquiries on demonstration listings** are still accepted (the page and dialog say the car is
+  not for sale). Whether to switch enquiries off on demonstration stock is Ruben's call.
+- **A dealership application form.** "List your stock" still goes to the dealer email on `/contact`.
+  A proper `/list-your-stock` form with consent and rate limiting is not built.
+- **A reference number on the sell-to-a-dealer confirmation**, for a seller to quote. Not built.
+- **Finance teaser on listings** uses the configured defaults (a 10 percent deposit over 72 months at
+  the configured rate). The rate is set in the CMS and must be a figure Ruben stands behind.

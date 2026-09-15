@@ -63,7 +63,12 @@ export async function distributeTradeIns({ dryRun = false } = {}): Promise<Summa
   const dealers = await payload.find({
     collection: "dealers",
     where: {
-      and: [{ verificationStatus: { equals: "verified" } }, { acceptsTradeIns: { equals: true } }],
+      and: [
+        { verificationStatus: { equals: "verified" } },
+        { acceptsTradeIns: { equals: true } },
+        // A demonstration dealership is not a business, so a real seller's details never reach it.
+        { isDemonstration: { not_equals: true } },
+      ],
     },
     limit: 500,
     depth: 2,
@@ -108,6 +113,7 @@ export async function distributeTradeIns({ dryRun = false } = {}): Promise<Summa
     id: dealer.id,
     tradingName: dealer.tradingName,
     verificationStatus: dealer.verificationStatus,
+    isDemonstration: dealer.isDemonstration,
     acceptsTradeIns: dealer.acceptsTradeIns,
     buysMakes: (dealer.buysMakes ?? [])
       .filter((make): make is Exclude<typeof make, number> => typeof make === "object")

@@ -74,6 +74,21 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  experimental: {
+    /*
+     * The stylesheet goes into the document instead of beside it.
+     *
+     * On a throttled mid-range Android the linked stylesheet was the thing the first paint waited
+     * for: it shared a 1.6Mbps link with the font, the photograph and every script, arrived about
+     * a second in, and only then could the browser lay out a document it had already parsed. With
+     * the CSS inline the first frame can be drawn from the HTML alone. Measured A/B on the same
+     * server, five cold loads each: home 1840 to 1984ms down to 1392ms, /cars 1856ms down to
+     * 1360ms. The cost is about 19KB of compressed CSS on every document, which a returning
+     * visitor would otherwise have cached.
+     */
+    inlineCss: true,
+  },
+
   images: {
     /*
      * The origin never resizes an image on request.

@@ -88,10 +88,17 @@ function unbreakable(text: string) {
 export function VehicleCard({
   vehicle,
   priority = false,
+  foot = "dealer",
 }: {
   vehicle: VehicleCardData;
   /** Preload this card's photograph. Give it to the first card of the first grid only. */
   priority?: boolean;
+  /**
+   * What the foot line carries. "dealer" (the default) shows the dealership and town; "town" drops
+   * the dealership, for a group's own page where every card would repeat its name; "none" drops the
+   * line, for a single-branch dealership's own page where the town would repeat too.
+   */
+  foot?: "dealer" | "town" | "none";
   /** @deprecated Position is no longer used for anything. Kept so older call sites compile. */
   index?: number;
 }) {
@@ -178,23 +185,29 @@ export function VehicleCard({
 
         <KeyFacts items={facts} className="rn-vcard__facts" />
 
-        <p className="rn-vcard__foot">
-          {vehicle.isDemonstration ? null : (
-            <BadgeCheck aria-hidden="true" className="text-success" />
-          )}
-          <span className="rn-vcard__dealer">
-            {vehicle.isDemonstration ? null : (
-              <span className="sr-only">Verified dealership: </span>
-            )}
-            {vehicle.dealerName}
-          </span>
-          {vehicle.cityName ? (
-            <>
-              <MapPin aria-hidden="true" className="ml-1" />
-              <span className="rn-vcard__town">{vehicle.cityName}</span>
-            </>
-          ) : null}
-        </p>
+        {foot === "none" || (foot === "town" && !vehicle.cityName) ? null : (
+          <p className="rn-vcard__foot">
+            {foot === "dealer" ? (
+              <>
+                {vehicle.isDemonstration ? null : (
+                  <BadgeCheck aria-hidden="true" className="text-success" />
+                )}
+                <span className="rn-vcard__dealer">
+                  {vehicle.isDemonstration ? null : (
+                    <span className="sr-only">Verified dealership: </span>
+                  )}
+                  {vehicle.dealerName}
+                </span>
+              </>
+            ) : null}
+            {vehicle.cityName ? (
+              <>
+                <MapPin aria-hidden="true" className={foot === "dealer" ? "ml-1" : undefined} />
+                <span className="rn-vcard__town">{vehicle.cityName}</span>
+              </>
+            ) : null}
+          </p>
+        )}
       </div>
     </article>
   );

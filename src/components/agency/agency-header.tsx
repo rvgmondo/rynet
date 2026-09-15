@@ -1,141 +1,147 @@
-import { ArrowLeft, Menu, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ChevronRight, Mail, Menu, X } from "lucide-react";
 import Link from "next/link";
 
-import { RynetMark } from "@/components/brand/rynet-mark";
+import { AGENCY_EMAIL, AGENCY_NAV, REVIEW_CTA } from "@/components/agency/agency-content";
+import { AgencyWordmark } from "@/components/agency/agency-wordmark";
+import { MobileMenu } from "@/components/layout/mobile-menu";
+import { NavLink } from "@/components/layout/nav-link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { buttonClasses } from "@/components/ui/button-classes";
 
 /*
- * Only routes that exist, same rule as the marketplace header.
- *
- * Not linked until built: /digital/work (there are no case studies, and inventing one is
- * out of the question), /digital/insights, /digital/resources, /digital/careers,
- * /digital/book.
+ * The focus ring for anything sitting directly on the navy bar. The product ring is a mid blue
+ * that disappears on navy, so the bar's own controls use the lighter on-navy blue. The bar is
+ * deliberately NOT an `.on-navy` region: the menu sheet opens inside it on a white card, and
+ * everything `.on-navy` sets (light ink, light ring, light theme switch) would be wrong there.
  */
-const NAV = [
-  { href: "/digital/services", label: "Services" },
-  { href: "/digital/process", label: "How we work" },
-  { href: "/digital/pricing", label: "Pricing" },
-  { href: "/digital/about", label: "About" },
-] as const;
+const RING = "focus-visible:outline-[color:var(--rn-focus-ring-on-navy)]";
 
 /**
- * The agency header.
+ * The agency header. Navy, sticky, 64px.
  *
- * Deliberately not the marketplace header with different links. Rynet Digital sells to
- * dealer principals and Rynet Showroom sells to car buyers, and a visitor who cannot tell
- * which one they are on will assume the agency is a department of the classifieds site.
- * The wordmark carries "Digital", and there is an explicit way back to the marketplace,
- * because the two share a domain and somebody will arrive on the wrong one.
+ * Deliberately not the marketplace header with different links. Rynet Digital sells to dealer
+ * principals and Rynet Showroom sells to car buyers, so the agency bar is navy where the
+ * marketplace bar is white, and a visitor can tell at a glance which front door they are on.
  *
- * Same `<details>` disclosure as the marketplace: keyboard operable, announces its expanded
- * state, and works before hydration and with JavaScript off.
+ * Left: RYNET DIGITAL. Then the four agency destinations with a current-page underline in brand
+ * red. Right: a quiet way back to Rynet Showroom (the agency's working example) and the one red
+ * action, "Book a free review", which is on every page at every width, phones included.
+ *
+ * Below 1024px the destinations move into the same native <details> sheet the marketplace uses
+ * (works before hydration and without JavaScript; closes on navigation, Escape and a scrim tap).
+ * The colour theme switch lives in the footer and at the bottom of that sheet, not in the bar.
  */
 export function AgencyHeader() {
   return (
-    /*
-     * Solid, and closed by the 2px ink rule, exactly as the marketplace masthead is.
-     *
-     * This was `bg-surface/95 backdrop-blur-sm` with a hairline under it, which is the old
-     * site: scrolled, grey ghosts of the page bled through the bar behind the wordmark, so
-     * RYNET DIGITAL sat on a mottled ground. It is also a full-viewport readback on every
-     * frame, which is the cost the vehicle page's action bar refuses for the same reason.
-     */
-    <header className="sticky top-0 z-[var(--z-header)] border-b-2 border-ink bg-surface">
-      <div className="container-page flex h-16 items-center gap-3 sm:gap-6">
+    <header className="sticky top-0 z-[var(--z-header)] border-b border-line-on-navy bg-navy text-on-navy-muted">
+      <div className="container-page flex h-[var(--header-height)] items-center gap-2 sm:gap-3">
         <Link
           href="/digital"
-          className="flex shrink-0 items-center gap-2"
           aria-label="Rynet Digital, home"
+          className={`-ml-1 flex shrink-0 items-center rounded-sm p-1 ${RING}`}
         >
-          <RynetMark className="h-7 w-auto sm:h-8" />
-          <span className="font-display text-base font-extrabold tracking-tight sm:text-lg">
-            RYNET <span className="text-accent">DIGITAL</span>
-          </span>
+          <AgencyWordmark />
         </Link>
 
-        <nav aria-label="Main" className="hidden lg:block">
+        <nav aria-label="Main" className="ml-6 hidden lg:block">
           <ul className="flex items-center gap-1">
-            {NAV.map((item) => (
+            {AGENCY_NAV.map((item) => (
               <li key={item.href}>
-                <Link
+                <NavLink
                   href={item.href}
-                  className="rn-label flex min-h-11 items-center px-3 text-ink-muted transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
+                  className={`rn-navlink text-on-navy-muted hover:bg-navy-raised hover:text-on-navy aria-[current=page]:text-on-navy aria-[current=page]:after:bg-brand-red ${RING}`}
                 >
                   {item.label}
-                </Link>
+                </NavLink>
               </li>
             ))}
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
-          <div className="hidden lg:block">
-            <ThemeToggle name="theme-bar" />
-          </div>
-
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <Link
-            href="/digital/contact"
-            /*
-              Ruled, not filled. The hero carries the one red call to action on this page,
-              and a second red block in the masthead directly above it spends the colour
-              twice on the same request.
-            */
-            className="rn-label hidden min-h-11 items-center border border-line-interactive px-4 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse sm:inline-flex"
+            href="/"
+            className={`rn-navlink hidden gap-1.5 text-on-navy-muted hover:bg-navy-raised hover:text-on-navy lg:inline-flex ${RING}`}
           >
-            Book a call
+            Rynet Showroom
+            <ArrowUpRight aria-hidden="true" className="size-4" />
           </Link>
 
-          <details className="group lg:hidden">
+          <NavLink
+            href={REVIEW_CTA.href}
+            className={buttonClasses({
+              variant: "primary",
+              size: "sm",
+              className: `px-3 sm:px-4 ${RING}`,
+            })}
+          >
+            <span className="sm:hidden">{REVIEW_CTA.short}</span>
+            <span className="hidden sm:inline">{REVIEW_CTA.label}</span>
+          </NavLink>
+
+          <MobileMenu className="lg:hidden">
             <summary
-              className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center border border-line-interactive text-ink-secondary hover:bg-ink hover:text-ink-inverse [&::-webkit-details-marker]:hidden"
-              aria-label="Menu"
+              aria-label="Open menu"
+              className={`flex size-11 cursor-pointer items-center justify-center rounded-sm text-on-navy hover:bg-navy-raised ${RING}`}
             >
-              <Menu aria-hidden="true" className="size-5 group-open:hidden" />
-              <X aria-hidden="true" className="hidden size-5 group-open:block" />
+              <Menu aria-hidden="true" className="size-6 group-open:hidden" />
+              <X aria-hidden="true" className="hidden size-6 group-open:block" />
             </summary>
 
-            <nav
-              aria-label="Main"
-              className="absolute inset-x-0 top-16 border-b-2 border-ink bg-surface py-2"
-            >
-              <ul className="container-page flex flex-col gap-1">
-                {NAV.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="rn-label flex min-h-12 items-center border-b border-line px-1 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
-                    >
-                      {item.label}
-                    </Link>
+            <div className="rn-menu__scrim" data-menu-close="" aria-hidden="true" />
+
+            <div className="rn-menu__sheet">
+              {/* "Menu", not "Main": two navigation landmarks with one name cannot be told apart. */}
+              <nav aria-label="Menu" className="px-2 pt-3 pb-2">
+                <ul>
+                  <li>
+                    <NavLink href="/digital" match={[]} className="rn-menu__link">
+                      Rynet Digital home
+                      <ChevronRight aria-hidden="true" />
+                    </NavLink>
                   </li>
-                ))}
-                <li>
-                  <Link
-                    href="/digital/contact"
-                    className="rn-label mt-2 flex min-h-11 items-center justify-center bg-accent-solid px-4 text-ink-on-accent hover:bg-accent-solid-hover"
-                  >
-                    Book a call
-                  </Link>
-                </li>
-                <li className="mt-2 border-t border-line pt-2">
-                  <Link
-                    href="/"
-                    className="rn-label flex min-h-12 items-center gap-2 px-1 text-ink-muted transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
-                  >
-                    <ArrowLeft aria-hidden="true" className="size-4" />
-                    Rynet Showroom, buy a car
-                  </Link>
-                </li>
-                {/* Captioned row, the way the marketplace menu does it. On its own the
-                    fieldset stretched to the full menu width and left its three 40px segments
-                    crammed against the left end with 253px of empty border beside them. */}
-                <li className="flex items-center justify-between gap-4 px-1 pt-4">
-                  <span className="rn-label text-ink-muted">Colour theme</span>
-                  <ThemeToggle name="theme-menu" />
-                </li>
-              </ul>
-            </nav>
-          </details>
+                  {AGENCY_NAV.map((item) => (
+                    <li key={item.href}>
+                      <NavLink href={item.href} className="rn-menu__link">
+                        {item.label}
+                        <ChevronRight aria-hidden="true" />
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              <div className="mx-4 border-t border-line pt-2">
+                <Link
+                  href="/"
+                  className="flex min-h-12 items-center gap-2 rounded-sm px-2 text-[0.9375rem] font-medium text-body hover:bg-subtle hover:text-heading"
+                >
+                  <ArrowLeft aria-hidden="true" className="size-4 text-muted" />
+                  Rynet Showroom, buy a car
+                </Link>
+              </div>
+
+              <div className="mt-auto border-t border-line px-4 py-4">
+                <Link
+                  href={REVIEW_CTA.href}
+                  className={buttonClasses({ variant: "primary", size: "lg", block: true })}
+                >
+                  {REVIEW_CTA.label}
+                </Link>
+                <a
+                  href={`mailto:${AGENCY_EMAIL}`}
+                  className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-sm text-sm font-medium text-body hover:bg-subtle hover:text-heading"
+                >
+                  <Mail aria-hidden="true" className="size-4 text-muted" />
+                  {AGENCY_EMAIL}
+                </a>
+                <div className="mt-3 flex items-center justify-between gap-4">
+                  <span className="text-sm text-muted">Colour theme</span>
+                  <ThemeToggle name="agency-theme-menu" />
+                </div>
+              </div>
+            </div>
+          </MobileMenu>
         </div>
       </div>
     </header>

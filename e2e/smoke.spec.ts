@@ -165,7 +165,9 @@ test.describe("search", () => {
      * thing after the heading rather than something to be hunted for.
      */
     const afterHeading = page.locator("h1#results-heading + p");
-    await expect(afterHeading).toContainText("verified dealerships");
+    // The count, worded honestly: "311 demo listings" while the stock is demonstration data
+    // (hard rule 1 forbids calling those dealerships verified), "40 cars" once it is real.
+    await expect(afterHeading).toContainText(/\d[\d\s]* (demo listings?|cars?)/);
 
     // Asserted on the count itself, not on the page. Next injects its own route announcer,
     // an empty assertive region at the end of the body, so a page-wide count of live regions

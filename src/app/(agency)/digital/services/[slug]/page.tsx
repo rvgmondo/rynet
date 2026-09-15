@@ -1,18 +1,24 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, Minus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { AgencyClose } from "@/components/agency/agency-close";
+import { REVIEW_CTA, sentence } from "@/components/agency/agency-content";
+import { AgencyPageHead } from "@/components/agency/agency-page-head";
+import { StageSteps } from "@/components/agency/stage-steps";
+import { buttonClasses } from "@/components/ui/button-classes";
+import { SectionHeader } from "@/components/ui/section-header";
 import { SERVICES, serviceBySlug } from "@/content/agency/services";
 import { serviceJsonLd } from "@/lib/structured-data";
 
 /**
  * One template, seven pages.
  *
- * Seven hand-written page components would drift the first time one of them was edited in a
- * hurry, and the drift always lands on the part nobody rereads, which here is the
- * "where the line is" section. That section is the reason a dealer believes the rest.
+ * Seven hand-written pages would drift the first time one was edited in a hurry, and the drift
+ * lands on the part nobody rereads, which here is "where the line is". Every service page reads
+ * in the same order: the outcome, the problem it solves, what is included, how it runs, where
+ * the line is, then the offer.
  */
 export function generateStaticParams() {
   return SERVICES.map((service) => ({ slug: service.slug }));
@@ -39,8 +45,10 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
   const service = serviceBySlug(slug);
   if (!service) notFound();
 
-  const { name, title, summary, problem, includes, notThis, outcome } = service;
-  const others = SERVICES.filter((item) => item.slug !== slug).slice(0, 3);
+  const { Icon, name, title, summary, includes, notThis, problem, outcome } = service;
+  // The next three in the list, wrapping round, so every service links onward to different ones.
+  const position = SERVICES.findIndex((item) => item.slug === slug);
+  const others = [1, 2, 3].map((step) => SERVICES[(position + step) % SERVICES.length]);
 
   return (
     <>
@@ -58,142 +66,163 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         }}
       />
 
-      {/*
-        REDRAWN, and it is seven pages wide rather than one.
-        ---------------------------------------------------
-        This template contained no part of the design system at all: no rn-head, no rn-prose, no
-        rn-label, no rule, no ground change. So the services index one level up was rebuilt as a
-        numbered ruled index last week, and a visitor who clicked a row on it arrived at a page
-        belonging to a different site: six bordered boxes for "what you get", a heavy 2px box at
-        half the column width for "what this is not", and three bordered icon cards at the end.
-      */}
-      <section className="rn-columns border-b border-line bg-surface-sunken">
-        <div className="container-page py-[var(--section-tight)]">
-          <Breadcrumbs
-            trail={[
-              { href: "/digital/services", label: "Services" },
-              { href: `/digital/services/${slug}`, label: name },
-            ]}
-          />
-
-          <p className="rn-label mt-8 text-ink-muted">{name}</p>
-          <h1 className="rn-head mt-4 max-w-[16ch]">{title}</h1>
-          <p className="measure mt-6 text-lg text-ink-secondary">{summary}</p>
-        </div>
-      </section>
-
-      {/*
-        The problem and what you get, side by side against one rule.
-        The claim holds the left, the detail holds the right, which is the spread the
-        marketplace uses for its verification copy and the agency uses on /digital/about.
-      */}
-      <section
-        aria-labelledby="problem-heading"
-        className="container-page py-[var(--section-base)]"
-      >
-        <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
-          <h2 id="problem-heading" className="rn-head max-w-[10ch]">
-            The problem
-          </h2>
-          <p className="rn-prose rn-prose--drop text-ink-secondary">{problem}</p>
-        </div>
-
-        <hr className="rn-rule mt-[var(--section-base)]" />
-
-        <div className="mt-[var(--section-base)] grid gap-8 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
-          <h2 id="includes-heading" className="rn-head max-w-[10ch]">
-            What you get
-          </h2>
-          {/* A ruled list. It was six bordered boxes in a two-column grid, each with a green
-              tick in the corner, which is the object the redesign exists to remove and the
-              colour this palette does not otherwise use. */}
-          <ul className="border-t border-line">
-            {includes.map((item) => (
-              <li key={item} className="border-b border-line py-4 text-ink-secondary">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/*
-        The section that makes the rest believable, on the ground that says so.
-        ----------------------------------------------------------------------
-        A page listing only what is included reads as a brochure; naming what is excluded is the
-        part a dealer principal can actually weigh. It was a heavy bordered box at half the
-        column width with the rest of the row empty, which is where a business puts something it
-        would rather not draw attention to. Every other page on this site gives its most
-        confident claim the inverted ground, and this is that claim.
-      */}
-      <section aria-labelledby="not-heading" className="bg-surface-inverse text-ink-inverse">
-        <div className="container-page py-[var(--section-base)]">
-          <h2 id="not-heading" className="rn-head max-w-[12ch]">
-            What this is not
-          </h2>
-          <hr className="mt-8 h-px border-0 bg-silver" />
-
-          <ul className="mt-10 grid gap-x-16 md:grid-cols-2">
-            {notThis.map((item) => (
-              <li key={item} className="border-t border-silver/40 py-5 opacity-90">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section
-        aria-labelledby="outcome-heading"
-        className="container-page py-[var(--section-base)]"
-      >
-        <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr] lg:items-start lg:gap-16">
-          <h2 id="outcome-heading" className="rn-head max-w-[12ch]">
-            What you end up with
-          </h2>
-          <div>
-            <p className="rn-prose rn-prose--drop text-lg text-ink-secondary">{outcome}</p>
+      <AgencyPageHead
+        trail={[
+          { href: "/digital/services", label: "Services" },
+          { href: `/digital/services/${slug}`, label: name },
+        ]}
+        eyebrow={name}
+        title={title}
+        lead={summary}
+        actions={
+          <>
             <Link
-              href="/digital/contact"
-              className="rn-label mt-8 inline-flex min-h-12 items-center gap-2 bg-accent-solid px-6 text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover"
+              href={REVIEW_CTA.href}
+              className={buttonClasses({ variant: "primary", size: "lg", block: "mobile" })}
             >
-              Talk to us about {name.toLowerCase()}
-              <ArrowRight aria-hidden="true" className="size-4" />
+              {REVIEW_CTA.label}
+              <ArrowRight aria-hidden="true" />
             </Link>
+            <Link
+              href="/digital/pricing"
+              className={buttonClasses({ variant: "outline", size: "lg", block: "mobile" })}
+            >
+              How we price
+            </Link>
+          </>
+        }
+        aside={
+          <div className="on-navy rounded-lg p-6 shadow-card sm:p-8">
+            <span className="flex size-12 items-center justify-center rounded-md bg-navy-raised text-on-navy">
+              <Icon aria-hidden="true" className="size-6" />
+            </span>
+            <p className="rn-eyebrow mt-6 text-on-navy-muted">What you walk away with</p>
+            <p className="mt-2 text-xl leading-snug font-semibold text-on-navy">{outcome}</p>
+          </div>
+        }
+      />
+
+      <section aria-labelledby="problem-heading" className="py-[var(--section-base)]">
+        <div className="container-page grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
+          <div>
+            <p className="rn-eyebrow">Why it matters</p>
+            <h2 id="problem-heading" className="rn-h2 mt-2">
+              The problem
+            </h2>
+          </div>
+          <p className="rn-lead max-w-3xl lg:pt-8">{problem}</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="includes-heading" className="bg-card py-[var(--section-base)]">
+        <div className="container-page">
+          <SectionHeader id="includes-heading" eyebrow={name} title="What is included" />
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {includes.map((item) => (
+              <li key={item} className="flex gap-3 rounded-md border border-line bg-page p-5">
+                <span
+                  aria-hidden="true"
+                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-success-subtle text-success"
+                >
+                  <Check className="size-3.5" />
+                </span>
+                <span className="text-body">{sentence(item)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="how-heading" className="py-[var(--section-base)]">
+        <div className="container-page">
+          <SectionHeader
+            id="how-heading"
+            eyebrow="How it works"
+            title="Five steps, and the first one is free"
+            action={{ href: "/digital/process", label: "How we work, in detail" }}
+          />
+          <div className="mt-10">
+            <StageSteps />
           </div>
         </div>
       </section>
 
-      {/*
-        The other three, drawn the way the index one level up draws all seven. A visitor moving
-        sideways should meet the same object, not three bordered cards that flip two words red.
-      */}
-      <section aria-labelledby="others-heading" className="container-page pb-[var(--section-base)]">
-        <hr className="rn-rule rn-rule--brand" />
-        <h2 id="others-heading" className="rn-label mt-8 text-ink-muted">
-          Other things we do
-        </h2>
-
-        <ul className="mt-4 border-t border-line">
-          {others.map((other) => (
-            <li key={other.slug} className="border-b border-line">
-              <Link
-                href={`/digital/services/${other.slug}`}
-                className="group grid gap-2 py-6 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse sm:grid-cols-[18rem_1fr_2rem] sm:items-baseline sm:gap-8 sm:px-4"
-              >
-                <span className="font-display text-lg font-bold leading-snug">{other.name}</span>
-                <span className="text-sm text-ink-secondary group-hover:text-ink-inverse">
-                  {other.summary}
-                </span>
-                <ArrowRight
-                  aria-hidden="true"
-                  className="hidden size-4 shrink-0 self-center sm:block"
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <section aria-labelledby="line-heading" className="pb-[var(--section-base)]">
+        <div className="container-page">
+          <div className="rn-panel grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16 lg:p-10">
+            <div>
+              <p className="rn-eyebrow">Where the line is</p>
+              <h2 id="line-heading" className="rn-h3 mt-2">
+                What this is not
+              </h2>
+              <p className="mt-2 text-sm text-muted">
+                Worth knowing before you book, not after the quote.
+              </p>
+            </div>
+            <ul className="space-y-4">
+              {notThis.map((item) => (
+                <li key={item} className="flex gap-3 text-body">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-subtle text-muted"
+                  >
+                    <Minus className="size-3.5" />
+                  </span>
+                  <span>{sentence(item)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </section>
+
+      <section aria-labelledby="others-heading" className="bg-card py-[var(--section-base)]">
+        <div className="container-page">
+          <SectionHeader
+            id="others-heading"
+            title="Other things we do"
+            action={{ href: "/digital/services", label: "All services" }}
+          />
+          <ul className="mt-8 grid gap-4 md:grid-cols-3">
+            {others.map((other) =>
+              other ? (
+                <li key={other.slug} className="flex">
+                  <article className="rn-card rn-card--interactive p-5">
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary">
+                        <other.Icon aria-hidden="true" className="size-5" />
+                      </span>
+                      <h3 className="text-base font-semibold text-heading">
+                        <Link
+                          href={`/digital/services/${other.slug}`}
+                          className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-solid focus-visible:after:outline-[color:var(--rn-focus-ring)]"
+                        >
+                          {other.name}
+                        </Link>
+                      </h3>
+                    </div>
+                    <p className="mt-3 text-sm text-body">{other.summary}</p>
+                    <span
+                      aria-hidden="true"
+                      className="rn-link-arrow mt-auto self-start pt-4 text-heading"
+                    >
+                      Learn more
+                      <ArrowRight />
+                    </span>
+                  </article>
+                </li>
+              ) : null,
+            )}
+          </ul>
+        </div>
+      </section>
+
+      <div className="pt-[var(--section-base)]">
+        <AgencyClose id="service-close" title="Start with a free review">
+          The review looks at your site, your stock feed and your advertising together, and says
+          what we would fix first, whether or not that is this service.
+        </AgencyClose>
+      </div>
     </>
   );
 }

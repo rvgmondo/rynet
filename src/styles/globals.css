@@ -165,10 +165,17 @@
     scroll-behavior: smooth;
     /*
      * Room for the sticky chrome, which is what SC 2.4.11 is about. The header is 4rem; a
-     * vehicle page pins an action bar to the bottom below 1024px.
+     * vehicle page pins a one-row action bar (about 4.25rem) to the bottom below 1024px.
      */
     scroll-padding-top: calc(var(--header-height) + 1rem);
-    scroll-padding-bottom: calc(7rem + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+
+  /* Below 1280px the search pages pin a filter and sort toolbar (about 3.8rem) under the header. */
+  @media (max-width: 79.99rem) {
+    html:has([data-sticky-toolbar]) {
+      scroll-padding-top: calc(var(--header-height) + 5rem);
+    }
   }
 
   @media (min-width: 64rem) {
@@ -406,7 +413,6 @@
     font-weight: 600;
     color: var(--rn-accent);
     text-decoration: none;
-    white-space: nowrap;
   }
 
   .rn-link-arrow:hover {
@@ -717,6 +723,8 @@
 
   .rn-field {
     display: grid;
+    /* Rows keep their own height when a form grid stretches the field to its row. */
+    align-content: start;
     gap: 0.375rem;
     min-width: 0;
   }
@@ -1274,6 +1282,17 @@
     text-wrap: pretty;
   }
 
+  /*
+   * The two-line reserve keeps facts level across a row of cards. A phone results list is one
+   * card per row, where there is no neighbour to line up with and the reserve only leaves a blank
+   * line under a short title.
+   */
+  @media (max-width: 31.99rem) {
+    .rn-grid .rn-vcard__title {
+      min-height: 0;
+    }
+  }
+
   .rn-vcard__variant {
     font-weight: 400;
     color: var(--rn-muted);
@@ -1461,6 +1480,21 @@
     background-color: var(--rn-card);
     border-bottom: 1px solid var(--rn-line);
     box-shadow: var(--rn-shadow-xs);
+  }
+
+  /*
+   * A vehicle page below 1024px pins its own action bar to the bottom, so the header scrolls away
+   * rather than stacking a second band of chrome on a phone. It snaps back to sticky while the menu
+   * is open, because the menu sheet is positioned under it.
+   */
+  @media (max-width: 63.9375rem) {
+    html:not([data-menu-open]) body:has([data-action-bar]) .rn-header {
+      position: static;
+    }
+
+    html:has([data-action-bar]):not([data-menu-open]) {
+      scroll-padding-top: 1rem;
+    }
   }
 
   .rn-header__bar {

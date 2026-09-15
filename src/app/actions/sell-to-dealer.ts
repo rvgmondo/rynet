@@ -50,7 +50,8 @@ const CONSENT_WORDING =
   `dealership decides for itself what it does with my details once it has them. I can withdraw ` +
   `this at any time by emailing privacy@rynet.co.za.`;
 
-const POLICY_VERSION = "2026-08-privacy-v1";
+// The privacy notice this consent was given under. Bumped when /privacy changes.
+const POLICY_VERSION = "2026-09-privacy-v2";
 
 const MINIMUM_FILL_MS = 4000;
 /*

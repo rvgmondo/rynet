@@ -213,6 +213,10 @@ const PAIRS: Pair[] = [
   t("Accent words on card", "--rn-accent", "--rn-card"),
   t("Accent hover on card", "--rn-accent-hover", "--rn-card"),
   t("Accent words on subtle accent", "--rn-accent", "--rn-accent-subtle"),
+  // Arrow links inside tinted panels (finance teaser, contact notes, step cards on the SHOWROOM pages)
+  t("Accent words on subtle panel", "--rn-accent", "--rn-subtle"),
+  t("Accent words on subtle info (links inside a notice)", "--rn-accent", "--rn-info-subtle"),
+  t("Muted on subtle info (small print inside a notice)", "--rn-muted", "--rn-info-subtle"),
 
   // Status: badges and notices put the status colour on its own subtle ground
   t("Success on card", "--rn-success", "--rn-card"),

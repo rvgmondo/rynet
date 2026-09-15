@@ -1,399 +1,107 @@
-import config from "@payload-config";
 import type { Metadata } from "next";
-import { unstable_cache } from "next/cache";
-import { getPayload, type Where } from "payload";
 
-import { FacetRail } from "@/components/vehicles/facet-rail";
-import { ResultsGrid } from "@/components/vehicles/results-grid";
-import { ResultsHeader } from "@/components/vehicles/results-header";
-import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
-import { formatRand } from "@/lib/format";
-import { resolveQuery, safePage, toCard } from "@/lib/search";
+import {
+  carriedPairs,
+  hrefFor,
+  KNOWN_KEYS,
+  type RawParams,
+  readState,
+} from "@/components/search/params";
+import { SearchScreen } from "@/components/search/search-screen";
+import { runSearch } from "@/components/search/stock";
+import { safePage } from "@/lib/search";
 
 export const metadata: Metadata = {
-  title: "Cars for sale from verified dealerships",
+  title: "Cars for sale",
   description:
-    "Search used, demo and new cars from registered South African dealerships. Filter by make, model, price, body type, transmission and province. No private sellers.",
+    "Search used, new and ex-demo cars listed by South African dealerships. Filter by price, make, model, body type, year, mileage and province. Every dealership is checked before it can list, and there are no private sellers.",
   /*
    * Every query variant of this page canonicalises to /cars.
    *
    * There was no canonical at all, so ?q=, ?colour=, ?sort= and every combination of facets
-   * each declared itself the original of a page with the same 311 cars on it. robots.txt
-   * already asks crawlers not to fetch /cars?, but a canonical is what consolidates the ones
-   * that arrive anyway, from a share or a link. The real landing pages under /cars/body/,
-   * /cars/fuel/ and /cars/in/ set their own canonicals and are unaffected.
+   * each declared itself the original of a page with the same cars on it. robots.txt already
+   * asks crawlers not to fetch /cars?, but a canonical is what consolidates the ones that arrive
+   * anyway, from a share or a link. The landing pages under /cars/body/, /cars/fuel/ and
+   * /cars/in/ set their own canonicals and are unaffected.
    */
   alternates: { canonical: "/cars" },
 };
 
-const PER_PAGE = 24;
-
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-const one = (value: string | string[] | undefined): string | undefined =>
-  Array.isArray(value) ? value[0] : value;
-
-type ResultPage = {
-  vehicles: VehicleCardData[];
-  totalDocs: number;
-  page: number;
-  totalPages: number;
-  demonstrationCount: number;
-};
-
-async function readResults(
-  where: Record<string, unknown>,
-  sort: string,
-  page: number,
-): Promise<ResultPage> {
-  const payload = await getPayload({ config });
-
-  const found = await payload.find({
-    collection: "vehicles",
-    where: where as never,
-    sort,
-    limit: PER_PAGE,
-    page,
-    depth: 2,
-  });
-
-  // How much of this result set is seeded example stock, so the page can say so once at the
-  // top rather than leaving it to a marker on each card.
-  const demonstration = await payload.count({
-    collection: "vehicles",
-    where: { and: [where, { isDemonstration: { equals: true } }] } as never,
-  });
-
-  return {
-    // The shared mapper. This page used to carry a verbatim copy of it, which is how the
-    // paint colour reached the card in one place and not the other two.
-    vehicles: found.docs.map(toCard),
-    totalDocs: found.totalDocs,
-    page: found.page ?? 1,
-    totalPages: found.totalPages,
-    demonstrationCount: demonstration.totalDocs,
-  };
-}
-
-/**
- * The cache on the search itself, which is where the time on this page actually went.
- *
- * Measured, not guessed. With the taxonomy lookups cached, a warm request spent 4ms
- * resolving eight slugs and its location, and then 125 to 175ms inside this one `find`.
- * `depth: 2` is why: twenty-four vehicles, each pulling its make, model, body, fuel,
- * transmission and colour, and a branch that pulls its own city and province. Hundreds of
- * round trips to SQLite to draw one page of results.
- *
- * Only the CARD data is kept, not the documents. `toCard` throws away everything a card does
- * not draw, including the VIN, so what sits in the cache is a few hundred bytes a car rather
- * than a fully populated listing.
- *
- * Sixty seconds, tagged for stock. A car is not so perishable that a minute matters, and any
- * write to a vehicle drops this immediately anyway.
- */
-function getResults(
-  where: Record<string, unknown>,
-  sort: string,
-  page: number,
-): Promise<ResultPage> {
-  return unstable_cache(
-    () => readResults(where, sort, page),
-    ["cars-results", JSON.stringify(where), sort, String(page)],
-    { revalidate: 60, tags: ["vehicles"] },
-  )();
-}
+type SearchParams = Promise<RawParams>;
 
 /**
  * Search.
  *
- * Server rendered, deliberately. Section 13 requires that every indexable route ships full
- * HTML, and search is the most valuable indexable surface on the platform. A client-side
- * skeleton that Googlebot sees as empty would throw away the entire SEO argument.
+ * Server rendered, deliberately. Every indexable route ships full HTML, and search is the most
+ * valuable one on the platform; a client-side skeleton that a crawler sees as empty would throw
+ * that away.
  *
- * Filter state lives entirely in the URL. That is a hard requirement in Section 6 and it is
- * also what makes a result set shareable, restorable and crawlable. There is no client
- * state store holding what the buyer filtered by.
+ * Filter state lives entirely in the URL, which is what makes a result set shareable, restorable
+ * and crawlable. There is no client state store holding what the buyer filtered by. A GET form
+ * with JavaScript off reaches every filter, the sort order and every page.
  *
- * The facet counts here are computed with one grouped query per dimension against the
- * filtered set. That is the correct semantics and it is not yet the performant shape: the
- * single-round-trip CTE described in docs/ARCHITECTURE.md lands with the search layer
- * proper, along with the denormalised index table. At 311 vehicles this is instant, and
- * writing the optimised version before the facet set is settled would be guessing.
+ * What the URL can say: `q` (the search box), `make`, `model`, `body`, `fuel`, `transmission` and
+ * `province` (each repeatable, so Toyota and Ford can be chosen together), `city`, `colour`,
+ * `variant`, `condition`, `minPrice`, `maxPrice`, `minYear`, `maxYear`, `maxMileage`, `sort` and
+ * `page`. Single values, which is all any older link or the home page search produces, read
+ * exactly as they always did. The rules that turn them into a result set, the counts and the
+ * order are in src/components/search/ and are unit tested there.
  */
 export default async function CarsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const payload = await getPayload({ config });
+  const state = readState(params);
 
-  // Clamped at both ends. The floor was clamped and the ceiling was not, so a page number past
-  // the safe integer range reached SQLite as an offset and this route answered 500.
-  const page = safePage(one(params.page) ?? 1);
-  const sort = one(params.sort) ?? "newest";
-
-  /*
-   * What someone typed into the search box, resolved into the same filters the rail
-   * produces. Explicit parameters always win, so a buyer who searches "bakkie under 300"
-   * and then ticks "Diesel" in the rail keeps both, and the rail is never overruled by the
-   * text they typed two clicks ago.
-   *
-   * This used to do nothing at all: the box on the 404 page sent ?q= here and this page
-   * ignored it, so the only search box on the site was decoration.
-   */
-  const query = one(params.q);
-  const parsed = await resolveQuery(query);
+  // Clamped at both ends (see safePage): a page number past the safe integer range once reached
+  // SQLite as an offset and this route answered 500. Past the last page shows the last page.
+  const run = await runSearch(
+    state,
+    safePage(Array.isArray(params.page) ? params.page[0] : params.page),
+  );
 
   /*
-   * A search that understood nothing must not answer with everything.
-   *
-   * "asdfgh" parsed to no filters at all, so the page fell through to the unfiltered query
-   * and presented all 311 cars under the heading the buyer had just searched. That is worse
-   * than returning nothing: it looks like a result, and the buyer scrolls a list that has no
-   * relationship to what they typed. If a query was given and none of it resolved, the
-   * result set is deliberately empty and the empty state explains why.
+   * Page links carry every parameter the buyer arrived with except the page itself, repeated
+   * values included. Without this page two drops the filters and dumps the buyer back into the
+   * whole catalogue, which is the most common pagination bug on a faceted site.
    */
-  const queryUnderstood =
-    !query ||
-    Boolean(
-      parsed.make ||
-        parsed.model ||
-        parsed.body ||
-        parsed.fuel ||
-        parsed.transmission ||
-        parsed.province ||
-        parsed.city ||
-        parsed.minPrice ||
-        parsed.maxPrice,
-    );
+  const keep = carriedPairs(params, ["page"]);
+  const buildHref = (target: number) =>
+    hrefFor("/cars", target > 1 ? [...keep, ["page", String(target)]] : keep);
 
-  const makeSlug = one(params.make) ?? parsed.make;
-  const modelSlug = one(params.model) ?? parsed.model;
-  const bodySlug = one(params.body) ?? parsed.body;
-  const fuelSlug = one(params.fuel) ?? parsed.fuel;
-  const transmissionSlug = one(params.transmission) ?? parsed.transmission;
-  const provinceSlug = one(params.province) ?? parsed.province;
-  const citySlug = one(params.city) ?? parsed.city;
-  const colourSlug = one(params.colour);
-  const minPrice = Number(one(params.minPrice) ?? 0) || parsed.minPrice;
-  const maxPrice = Number(one(params.maxPrice) ?? 0) || parsed.maxPrice;
+  // The sort form carries everything except sort and page, the search box's words included, since
+  // sorting changes the order and nothing else.
+  const sortCarried = carriedPairs(params, ["sort", "page"]);
 
-  // Resolve slugs to ids. Taxonomies are small and cached; this is not the hot path.
-  const resolve = async (collection: string, slug?: string) => {
-    if (!slug) return undefined;
-    const found = await payload.find({
-      collection: collection as never,
-      where: { slug: { equals: slug } },
-      limit: 1,
-      depth: 0,
-    });
-    const doc = found.docs[0] as { id: number } | undefined;
-    return doc?.id;
-  };
+  // Parameters this page does not know (a campaign tag on a shared link) ride through the filters.
+  const extra = carriedPairs(
+    Object.fromEntries(Object.entries(params).filter(([key]) => !KNOWN_KEYS.has(key))),
+    [],
+  );
 
-  const [makeId, modelId, bodyId, fuelId, transmissionId, provinceId, cityId, colourId] =
-    await Promise.all([
-      resolve("makes", makeSlug),
-      resolve("models", modelSlug),
-      resolve("body-types", bodySlug),
-      resolve("fuel-types", fuelSlug),
-      resolve("transmissions", transmissionSlug),
-      resolve("provinces", provinceSlug),
-      resolve("cities", citySlug),
-      resolve("colours", colourSlug),
-    ]);
-
-  /*
-   * Location filters through the branch, and a city that has no branches widens to its
-   * province rather than answering nothing.
-   *
-   * Searching "Cape Town", "Durban" or "Johannesburg" returned zero cars, because no
-   * dealership has a branch registered in any of those three: they are in Bellville,
-   * Pinetown, Umhlanga, Sandton, Boksburg and Benoni. To a buyer those ARE Cape Town, Durban
-   * and Johannesburg, so answering "nothing" to the three biggest cities in the country,
-   * while holding 78 cars in the Western Cape, is a search that is technically right and
-   * practically broken.
-   *
-   * So it widens by one step, to the province the city is in, and the results header says
-   * so. Widening silently would be worse than not widening: a buyer who asked for Cape Town
-   * and is shown George needs to be told.
-   */
-  let branchIds: number[] | undefined;
-  let widened: { from: string; to: string } | null = null;
-
-  if (provinceId || cityId) {
-    const branchesIn = async (clause: Where) => {
-      const found = await payload.find({
-        collection: "branches",
-        where: clause,
-        limit: 500,
-        depth: 0,
-      });
-      return found.docs.map((b) => b.id);
-    };
-
-    if (cityId) {
-      branchIds = await branchesIn({ city: { equals: cityId } });
-
-      const stocked =
-        branchIds.length > 0 &&
-        (
-          await payload.count({
-            collection: "vehicles",
-            where: {
-              and: [{ status: { equals: "live" } }, { branch: { in: branchIds } }],
-            } as never,
-          })
-        ).totalDocs > 0;
-
-      if (!stocked) {
-        const city = await payload.findByID({ collection: "cities", id: cityId, depth: 1 });
-        const province = city?.province;
-        const provinceDoc = typeof province === "object" && province ? province : null;
-
-        if (provinceDoc) {
-          const wider = await branchesIn({ province: { equals: provinceDoc.id } });
-          if (wider.length > 0) {
-            branchIds = wider;
-            widened = { from: city.name, to: provinceDoc.name };
-          }
-        }
-      }
-    } else {
-      branchIds = await branchesIn({ province: { equals: provinceId } });
-    }
-
-    // A location with no branches means no stock, and an empty `in` clause would otherwise
-    // match everything rather than nothing.
-    if (!branchIds || branchIds.length === 0) branchIds = [-1];
-  }
-
-  const where: Record<string, unknown> = { status: { equals: "live" } };
-  // -1 is an id no row has, which is how "match nothing" is expressed without a special case
-  // running through every clause below.
-  if (!queryUnderstood) where.id = { equals: -1 };
-  if (makeId) where.make = { equals: makeId };
-  if (modelId) where.model = { equals: modelId };
-  if (bodyId) where.bodyType = { equals: bodyId };
-  if (fuelId) where.fuelType = { equals: fuelId };
-  if (transmissionId) where.transmission = { equals: transmissionId };
-  if (colourId) where.exteriorColour = { equals: colourId };
-  if (branchIds) where.branch = { in: branchIds };
-  if (minPrice || maxPrice) {
-    where.price = {
-      ...(minPrice ? { greater_than_equal: minPrice } : {}),
-      ...(maxPrice ? { less_than_equal: maxPrice } : {}),
-    };
-  }
-
-  const SORTS: Record<string, string> = {
-    newest: "-publishedAt",
-    "price-asc": "price",
-    "price-desc": "-price",
-    mileage: "mileageKm",
-    year: "-modelYear",
-  };
-
-  // `noUncheckedIndexedAccess` types the fallback as possibly undefined too, and "newest" is
-  // a key this object literally declares. Named once rather than asserted at the call.
-  const order = SORTS[sort] ?? "-publishedAt";
-
-  const results = await getResults(where, order, page);
-  const { vehicles, demonstrationCount } = results;
-
-  /**
-   * Page links carry every current filter. Without this, clicking page 2 drops the
-   * filters and dumps the buyer back into all 311 cars, which is the single most common
-   * pagination bug on faceted sites.
-   */
-  /*
-   * Every filter the buyer arrived with, as hidden inputs for the sort form.
-   *
-   * A GET form submits only its own controls, so the sort control was posting `sort` alone
-   * and throwing away the search term, the colour and every ticked facet. Choosing "price,
-   * low to high" on a filtered result set dumped the buyer back into all 311 cars, which is
-   * the same class of bug the facet rail had, in the one control a buyer is most likely to
-   * touch after filtering.
-   */
-  const carried = Object.entries(params)
-    .map(([key, value]) => ({ key, value: one(value) }))
-    .filter((entry): entry is { key: string; value: string } =>
-      Boolean(entry.value && entry.key !== "sort" && entry.key !== "page"),
-    );
-
-  const buildHref = (target: number) => {
-    const next = new URLSearchParams();
-    for (const [key, value] of Object.entries(params)) {
-      const v = one(value);
-      if (v && key !== "page") next.set(key, v);
-    }
-    if (target > 1) next.set("page", String(target));
-    const query = next.toString();
-    return query ? `/cars?${query}` : "/cars";
-  };
-
-  /*
-   * The price range on THIS page, and only when this page has cars on it.
-   *
-   * `results.totalDocs > 0` was the wrong guard: a page number past the last page returns a
-   * non-zero total with an empty `docs` array, and Math.min of nothing is Infinity, so the
-   * page printed "R Infinity to R -Infinity on this page" and still answered 200.
-   */
-  const priceSummary =
-    vehicles.length > 0
-      ? `${formatRand(Math.min(...vehicles.map((v) => v.price)))} to ${formatRand(Math.max(...vehicles.map((v) => v.price)))} on this page`
-      : null;
+  const nothingUnderstood = run.resolved.filters.nothing && run.resolved.query;
 
   return (
-    <div className="container-page py-[var(--section-tight)]">
-      {/*
-        A ruled column boundary rather than a gap. The rail sits on the sunken ground and the
-        results run the FULL width to the container maximum: centring them at a text measure
-        is what makes a marketplace read as a blog, and it is what left the old page with an
-        empty right half.
-
-        The sidebar appears at 1280px, not 1024px. At 1024 a 280px rail left only enough room
-        for two card tracks, so widening the window from 1023 to 1024 REMOVED a column of
-        cars and added 632px of scroll, at the width more laptops sit at than any other.
-      */}
-      <div className="grid gap-0 xl:grid-cols-[17.5rem_1fr] xl:divide-x xl:divide-line-strong">
-        <FacetRail
-          active={{
-            make: makeSlug,
-            body: bodySlug,
-            fuel: fuelSlug,
-            transmission: transmissionSlug,
-            province: provinceSlug,
-            minPrice: minPrice ? String(minPrice) : undefined,
-            maxPrice: maxPrice ? String(maxPrice) : undefined,
-            // Carried through as hidden inputs so applying a facet does not silently drop
-            // the text someone searched for, or the colour they picked off the home page.
-            q: query,
-            colour: colourSlug,
-          }}
-        />
-
-        <section aria-labelledby="results-heading" className="pb-10 xl:ps-8">
-          <ResultsHeader
-            total={results.totalDocs}
-            page={results.page}
-            totalPages={results.totalPages}
-            sort={sort}
-            priceSummary={priceSummary}
-            query={query}
-            understood={parsed.matched}
-            ignored={parsed.unmatched}
-            demonstrationCount={demonstrationCount}
-            filters={carried}
-            widened={widened}
-          />
-
-          <ResultsGrid
-            vehicles={vehicles}
-            page={results.page}
-            totalPages={results.totalPages}
-            buildHref={buildHref}
-            emptyAction="Clear all filters"
-          />
-        </section>
-      </div>
-    </div>
+    <SearchScreen
+      run={run}
+      heading="Cars for sale"
+      sortAction="/cars"
+      sortCarried={sortCarried}
+      buildHref={buildHref}
+      extra={extra}
+      empty={
+        nothingUnderstood
+          ? {
+              title: `Nothing matched “${run.resolved.query?.text ?? ""}”`,
+              body: "Try a make, a model, a body type or a town, such as Hilux, bakkie or Pretoria.",
+              href: "/cars",
+              action: "See all cars",
+            }
+          : {
+              title: "No cars match that combination",
+              body: "Nothing listed fits every filter you have set at once. Widening the price range, the year or the province usually brings cars back.",
+              href: "/cars",
+              action: "Clear all filters",
+            }
+      }
+    />
   );
 }

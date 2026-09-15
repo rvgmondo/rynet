@@ -14,6 +14,14 @@ import { z } from "zod";
  * answer changes nothing is a question that should not be asked.
  */
 
+/**
+ * The consent sentence. The form prints it beside the checkbox and the server action stores it
+ * verbatim as evidence, so both import it from here: a plain module, because a "use server" file
+ * may export nothing but async functions.
+ */
+export const AGENCY_CONSENT_WORDING =
+  "I agree that Rynet may use the details I have given to reply to this enquiry about Rynet Digital's services, and to contact me about it.";
+
 export const DEALERSHIP_SIZES = [
   { value: "single", label: "One branch" },
   { value: "multi", label: "Two to five branches" },

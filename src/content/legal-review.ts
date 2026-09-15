@@ -26,6 +26,17 @@ export const LEGAL_REVIEWED_AT: Record<LegalDocument, string | null> = {
   sellNotice: null,
   /** The multi-recipient consent wording on the sell form, stored verbatim on each record. */
   sellConsent: null,
+  /** The consent wording in the enquiry dialog on a listing, stored verbatim on each record. */
+  enquiryConsent: null,
+  /** The consent wording on the Rynet Digital qualification form, stored verbatim on each record. */
+  agencyConsent: null,
 };
 
-export type LegalDocument = "privacy" | "terms" | "cookies" | "sellNotice" | "sellConsent";
+export type LegalDocument =
+  | "privacy"
+  | "terms"
+  | "cookies"
+  | "sellNotice"
+  | "sellConsent"
+  | "enquiryConsent"
+  | "agencyConsent";

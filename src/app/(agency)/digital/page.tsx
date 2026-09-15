@@ -1,249 +1,294 @@
-import { ArrowRight, Check, X } from "lucide-react";
+import { Accessibility, ArrowRight, BadgeInfo, Check, Link2, Smartphone, X } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AgencyClose } from "@/components/agency/agency-close";
+import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
+import { GaugeMotif } from "@/components/agency/gauge-motif";
+import { ShowroomFrame } from "@/components/agency/showroom-frame";
+import { getShowroomSample } from "@/components/agency/showroom-sample";
+import { StageSteps } from "@/components/agency/stage-steps";
+import { buttonClasses } from "@/components/ui/button-classes";
+import { SectionHeader } from "@/components/ui/section-header";
 import { SERVICES } from "@/content/agency/services";
 
 export const metadata: Metadata = {
   title: "Websites, stock feeds and advertising for car dealerships",
   description:
-    "Rynet Digital works with South African car dealerships and nobody else. Websites, stock feeds, paid media, local search, photography, lead routing and reporting.",
+    "Rynet Digital works with South African car dealerships and nobody else. Dealership websites, stock feeds, paid media, local search, photography, lead routing and reporting.",
   alternates: { canonical: "/digital" },
 };
+
+/*
+ * Rendered on demand, because the browser frame shows real Showroom listings from a database
+ * that does not exist during `next build`. The listings are cached on the data (see
+ * showroom-sample.ts), so this costs one cached read per request.
+ */
+export const dynamic = "force-dynamic";
+
+/*
+ * What Rynet Showroom lets a dealer check for themselves, as outcomes for a dealership rather
+ * than as build notes. Each has a place to check it. Search engine markup is deliberately not in
+ * the list: structured data is withheld from demonstration listings, so there is nothing on
+ * Showroom today that would prove it.
+ */
+const PROOF = [
+  {
+    icon: Smartphone,
+    title: "Quick on a buyer's phone",
+    body: "Built for a mid-range Android on a slow connection, because that is what your buyers are holding, not a laptop on fibre.",
+    href: "/cars",
+    link: "Search it on your phone",
+  },
+  {
+    icon: Link2,
+    title: "A search you can send",
+    body: "Every filter lives in the web address, so a buyer can send a search to their partner and it opens exactly the same.",
+    href: "/cars?body=suv&maxPrice=300000",
+    link: "Open a filtered search",
+  },
+  {
+    icon: Accessibility,
+    title: "Usable by every buyer",
+    body: "Built to WCAG 2.2 AA and checked automatically on every change, so a buyer using a keyboard or a screen reader can still enquire.",
+    href: "/accessibility",
+    link: "Read the accessibility statement",
+  },
+  {
+    icon: BadgeInfo,
+    title: "Honest about what is not real",
+    body: "Every listing on Showroom today is demonstration data, and every card and page says so. Your site gets the same care.",
+    href: "/cars",
+    link: "See the labels",
+  },
+] as const;
+
+const FIT = [
+  {
+    heading: "Probably a fit",
+    icon: Check,
+    tone: "bg-success-subtle text-success",
+    items: [
+      "You are a registered dealership with stock on a floor and a DMS you can export from.",
+      "Your current site is slow, or your stock is wrong on it, or both.",
+      "You are spending on Google or Facebook and cannot say what came back.",
+      "Leads arrive in four places and some of them go unanswered.",
+      "You want to own what gets built rather than rent it.",
+    ],
+  },
+  {
+    heading: "Probably not",
+    icon: X,
+    tone: "bg-subtle text-muted",
+    items: [
+      "You sell privately rather than as a registered dealership. We only work with dealerships, same as the marketplace.",
+      "You want a guaranteed position in search results. Nobody can promise that honestly.",
+      "You want the cheapest option. We are not it, and we will say so.",
+      "You want someone to post on social media three times a week. That is not what we do.",
+      "You need it live next week. The first stock import alone takes longer than that to get right.",
+    ],
+  },
+] as const;
 
 /**
  * The agency home page.
  *
- * The hard problem here is that Rynet Digital has no clients yet, so every convention of an
- * agency home page is unavailable: no logo wall, no testimonials, no case study metrics, no
- * "trusted by 40 dealerships". The brief forbids inventing any of it and it would be the
- * wrong thing to do anyway, since a dealer principal in this market can check.
+ * Rynet Digital has no clients yet, so the usual furniture of an agency home page (logo wall,
+ * testimonials, case study numbers) is unavailable, and inventing any of it is out of the
+ * question. The proof is Rynet Showroom: real, on the same domain, and shown here as itself in a
+ * browser frame with live listings, clearly labelled as demonstration data.
  *
- * So the proof is Rynet Showroom. It is real, it is on the same domain, and a visitor can
- * open it in a new tab and judge it in ten seconds. "We built the thing you are standing on"
- * is a stronger argument than a testimonial nobody can verify, and it is the only one we
- * have actually earned.
- *
- * Everything claimed below is either about method, or about Showroom, which is checkable.
- * When real dealer work exists, it goes in /digital/work and this page changes.
+ * Order: the outcome and the terms, the working example, the seven services as cards, the five
+ * steps, who it suits and who it does not, then the offer.
  */
-export default function AgencyHomePage() {
+export default async function AgencyHomePage() {
+  const cards = await getShowroomSample(2);
+
   return (
     <>
-      <section className="rn-columns border-b border-line bg-surface-sunken">
-        <div className="container-page py-[var(--section-base)]">
-          {/* Muted, not red. The one filled red object above this fold is the call to
-              action; a red eyebrow above it competes with the thing it is meant to point at. */}
-          <p className="rn-label text-ink-muted">Rynet Digital</p>
-          {/*
-            `rn-head`, not `text-5xl`.
-            ------------------------
-            This whole page was set at Tailwind's default scale in the default width while
-            the marketplace was rebuilt around a display face with a real width axis. The
-            headline said the same words at two thirds the presence, and a visitor crossing
-            from one front door to the other could see that one of them had been designed and
-            the other had been laid out.
-          */}
-          <h1 className="rn-head mt-5 max-w-[18ch]">More test drives. More sales.</h1>
-          <p className="measure mt-6 text-lg text-ink-secondary">
-            We work with car dealerships and nobody else. Websites that load on a phone, stock feeds
-            that stay correct, advertising you can trace to a lead, and reporting that fits on one
-            page.
-          </p>
+      <section className="relative overflow-hidden bg-navy">
+        <GaugeMotif className="-top-40 -right-40 hidden w-[44rem] opacity-40 lg:block" />
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/digital/contact"
-              className="rn-label inline-flex min-h-12 items-center gap-2 bg-accent-solid px-6 text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover"
-            >
-              Book a call
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
-            <Link
-              href="/digital/services"
-              className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
-            >
-              What we do
-            </Link>
+        <div className="container-page relative grid gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-14 lg:py-20 xl:gap-20">
+          <div className="on-navy">
+            <p className="rn-eyebrow text-on-navy-muted">For South African car dealerships</p>
+            <h1 className="rn-h1 mt-4 text-display">Turn your stock into test drives.</h1>
+            <p className="mt-5 max-w-xl text-[1.0625rem] leading-relaxed sm:text-lg">
+              Dealership websites, stock feeds and advertising, built by the team behind Rynet
+              Showroom. We work with car dealerships and nobody else, and you own everything we
+              build.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Link
+                href={REVIEW_CTA.href}
+                className={buttonClasses({ variant: "primary", size: "lg", block: "mobile" })}
+              >
+                {REVIEW_CTA.label}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+              <Link
+                href="/digital/services"
+                className={buttonClasses({ variant: "outline", size: "lg", block: "mobile" })}
+              >
+                See what we do
+              </Link>
+            </div>
+
+            <ul className="mt-10 grid gap-3 border-t border-line-on-navy pt-8 text-sm sm:grid-cols-3 sm:gap-6">
+              {TERMS.map((term) => (
+                <li key={term.title} className="flex gap-3 sm:flex-col sm:gap-2">
+                  <term.icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-on-navy" />
+                  <span className="font-medium text-on-navy">{term.title}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <ShowroomFrame cards={cards} tone="navy" className="hidden lg:block" />
+        </div>
+      </section>
+
+      <section aria-labelledby="proof-heading" className="bg-card py-[var(--section-base)]">
+        <div className="container-page">
+          <SectionHeader
+            id="proof-heading"
+            eyebrow="The working example"
+            title="Judge us on a site you can open right now"
+            lead="Rynet Showroom is the marketplace on this domain, and we built it. Everything below is something you can check on it in the next five minutes."
+          />
+
+          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
+            <ShowroomFrame cards={cards} className="lg:hidden" />
+
+            <div className="rounded-lg border border-line bg-subtle p-6 sm:p-8 lg:order-2 lg:self-start">
+              <h3 className="rn-h3">We have not done this for you yet</h3>
+              <p className="mt-3 text-body">
+                Rynet Digital is new, so there are no client logos, testimonials or case studies
+                here. Inventing them would be the easiest thing on this site to do, and the fastest
+                way to lose the dealer who checks.
+              </p>
+              <p className="mt-3 text-body">
+                What we can show you is what we built for ourselves. When there is client work to
+                show, it will be here, with the dealership&apos;s permission and real numbers.
+              </p>
+              <Link href="/cars" className="rn-link-arrow mt-5">
+                Open Rynet Showroom
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
+
+            <ul className="grid gap-4 sm:grid-cols-2 lg:order-1">
+              {PROOF.map((item) => (
+                <li key={item.title} className="flex flex-col rounded-md border border-line p-5">
+                  <span className="flex size-10 items-center justify-center rounded-md bg-subtle text-heading">
+                    <item.icon aria-hidden="true" className="size-5" />
+                  </span>
+                  <h3 className="mt-4 text-base font-semibold text-heading">{item.title}</h3>
+                  <p className="mt-1.5 text-sm text-body">{item.body}</p>
+                  <Link href={item.href} className="rn-link-arrow mt-auto self-start pt-4">
+                    {item.link}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
-      {/*
-        The proof section. Not a case study, because we have not done client work yet and a
-        case study without a client is a lie with a layout. This is the one build we can
-        point at, and the visitor can open it and check every claim in it.
-      */}
-      <section aria-labelledby="proof-heading" className="container-page py-[var(--section-base)]">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-start">
-          <div>
-            <h2 id="proof-heading" className="rn-head">
-              We have not done this for you yet
-            </h2>
-            <div className="measure mt-5 space-y-4 text-ink-secondary">
-              <p>
-                Rynet Digital is new, so there is no logo wall on this page and no client
-                testimonials, because we do not have any. Putting invented ones here would be the
-                easiest thing on this site to do and the fastest way to lose the one dealer who
-                checks.
-              </p>
-              <p>
-                What we can show you is what we built for ourselves.{" "}
-                <Link href="/" className="font-semibold text-accent hover:underline">
-                  Rynet Showroom
-                </Link>{" "}
-                is on this same domain. Open it, search it on your phone, and judge it. Every claim
-                below is something you can verify in the next five minutes.
-              </p>
-            </div>
-          </div>
+      <section aria-labelledby="services-heading" className="py-[var(--section-base)]">
+        <div className="container-page">
+          <SectionHeader
+            id="services-heading"
+            eyebrow="What we do"
+            title="Seven services, built around how a dealership sells"
+            action={{ href: "/digital/services", label: "All services" }}
+          />
 
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {[
-              {
-                title: "Built for a phone first",
-                body: "Tested at 320 pixels through to 1920, on a throttled connection, because that is what your buyers are holding.",
-              },
-              {
-                title: "Accessible, and tested for it",
-                body: "WCAG 2.2 AA, with automated checks failing the build on every change rather than an audit at the end.",
-              },
-              {
-                title: "Search that survives a back button",
-                body: "Every filter is in the URL, so a search can be sent to someone else or opened again tomorrow.",
-              },
-              {
-                title: "Legible to a search engine",
-                body: "Structured data for vehicles and dealerships, canonical URLs, and a crawl policy so filter permutations do not dilute the pages that matter.",
-              },
-            ].map((item) => (
-              <li key={item.title} className="border-t-2 border-ink pt-5">
-                <h3 className="text-base">{item.title}</h3>
-                <p className="mt-2 text-sm text-ink-secondary">{item.body}</p>
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {SERVICES.map((service) => (
+              <li key={service.slug} className="flex">
+                <article className="rn-card rn-card--interactive p-6">
+                  <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-on-secondary">
+                    <service.Icon aria-hidden="true" className="size-5" />
+                  </span>
+                  <h3 className="mt-5 text-lg font-semibold text-heading">
+                    <Link
+                      href={`/digital/services/${service.slug}`}
+                      className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-[color:var(--rn-focus-ring)] focus-visible:after:outline-solid"
+                    >
+                      {service.name}
+                    </Link>
+                  </h3>
+                  <p className="mt-2 text-sm text-body">{service.summary}</p>
+                  <span aria-hidden="true" className="rn-link-arrow mt-auto pt-5 text-heading">
+                    Learn more
+                    <ArrowRight />
+                  </span>
+                </article>
               </li>
             ))}
+            <li className="flex">
+              <div className="on-navy flex w-full flex-col rounded-md p-6">
+                <h3 className="text-lg font-semibold">Not sure which you need?</h3>
+                <p className="mt-2 text-sm">
+                  Most dealerships need three or four of these, and nobody needs all seven on day
+                  one. The free review tells you where to start.
+                </p>
+                <Link
+                  href={REVIEW_CTA.href}
+                  className={buttonClasses({
+                    variant: "primary",
+                    size: "sm",
+                    className: "mt-auto self-start",
+                  })}
+                >
+                  {REVIEW_CTA.label}
+                </Link>
+              </div>
+            </li>
           </ul>
         </div>
       </section>
 
-      <section
-        aria-labelledby="services-heading"
-        className="border-t border-line bg-surface-sunken"
-      >
-        <div className="container-page py-[var(--section-base)]">
-          <h2 id="services-heading" className="rn-head">
-            Seven things, done properly
-          </h2>
-          <p className="measure mt-4 text-ink-secondary">
-            Most dealerships need three or four of these. Nobody needs all seven on day one, and we
-            will say so rather than sell you the list.
-          </p>
+      <section aria-labelledby="steps-heading" className="bg-card py-[var(--section-base)]">
+        <div className="container-page">
+          <SectionHeader
+            id="steps-heading"
+            eyebrow="How it works"
+            title="Five steps, and the first one is free"
+            action={{ href: "/digital/process", label: "How we work" }}
+          />
 
-          {/*
-            An index, not a card grid.
-            -------------------------
-            Seven bordered boxes with a small red icon in the corner of each is the layout
-            every agency site in the country already has, and it is what made this page read
-            as a template next to the marketplace. It also fought the design system, which
-            spent the whole redesign taking boxes off things.
-
-            So the seven become a numbered list, which is what they actually are. The number
-            is set at display scale in the muted ink so the row has a spine, the name carries
-            the weight, and the rule between rows does the work the border was doing. It
-            reads as a contents page, which is a form that suits seven items and suits a firm
-            that wants to look like it has done this before.
-          */}
-          <ol className="mt-10 border-t border-line">
-            {SERVICES.map(({ slug, name, summary }, index) => (
-              <li key={slug} className="border-b border-line">
-                <Link
-                  href={`/digital/services/${slug}`}
-                  className="group flex flex-col gap-2 py-6 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse sm:flex-row sm:items-baseline sm:gap-8 sm:px-4"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="font-display text-2xl font-extrabold tabular text-ink-muted group-hover:text-ink-inverse [font-variation-settings:'wdth'_112]"
-                  >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-8">
-                    <span className="font-display text-xl font-bold leading-snug sm:w-[20rem] sm:shrink-0">
-                      {name}
-                    </span>
-                    <span className="mt-2 block text-sm text-ink-secondary group-hover:text-ink-inverse sm:mt-0">
-                      {summary}
-                    </span>
-                  </span>
-                  <ArrowRight
-                    aria-hidden="true"
-                    className="hidden size-4 shrink-0 self-center sm:block"
-                  />
-                </Link>
-              </li>
-            ))}
-          </ol>
+          <div className="mt-10">
+            <StageSteps />
+          </div>
         </div>
       </section>
 
-      {/*
-        The tonal break this page did not have.
-        --------------------------------------
-        Every band on this page sat on the same two grounds in the same left-aligned column,
-        so it read as one long scroll with headings in it. The marketplace breaks its own
-        rhythm exactly once, by inverting the ground under "What verified means", and the
-        break is most of what makes that page feel composed rather than stacked.
+      <section aria-labelledby="fit-heading" className="py-[var(--section-base)]">
+        <div className="container-page">
+          <SectionHeader
+            id="fit-heading"
+            eyebrow="Before you book"
+            title="Whether we are a fit"
+            lead="Being wrong about this wastes your time and ours, so here it is plainly."
+          />
 
-        This is the right band to do it to. Saying plainly who should not hire us is the most
-        confident thing on the page, so it gets the ground that looks like a statement.
-
-        Two columns split by a rule rather than two bordered boxes. A box around a list is a
-        container drawn because the layout felt loose, and the rule between the columns is
-        the same information with nothing extra around it.
-      */}
-      <section aria-labelledby="fit-heading" className="bg-surface-inverse text-ink-inverse">
-        <div className="container-page py-[var(--section-base)]">
-          <h2 id="fit-heading" className="rn-head">
-            Whether this is a fit
-          </h2>
-          <p className="measure mt-4 text-lg opacity-80">
-            Being wrong about this wastes your time and ours, so here it is plainly.
-          </p>
-          <hr className="mt-8 h-px border-0 bg-silver" />
-
-          <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-0 md:divide-x md:divide-silver">
-            {[
-              {
-                heading: "Probably a fit",
-                Mark: Check,
-                items: [
-                  "You are a registered dealership with stock on a floor and a DMS you can export from.",
-                  "Your current site is slow, or your stock is wrong on it, or both.",
-                  "You are spending on Google or Facebook and cannot say what came back.",
-                  "Leads are arriving in four places and some of them go unanswered.",
-                  "You want to own what gets built rather than rent it.",
-                ],
-              },
-              {
-                heading: "Probably not",
-                Mark: X,
-                items: [
-                  "You sell privately rather than as a registered dealership. We only work with dealerships, same as the marketplace.",
-                  "You want a guaranteed position in search results. Nobody can promise that honestly.",
-                  "You want the cheapest option. We are not it, and we will tell you who might be.",
-                  "You want somebody to post on social media three times a week. That is not what we do.",
-                  "You need it live next week. The first stock import alone takes longer than that to get right.",
-                ],
-              },
-            ].map((column, index) => (
-              <div key={column.heading} className={index === 0 ? "md:pe-10" : "md:ps-10"}>
-                <h3 className="rn-label">{column.heading}</h3>
-                <ul className="mt-6 space-y-0">
+          <div className="mt-10 grid gap-4 lg:grid-cols-2">
+            {FIT.map((column) => (
+              <div key={column.heading} className="rn-card p-6 sm:p-8">
+                <h3 className="rn-h3">{column.heading}</h3>
+                <ul className="mt-5 space-y-4">
                   {column.items.map((item) => (
-                    <li
-                      key={item}
-                      className="flex gap-4 border-t border-silver/40 py-4 text-sm opacity-90"
-                    >
-                      <column.Mark aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                    <li key={item} className="flex gap-3 text-body">
+                      <span
+                        aria-hidden="true"
+                        className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ${column.tone}`}
+                      >
+                        <column.icon className="size-3.5" />
+                      </span>
                       <span>{item}</span>
                     </li>
                   ))}
@@ -254,40 +299,11 @@ export default function AgencyHomePage() {
         </div>
       </section>
 
-      {/*
-        The close, at closing scale.
-        ---------------------------
-        It was a third-level heading, a paragraph and a small button, which is how a page
-        ends when nobody decided how it should end. The offer is the single most valuable
-        thing on this page and it was the quietest object on it.
-
-        The rule above it is the masthead sweep, which appears twice on this site and both
-        times to say that something is over.
-      */}
-      <section aria-labelledby="cta-heading" className="container-page py-[var(--section-base)]">
-        <hr className="rn-rule rn-rule--brand" />
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-          <div>
-            <h2 id="cta-heading" className="rn-head max-w-[14ch]">
-              Start with the free review
-            </h2>
-          </div>
-          <div>
-            <p className="rn-prose text-ink-secondary">
-              Send us your website and we will come back with what is actually slowing it down, what
-              is stopping it being found, and what we would fix first. No obligation, and we will
-              tell you if the answer is that you do not need us.
-            </p>
-            <Link
-              href="/digital/contact"
-              className="rn-label mt-8 inline-flex min-h-12 items-center gap-2 bg-accent-solid px-6 text-ink-on-accent transition-colors duration-[var(--duration-micro)] hover:bg-accent-solid-hover"
-            >
-              Get in touch
-              <ArrowRight aria-hidden="true" className="size-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      <AgencyClose id="close-heading" title="Start with a free review of your site">
+        Send us your website. We come back with what is slowing it down, what is stopping it being
+        found, and what we would fix first. If the honest answer is that you do not need us, the
+        review says that.
+      </AgencyClose>
     </>
   );
 }

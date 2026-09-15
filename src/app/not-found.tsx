@@ -6,8 +6,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SkipLink } from "@/components/layout/skip-link";
 import { archivo } from "@/lib/fonts";
-
-import "@/styles/globals.css";
+import { siteStylesheetUrl } from "@/lib/site-stylesheet";
 
 /**
  * The GLOBAL not-found.
@@ -21,16 +20,24 @@ import "@/styles/globals.css";
  * `suppressHydrationWarning` and the ThemeProvider match the layouts: next-themes stamps
  * data-theme before React hydrates, and the theme switch in the footer needs the provider. Before
  * hydration tokens.css still follows the operating system.
+ *
+ * It LINKS the site stylesheet rather than importing it. An import here is carried in the React
+ * payload of every page on the site, a whole extra copy of the stylesheet per document; see
+ * src/lib/site-stylesheet.ts for the measurement. React hoists the link into the head and holds
+ * the first paint for it, so the page never flashes unstyled.
  */
 export const metadata: Metadata = {
   title: "Page not found | Rynet",
   robots: { index: false, follow: true },
 };
 
-export default function GlobalNotFound() {
+export default async function GlobalNotFound() {
+  const stylesheet = await siteStylesheetUrl();
+
   return (
     <html lang="en-ZA" suppressHydrationWarning className={archivo.variable}>
       <body>
+        {stylesheet ? <link rel="stylesheet" href={stylesheet} precedence="default" /> : null}
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
           <SkipLink />
           <SiteHeader />

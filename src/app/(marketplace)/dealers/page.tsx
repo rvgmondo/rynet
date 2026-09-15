@@ -1,10 +1,19 @@
 import config from "@payload-config";
+import { ArrowRight, Search, Store } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPayload } from "payload";
 
+import {
+  DealerDirectoryCard,
+  type DirectoryDealer,
+} from "@/components/dealers/dealer-directory-card";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { relName } from "@/lib/relations";
+import { buttonClasses } from "@/components/ui/button-classes";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Field, Input, Select } from "@/components/ui/field";
+import { Notice } from "@/components/ui/notice";
+import { relId, relName, relSlug } from "@/lib/relations";
 
 /**
  * Rendered on demand, not prerendered.
@@ -17,130 +26,336 @@ import { relName } from "@/lib/relations";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Verified dealerships",
+  title: "Find a dealership",
   description:
-    "Every dealership on Rynet is a registered business we have checked. Browse them by province, see their stock and their trading hours.",
+    "Every dealership on Rynet is checked before it can list, and private sellers cannot list at all. Browse dealerships by province and see what each one has in stock.",
   alternates: { canonical: "/dealers" },
 };
+
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const one = (value: string | string[] | undefined) =>
+  (Array.isArray(value) ? value[0] : value)?.trim() || null;
 
 /**
  * The dealership directory.
  *
- * Only verified dealerships appear, and that is enforced in the collection's access rule
- * rather than filtered here. A pending or suspended dealership is invisible rather than
- * greyed out: on a platform whose whole promise is "verified only", a half-listed business
- * is worse than none.
+ * Only verified dealerships appear, filtered here and enforced again in the collection's read
+ * rule. A pending or suspended dealership is invisible rather than greyed out: on a platform
+ * whose promise is "checked dealerships only", a half-listed business is worse than none.
+ *
+ * The filter is a GET form with a submit button, so it works before any JavaScript arrives and
+ * a filtered directory is a link that can be shared. Both fields live in the one form, so neither
+ * needs a hidden input to survive the other being changed.
+ *
+ * Stock figures come from one query over live stock with only four columns selected, rather than
+ * a count per dealership. At a few thousand live listings that is still cheaper than twelve
+ * round trips; past that, the dealership's maintained `listingCount` is the figure to read.
  */
-export default async function DealersPage() {
+export default async function DealersPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const provinceSlug = one(params.province);
+  const nameQuery = one(params.q)?.slice(0, 80) ?? null;
+
   const payload = await getPayload({ config });
 
-  const dealers = await payload.find({
-    collection: "dealers",
-    where: { verificationStatus: { equals: "verified" } },
-    sort: "tradingName",
-    limit: 100,
-    depth: 0,
-  });
+  const [dealers, branches, provinces, stock] = await Promise.all([
+    payload.find({
+      collection: "dealers",
+      where: { verificationStatus: { equals: "verified" } },
+      sort: "tradingName",
+      limit: 100,
+      depth: 0,
+    }),
+    payload.find({
+      collection: "branches",
+      sort: "-isPrimary",
+      limit: 500,
+      depth: 1,
+    }),
+    payload.find({
+      collection: "provinces",
+      sort: "name",
+      limit: 20,
+      depth: 0,
+    }),
+    payload.find({
+      collection: "vehicles",
+      where: { status: { equals: "live" } },
+      pagination: false,
+      depth: 0,
+      select: { dealer: true, make: true, price: true, priceType: true },
+    }),
+  ]);
 
-  const branches = await payload.find({
-    collection: "branches",
-    limit: 500,
-    depth: 1,
-  });
-
-  const counts = await Promise.all(
-    dealers.docs.map(async (d) => ({
-      id: d.id,
-      count: (
-        await payload.count({
-          collection: "vehicles",
-          where: { and: [{ dealer: { equals: d.id } }, { status: { equals: "live" } }] },
-        })
-      ).totalDocs,
-    })),
-  );
-  const countFor = new Map(counts.map((c) => [c.id, c.count]));
+  const makeIds = [...new Set(stock.docs.map((v) => relId(v.make)).filter((id) => id !== null))];
+  const makes = makeIds.length
+    ? await payload.find({
+        collection: "makes",
+        where: { id: { in: makeIds } },
+        limit: makeIds.length,
+        depth: 0,
+      })
+    : { docs: [] };
+  const makeName = new Map(makes.docs.map((m) => [m.id, m.name]));
 
   const branchesFor = new Map<number, typeof branches.docs>();
   for (const branch of branches.docs) {
-    const dealerId = typeof branch.dealer === "number" ? branch.dealer : branch.dealer?.id;
+    const dealerId = relId(branch.dealer);
     if (!dealerId) continue;
     branchesFor.set(dealerId, [...(branchesFor.get(dealerId) ?? []), branch]);
   }
 
-  return (
-    <div className="container-page py-[var(--section-tight)]">
-      <Breadcrumbs trail={[{ href: "/dealers", label: "Dealerships" }]} />
+  type Tally = {
+    count: number;
+    min: number | null;
+    max: number | null;
+    makes: Map<string, number>;
+  };
+  const tallies = new Map<number, Tally>();
+  for (const vehicle of stock.docs) {
+    const dealerId = relId(vehicle.dealer);
+    if (!dealerId) continue;
+    const tally = tallies.get(dealerId) ?? { count: 0, min: null, max: null, makes: new Map() };
+    tally.count += 1;
+    if (vehicle.priceType !== "poa" && typeof vehicle.price === "number" && vehicle.price > 0) {
+      tally.min = tally.min === null ? vehicle.price : Math.min(tally.min, vehicle.price);
+      tally.max = tally.max === null ? vehicle.price : Math.max(tally.max, vehicle.price);
+    }
+    const name = makeName.get(relId(vehicle.make) ?? -1);
+    if (name) tally.makes.set(name, (tally.makes.get(name) ?? 0) + 1);
+    tallies.set(dealerId, tally);
+  }
 
-      <div className="mt-5 max-w-2xl">
-        <h1 className="text-3xl">Verified dealerships</h1>
-        <p className="mt-3 text-ink-secondary">
-          Every dealership here is a registered business with a trading address we have checked.
-          There are no private sellers on Rynet, so whoever you deal with has a name, a premises and
-          something to lose.{" "}
-          <Link
-            href="/how-verification-works"
-            className="font-semibold text-accent hover:underline"
+  const all: (DirectoryDealer & { provinces: string[] })[] = dealers.docs.map((dealer) => {
+    const own = branchesFor.get(dealer.id) ?? [];
+    const primary = own.find((b) => b.isPrimary) ?? own[0];
+    const tally = tallies.get(dealer.id);
+    return {
+      id: dealer.id,
+      slug: dealer.slug,
+      tradingName: dealer.tradingName,
+      isDemonstration: Boolean(dealer.isDemonstration),
+      foundedYear: dealer.foundedYear ?? null,
+      location: primary
+        ? [relName(primary.city), relName(primary.province)].filter(Boolean).join(", ") || null
+        : null,
+      branchCount: own.length,
+      stockCount: tally?.count ?? 0,
+      makes: tally
+        ? [...tally.makes.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name)
+        : [],
+      minPrice: tally?.min ?? null,
+      maxPrice: tally?.max ?? null,
+      provinces: [...new Set(own.map((b) => relSlug(b.province)).filter(Boolean))],
+    };
+  });
+
+  const provinceOptions = provinces.docs
+    .map((province) => ({
+      slug: province.slug,
+      name: province.name,
+      count: all.filter((d) => d.provinces.includes(province.slug)).length,
+    }))
+    .filter((option) => option.count > 0 || option.slug === provinceSlug);
+  const province = provinceOptions.find((p) => p.slug === provinceSlug) ?? null;
+
+  const needle = nameQuery?.toLowerCase() ?? null;
+  const shown = all.filter(
+    (dealer) =>
+      (!province || dealer.provinces.includes(province.slug)) &&
+      (!needle || dealer.tradingName.toLowerCase().includes(needle)),
+  );
+  const filtered = Boolean(province || needle);
+
+  const demoCount = all.filter((d) => d.isDemonstration).length;
+  const allDemo = all.length > 0 && demoCount === all.length;
+
+  const resultLine = [
+    `${shown.length} ${shown.length === 1 ? "dealership" : "dealerships"}`,
+    province ? `in ${province.name}` : null,
+    nameQuery ? `matching "${nameQuery}"` : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <>
+      <section className="border-b border-line bg-card">
+        <div className="container-page pt-6 pb-[calc(var(--section-tight)+2.5rem)] sm:pt-8">
+          {/* No visible trail on a top-level page; the structured data still carries it. */}
+          <Breadcrumbs trail={[{ href: "/dealers", label: "Dealerships" }]} />
+
+          <div className="max-w-3xl">
+            <p className="rn-eyebrow">Dealership directory</p>
+            <h1 className="rn-h1 mt-3">Find a dealership</h1>
+            <p className="rn-lead mt-4 text-pretty">
+              Every car on Rynet is listed by a dealership, and every dealership is checked before
+              it can list. There are no private sellers, so whoever you deal with has a name, a
+              premises and a reputation to keep.
+            </p>
+            <Link href="/how-verification-works" className="rn-link-arrow mt-4">
+              How we check dealerships
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <div className="container-page relative -mt-10">
+        <search className="rn-panel block p-4 sm:p-5">
+          <form
+            method="get"
+            action="/dealers"
+            className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end"
           >
-            What we check
-          </Link>
-        </p>
+            <Field id="dealer-q" label="Dealership name">
+              <Input
+                type="search"
+                name="q"
+                defaultValue={nameQuery ?? ""}
+                placeholder="Any dealership"
+                autoComplete="off"
+                enterKeyHint="search"
+              />
+            </Field>
+            <Field id="dealer-province" label="Province">
+              <Select name="province" defaultValue={province?.slug ?? ""}>
+                <option value="">All provinces ({all.length})</option>
+                {provinceOptions.map((option) => (
+                  <option key={option.slug} value={option.slug}>
+                    {option.name} ({option.count})
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <button
+              type="submit"
+              className={buttonClasses({ variant: "secondary", block: "mobile" })}
+            >
+              <Search aria-hidden="true" />
+              Show dealerships
+            </button>
+          </form>
+        </search>
       </div>
 
-      <ul className="rn-grid mt-8">
-        {dealers.docs.map((dealer) => {
-          const dealerBranches = branchesFor.get(dealer.id) ?? [];
-          const primary = dealerBranches.find((b) => b.isPrimary) ?? dealerBranches[0];
-          const count = countFor.get(dealer.id) ?? 0;
+      <section
+        aria-labelledby="directory-results"
+        className="container-page pt-8 pb-[var(--section-base)] sm:pt-10"
+      >
+        {demoCount > 0 ? (
+          <Notice title="Demonstration dealerships" className="mb-8">
+            {allDemo
+              ? "Every dealership in this directory is a demonstration, created to show how Rynet works. None of them is a real business, and none of their cars is for sale."
+              : "Dealerships marked Demo dealership are demonstrations, created to show how Rynet works. They are not real businesses, and their cars are not for sale."}
+          </Notice>
+        ) : null}
 
-          return (
-            <li key={dealer.id}>
-              <article className="rn-card h-full p-5">
-                <h2 className="text-lg leading-snug">
-                  <Link href={`/dealers/${dealer.slug}`} className="after:absolute after:inset-0">
-                    {dealer.tradingName}
-                  </Link>
-                </h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <h2 id="directory-results" className="text-xl font-semibold tracking-tight text-heading">
+            {resultLine}
+          </h2>
+          {filtered ? (
+            <Link href="/dealers" className="rn-link-arrow">
+              Show every dealership
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          ) : null}
+        </div>
 
-                {/* The word inside a ruled box, not a tick. A glyph next to a name is what
-                    every template ships and it persuades nobody; the claim is checkable
-                    because a dealership cannot publish stock until all three checks pass. */}
-                <p className="rn-label mt-3 inline-block border border-current px-1.5 py-1">
-                  Verified
-                </p>
+        {shown.length > 0 ? (
+          <ul className="rn-grid mt-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+            {shown.map((dealer) => (
+              <li key={dealer.id}>
+                <DealerDirectoryCard dealer={dealer} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState
+            icon={Store}
+            headingLevel={3}
+            className="mt-6"
+            title={filtered ? "No dealership matches that search" : "No dealerships are listed yet"}
+            action={
+              filtered ? (
+                <Link href="/dealers" className={buttonClasses({ variant: "primary" })}>
+                  Show every dealership
+                </Link>
+              ) : (
+                <Link href="/cars" className={buttonClasses({ variant: "primary" })}>
+                  Browse cars for sale
+                </Link>
+              )
+            }
+          >
+            {province && needle
+              ? `Nothing in ${province.name} has a name containing "${nameQuery}". Try the name on its own, or another province.`
+              : province
+                ? `There is no dealership on Rynet in ${province.name} yet. Try a neighbouring province for now.`
+                : needle
+                  ? `No dealership name contains "${nameQuery}". Check the spelling, or try one word from the name.`
+                  : "Dealerships appear here once they have been checked and approved."}
+          </EmptyState>
+        )}
+      </section>
 
-                {primary ? (
-                  <p className="rn-card__muted mt-4 text-sm">
-                    <span>
-                      {relName(primary.city)}
-                      {relName(primary.province) ? `, ${relName(primary.province)}` : ""}
-                      {dealerBranches.length > 1 ? (
-                        <span>
-                          {" "}
-                          and {dealerBranches.length - 1} other branch
-                          {dealerBranches.length > 2 ? "es" : ""}
-                        </span>
-                      ) : null}
-                    </span>
-                  </p>
-                ) : null}
+      <section
+        aria-labelledby="list-your-stock"
+        className="container-page pb-[var(--section-base)]"
+      >
+        <div className="on-navy relative isolate overflow-hidden rounded-lg px-6 py-10 sm:px-10 sm:py-12 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16 lg:px-14">
+          {/* A quarter of the gauge from the mark, drawn large and quiet behind the copy. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 200 200"
+            className="pointer-events-none absolute -right-16 -bottom-24 -z-10 size-[22rem] sm:-right-10 lg:size-[26rem]"
+            fill="none"
+          >
+            <path
+              d="M20 180A160 160 0 0 1 180 20"
+              stroke="var(--rn-line-on-navy)"
+              strokeWidth="14"
+              strokeLinecap="round"
+            />
+            <path
+              d="M128 28A160 160 0 0 1 180 20"
+              stroke="var(--rn-brand-red)"
+              strokeWidth="14"
+              strokeLinecap="round"
+            />
+          </svg>
 
-                <hr className="rn-card__rule mt-auto" />
-                <p className="mt-4 flex items-baseline justify-between gap-3">
-                  <span className="rn-label rn-card__muted">In stock</span>
-                  <span className="rn-figure">{count}</span>
-                </p>
+          <div className="max-w-2xl">
+            <p className="rn-eyebrow text-on-navy-muted">For dealerships</p>
+            <h2 id="list-your-stock" className="rn-h2 mt-3">
+              List your stock on Rynet
+            </h2>
+            <p className="mt-4 text-base text-on-navy-muted sm:text-lg">
+              A buyer on Rynet is only ever looking at dealership stock, because private sellers
+              cannot list here. Tell us your trading name, your CIPC registration number and roughly
+              how many units you carry, and we will take it from there.
+            </p>
+          </div>
 
-                {dealer.isDemonstration ? (
-                  <p className="rn-label rn-label--light rn-card__muted mt-2">
-                    Demonstration listing, not a real business.
-                  </p>
-                ) : null}
-              </article>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
+            <Link
+              href="/contact"
+              className={buttonClasses({ variant: "primary", size: "lg", block: "mobile" })}
+            >
+              List your stock
+              <ArrowRight aria-hidden="true" />
+            </Link>
+            <Link
+              href="/how-verification-works"
+              className={buttonClasses({ variant: "outline", size: "lg", block: "mobile" })}
+            >
+              What we check first
+            </Link>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

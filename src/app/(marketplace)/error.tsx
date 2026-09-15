@@ -1,7 +1,12 @@
 "use client";
 
+import { RotateCcw } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
+
+import { RynetMark } from "@/components/brand/rynet-mark";
+import { Button } from "@/components/ui/button";
+import { buttonClasses } from "@/components/ui/button-classes";
 
 /**
  * The error boundary.
@@ -12,6 +17,9 @@ import * as React from "react";
  *
  * The reset button is a real retry: most errors here are a transient database read on a
  * shared host, and trying again genuinely works.
+ *
+ * Drawn as the same centred panel as the 404, so the two pages a lost visitor can land on look
+ * like one family.
  */
 export default function MarketplaceError({
   error,
@@ -25,46 +33,35 @@ export default function MarketplaceError({
   }, [error]);
 
   return (
-    <div className="container-page py-[var(--section-loose)]">
-      <div className="measure">
-        <p className="rn-label text-ink-muted">Rynet</p>
-        <h1 className="rn-head mt-6 max-w-[14ch]">Something went wrong</h1>
-        <p className="rn-prose mt-5 text-ink-secondary">
-          That page did not load. It is usually temporary, so trying again is worth a go before
-          anything else.
+    <div className="container-narrow py-[var(--section-base)]">
+      <div className="rn-panel px-5 py-10 text-center sm:px-12 sm:py-14">
+        <RynetMark className="mx-auto h-12 w-auto" />
+        <p className="rn-eyebrow mt-6">Something went wrong</p>
+        <h1 className="rn-h1 mt-2">That page did not load</h1>
+        <p className="rn-lead mx-auto mt-4 max-w-xl text-muted">
+          It is usually temporary, so trying again is worth a go before anything else.
         </p>
 
-        <hr className="rn-rule mt-10" />
-
-        {/* One red object. The secondary action takes the ink flip, which is also the only
-            hover this design has: `hover:bg-surface-sunken` on a page already standing on the
-            sunken ground was no hover at all in dark. */}
-        <div className="mt-8 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={reset}
-            className="rn-label inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
-          >
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button type="button" size="lg" onClick={reset}>
+            <RotateCcw aria-hidden="true" />
             Try again
-          </button>
-          <Link
-            href="/cars"
-            className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-6 hover:bg-ink hover:text-ink-inverse"
-          >
-            Back to the stock
+          </Button>
+          <Link href="/cars" className={buttonClasses({ variant: "outline", size: "lg" })}>
+            Browse cars for sale
           </Link>
         </div>
 
         {error.digest ? (
-          <p className="mt-10 border-t border-line pt-5 text-xs text-ink-muted">
-            If it keeps happening, quote this when you{" "}
-            <Link
-              href="/contact"
-              className="text-ink underline decoration-line-interactive underline-offset-4 hover:decoration-ink"
-            >
+          <p className="mx-auto mt-10 max-w-md border-t border-line pt-5 text-sm text-muted">
+            If it keeps happening, quote this reference when you{" "}
+            <Link href="/contact" className="font-semibold text-heading">
               get in touch
             </Link>
-            : <code className="tabular">{error.digest}</code>
+            :{" "}
+            <code className="rounded-xs bg-subtle px-1.5 py-0.5 text-heading tabular">
+              {error.digest}
+            </code>
           </p>
         ) : null}
       </div>

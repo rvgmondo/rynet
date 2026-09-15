@@ -29,8 +29,15 @@ export function MobileMenu({
   const ref = useRef<HTMLDetailsElement>(null);
   const pathname = usePathname();
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the path is the trigger, not a value read inside.
+  /*
+   * Closes on a CHANGE of path, not on the first run. The first run is hydration, and a person on
+   * a slow phone who opened the menu before the scripts arrived would otherwise watch it snap shut
+   * under their thumb.
+   */
+  const lastPath = useRef(pathname);
   useEffect(() => {
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
     if (ref.current?.open) ref.current.open = false;
   }, [pathname]);
 

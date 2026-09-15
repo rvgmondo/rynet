@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, RotateCcw } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Check, RotateCcw } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -34,42 +34,33 @@ import { Button } from "@/components/ui/button";
  */
 
 /*
- * The three shared form primitives, drawn as ruled lines rather than as boxes.
+ * The shared form primitives, in the SHOWROOM style.
  *
- * Every form on both front doors reads from these, so this is where the design system
- * either reaches the forms or does not. It did not: the sell page and the agency
- * qualification form were still rendering boxed inputs with pill radii while the rest of
- * the site had been redrawn, which is exactly the "one component that has not been redrawn
- * looks pasted in" failure the direction warns about.
+ * Other forms import these constants (the enquiry dialog on a listing, the agency qualification
+ * form, the two-factor page), so they are the single place a boxed field, a sentence-case label
+ * and a choice card are defined for hand-written markup. They resolve to the same component
+ * classes as `@/components/ui` (`.rn-input`, `.rn-select`, `.rn-field__label`), so a field built
+ * here and a field built with `<Input>` cannot drift apart.
  *
- * An input is a LINE. It carries a 2px bottom rule in --rn-line-interactive, which is the
- * token that clears the 3:1 that SC 1.4.11 requires of a boundary that IS the control, and
- * it is set at body size rather than small text because a person is typing into it.
- *
- * A choice is a ROW, and its selected state is the ink flip the rest of the product uses,
- * not a tinted background. The `has-[:checked]` selector keeps that working without any
- * JavaScript, which matters because these forms work before hydration.
+ * A choice is a CARD: a white 44px-plus row with a 3:1 border, and a checked state that draws a
+ * 2px navy edge and a tinted ground. `has-[:checked]` keeps that working without JavaScript.
  */
-export const LABEL_CLASS =
-  "block font-display text-label font-bold uppercase tracking-[var(--tracking-widest)] text-ink-muted [font-variation-settings:'wdth'_100]";
-export const INPUT_CLASS =
-  "mt-2 min-h-11 w-full border-0 border-b-2 border-line-interactive bg-transparent px-0 text-base font-medium text-ink placeholder:text-ink-muted";
-/*
- * A choice is a ROW, and until now this class did not draw one.
- *
- * The comment above has said "a choice is a ROW, and its selected state is the ink flip" since
- * the primitives were written, and the class underneath it drew a box on all four sides. So step
- * two of the sell form was eleven thin-bordered rectangles in a two-column grid, and because two
- * of the four groups have three options, two of those rectangles sat alone on a row with a full
- * empty cell beside them. Eleven grey-bordered boxes with two holes in the grid is the exact
- * object the redesign exists to remove, on the one screen that is nothing but choices.
- *
- * Now it is a row: no border, a hairline between rows only, full width, and the ink flip it
- * always claimed. The rule is on the TOP of each row so the group closes on the rule below the
- * last one, which is how every other list on the site is ruled.
- */
+export const LABEL_CLASS = "block text-sm font-semibold leading-snug text-heading";
+export const INPUT_CLASS = "rn-input mt-2";
+export const SELECT_CLASS = "rn-select mt-2";
+export const TEXTAREA_CLASS = "rn-textarea mt-2";
 export const CHOICE_CLASS =
-  "flex min-h-12 w-full cursor-pointer items-center gap-4 border-t border-line px-2 text-sm transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse has-[:checked]:bg-ink has-[:checked]:font-semibold has-[:checked]:text-ink-inverse";
+  "flex min-h-12 w-full cursor-pointer items-center gap-3 rounded-sm border border-line-control bg-card px-4 py-2.5 text-sm text-heading shadow-xs transition-[border-color,background-color,box-shadow] duration-[var(--duration-micro)] hover:border-heading has-[:checked]:border-heading has-[:checked]:bg-subtle has-[:checked]:font-semibold has-[:checked]:shadow-[inset_0_0_0_1px_var(--rn-heading)]";
+
+/** The error line under a control: an icon and the words, in the danger colour. */
+export function FieldError({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <p id={id} className="rn-field__error mt-2">
+      <AlertCircle aria-hidden="true" />
+      <span>{children}</span>
+    </p>
+  );
+}
 
 /** A labelled field. Module scope, deliberately. See hazard one above. */
 export function Field({
@@ -77,44 +68,44 @@ export function Field({
   label,
   hint,
   error,
+  optional = false,
   children,
 }: {
   name: string;
   label: string;
   hint?: string;
   error?: string;
+  /** Adds a muted "(optional)" after the label. */
+  optional?: boolean;
   children: React.ReactNode;
 }) {
   return (
     /*
-     * A column that pushes its control to the bottom, so two fields side by side rule together.
-     *
-     * The hint sat between the label and the input, so a field with a hint pushed its own rule
-     * down and a field without one did not. Year and Mileage share a row on the sell form, and
-     * their 2px rules sat 21px apart: two underlines at two different heights, in a design whose
-     * entire idea is that a rule is where a control is. Every pair on both forms did it.
-     *
-     * `h-full` plus `mt-auto` on the control fixes it without moving the hint, which belongs
-     * above the field a person is about to type in rather than below it.
+     * Label, control, then the hint and the error under the control, the same order as the
+     * `Field` in components/ui. With the hint below, two fields side by side keep their boxes
+     * level whether or not one of them has a hint, which the old ruled layout had to fight for.
      */
-    <div className="flex h-full flex-col">
+    <div className="min-w-0">
       <label htmlFor={name} className={LABEL_CLASS}>
         {label}
+        {optional ? <span className="font-normal text-muted"> (optional)</span> : null}
       </label>
+      {children}
       {hint ? (
-        <p id={`${name}-hint`} className="mt-0.5 text-xs text-ink-muted">
+        <p id={`${name}-hint`} className="rn-field__hint mt-1.5">
           {hint}
         </p>
       ) : null}
-      <div className="mt-auto">{children}</div>
-      {error ? (
-        <p id={`${name}-error`} className="mt-1 text-xs font-medium text-danger">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FieldError id={`${name}-error`}>{error}</FieldError> : null}
     </div>
   );
 }
+
+const CHOICE_COLUMNS = {
+  1: "",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+} as const;
 
 /** A group of radios or checkboxes with its own legend, error and 44px targets. */
 export function ChoiceGroup({
@@ -132,22 +123,13 @@ export function ChoiceGroup({
   type: "radio" | "checkbox";
   options: readonly { value: string; label: string }[];
   error?: string;
-  columns?: 1 | 2;
+  columns?: 1 | 2 | 3;
 }) {
   return (
-    <fieldset>
+    <fieldset className="min-w-0">
       <legend className={LABEL_CLASS}>{legend}</legend>
-      {hint ? <p className="mt-0.5 text-xs text-ink-muted">{hint}</p> : null}
-      {/*
-        One column, with the rows ruled, and a closing rule under the last.
-        ------------------------------------------------------------------
-        Two columns left a hole whenever a group had an odd number of options, which two of the
-        four on the sell form do. A ruled single column has no such arithmetic, reads top to
-        bottom the way a list of options is read, and gives every row the full width to flip to
-        ink, which is the feedback. The `columns` prop stays for callers that want a wide pair of
-        short options, and it now splits the SAME ruled rows rather than switching to boxes.
-      */}
-      <div className={`mt-3 grid border-b border-line ${columns === 2 ? "sm:grid-cols-2" : ""}`}>
+      {hint ? <p className="rn-field__hint mt-1">{hint}</p> : null}
+      <div className={`mt-3 grid gap-2 ${CHOICE_COLUMNS[columns]}`}>
         {options.map((option) => (
           <label key={option.value} className={CHOICE_CLASS}>
             <input
@@ -162,22 +144,13 @@ export function ChoiceGroup({
                */
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? `${name}-error` : undefined}
-              /*
-               * `accent-color` on the ink rather than on red. A ticked option already flips its
-               * whole row to ink, so a red dot inside a black row is a second mark saying the
-               * same thing, in the one colour this palette rations.
-               */
-              className="size-4 shrink-0 accent-[var(--rn-ink)]"
+              className={type === "radio" ? "rn-radio" : "rn-check"}
             />
-            {option.label}
+            <span className="min-w-0 flex-1">{option.label}</span>
           </label>
         ))}
       </div>
-      {error ? (
-        <p id={`${name}-error`} className="mt-1 text-xs font-medium text-danger">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FieldError id={`${name}-error`}>{error}</FieldError> : null}
     </fieldset>
   );
 }
@@ -214,6 +187,7 @@ export function focusFirstInvalid(
     const { name } = control as HTMLInputElement;
     if (!name || !names.has(name)) continue;
     if (control.closest("[hidden]")) continue;
+    if ((control as HTMLInputElement).type === "hidden") continue;
 
     control.focus();
     return true;
@@ -222,46 +196,58 @@ export function focusFirstInvalid(
   return false;
 }
 
+/** Written out in full so Tailwind can see every class it has to generate. */
+const PROGRESS_COLUMNS: Record<number, string> = {
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+};
+
+type StepDefinition = {
+  title: string;
+  hint: string;
+  /** A short name for the progress indicator. Falls back to the title. */
+  label?: string;
+};
+
 /**
- * Progress. A live region rather than a decorative bar, so the change is announced. The bar
- * itself is aria-hidden because the sentence already says it.
+ * Progress. The sentence is a live region, so the change is announced. The segmented bar and
+ * its labels are aria-hidden because the sentence and the step heading already say it.
+ *
+ * The sentence is only "Step 2 of 3". It used to carry the step title and hint as well, which
+ * put the title on screen twice (here and in the heading under it) and orphaned a word on a
+ * phone.
  */
-export function StepProgress({
-  step,
-  steps,
-}: {
-  step: number;
-  steps: readonly { title: string; hint: string }[];
-}) {
+export function StepProgress({ step, steps }: { step: number; steps: readonly StepDefinition[] }) {
   const current = steps[step] ?? steps[0];
   if (!current) return null;
 
   return (
     <div className="mb-6">
-      <p role="status" aria-live="polite" className="text-sm font-semibold">
-        Step {step + 1} of {steps.length}: {current.title}
-        <span className="ml-2 font-normal text-ink-muted">{current.hint}</span>
-      </p>
-      {/*
-        A rule in three parts, not three capsules.
-        -----------------------------------------
-        The unreached segments were `bg-surface-sunken`, which in dark theme is the ground the
-        form is already standing on, so two of the three were invisible: on step one the
-        indicator was a single red capsule floating on its own with nothing to be one third of.
-        It also put a second red object in a viewport that already has the Continue button,
-        which is the one rule this palette has, and it drew four rounded capsules on a system
-        whose radius tokens are all zero.
-
-        Ink for done, the strong hairline for not yet, 2px, square. The same rule the rest of
-        the site uses to separate things, cut into as many parts as there are steps.
-      */}
-      <ol aria-hidden="true" className="mt-4 flex gap-1">
-        {steps.map((item, index) => (
-          <li
-            key={item.title}
-            className={`h-[2px] flex-1 ${index <= step ? "bg-ink" : "bg-line-strong"}`}
-          />
-        ))}
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p role="status" aria-live="polite" className="text-sm font-semibold text-heading">
+          Step {step + 1} of {steps.length}
+        </p>
+        <p className="text-sm text-muted">{current.hint}</p>
+      </div>
+      <ol aria-hidden="true" className={`mt-3 grid gap-2 ${PROGRESS_COLUMNS[steps.length] ?? ""}`}>
+        {steps.map((item, index) => {
+          const done = index < step;
+          const active = index === step;
+          return (
+            <li key={item.title} className="min-w-0">
+              <span
+                className={`block h-1.5 rounded-full transition-colors duration-[var(--duration-element)] ${done || active ? "bg-heading" : "bg-line-strong"}`}
+              />
+              <span
+                className={`mt-2 flex min-w-0 items-start gap-1 text-xs leading-tight ${active ? "font-semibold text-heading" : done ? "text-body" : "text-muted"}`}
+              >
+                {done ? <Check className="size-3.5 shrink-0" /> : null}
+                <span className="min-w-0 break-words">{item.label ?? item.title}</span>
+              </span>
+            </li>
+          );
+        })}
       </ol>
     </div>
   );
@@ -290,27 +276,44 @@ export function StepNav({
   const last = step >= stepCount - 1;
 
   return (
+    /*
+     * On a phone the forward action fills the row beside Back, so the thumb target is the full
+     * width that is left; from 640px both sit at their natural width. Back comes first in the
+     * DOM and on screen, so the tab order and the visual order agree at every width.
+     */
     <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-line pt-6">
       {step > 0 ? (
-        <Button key="nav-back" type="button" variant="outline" onClick={onBack}>
+        <Button key="nav-back" type="button" variant="outline" size="lg" onClick={onBack}>
           <ArrowLeft aria-hidden="true" />
           Back
         </Button>
       ) : null}
 
       {last ? (
-        <Button key="nav-submit" type="submit" disabled={pending}>
+        <Button
+          key="nav-submit"
+          type="submit"
+          size="lg"
+          disabled={pending}
+          className="min-w-0 flex-1 sm:flex-none"
+        >
           {pending ? pendingLabel : submitLabel}
           {pending ? null : <ArrowRight aria-hidden="true" />}
         </Button>
       ) : (
-        <Button key="nav-continue" type="button" onClick={onNext}>
+        <Button
+          key="nav-continue"
+          type="button"
+          size="lg"
+          onClick={onNext}
+          className="min-w-0 flex-1 sm:flex-none"
+        >
           Continue
           <ArrowRight aria-hidden="true" />
         </Button>
       )}
 
-      {note ? <p className="text-xs text-ink-muted">{note}</p> : null}
+      {note ? <p className="basis-full text-sm text-muted sm:basis-auto">{note}</p> : null}
     </div>
   );
 }
@@ -338,10 +341,15 @@ type Draft = Record<string, string | string[]>;
 
 type ActionState = { status: string; fieldErrors?: Record<string, string> };
 
+type Validator = (index: number, data: FormData) => Record<string, string>;
+
+/** Fired on the form element after a saved draft has been written back into its controls. */
+export const DRAFT_RESTORED_EVENT = "rn:draft-restored";
+
 export type MultiStepOptions = {
   /** localStorage key. Version it, so a changed field set does not restore into nothing. */
   storageKey: string;
-  steps: readonly { title: string; hint: string }[];
+  steps: readonly StepDefinition[];
   /** Which step each field belongs to, so a server error returns to the right screen. */
   fieldStep: Record<string, number>;
   /** The server action state, watched for field errors. */
@@ -417,7 +425,13 @@ export function useMultiStepForm({
         any = any || value.length > 0;
       }
 
-      if (any) setRestored(true);
+      if (any) {
+        setRestored(true);
+        // Writing `.value` fires no change event, so a control that derives what it offers
+        // from another control's value (model suggestions that depend on the make) has no
+        // other way to learn that the values under it just changed.
+        form.dispatchEvent(new CustomEvent(DRAFT_RESTORED_EVENT));
+      }
     } catch {
       // A private window, cleared site data, or storage disabled entirely. The form works
       // without it, so there is nothing to report and nothing to recover.
@@ -507,7 +521,7 @@ export function useMultiStepForm({
   });
 
   const next = React.useCallback(
-    (validate: (index: number, data: FormData) => Record<string, string>) => {
+    (validate: Validator) => {
       const form = formRef.current;
       if (!form) return;
 
@@ -537,17 +551,51 @@ export function useMultiStepForm({
     [clientErrors, state],
   );
 
+  /** Stamps the elapsed time. Fires before the action, which is what makes the stamp real. */
+  const stampElapsed = React.useCallback(() => {
+    // Computing this during render made every genuine enquiry on the marketplace look like a
+    // bot, and the form reported success while writing nothing.
+    if (elapsedField.current) {
+      elapsedField.current.value = String(Date.now() - renderedAt.current);
+    }
+  }, []);
+
+  /**
+   * Checks every step once more on submit, and stops the submit if anything fails.
+   *
+   * The last step used to go straight to the server. A value the browser accepts and the schema
+   * does not (a phone number with letters in it) came back as a field error AFTER React had reset
+   * the form, which wiped the first two steps as well. Calling `preventDefault` in this handler
+   * stops React dispatching the action at all, so nothing is sent and nothing is reset.
+   */
+  const guardSubmit = React.useCallback(
+    (validate: Validator, event: React.FormEvent<HTMLFormElement>): boolean => {
+      stampElapsed();
+      const data = new FormData(event.currentTarget);
+
+      const errors: Record<string, string> = {};
+      let firstFailing = -1;
+      for (let index = 0; index < steps.length; index += 1) {
+        const found = validate(index, data);
+        if (Object.keys(found).length > 0 && firstFailing === -1) firstFailing = index;
+        Object.assign(errors, found);
+      }
+
+      if (firstFailing === -1) return true;
+
+      event.preventDefault();
+      setClientErrors(errors);
+      invalid.current = errors;
+      if (firstFailing !== step) goTo(firstFailing);
+      return false;
+    },
+    [goTo, stampElapsed, step, steps.length],
+  );
+
   const formProps = {
     ref: formRef,
     onChange: saveDraft,
-    onSubmit: () => {
-      // Fires before the action, so the value the server reads is the real elapsed time
-      // rather than zero. Computing this during render made every genuine enquiry on the
-      // marketplace look like a bot, and the form reported success while writing nothing.
-      if (elapsedField.current) {
-        elapsedField.current.value = String(Date.now() - renderedAt.current);
-      }
-    },
+    onSubmit: stampElapsed,
   };
 
   return {
@@ -563,22 +611,19 @@ export function useMultiStepForm({
     headingRef,
     elapsedField,
     formProps,
+    guardSubmit,
   };
 }
 
 /** The "we brought your answers back" banner, shown when a draft was restored. */
 export function RestoredNotice({ onStartAgain }: { onStartAgain: () => void }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-y border-line py-4">
-      <p className="text-sm text-ink-secondary">We brought back what you had already filled in.</p>
-      <button
-        type="button"
-        onClick={onStartAgain}
-        className="rn-label inline-flex min-h-11 items-center gap-2 px-3 hover:bg-ink hover:text-ink-inverse"
-      >
-        <RotateCcw aria-hidden="true" className="size-4" />
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-md bg-subtle py-1.5 ps-4 pe-1.5">
+      <p className="py-1.5 text-sm text-body">We brought back what you had already filled in.</p>
+      <Button type="button" variant="ghost" size="sm" onClick={onStartAgain}>
+        <RotateCcw aria-hidden="true" />
         Start again
-      </button>
+      </Button>
     </div>
   );
 }

@@ -2,7 +2,8 @@ import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { AgencyClose } from "@/components/agency/agency-close";
+import { AgencyPageHead } from "@/components/agency/agency-page-head";
 import { SERVICES } from "@/content/agency/services";
 
 export const metadata: Metadata = {
@@ -12,98 +13,85 @@ export const metadata: Metadata = {
   alternates: { canonical: "/digital/services" },
 };
 
+/**
+ * The services index.
+ *
+ * Seven rich cards, one per service, each a single link to its page. The home page introduces
+ * the services by name and summary; this page leads with the outcome each one is for and what a
+ * dealer walks away with, so the two lists say different things. What is included and where the
+ * line is live on each service's own page.
+ *
+ * e2e/agency.spec.ts counts exactly seven distinct service links in `main` here, so nothing
+ * else on this page links to a service page.
+ */
 export default function ServicesIndexPage() {
   return (
     <>
-      <section className="rn-columns border-b border-line bg-surface-sunken">
-        <div className="container-page py-[var(--section-tight)]">
-          <Breadcrumbs trail={[{ href: "/digital/services", label: "Services" }]} />
+      <AgencyPageHead
+        trail={[{ href: "/digital/services", label: "Services" }]}
+        eyebrow="Services"
+        title="Seven services, all for car dealerships"
+        lead="Each one exists because of something that costs a dealership sales: a slow site, stock that is wrong, ad spend nobody can trace, leads left waiting. Start with the one that costs you most."
+      />
 
-          <h1 className="rn-head mt-8 max-w-[12ch]">What we do</h1>
-          <p className="measure mt-6 text-lg text-ink-secondary">
-            Seven services, all of them for car dealerships. Most dealerships need three or four.
-            Each page below says what is actually delivered and where the line is, because a
-            services page that only lists reassurances is a brochure.
-          </p>
-        </div>
-      </section>
+      <section aria-label="All services" className="py-[var(--section-base)]">
+        <ul className="container-page grid gap-5 md:grid-cols-2">
+          {SERVICES.map((service) => (
+            <li key={service.slug} className="flex">
+              <article className="rn-card rn-card--interactive p-6 sm:p-8">
+                <div className="flex items-center gap-4">
+                  <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary">
+                    <service.Icon aria-hidden="true" className="size-6" />
+                  </span>
+                  <p className="text-sm font-semibold text-muted">{service.name}</p>
+                </div>
 
-      {/*
-        The index again, one level deeper.
-        ----------------------------------
-        The home page lists these seven as names. This page lists them as arguments, with the
-        limit of each one carried at the same weight as the promise. Same device either way,
-        because a visitor arriving from the home page should recognise where they are rather
-        than meet a different site's layout one click in.
+                <h2 className="rn-h3 mt-5">
+                  <Link
+                    href={`/digital/services/${service.slug}`}
+                    className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-solid focus-visible:after:outline-[color:var(--rn-focus-ring)]"
+                  >
+                    {service.title}
+                  </Link>
+                </h2>
+                <p className="mt-3 text-body">{service.summary}</p>
 
-        "Where the line is" gets its own column rather than a footnote under a card. It is the
-        sentence that separates this from a brochure and it was set in the smallest, palest
-        type on the page.
-      */}
-      <section className="container-page py-[var(--section-base)]">
-        <ol className="border-t border-line">
-          {SERVICES.map(({ slug, name, title, summary, notThis }, index) => (
-            <li key={slug} className="border-b border-line">
-              <Link
-                href={`/digital/services/${slug}`}
-                className="group grid gap-4 py-8 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse lg:grid-cols-[4rem_1fr_1fr_2rem] lg:gap-10 lg:px-4"
-              >
+                <div className="mt-6 rounded-md bg-subtle p-4">
+                  <p className="text-sm font-semibold text-heading">What you walk away with</p>
+                  <p className="mt-1 text-sm text-body">{service.outcome}</p>
+                </div>
+
                 <span
                   aria-hidden="true"
-                  className="font-display text-2xl font-extrabold tabular text-ink-muted group-hover:text-ink-inverse [font-variation-settings:'wdth'_112]"
+                  className="rn-link-arrow mt-auto self-start pt-6 text-heading"
                 >
-                  {String(index + 1).padStart(2, "0")}
+                  What is included
+                  <ArrowRight />
                 </span>
-
-                <span>
-                  <span className="rn-label block text-ink-muted group-hover:text-ink-inverse">
-                    {name}
-                  </span>
-                  <h2 className="mt-3 font-display text-xl font-bold leading-snug">{title}</h2>
-                  <span className="rn-prose mt-3 block text-ink-secondary group-hover:text-ink-inverse">
-                    {summary}
-                  </span>
-                </span>
-
-                <span className="border-t border-line pt-4 group-hover:border-ink-inverse/30 lg:border-l lg:border-t-0 lg:ps-10 lg:pt-0">
-                  <span className="rn-label block text-ink-muted group-hover:text-ink-inverse">
-                    Where the line is
-                  </span>
-                  <span className="rn-prose mt-3 block text-ink-secondary group-hover:text-ink-inverse">
-                    {notThis[0]}
-                  </span>
-                </span>
-
-                <ArrowRight
-                  aria-hidden="true"
-                  className="hidden size-4 shrink-0 self-center lg:block"
-                />
-              </Link>
+              </article>
             </li>
           ))}
-        </ol>
+
+          <li className="flex">
+            <div className="flex w-full flex-col justify-center rounded-md border border-dashed border-line-strong p-6 sm:p-8">
+              <h2 className="rn-h3">Not sure where to start?</h2>
+              <p className="mt-3 text-body">
+                The free review puts these seven in order for your dealership: what to fix first,
+                what can wait, and what you do not need at all.
+              </p>
+              <Link href="/digital/process" className="rn-link-arrow mt-5 self-start">
+                How an engagement runs
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
+          </li>
+        </ul>
       </section>
 
-      <section aria-labelledby="services-cta" className="container-page pb-[var(--section-base)]">
-        <hr className="rn-rule rn-rule--brand" />
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-start">
-          <h2 id="services-cta" className="rn-head max-w-[14ch]">
-            Not sure which of these you need?
-          </h2>
-          <div>
-            <p className="rn-prose text-ink-secondary">
-              Send us your site. We will tell you what we would fix first and in what order, and if
-              the honest answer is that you do not need us yet, we will say that instead.
-            </p>
-            <Link
-              href="/digital/contact"
-              className="rn-label mt-8 inline-flex min-h-12 items-center bg-accent-solid px-6 text-ink-on-accent hover:bg-accent-solid-hover"
-            >
-              Get in touch
-            </Link>
-          </div>
-        </div>
-      </section>
+      <AgencyClose id="services-close" title="Find out which of these you need">
+        Send us your site. We will tell you what we would fix first and in what order, and if the
+        honest answer is that you do not need us yet, we will say that instead.
+      </AgencyClose>
     </>
   );
 }
