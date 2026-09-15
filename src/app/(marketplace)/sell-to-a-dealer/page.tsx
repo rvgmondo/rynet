@@ -315,10 +315,7 @@ export default async function SellToADealerPage() {
               key={title}
               className="flex gap-4 border-b border-line py-5 md:block md:rounded-md md:border md:bg-card md:p-6 md:shadow-card"
             >
-              <span
-                aria-hidden="true"
-                className="grid size-10 shrink-0 place-items-center rounded-md bg-subtle text-heading md:size-11"
-              >
+              <span aria-hidden="true" className="rn-icon-tile">
                 <Icon className="size-5" />
               </span>
               <div className="min-w-0">

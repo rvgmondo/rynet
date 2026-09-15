@@ -67,7 +67,7 @@ export default function ServicesIndexPage() {
             <li key={service.slug} className="flex">
               <article className="rn-card rn-card--interactive p-6 max-sm:rounded-none max-sm:border-x-0 max-sm:border-t-0 max-sm:bg-transparent max-sm:px-0 max-sm:pt-0 max-sm:shadow-none sm:p-8">
                 <div className="flex items-center gap-4">
-                  <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary">
+                  <span className="rn-icon-tile rn-icon-tile--lg">
                     <service.Icon aria-hidden="true" className="size-6" />
                   </span>
                   <p className="text-sm font-semibold text-muted">{service.name}</p>

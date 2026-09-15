@@ -215,7 +215,7 @@ export default function PricingPage() {
             {DRIVERS.map((column) => (
               <div key={column.heading} className="rn-card p-6 sm:p-8">
                 <div className="flex items-center gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-md bg-subtle text-heading">
+                  <span className="rn-icon-tile">
                     <column.icon aria-hidden="true" className="size-5" />
                   </span>
                   <h3 className="rn-h3">{column.heading}</h3>

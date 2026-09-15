@@ -457,6 +457,96 @@
     transform: translateX(2px);
   }
 
+  /*
+   * THE TWO LINK STYLES. There are exactly two, and <TextLink> draws both:
+   *
+   *   .rn-link-arrow  red words and an arrow, for a section's next step ("See all their stock")
+   *   .rn-link        heading ink with a quiet underline that turns red on hover, for a link
+   *                   inside a sentence, a notice, a caption, a card or a form: "How we check",
+   *                   "See the full estimate", "Photo credit", an email address
+   *
+   * There used to be four (black underlined, body underlined, red underlined, red with an arrow),
+   * which read as several people building one site. The underline is always there, so a link is
+   * never told apart by colour alone (SC 1.4.1).
+   */
+  .rn-link {
+    font-weight: 600;
+    color: var(--rn-heading);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rn-line-control);
+    text-underline-offset: 3px;
+    transition:
+      color var(--duration-micro) var(--rn-ease-out),
+      text-decoration-color var(--duration-micro) var(--rn-ease-out);
+  }
+
+  .rn-link:hover {
+    color: var(--rn-accent);
+    text-decoration-color: currentColor;
+  }
+
+  .on-navy .rn-link {
+    color: var(--rn-on-navy);
+    text-decoration-color: var(--rn-on-navy-muted);
+  }
+
+  .on-navy .rn-link:hover {
+    color: var(--rn-on-navy);
+    text-decoration-color: currentColor;
+  }
+
+  /* Links inside copy nobody on the team marks up (a legal document, a dealer's description). */
+  .rn-links :where(a:not([class])) {
+    font-weight: 600;
+    color: var(--rn-heading);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rn-line-control);
+    text-underline-offset: 3px;
+  }
+
+  .rn-links :where(a:not([class])):hover {
+    color: var(--rn-accent);
+    text-decoration-color: currentColor;
+  }
+
+  /*
+   * The icon tile: one style on every page, marketplace and agency. A 44px rounded square on the
+   * tinted ground with the icon in heading ink (48px with `--lg`, for a feature card), and the
+   * raised navy on a navy band. It used to be pale grey on one page and solid navy on the next.
+   */
+  .rn-icon-tile {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--rn-radius-md);
+    background-color: var(--rn-subtle);
+    color: var(--rn-heading);
+  }
+
+  .rn-icon-tile svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .rn-icon-tile--lg {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .rn-icon-tile--lg svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .on-navy .rn-icon-tile {
+    background-color: var(--rn-navy-raised);
+    color: var(--rn-on-navy);
+  }
+
   /* ---------------------------------------------------------------------- button */
 
   .rn-btn {
@@ -581,17 +671,20 @@
     background-color: var(--rn-subtle);
   }
 
+  /* Drawn like .rn-link, so a button that reads as a link is the same link as everywhere else. */
   .rn-btn--link {
     min-height: 1.5rem;
     padding-inline: 0;
-    color: var(--rn-accent);
-    text-decoration: underline;
+    color: var(--rn-heading);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rn-line-control);
     text-underline-offset: 3px;
   }
 
   .rn-btn--link:hover {
-    color: var(--rn-accent-hover);
-    text-decoration-thickness: 2px;
+    color: var(--rn-accent);
+    text-decoration-color: currentColor;
   }
 
   /* Outline and ghost on a navy band. */
@@ -1111,6 +1204,78 @@
   .rn-section-header__lead {
     font-size: var(--rn-text-base);
     color: var(--rn-muted);
+  }
+
+  /* ------------------------------------------------------------------ page header */
+
+  /* See <PageHeader>: split (title left, lead right) or aside (title and lead left, content right). */
+  .rn-pagehead {
+    background-color: var(--rn-card);
+    border-bottom: 1px solid var(--rn-line);
+  }
+
+  .rn-pagehead__inner {
+    padding-block: clamp(2rem, 1.25rem + 3vw, 4rem);
+  }
+
+  .rn-pagehead__title {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .rn-pagehead__body {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+    max-width: 42rem;
+    margin-top: 1rem;
+  }
+
+  .rn-pagehead__title .rn-pagehead__body {
+    margin-top: 0.25rem;
+  }
+
+  .rn-pagehead__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    font-size: var(--rn-text-sm);
+    color: var(--rn-muted);
+  }
+
+  .rn-pagehead__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+
+  @media (min-width: 64rem) {
+    .rn-pagehead__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      align-items: start;
+      column-gap: clamp(3rem, 7vw, 7rem);
+    }
+
+    /* The lead's first line starts level with the top of the title, below the eyebrow. */
+    .rn-pagehead__grid > .rn-pagehead__body {
+      margin-top: 0;
+      padding-top: 0.625rem;
+    }
+
+    .rn-pagehead__grid:has(> .rn-pagehead__title > .rn-eyebrow) > .rn-pagehead__body {
+      padding-top: 2.25rem;
+    }
+
+    .rn-pagehead__grid--aside {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: start;
+      column-gap: 4rem;
+    }
   }
 
   /* ------------------------------------------------------------------ empty state */
@@ -1685,9 +1850,20 @@
     color: var(--rn-muted);
   }
 
+  /* The current page: tinted row and a short red bar that sits inside the row's rounded corner. */
   .rn-menu__link[aria-current="page"] {
+    position: relative;
     background-color: var(--rn-subtle);
-    box-shadow: inset 3px 0 0 var(--rn-primary);
+  }
+
+  .rn-menu__link[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    inset-block: 0.875rem;
+    inset-inline-start: 0.375rem;
+    width: 3px;
+    border-radius: 3px;
+    background-color: var(--rn-primary);
   }
 
   @keyframes rn-fade-in {

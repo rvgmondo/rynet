@@ -157,10 +157,7 @@ export default function AboutPage() {
             <ul className="mt-5 divide-y divide-line">
               {AT_A_GLANCE.map((fact) => (
                 <li key={fact.label} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  <span
-                    aria-hidden="true"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-md bg-subtle text-heading"
-                  >
+                  <span aria-hidden="true" className="rn-icon-tile">
                     <fact.icon className="size-5" />
                   </span>
                   <div className="min-w-0">
@@ -199,10 +196,7 @@ export default function AboutPage() {
             <ul className="mt-5 grid gap-4">
               {ALREADY_KNOWN.map((item) => (
                 <li key={item.title} className="rn-card flex-row gap-4 p-5 sm:p-6">
-                  <span
-                    aria-hidden="true"
-                    className="flex size-11 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary"
-                  >
+                  <span aria-hidden="true" className="rn-icon-tile">
                     <item.icon className="size-5" />
                   </span>
                   <div className="min-w-0">
@@ -268,10 +262,7 @@ export default function AboutPage() {
           <div className="on-navy relative overflow-hidden rounded-lg px-5 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
             <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-16">
               <div>
-                <span
-                  aria-hidden="true"
-                  className="flex size-12 items-center justify-center rounded-md bg-navy-raised text-on-navy"
-                >
+                <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
                   <Scale className="size-6" />
                 </span>
                 <p className="rn-eyebrow mt-6 text-on-navy-muted">Said up front</p>
@@ -315,10 +306,7 @@ export default function AboutPage() {
         <div className="container-page">
           <div className="rn-panel grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:gap-16 lg:p-10">
             <div className="flex items-start gap-4">
-              <span
-                aria-hidden="true"
-                className="flex size-12 shrink-0 items-center justify-center rounded-md bg-subtle text-heading"
-              >
+              <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
                 <UserRound className="size-6" />
               </span>
               <div className="min-w-0">

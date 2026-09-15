@@ -136,7 +136,10 @@ All in `src/components/ui/` (barrel: `@/components/ui`). None is a client compon
 | `Container` | 1280px or `size="narrow"`. |
 | `Field` + `Input`, `Textarea`, `Select`, `Checkbox`, `Radio`, `Choice` | Field wires label, id, hint, error, `aria-describedby`, `aria-invalid`. Controls are 44px, 16px text, native. |
 | `SectionHeader` | eyebrow, title (h2 by default), lead, and an arrow link action. |
-| `PriceTag` | the price. `RandFigure` in `components/vehicles` delegates to it. |
+| `PageHeader` | the opening band of a content page: eyebrow, H1, lead, `meta` (date, legal marker), `actions`, optional `aside`. From 1024px it is split (title left, lead and actions right) or, with an aside, title and lead left and real content right. The right half of the band is never empty. Used by /contact, /dealers and every legal document. |
+| `TextLink` | the two link styles and the only two: `action` (red words and an arrow, `.rn-link-arrow`, a section's next step) and `inline` (heading ink, semibold, a quiet underline that turns red on hover, `.rn-link`, for links in sentences, notices, captions, cards, forms and email addresses). Copy nobody marks up (a legal document, a dealer's description) gets `.rn-links` on its container. |
+| `IconTile` | the one icon tile: 44px, 12px radius, tinted ground, heading ink icon; `size="lg"` is 48px; raised navy inside `.on-navy`. `.rn-icon-tile` for markup that maps icons itself. |
+| `PriceTag` | the price. `RandFigure` in `components/vehicles` delegates to it. Every figure from `formatRand`, `formatMonthly`, `formatKm` and `formatCc` joins its parts with no-break spaces, so "R 1 020 800" or "103 900 km" never breaks across lines anywhere; compare with `plain()` in tests. |
 | `KeyFacts` | icon, label, value. `inline` on cards, `grid` on listings. |
 | `EmptyState` | icon, title, body, one action. |
 | `Notice` | `info`, `warning`, `neutral`. `role="note"`. The demonstration disclosure is an info Notice. |

@@ -3,6 +3,7 @@ import { Children, cloneElement, isValidElement, type ReactElement, type ReactNo
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { LegalReviewMarker } from "@/components/layout/legal-review-marker";
+import { PageHeader } from "@/components/ui/page-header";
 import { slugify } from "@/lib/slug";
 
 /**
@@ -87,19 +88,19 @@ export function LegalDocument({
     <>
       <Breadcrumbs trail={[{ href: path, label: title }]} />
 
-      <section aria-labelledby="document-heading" className="border-b border-line bg-card">
-        <div className="container-page py-10 sm:py-14">
-          <p className="rn-eyebrow">{eyebrow}</p>
-          <h1 id="document-heading" className="rn-h1 mt-3 max-w-[20ch]">
-            {title}
-          </h1>
-          <p className="rn-lead mt-4 max-w-2xl">{intro}</p>
-          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
-            <p className="text-sm text-muted">Last updated {updated}</p>
+      <PageHeader
+        id="document-heading"
+        eyebrow={eyebrow}
+        title={title}
+        titleClassName="max-w-[20ch]"
+        lead={intro}
+        meta={
+          <>
+            <p>Last updated {updated}</p>
             {reviewedAt !== undefined ? <LegalReviewMarker reviewedAt={reviewedAt} /> : null}
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       <div className="container-page py-8 sm:py-12 lg:py-16">
         <div
@@ -136,7 +137,7 @@ export function LegalDocument({
 
           {/* Sized to the reading column, so the white card never carries an empty right third. */}
           <article className="rn-card w-full max-w-[46rem] min-w-0 px-5 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
-            <div className="rn-doc measure break-words [&>h2:first-child]:mt-0 [&>h2:first-child]:border-t-0 [&>h2:first-child]:pt-0 [&_a]:font-medium [&_a]:text-accent">
+            <div className="rn-doc rn-links measure break-words [&>h2:first-child]:mt-0 [&>h2:first-child]:border-t-0 [&>h2:first-child]:pt-0">
               {withHeadingIds(children)}
             </div>
           </article>

@@ -177,7 +177,7 @@ export function ListingSummary({
             </p>
             <Link
               href={`/cars/${relSlug(vehicle.make)}/${relSlug(vehicle.model)}`}
-              className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-heading underline underline-offset-3 hover:text-accent"
+              className="rn-link mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm"
             >
               All {relName(vehicle.model)} listings
               <ArrowRight aria-hidden="true" className="size-4" />

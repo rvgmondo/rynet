@@ -13,6 +13,7 @@ import { buttonClasses } from "@/components/ui/button-classes";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
+import { PageHeader } from "@/components/ui/page-header";
 import { relId, relName, relSlug } from "@/lib/relations";
 import { vehiclePhoto } from "@/lib/vehicle-photo";
 import type { Vehicle } from "@/payload-types";
@@ -213,26 +214,23 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
 
   return (
     <>
-      <section className="border-b border-line bg-card">
-        <div className="container-page pt-6 pb-[calc(var(--section-tight)+2.5rem)] sm:pt-8">
-          {/* No visible trail on a top-level page; the structured data still carries it. */}
+      <PageHeader
+        id="dealers-heading"
+        before={
+          /* No visible trail on a top-level page; the structured data still carries it. */
           <Breadcrumbs trail={[{ href: "/dealers", label: "Dealerships" }]} />
-
-          <div className="max-w-3xl">
-            <p className="rn-eyebrow">Dealership directory</p>
-            <h1 className="rn-h1 mt-3">Find a dealership</h1>
-            <p className="rn-lead mt-4 text-pretty">
-              Every car on Rynet is listed by a dealership, and every dealership is checked before
-              it can list. There are no private sellers, so whoever you deal with has a name, a
-              premises and a reputation to keep.
-            </p>
-            <Link href="/how-verification-works" className="rn-link-arrow mt-4">
-              How we check dealerships
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </section>
+        }
+        eyebrow="Dealership directory"
+        title="Find a dealership"
+        lead="Every car on Rynet is listed by a dealership, and every dealership is checked before it can list. There are no private sellers, so whoever you deal with has a name, a premises and a reputation to keep."
+        actions={
+          <Link href="/how-verification-works" className="rn-link-arrow">
+            How we check dealerships
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        }
+        innerClassName="pb-[calc(var(--section-tight)+2.5rem)] lg:pb-[calc(var(--section-tight)+3rem)]"
+      />
 
       <div className="container-page relative -mt-10">
         <search className="rn-panel block p-4 sm:p-5">

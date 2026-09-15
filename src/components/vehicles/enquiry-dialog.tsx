@@ -215,7 +215,7 @@ export function EnquiryDialog({
                   <span className="text-sm text-body">
                     I agree that Rynet may pass the details I have given to the selling dealership
                     so they can respond to this enquiry, and may contact me about it. See our{" "}
-                    <a href="/privacy" className="text-accent underline underline-offset-3">
+                    <a href="/privacy" className="rn-link">
                       privacy notice
                     </a>
                     .

@@ -118,7 +118,7 @@ export function DealerBlock({
               href={directions}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-6 w-fit items-center gap-1.5 font-semibold text-heading underline underline-offset-3 hover:text-accent"
+              className="rn-link inline-flex min-h-6 w-fit items-center gap-1.5"
             >
               <Navigation aria-hidden="true" className="size-4" />
               Get directions
@@ -132,10 +132,7 @@ export function DealerBlock({
         {demonstration
           ? "Demo dealerships show how Rynet works. Real dealerships are checked before they can list."
           : "Every dealership is checked before it can list on Rynet."}{" "}
-        <Link
-          href="/how-verification-works"
-          className="font-medium text-body underline underline-offset-3 hover:text-heading"
-        >
+        <Link href="/how-verification-works" className="rn-link whitespace-nowrap">
           How we check
         </Link>
       </p>

@@ -250,10 +250,7 @@ export default async function HowVerificationWorksPage() {
               className="border-b border-line py-6 md:rounded-md md:border md:bg-card md:p-7 md:shadow-card"
             >
               <div className="flex items-center justify-between gap-4">
-                <span
-                  aria-hidden="true"
-                  className="grid size-12 place-items-center rounded-md bg-subtle text-heading"
-                >
+                <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
                   <Icon className="size-6" />
                 </span>
                 <span className="text-sm font-semibold text-muted tabular">
@@ -336,10 +333,7 @@ export default async function HowVerificationWorksPage() {
       <section aria-labelledby="report-heading" className="container-page py-[var(--section-base)]">
         <div className="rn-card flex flex-col gap-6 p-6 sm:p-8 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 gap-4">
-            <span
-              aria-hidden="true"
-              className="grid size-12 shrink-0 place-items-center rounded-md bg-subtle text-heading"
-            >
+            <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
               <Flag className="size-6" />
             </span>
             <div className="min-w-0">

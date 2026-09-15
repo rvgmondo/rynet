@@ -105,7 +105,7 @@ export default function AgencyContactPage() {
                   <Mail aria-hidden="true" className="size-5 shrink-0 text-muted" />
                   <a
                     href={`mailto:${AGENCY_EMAIL}`}
-                    className="inline-flex min-h-11 items-center font-semibold text-accent underline underline-offset-3 hover:text-accent-hover"
+                    className="rn-link inline-flex min-h-11 items-center"
                   >
                     {AGENCY_EMAIL}
                   </a>
@@ -144,10 +144,7 @@ export default function AgencyContactPage() {
               <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
               <span>
                 What you send is handled under our{" "}
-                <Link
-                  href="/privacy"
-                  className="font-semibold text-heading underline underline-offset-3 hover:text-accent"
-                >
+                <Link href="/privacy" className="rn-link">
                   privacy notice
                 </Link>
                 . It is not passed to any dealership, and it is used only for this enquiry.

@@ -223,7 +223,7 @@ export function SpecTable({ vehicle, facts = [] }: { vehicle: Vehicle; facts?: K
       </dl>
       <p className="mt-3 text-xs text-muted">
         Something wrong with this listing?{" "}
-        <Link href="/contact" className="font-medium text-body underline underline-offset-3">
+        <Link href="/contact" className="rn-link">
           Tell us
         </Link>{" "}
         and quote the Rynet reference.

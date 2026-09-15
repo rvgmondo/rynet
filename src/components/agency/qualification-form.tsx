@@ -301,10 +301,7 @@ export function QualificationForm() {
         <p className="rn-h3 mt-5">{state.message}</p>
         <p className="mx-auto mt-3 max-w-md text-body">
           You get the written review whether or not anything comes of it. If it is urgent, email{" "}
-          <a
-            href={`mailto:${AGENCY_EMAIL}`}
-            className="font-semibold text-accent underline underline-offset-3 hover:text-accent-hover"
-          >
+          <a href={`mailto:${AGENCY_EMAIL}`} className="rn-link">
             {AGENCY_EMAIL}
           </a>{" "}
           and say so.

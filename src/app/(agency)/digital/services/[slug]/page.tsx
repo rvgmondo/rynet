@@ -93,7 +93,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         }
         aside={
           <div className="on-navy rounded-lg p-6 shadow-card sm:p-8">
-            <span className="flex size-12 items-center justify-center rounded-md bg-navy-raised text-on-navy">
+            <span className="rn-icon-tile rn-icon-tile--lg">
               <Icon aria-hidden="true" className="size-6" />
             </span>
             <p className="rn-eyebrow mt-6 text-on-navy-muted">What you walk away with</p>
@@ -189,7 +189,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                 <li key={other.slug} className="flex">
                   <article className="rn-card rn-card--interactive p-5">
                     <div className="flex items-center gap-3">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary">
+                      <span className="rn-icon-tile">
                         <other.Icon aria-hidden="true" className="size-5" />
                       </span>
                       <h3 className="text-base font-semibold text-heading">

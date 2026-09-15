@@ -181,7 +181,7 @@ export default async function AgencyHomePage() {
                   key={item.title}
                   className="flex flex-col border-b border-line py-5 sm:rounded-md sm:border sm:p-5"
                 >
-                  <span className="flex size-10 items-center justify-center rounded-md bg-subtle text-heading">
+                  <span className="rn-icon-tile">
                     <item.icon aria-hidden="true" className="size-5" />
                   </span>
                   <h3 className="mt-4 text-base font-semibold text-heading">{item.title}</h3>
@@ -214,7 +214,7 @@ export default async function AgencyHomePage() {
             {SERVICES.map((service) => (
               <li key={service.slug} className="flex">
                 <article className="rn-card rn-card--interactive gap-4 p-6 max-sm:flex-row max-sm:rounded-none max-sm:border-x-0 max-sm:border-t-0 max-sm:bg-transparent max-sm:px-0 max-sm:py-4 max-sm:shadow-none sm:gap-0">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary sm:size-11">
+                  <span className="rn-icon-tile">
                     <service.Icon aria-hidden="true" className="size-5" />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col">

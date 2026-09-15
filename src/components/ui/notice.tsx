@@ -55,7 +55,7 @@ export function Notice({
         <details className="group min-w-0 flex-1">
           <summary className="flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-0.5 [&::-webkit-details-marker]:hidden">
             <span className="rn-notice__title">{title}</span>
-            <span className="inline-flex min-h-6 items-center gap-1 font-semibold text-heading underline decoration-line-control underline-offset-3 group-hover:decoration-heading">
+            <span className="rn-link inline-flex min-h-6 items-center gap-1 group-hover:decoration-current">
               {details}
               <ChevronDown
                 aria-hidden="true"

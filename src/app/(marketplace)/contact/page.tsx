@@ -15,6 +15,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { PageHeader } from "@/components/ui/page-header";
 import { COMPANY } from "@/content/company";
 
 export const metadata: Metadata = {
@@ -136,17 +137,13 @@ export default function ContactPage() {
     <>
       <Breadcrumbs trail={[{ href: "/contact", label: "Contact" }]} />
 
-      <section aria-labelledby="contact-heading" className="border-b border-line bg-card">
-        <div className="container-page py-10 sm:py-14 lg:py-16">
-          <p className="rn-eyebrow">Contact</p>
-          <h1 id="contact-heading" className="rn-h1 mt-3">
-            How can we help?
-          </h1>
-          <p className="rn-lead mt-4 max-w-2xl">
-            Pick the route that fits and your message goes straight to the person who deals with it.
-          </p>
-
-          <nav aria-label="Contact routes" className="mt-8">
+      <PageHeader
+        id="contact-heading"
+        eyebrow="Contact"
+        title="How can we help?"
+        lead="Pick the route that fits and your message goes straight to the person who deals with it."
+        actions={
+          <nav aria-label="Contact routes">
             <ul className="flex flex-wrap gap-2">
               {GROUPS.map((group) => (
                 <li key={group.id}>
@@ -157,8 +154,8 @@ export default function ContactPage() {
               ))}
             </ul>
           </nav>
-        </div>
-      </section>
+        }
+      />
 
       <div className="container-page space-y-14 py-[var(--section-base)]">
         {GROUPS.map((group) => (
@@ -171,10 +168,7 @@ export default function ContactPage() {
             >
               {group.routes.map((route) => (
                 <li key={route.id} id={route.id} className="rn-card flex flex-col p-6">
-                  <span
-                    aria-hidden="true"
-                    className="grid size-11 place-items-center rounded-md bg-subtle text-heading"
-                  >
+                  <span aria-hidden="true" className="rn-icon-tile">
                     <route.icon className="size-5" />
                   </span>
                   <h3 className="mt-5 text-lg font-semibold">{route.title}</h3>
@@ -183,7 +177,7 @@ export default function ContactPage() {
                   <div className="mt-5 border-t border-line pt-4">
                     <a
                       href={`mailto:${route.email}`}
-                      className="inline-flex min-h-11 max-w-full items-center gap-2 break-all text-base font-semibold text-accent underline decoration-1 underline-offset-4 hover:text-accent-hover"
+                      className="rn-link inline-flex min-h-11 max-w-full items-center gap-2 break-all text-base"
                     >
                       <Mail aria-hidden="true" className="size-4 shrink-0" />
                       {route.email}
@@ -236,7 +230,7 @@ export default function ContactPage() {
                 {COMPANY.phone ? (
                   <a
                     href={`tel:${COMPANY.phone.replace(/[^0-9+]/g, "")}`}
-                    className="inline-flex min-h-11 items-center font-semibold text-heading underline underline-offset-4 tabular"
+                    className="rn-link inline-flex min-h-11 items-center tabular"
                   >
                     {COMPANY.phone}
                   </a>

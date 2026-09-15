@@ -109,10 +109,7 @@ function RegistrationRecord({ dealer }: { dealer: Dealer }) {
       <h2 className="text-base font-semibold text-heading">Registration details</h2>
       <p className="mt-1 text-sm text-muted">
         As recorded on this dealership's Rynet account.{" "}
-        <Link
-          href="/how-verification-works"
-          className="font-semibold text-accent underline underline-offset-3 hover:text-accent-hover"
-        >
+        <Link href="/how-verification-works" className="rn-link">
           What we check before a dealership can list
         </Link>
       </p>

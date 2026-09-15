@@ -71,7 +71,7 @@ export function HomeHero({
             {secondary ? (
               <Link
                 href={secondary.href}
-                className="mt-6 hidden min-h-11 items-center gap-1.5 font-semibold text-on-navy underline decoration-on-navy-muted underline-offset-4 hover:decoration-on-navy sm:inline-flex"
+                className="rn-link mt-6 hidden min-h-11 items-center gap-1.5 sm:inline-flex"
               >
                 {secondary.label}
                 <ArrowRight aria-hidden="true" className="size-4" />
@@ -183,7 +183,7 @@ function HeroPhoto({ hero, wide }: { hero: HeroListing; wide: boolean }) {
           <span className="max-sm:sr-only">{hero.credit}</span>
           <span className="sm:hidden">
             {" "}
-            <a href="#photo-credits" className="underline underline-offset-2">
+            <a href="#photo-credits" className="rn-link">
               Credit
             </a>
           </span>

@@ -198,7 +198,7 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
           <details className="group">
             <summary className="flex min-h-6 cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
               <span className="min-w-0 truncate">Photograph of this model, not of this car.</span>
-              <span className="inline-flex shrink-0 items-center gap-0.5 font-semibold text-body underline underline-offset-2">
+              <span className="rn-link inline-flex shrink-0 items-center gap-0.5">
                 Photo credit
                 <ChevronDown
                   aria-hidden="true"

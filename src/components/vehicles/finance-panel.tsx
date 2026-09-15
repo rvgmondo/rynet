@@ -55,10 +55,7 @@ export function FinanceTeaser({
         </span>
         .
       </p>
-      <a
-        href="#finance"
-        className="mt-1 inline-flex min-h-6 items-center font-semibold text-heading underline underline-offset-3 hover:text-accent"
-      >
+      <a href="#finance" className="rn-link mt-1 inline-flex min-h-6 items-center">
         See the full estimate
       </a>
     </div>

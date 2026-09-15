@@ -70,7 +70,7 @@ export function FeaturesPanel({ vehicle }: { vehicle: Vehicle }) {
       <FeatureList items={first} className="mt-5" />
       {rest.length > 0 ? (
         <details className="group mt-3">
-          <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-sm text-sm font-semibold text-heading underline underline-offset-3 hover:text-accent [&::-webkit-details-marker]:hidden">
+          <summary className="rn-link inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-sm text-sm [&::-webkit-details-marker]:hidden">
             <span className="group-open:hidden">Show all {features.length} features</span>
             <span className="hidden group-open:inline">Show fewer features</span>
           </summary>

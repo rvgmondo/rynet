@@ -73,7 +73,7 @@ export function SellAndListBands() {
           aria-labelledby="sell-heading"
           className="rn-panel flex flex-col p-6 sm:p-8 lg:p-10"
         >
-          <span className="grid size-12 place-items-center rounded-md bg-subtle text-heading">
+          <span className="rn-icon-tile rn-icon-tile--lg">
             <HandCoins aria-hidden="true" className="size-6" />
           </span>
           <h2 id="sell-heading" className="rn-h2 mt-6">
@@ -103,7 +103,7 @@ export function SellAndListBands() {
           aria-labelledby="list-heading"
           className="rn-panel flex flex-col p-6 sm:p-8 lg:p-10"
         >
-          <span className="grid size-12 place-items-center rounded-md bg-subtle text-heading">
+          <span className="rn-icon-tile rn-icon-tile--lg">
             <Store aria-hidden="true" className="size-6" />
           </span>
           <h2 id="list-heading" className="rn-h2 mt-6">
