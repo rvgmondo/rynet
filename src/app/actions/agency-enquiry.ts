@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { getPayload } from "payload";
 
 import {
+  AGENCY_CONSENT_WORDING,
   AGENCY_INTERESTS,
   type AgencyEnquiryState,
   agencyEnquirySchema,
@@ -28,10 +29,10 @@ import { rateLimit, visitorKey } from "@/lib/rate-limit";
  * NOTE: this module may export NOTHING but async functions. See the schema module.
  */
 
-/** The exact wording agreed to. Stored verbatim, because this page will change. */
-const CONSENT_WORDING =
-  "I agree that Rynet may use the details I have given to reply to this enquiry about Rynet Digital's services, and to contact me about it.";
-const POLICY_VERSION = "2026-08-privacy-v1";
+/** The exact wording agreed to, shared with the form. Stored verbatim, because this page will change. */
+const CONSENT_WORDING = AGENCY_CONSENT_WORDING;
+// The privacy notice this consent was given under. Bumped when /privacy changes.
+const POLICY_VERSION = "2026-09-privacy-v2";
 
 const MINIMUM_FILL_MS = 4000;
 /*

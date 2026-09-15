@@ -7,17 +7,19 @@
   "segmentPaths": [
     "/_tree",
     "/_full",
+    "/_index",
+    "/!KGFnZW5jeSk",
     "/!KGFnZW5jeSk/digital",
     "/!KGFnZW5jeSk/digital/process/__PAGE__"
   ],
   "prefetchHints": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 0,
         "slots": {
           "children": {
-            "hints": 32,
+            "hints": 0,
             "slots": {
               "children": {
                 "hints": 64,

@@ -71,9 +71,9 @@ export const PRICING_IS_UNPUBLISHED = PRICE_BANDS.every((band) => band.from === 
 
 export const PRICING_FAQS = [
   {
-    question: "Why are there no prices on this page?",
+    question: "Why are prices not published yet?",
     answer:
-      "Because we have not done enough dealership work to quote a range we would stand behind. Publishing one now would mean guessing, and a guessed price is worse than no price: you would plan around it and we would have to revise it. Ask on a call and you will get a real number for your situation.",
+      "A guessed price is worse than no price: you would plan around it and we would have to revise it. You get a figure in writing after the free review and the call.",
   },
   {
     question: "Do you take a percentage of advertising spend?",

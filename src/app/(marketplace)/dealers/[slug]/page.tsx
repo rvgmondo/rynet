@@ -1,42 +1,53 @@
 import config from "@payload-config";
+import { ArrowRight, CalendarDays, Car, Layers, MapPin, Tag } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPayload } from "payload";
+import { getPayload, type Where } from "payload";
 
+import { aboutParagraphs, firstSentence } from "@/components/dealers/about-text";
+import { BranchCard, DealerContactPanel } from "@/components/dealers/dealer-contact";
+import { DealerMonogram } from "@/components/dealers/dealer-monogram";
+import { carsCount, joinNames, makesSummary } from "@/components/dealers/names";
+import { SellToDealerBand } from "@/components/dealers/sell-band";
+import {
+  type BodyFacet,
+  STOCK_SORTS,
+  StockToolbar,
+  stockHref,
+} from "@/components/dealers/stock-toolbar";
+import { DAY_LABEL } from "@/components/dealers/trading-hours";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { ResultsGrid } from "@/components/vehicles/results-grid";
+import { Badge, DealershipStatusBadge } from "@/components/ui/badge";
+import { buttonClasses } from "@/components/ui/button-classes";
+import { EmptyState } from "@/components/ui/empty-state";
+import { type KeyFact, KeyFacts } from "@/components/ui/key-facts";
+import { Notice } from "@/components/ui/notice";
+import { Pagination } from "@/components/vehicles/pagination";
+import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { formatRand } from "@/lib/format";
-import { relName } from "@/lib/relations";
-import { toCard } from "@/lib/search";
+import { relId, relName } from "@/lib/relations";
+import { PER_PAGE, SORTS, safePage, toCard } from "@/lib/search";
+import type { Dealer } from "@/payload-types";
 
 type Params = Promise<{ slug: string }>;
 type Search = Promise<Record<string, string | string[] | undefined>>;
 
-const DAYS = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
-] as const;
-const DAY_LABEL: Record<string, string> = {
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
-  saturday: "Saturday",
-  sunday: "Sunday",
-};
+const one = (value: string | string[] | undefined) =>
+  (Array.isArray(value) ? value[0] : value)?.trim() || null;
 
+/**
+ * Only a verified dealership has a public page, the same rule the directory and the
+ * collection's read access apply. A pending or suspended dealership answers 404 rather than
+ * rendering a profile nobody has approved.
+ */
 async function loadDealer(slug: string) {
   const payload = await getPayload({ config });
   const found = await payload.find({
     collection: "dealers",
-    where: { slug: { equals: slug } },
+    where: {
+      and: [{ slug: { equals: slug } }, { verificationStatus: { equals: "verified" } }],
+    },
     limit: 1,
     depth: 1,
   });
@@ -48,12 +59,17 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const dealer = await loadDealer(slug);
   if (!dealer) return { title: "Dealership not found" };
 
+  const about = firstSentence(aboutParagraphs(dealer.aboutRichText));
+
   return {
-    title: `${dealer.tradingName}, verified dealership`,
-    description:
-      dealer.aboutRichText && typeof dealer.aboutRichText === "object"
-        ? `${dealer.tradingName} is a verified dealership on Rynet. See their current stock, branches and trading hours.`
-        : `${dealer.tradingName} is a verified dealership on Rynet. See their current stock, branches and trading hours.`,
+    // A demonstration dealership is never called verified, in the tab title or anywhere else.
+    title: dealer.isDemonstration
+      ? `${dealer.tradingName}, demonstration dealership`
+      : `${dealer.tradingName}, verified dealership`,
+    description: dealer.isDemonstration
+      ? `${dealer.tradingName} is a demonstration dealership on Rynet, showing how a dealership's stock, branches and trading hours appear. It is not a real business.`
+      : (about ??
+        `${dealer.tradingName} is a verified dealership on Rynet. See their current stock, branches and trading hours.`),
     alternates: { canonical: `/dealers/${dealer.slug}` },
     // A dealership that does not exist is not offered for indexing. `follow` stays on so the
     // stock links are still crawled once real dealerships replace the seed.
@@ -62,19 +78,74 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 /**
- * A dealership microsite.
+ * The registration details on record, for a real dealership only. Rows with no value are left out.
  *
- * The verification badge is the point of the page and it links to what verification
- * actually involves, because a badge that links nowhere is decoration.
+ * Worded as "on record", not "checked": a dealership can still edit its registered name and
+ * numbers after it is approved (only memberships and the status are staff-only fields), so a
+ * sentence saying Rynet checked what is printed here could quietly stop being true.
+ */
+function RegistrationRecord({ dealer }: { dealer: Dealer }) {
+  const memberships = (dealer.accreditations ?? [])
+    .map((a) => relName(a))
+    .filter((name): name is string => Boolean(name));
+  const rows = [
+    { label: "Registered name", value: dealer.legalName },
+    { label: "CIPC registration", value: dealer.registrationNumber },
+    { label: "VAT number", value: dealer.vatNumber },
+    { label: "Motor trade number", value: dealer.motorTradeNumber },
+    { label: "Industry membership", value: memberships.length ? joinNames(memberships) : null },
+  ].filter((row): row is { label: string; value: string } => Boolean(row.value));
+  if (rows.length === 0) return null;
+
+  return (
+    <div className="mt-8 rounded-md border border-line bg-page p-4 sm:p-5">
+      <h2 className="text-base font-semibold text-heading">Registration details</h2>
+      <p className="mt-1 text-sm text-muted">
+        As recorded on this dealership's Rynet account.{" "}
+        <Link
+          href="/how-verification-works"
+          className="font-semibold text-accent underline underline-offset-3 hover:text-accent-hover"
+        >
+          What we check before a dealership can list
+        </Link>
+      </p>
+      <dl className="mt-4 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+        {rows.map((row) => (
+          <div key={row.label}>
+            <dt className="text-muted">{row.label}</dt>
+            <dd className="mt-0.5 font-semibold text-heading tabular">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
+}
+
+/**
+ * A dealership's page.
+ *
+ * The first screen answers who they are and how to reach them: the monogram, the name, the
+ * status badge, where they are, what they stock and at what prices, and a contact panel with
+ * call, WhatsApp and directions. Their stock follows straight after, as the same cards the search
+ * uses, with body-type chips and a sort that work without JavaScript, so on a laptop the first
+ * row of cards starts inside the first screen. A group with several branches lists them after
+ * the stock, and the page closes on a band for the reader who came to sell.
+ *
+ * HONESTY. A demonstration dealership carries "Demo dealership", never a verified badge, and
+ * one calm notice under its name. It shows no registration record (the seeded legal names and
+ * memberships were never checked, and printing them as checked facts would be fabrication), and
+ * its contact panel offers no call, WhatsApp or directions. The link to /sell-to-a-dealer says
+ * "a dealership", not "this dealership", because that form goes to every matching dealership in
+ * the seller's province and cannot be pointed at one.
  *
  * `LocalBusiness` structured data per branch: address, geo and opening hours. No
- * `aggregateRating`, because no reviews have been collected. Marking up a rating that does
- * not exist is the single worst thing to publish on a trust-led platform, and Google
- * penalises it besides.
+ * `aggregateRating`, because no reviews have been collected. Marking up a rating that does not
+ * exist is the single worst thing to publish on a trust-led platform, and Google penalises it
+ * besides.
  *
- * Theme control from the dealer portal lands with the portal. The `theme.accent` field
- * already exists and is contrast-validated on save, so a dealership cannot choose a colour
- * that makes their own microsite unreadable.
+ * PERFORMANCE. No image is preloaded. On a phone the whole first screen is text, so the headline
+ * is the largest paint, and preloading a card photograph below the fold would only compete with
+ * it. Every card keeps `content-visibility: auto` through `.rn-grid`.
  */
 export default async function DealerPage({
   params,
@@ -88,13 +159,15 @@ export default async function DealerPage({
   const dealer = await loadDealer(slug);
   if (!dealer) notFound();
 
+  const now = new Date();
   const payload = await getPayload({ config });
-  const page = Math.max(
-    1,
-    Number((Array.isArray(query.page) ? query.page[0] : query.page) ?? 1) || 1,
-  );
+  const page = safePage(one(query.page));
+  const requestedSort = one(query.sort);
+  const sort = requestedSort && SORTS[requestedSort] ? requestedSort : "newest";
+  const requestedBody = one(query.body);
+  const live: Where[] = [{ dealer: { equals: dealer.id } }, { status: { equals: "live" } }];
 
-  const [branches, stock] = await Promise.all([
+  const [branches, inventory] = await Promise.all([
     payload.find({
       collection: "branches",
       where: { dealer: { equals: dealer.id } },
@@ -102,17 +175,110 @@ export default async function DealerPage({
       limit: 25,
       depth: 1,
     }),
+    // Every live car, four columns only, for the figures and the body-type counts. The page
+    // of cards below is a separate query, so the figures never change with the page number.
     payload.find({
       collection: "vehicles",
-      where: { and: [{ dealer: { equals: dealer.id } }, { status: { equals: "live" } }] },
-      sort: "-publishedAt",
-      limit: 24,
-      page,
-      depth: 2,
+      where: { and: live },
+      pagination: false,
+      depth: 0,
+      select: { make: true, bodyType: true, price: true, priceType: true },
     }),
   ]);
 
-  const cheapest = stock.docs.length ? Math.min(...stock.docs.map((v) => v.price)) : null;
+  const unique = (ids: (number | null)[]) =>
+    [...new Set(ids)].filter((id): id is number => id !== null);
+  const makeIds = unique(inventory.docs.map((v) => relId(v.make)));
+  const bodyIds = unique(inventory.docs.map((v) => relId(v.bodyType)));
+
+  const [makes, bodyTypes] = await Promise.all([
+    makeIds.length
+      ? payload.find({
+          collection: "makes",
+          where: { id: { in: makeIds } },
+          limit: makeIds.length,
+          depth: 0,
+        })
+      : Promise.resolve({ docs: [] as { id: number; name: string; slug: string }[] }),
+    bodyIds.length
+      ? payload.find({
+          collection: "body-types",
+          where: { id: { in: bodyIds } },
+          limit: bodyIds.length,
+          depth: 0,
+        })
+      : Promise.resolve({ docs: [] as { id: number; name: string; slug: string }[] }),
+  ]);
+
+  const total = inventory.docs.length;
+  const makeCounts = new Map<number, number>();
+  const bodyCounts = new Map<number, number>();
+  let minPrice: number | null = null;
+  let maxPrice: number | null = null;
+  for (const vehicle of inventory.docs) {
+    const makeId = relId(vehicle.make);
+    const bodyId = relId(vehicle.bodyType);
+    if (makeId !== null) makeCounts.set(makeId, (makeCounts.get(makeId) ?? 0) + 1);
+    if (bodyId !== null) bodyCounts.set(bodyId, (bodyCounts.get(bodyId) ?? 0) + 1);
+    if (vehicle.priceType !== "poa" && typeof vehicle.price === "number" && vehicle.price > 0) {
+      minPrice = minPrice === null ? vehicle.price : Math.min(minPrice, vehicle.price);
+      maxPrice = maxPrice === null ? vehicle.price : Math.max(maxPrice, vehicle.price);
+    }
+  }
+
+  const makeNames = makes.docs
+    .map((make) => ({ name: make.name, count: makeCounts.get(make.id) ?? 0 }))
+    .sort((a, b) => b.count - a.count)
+    .map((make) => make.name);
+
+  const bodies: BodyFacet[] = bodyTypes.docs
+    .map((body) => ({ slug: body.slug, name: body.name, count: bodyCounts.get(body.id) ?? 0 }))
+    .filter((body) => body.count > 0)
+    .sort((a, b) => b.count - a.count);
+  const activeBody = bodyTypes.docs.find((body) => body.slug === requestedBody) ?? null;
+
+  const stock = await payload.find({
+    collection: "vehicles",
+    where: {
+      and: [...live, ...(activeBody ? [{ bodyType: { equals: activeBody.id } }] : [])],
+    },
+    sort: SORTS[sort],
+    limit: PER_PAGE,
+    page,
+    depth: 2,
+  });
+  const cards = stock.docs.map(toCard);
+
+  const primary = branches.docs.find((b) => b.isPrimary) ?? branches.docs[0] ?? null;
+  const branchCount = branches.docs.length;
+  const isDemonstration = Boolean(dealer.isDemonstration);
+  const about = aboutParagraphs(dealer.aboutRichText);
+
+  const facts: KeyFact[] = [
+    { icon: Car, label: "Cars in stock", value: total === 0 ? "None right now" : String(total) },
+    ...(minPrice !== null && maxPrice !== null
+      ? [
+          {
+            icon: Tag,
+            label: "Price range",
+            value:
+              minPrice === maxPrice
+                ? formatRand(minPrice)
+                : `${formatRand(minPrice)} to ${formatRand(maxPrice)}`,
+          },
+        ]
+      : []),
+    ...(makeNames.length
+      ? [{ icon: Layers, label: "Makes in stock", value: makesSummary(makeNames) ?? "" }]
+      : []),
+    ...(dealer.foundedYear
+      ? [{ icon: CalendarDays, label: "Trading since", value: String(dealer.foundedYear) }]
+      : []),
+  ];
+
+  const sortLabel = STOCK_SORTS.find((option) => option.value === sort)?.label ?? "Newest listed";
+  const from = stock.totalDocs === 0 ? 0 : (page - 1) * PER_PAGE + 1;
+  const to = Math.min(page * PER_PAGE, stock.totalDocs);
 
   /*
    * A demonstration dealership publishes no structured data.
@@ -168,16 +334,9 @@ export default async function DealerPage({
         />
       ) : null}
 
-      {/*
-        REDRAWN. This is the page Rynet shows a dealership when it sells them on listing, so it
-        is a commercial surface, and it was a single flat band with the whole of its right-hand
-        column given to one bordered box: at three branches the box ran 500px while the stock
-        grid beside it ran 3,800, leaving three and a half thousand pixels of empty column. The
-        address, phone and hours a buyer drives to are now a ruled band across the full width,
-        directly under the header, where they are read before the stock rather than beside it.
-      */}
-      <section className="rn-columns border-b border-line bg-surface-sunken">
-        <div className="container-page py-[var(--section-tight)]">
+      <section className="border-b border-line bg-card">
+        <div className="container-page pt-6 pb-[var(--section-tight)] sm:pt-8">
+          {/* Visible trail is Home and Dealerships; the name is the headline right below. */}
           <Breadcrumbs
             trail={[
               { href: "/dealers", label: "Dealerships" },
@@ -185,151 +344,195 @@ export default async function DealerPage({
             ]}
           />
 
-          <h1 className="rn-head mt-8 max-w-[16ch]">{dealer.tradingName}</h1>
+          <div className="mt-6 grid gap-8 lg:mt-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-16">
+            <div className="min-w-0">
+              {/*
+                The name block. On a phone the monogram shares a row with the badges and the name
+                runs full width beneath, so a long trading name is never squeezed beside a tile;
+                from 640px the monogram sits to the left of all three. The heading comes first in
+                the source, so a screen reader meets the name before the badges.
+              */}
+              <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 sm:gap-x-6">
+                <DealerMonogram
+                  name={dealer.tradingName}
+                  size="lg"
+                  className="col-start-1 row-start-1 sm:row-span-3"
+                />
+                <h1 className="rn-h1 col-span-2 row-start-2 mt-4 sm:col-span-1 sm:col-start-2 sm:mt-1.5">
+                  {dealer.tradingName}
+                </h1>
+                <div className="col-start-2 row-start-1 flex flex-wrap gap-2 sm:self-end">
+                  <DealershipStatusBadge isDemonstration={isDemonstration} />
+                  {branchCount > 1 ? <Badge>{branchCount} branches</Badge> : null}
+                </div>
+                {primary ? (
+                  <p className="col-span-2 row-start-3 mt-2 flex items-start gap-2 self-start text-base text-body sm:col-span-1 sm:col-start-2">
+                    <MapPin
+                      aria-hidden="true"
+                      className="mt-1 size-[1.125rem] shrink-0 text-muted"
+                    />
+                    <span>
+                      {[primary.suburb, relName(primary.city), relName(primary.province)]
+                        .filter((part, index, parts) => part && parts.indexOf(part) === index)
+                        .join(", ")}
+                      {branchCount > 1
+                        ? `, and ${branchCount - 1} more ${branchCount === 2 ? "branch" : "branches"}`
+                        : null}
+                    </span>
+                  </p>
+                ) : null}
+              </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-            {dealer.verificationStatus === "verified" ? (
-              /* The same ruled stamp the cards carry, in ink. It was a red link behind a
-                 BadgeCheck glyph: the one glyph the direction names and rejects, and the only
-                 red object on a page that has no other. */
-              <Link
-                href="/how-verification-works"
-                className="rn-label inline-flex min-h-11 items-center border border-current px-2 py-1 transition-colors duration-[var(--duration-micro)] hover:bg-ink hover:text-ink-inverse"
-              >
-                Verified dealership
-              </Link>
-            ) : null}
-            <span className="rn-label tabular text-ink">
-              {stock.totalDocs} {stock.totalDocs === 1 ? "vehicle" : "vehicles"} in stock
-            </span>
-            {cheapest ? (
-              <span className="rn-label tabular text-ink-muted">from {formatRand(cheapest)}</span>
-            ) : null}
-            {dealer.foundedYear ? (
-              <span className="rn-label text-ink-muted">Trading since {dealer.foundedYear}</span>
-            ) : null}
+              {isDemonstration ? (
+                <Notice title="Demonstration dealership" className="mt-6 max-w-3xl">
+                  This dealership is example data, created to show how a dealership page works on
+                  Rynet. It is not a real business, so it has no registration record and none of its
+                  cars is for sale. Car photographs show the model, not the individual car.
+                </Notice>
+              ) : null}
+
+              {about.length > 0 ? (
+                <div className="mt-6 max-w-[62ch] space-y-3 text-base text-body sm:text-lg">
+                  {about.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="mt-6 border-t border-line pt-6">
+                <h2 className="sr-only">At a glance</h2>
+                <KeyFacts items={facts} variant="grid" />
+              </div>
+
+              {isDemonstration ? null : <RegistrationRecord dealer={dealer} />}
+
+              {isDemonstration ? null : (
+                <Link href="/how-verification-works" className="rn-link-arrow mt-6">
+                  How Rynet checks a dealership
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+              )}
+            </div>
+
+            <aside aria-labelledby="contact-heading" className="min-w-0">
+              <DealerContactPanel
+                dealer={dealer}
+                branch={primary}
+                branchCount={branchCount}
+                now={now}
+              />
+            </aside>
           </div>
-
-          {dealer.isDemonstration ? (
-            /* The same sentence the cards set as a ruled label. It was a bordered box here and
-               a rule there, for one fact. */
-            <p className="rn-label mt-8 border-t border-line-interactive pt-4 text-ink-muted">
-              Demonstration listing. This dealership is seeded example data. It is not a real
-              business, and its stock is not for sale.
-            </p>
-          ) : null}
         </div>
       </section>
 
       <section
-        aria-labelledby="branches-heading"
-        className="container-page py-[var(--section-base)]"
+        aria-labelledby="stock-heading"
+        className="container-page pt-[var(--section-tight)] pb-[var(--section-base)]"
       >
-        <h2 id="branches-heading" className="rn-label text-ink-muted">
-          {branches.docs.length === 1 ? "Where they are" : "Branches"}
-        </h2>
-
-        <div className="mt-4 grid border-t border-line md:grid-cols-2 md:gap-x-12 xl:grid-cols-3">
-          {branches.docs.map((branch) => (
-            <div key={branch.id} className="border-b border-line py-6">
-              {branches.docs.length > 1 ? (
-                <h3 className="font-display text-base font-bold">{branch.name}</h3>
-              ) : null}
-
-              <address className="mt-2 text-sm not-italic text-ink-secondary">
-                {branch.addressLine1}
-                {branch.suburb ? <>, {branch.suburb}</> : null}
-                <br />
-                {relName(branch.city)}
-                {relName(branch.province) ? `, ${relName(branch.province)}` : ""}
-                {branch.postalCode ? ` ${branch.postalCode}` : ""}
-              </address>
-
-              {branch.phone ? (
-                <p className="mt-3">
-                  <a
-                    href={`tel:${branch.phone.replace(/[^0-9+]/g, "")}`}
-                    className="rn-label inline-flex min-h-11 items-center tabular text-ink underline decoration-line-interactive underline-offset-4 hover:decoration-ink"
-                  >
-                    {branch.phone}
-                  </a>
-                </p>
-              ) : null}
-
-              {branch.email ? (
-                /* `break-all` was breaking the address mid-word: it rendered as "...exam / ple".
-                   `break-words` breaks at the longest opportunity the string offers and only
-                   splits a word when there is no other choice. */
-                <p className="mt-1">
-                  <a
-                    href={`mailto:${branch.email}`}
-                    className="break-words text-sm text-ink-secondary underline decoration-line-interactive underline-offset-4 hover:text-ink hover:decoration-ink"
-                  >
-                    {branch.email}
-                  </a>
-                </p>
-              ) : null}
-
-              {branch.tradingHours && branch.tradingHours.length > 0 ? (
-                <details className="group mt-4 border-t border-line">
-                  {/* It rendered identically to the static lines above it and gave no sign at
-                      all that it opened. Same fix as the specification groups on a vehicle. */}
-                  <summary className="rn-label flex min-h-11 cursor-pointer items-center justify-between gap-3 text-ink-muted transition-colors duration-[var(--duration-micro)] [&::-webkit-details-marker]:hidden [&::marker]:content-[''] hover:text-ink">
-                    Trading hours
-                    <span aria-hidden="true" className="w-3 text-center">
-                      <span className="group-open:hidden">+</span>
-                      <span className="hidden group-open:inline">-</span>
-                    </span>
-                  </summary>
-                  <dl className="pb-3 text-xs">
-                    {DAYS.map((day) => {
-                      const hours = branch.tradingHours?.find((h) => h.day === day);
-                      if (!hours) return null;
-                      return (
-                        <div key={day} className="flex justify-between gap-4 py-1">
-                          <dt className="text-ink-muted">{DAY_LABEL[day]}</dt>
-                          <dd className="tabular">
-                            {hours.closed ? "Closed" : `${hours.opensAt} to ${hours.closesAt}`}
-                          </dd>
-                        </div>
-                      );
-                    })}
-                  </dl>
-                </details>
-              ) : null}
-            </div>
-          ))}
+        <div className="max-w-3xl">
+          <h2 id="stock-heading" className="rn-h2">
+            {total > 0
+              ? `${carsCount(total)} at ${dealer.tradingName}`
+              : `Stock at ${dealer.tradingName}`}
+          </h2>
+          {stock.totalDocs > 0 ? (
+            <p className="mt-2 text-muted">
+              Showing <span className="tabular">{from}</span> to{" "}
+              <span className="tabular">{to}</span> of{" "}
+              <span className="tabular">{stock.totalDocs}</span>
+              {activeBody ? ` (${activeBody.name})` : ""}, sorted by {sortLabel.toLowerCase()}.
+            </p>
+          ) : null}
         </div>
-      </section>
 
-      {/*
-        The stock, at the full width of the container rather than in a column beside an empty
-        one. This is what the page is for.
+        {total > 0 ? (
+          <div className="mt-6">
+            <StockToolbar
+              slug={dealer.slug}
+              total={total}
+              bodies={bodies}
+              body={activeBody?.slug ?? null}
+              sort={sort}
+            />
+          </div>
+        ) : null}
 
-        No reviews section. The dealership has none, and an empty "Reviews (0)" panel invites
-        the question of whether the platform has any at all. It appears when there is something
-        in it.
-      */}
-      <section aria-labelledby="stock-heading" className="container-page pb-[var(--section-base)]">
-        <h2 id="stock-heading" className="rn-head">
-          Their stock
-        </h2>
-        <hr className="rn-rule mt-6" />
-
-        <div className="mt-8">
-          <ResultsGrid
-            vehicles={stock.docs.map(toCard)}
-            page={stock.page ?? 1}
-            totalPages={stock.totalPages}
-            buildHref={(p) =>
-              p > 1 ? `/dealers/${dealer.slug}?page=${p}` : `/dealers/${dealer.slug}`
+        {cards.length > 0 ? (
+          /*
+           * The cards drop the dealership's name, which every one of them would otherwise repeat
+           * under a headline that already says it. A single-branch dealership drops the whole
+           * foot, since the town would repeat too; a group keeps the town, which tells a buyer
+           * which branch the car is at.
+           */
+          <div className="mt-6">
+            <ul className="rn-grid">
+              {cards.map((card) => (
+                <li key={card.publicRef}>
+                  <VehicleCard vehicle={card} foot={branchCount > 1 ? "town" : "none"} />
+                </li>
+              ))}
+            </ul>
+            <Pagination
+              page={stock.page ?? 1}
+              totalPages={stock.totalPages}
+              buildHref={(p) => stockHref(dealer.slug, { body: activeBody?.slug, sort, page: p })}
+            />
+          </div>
+        ) : (
+          /*
+           * Two ways to get here: the dealership has no live stock, or the page number in the
+           * address runs past the end of it (a body-type chip only ever offers types this
+           * dealership has in stock, so a filter alone never empties the grid).
+           */
+          <EmptyState
+            icon={Car}
+            headingLevel={3}
+            className="mt-6"
+            title={
+              total > 0 ? "That page is past the end of their stock" : "Nothing in stock right now"
             }
-            emptyTitle="Nothing in stock right now"
-            emptyBody="This dealership has no live listings at the moment. Stock changes daily, and there is plenty from other verified dealerships in the meantime."
-            emptyAction="Browse all stock"
-          />
-        </div>
+            action={
+              total > 0 ? (
+                <Link
+                  href={stockHref(dealer.slug, { body: activeBody?.slug, sort })}
+                  className={buttonClasses()}
+                >
+                  Back to the first page
+                </Link>
+              ) : (
+                <Link href="/cars" className={buttonClasses()}>
+                  Browse all cars
+                </Link>
+              )
+            }
+          >
+            {total > 0
+              ? `${dealer.tradingName} has ${carsCount(total)} in stock, and they all fit on earlier pages.`
+              : "This dealership has no live listings at the moment. Stock changes daily, and there are cars from other dealerships in the meantime."}
+          </EmptyState>
+        )}
       </section>
+
+      {branchCount > 1 ? (
+        <section
+          aria-labelledby="branches-heading"
+          className="container-page pb-[var(--section-base)]"
+        >
+          <h2 id="branches-heading" className="rn-h2 scroll-mt-24">
+            {branchCount} branches
+          </h2>
+          <ul className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {branches.docs.map((branch) => (
+              <li key={branch.id} className="flex">
+                <BranchCard dealer={dealer} branch={branch} now={now} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <SellToDealerBand dealer={dealer} />
     </>
   );
 }

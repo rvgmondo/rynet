@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LegalReviewNotice, Prose } from "@/components/layout/prose";
+import { LegalDocument } from "@/components/conversion/legal-document";
+import { LEGAL_REVIEWED_AT } from "@/content/legal-review";
+import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 
 export const metadata: Metadata = {
   title: "Privacy notice and POPIA",
@@ -13,8 +15,8 @@ export const metadata: Metadata = {
 /**
  * Privacy notice, POPIA.
  *
- * A DRAFT. It carries the review banner and must not lose it until a South African attorney
- * has read it. Written in plain language on purpose: partly because POPIA requires that a
+ * A DRAFT. It carries the "Requires legal review" marker and must not lose it until a South
+ * African attorney has read it, which is recorded in src/content/legal-review.ts. Written in plain language on purpose: partly because POPIA requires that a
  * data subject can understand what they are agreeing to, and partly because a notice nobody
  * can read is a notice nobody has actually consented to.
  *
@@ -24,13 +26,14 @@ export const metadata: Metadata = {
  */
 export default function PrivacyPage() {
   return (
-    <Prose
+    <LegalDocument
+      eyebrow="Privacy and POPIA"
       title="Privacy notice"
       intro="What we collect, why, who sees it, and how to get it back. Written under the Protection of Personal Information Act."
-      updated="26 August 2026"
+      updated="14 September 2026"
+      path="/privacy"
+      reviewedAt={LEGAL_REVIEWED_AT.privacy}
     >
-      <LegalReviewNotice />
-
       <h2>Who we are</h2>
       <p>
         Rynet is a vehicle marketplace operating in South Africa. In POPIA terms we are the
@@ -56,6 +59,20 @@ export default function PrivacyPage() {
         though we cannot take back an enquiry a dealership has already received.
       </p>
 
+      <h3>When you offer your car to dealerships</h3>
+      <p>
+        Your name, email address and phone number, and the details of your car and where it is. We
+        collect it for one purpose: to pass it to no more than {MAX_DEALERSHIPS} verified
+        dealerships in your province that buy that kind of car, so they can contact you with an
+        offer.
+      </p>
+      <p>
+        <strong>Our lawful basis is your consent</strong>, recorded word for word with the date, the
+        same way as for an enquiry. Once a dealership has your details it decides for itself what it
+        does with them, and it answers for that use. The full notice is on the{" "}
+        <Link href="/sell-to-a-dealer#popia-heading">sell to a dealership page</Link>.
+      </p>
+
       <h3>When you browse</h3>
       <p>
         We keep aggregate counts of how many times a listing was viewed and how many times a phone
@@ -78,8 +95,14 @@ export default function PrivacyPage() {
       <ul>
         <li>
           <strong>The dealership selling the vehicle you enquired about.</strong> That is the point
-          of the enquiry, and it is what you consented to. We do not pass your details to any other
+          of the enquiry, and it is what you consented to. We do not pass an enquiry to any other
           dealership.
+        </li>
+        <li>
+          <strong>
+            If you offer your car to dealerships, no more than {MAX_DEALERSHIPS} dealerships
+          </strong>{" "}
+          in your province that buy that kind of car, as the consent you gave says.
         </li>
         <li>
           <strong>Our hosting and email providers</strong>, as operators processing on our
@@ -112,7 +135,6 @@ export default function PrivacyPage() {
           <strong>Accounts:</strong> until you delete yours, or after three years of no sign-in.
         </li>
       </ul>
-      <p>Deletion is automatic when a retention period ends. It is not a manual clean-up.</p>
 
       <h2>Your rights</h2>
       <p>Under POPIA you can:</p>
@@ -177,6 +199,6 @@ export default function PrivacyPage() {
         Johannesburg.{" "}
         <a href="mailto:enquiries@inforegulator.org.za">enquiries@inforegulator.org.za</a>
       </p>
-    </Prose>
+    </LegalDocument>
   );
 }

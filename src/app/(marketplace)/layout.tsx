@@ -1,68 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Newsreader } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SkipLink } from "@/components/layout/skip-link";
-
 import { displayFontUrl } from "@/lib/font-preload";
+import { archivo } from "@/lib/fonts";
 
 import "@/styles/globals.css";
-
-/**
- * Two families, and the second one exists to keep the first one honest.
- *
- * Archivo is a variable grotesque with a real WIDTH axis alongside weight, and that axis is
- * the whole typographic idea. At wdth 118 / wght 800 a headline fills a twelve column
- * measure edge to edge with no manual tracking hack; the same file at wdth 100 / wght 700
- * sets an eleven pixel uppercase label at 0.16em without turning to mush. One family, two
- * completely different registers. It also ships genuine tabular figures, which every price,
- * mileage and instalment on this platform depends on, and e2e/typography.spec.ts fails the
- * build if a subsetting change ever strips them.
- *
- * Newsreader does exactly one job: running prose. The verification explanation, dealership
- * descriptions, editorial. Never in a card, never in the search interface, never in a
- * button. This is the load-bearing decision, because a heavy expanded grotesk on its own is
- * what makes a brutal layout read as a student project. Students do not set body copy in an
- * optically sized serif.
- *
- * Both are self-hosted by next/font, which subsets them, serves them from our own origin
- * and writes a metric-matched fallback so the swap does not shift the layout.
- */
-const archivo = Archivo({
-  subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
-  display: "swap",
-  preload: true,
-});
-
-const newsreader = Newsreader({
-  subsets: ["latin"],
-  /*
-   * No `axes: ["opsz"]`.
-   *
-   * The optical size axis was requested and then never used: nothing on either front door
-   * sets `font-optical-sizing` or an `opsz` variation, so the only thing the axis did was
-   * keep a second variable dimension in every file. It cost 128.8 KB across the four faces
-   * for a difference no rule on this site asks for. Weight still varies, because weight is
-   * the default axis and is not what was removed.
-   */
-  style: ["normal", "italic"],
-  variable: "--font-newsreader",
-  display: "swap",
-  // Prose is below the fold on every page that has any, so it never blocks the first paint.
-  preload: false,
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"),
   title: {
-    default: "Rynet Showroom | Cars for sale from verified South African dealerships",
+    default: "Rynet Showroom | Cars for sale from South African dealerships",
     template: "%s | Rynet Showroom",
   },
   description:
-    "Every car on Rynet comes from a registered, verified dealership. No private sellers, ever. Search stock across South Africa by make, model, price, area and monthly instalment.",
+    "Cars for sale from South African dealerships only. Every dealership is checked before it can list, and there are no private sellers. Search stock across the country by make, model, price and area.",
   openGraph: {
     type: "website",
     locale: "en_ZA",
@@ -86,8 +39,8 @@ export const viewport: Viewport = {
   // Never cap zoom. Pinch-zoom is an accessibility requirement, not a layout nuisance.
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ededea" },
-    { media: "(prefers-color-scheme: dark)", color: "#080d14" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f2139" },
   ],
 };
 
@@ -99,11 +52,7 @@ export default async function MarketplaceLayout({ children }: { children: React.
   const displayFont = await displayFontUrl();
 
   return (
-    <html
-      lang="en-ZA"
-      suppressHydrationWarning
-      className={`${archivo.variable} ${newsreader.variable}`}
-    >
+    <html lang="en-ZA" suppressHydrationWarning className={archivo.variable}>
       {/*
         A real element in a real head, not ReactDOM.preload.
         ------------------------------------------------------------------

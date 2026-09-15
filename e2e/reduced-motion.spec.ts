@@ -66,68 +66,63 @@ for (const path of PAGES) {
   });
 }
 
-test("the mileage gauge reads the real odometer, never zero", async ({ page }) => {
+test("a listing with no photograph still says what it is, never a blank box", async ({ page }) => {
   /*
-   * The needle rests at the car's true mileage by default and the sweep animates up to it,
-   * rather than the other way round. If that is ever inverted, a reader with reduced motion
-   * sees every car in the country showing zero kilometres, which is worse than no gauge.
+   * The no-photograph state replaced the colour plate and its mileage gauge. What has to hold
+   * with animation off is the same thing the gauge test held: the placeholder is not an empty
+   * rectangle. It carries the car's recorded colour name when there is one, and always says that
+   * photographs are coming.
    *
-   * The plate only draws for a listing with no photographs, which is now most of a page of
-   * results away rather than all of it, so this walks the first three pages to collect a
-   * sample worth asserting on. The seed deliberately leaves one listing in twelve bare.
+   * The seed leaves about one listing in twelve without photographs, so this walks the first
+   * three pages of results to collect a sample worth asserting on.
    */
-  const gauges: { sweep: number; dash: number }[] = [];
+  const placeholders: { text: string; visible: boolean }[] = [];
 
   for (const page_ of [1, 2, 3]) {
     await page.goto(page_ === 1 ? "/cars" : `/cars?page=${page_}`);
     await page.waitForTimeout(400);
-
-    gauges.push(
-      ...(await page.locator(".rn-plate").evaluateAll((nodes) =>
+    placeholders.push(
+      ...(await page.locator("article .rn-noimage").evaluateAll((nodes) =>
         nodes.map((node) => {
-          const value = node.querySelector(".rn-plate__value");
+          const style = getComputedStyle(node);
           return {
-            // What the server said the odometer was, as a share of the gauge.
-            sweep: Number.parseFloat(getComputedStyle(node).getPropertyValue("--sweep")),
-            // What the browser actually drew.
-            dash: value ? Number.parseFloat(getComputedStyle(value).strokeDasharray) : Number.NaN,
+            text: (node.textContent ?? "").replace(/\s+/g, " ").trim(),
+            visible: style.visibility !== "hidden" && Number.parseFloat(style.opacity) > 0.9,
           };
         }),
       )),
     );
   }
 
-  expect(gauges.length, "no colour plate rendered, so nothing was tested").toBeGreaterThan(3);
-
-  for (const gauge of gauges) {
-    expect(Number.isNaN(gauge.dash), "a plate drew no gauge at all").toBe(false);
-    // Not "more than half are non-zero". Every single one has to agree with its own car.
-    expect(
-      gauge.dash,
-      `the gauge drew ${gauge.dash} for an odometer of ${gauge.sweep}`,
-    ).toBeCloseTo(gauge.sweep, 1);
-  }
-
-  // And at least one car in the sample has actually been driven, so a suite where every
-  // sweep happened to be zero cannot pass by agreeing with itself.
   expect(
-    gauges.some((gauge) => gauge.sweep > 0),
-    "every car in the sample read zero",
-  ).toBe(true);
+    placeholders.length,
+    "no listing without a photograph, so nothing was tested",
+  ).toBeGreaterThan(0);
+  for (const placeholder of placeholders) {
+    expect(placeholder.visible, "a placeholder was left transparent").toBe(true);
+    expect(placeholder.text).toContain("Photos coming soon");
+  }
 });
 
-test("the ink flip still happens, because it is the only feedback the design has", async ({
-  page,
-}) => {
+test("a card still answers focus, because feedback is not motion", async ({ page }) => {
+  /*
+   * The previous design flipped a card to ink on hover and focus. SHOWROOM lifts it and deepens
+   * its shadow. Reduced motion removes the lift; the shadow change is not vestibular motion and
+   * must survive, or a keyboard user on a reduced-motion setting gets no sign of where they are
+   * beyond the ring.
+   */
   await page.goto("/cars");
 
-  const card = page.locator(".rn-card").first();
-  const before = await card.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const card = page.locator("article.rn-card").first();
+  const before = await card.evaluate((el) => getComputedStyle(el).boxShadow);
 
-  // Focus rather than hover, so this holds on a touch device too.
   await card.locator("a").first().focus();
   await page.waitForTimeout(200);
 
-  const after = await card.evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(after, "a colour change is not vestibular motion and must survive").not.toBe(before);
+  const after = await card.evaluate((el) => ({
+    shadow: getComputedStyle(el).boxShadow,
+    transform: getComputedStyle(el).transform,
+  }));
+  expect(after.shadow, "the focus state must survive reduced motion").not.toBe(before);
+  expect(after.transform === "none" || after.transform === "matrix(1, 0, 0, 1, 0, 0)").toBe(true);
 });

@@ -32,7 +32,12 @@ import path from "node:path";
 /** `undefined` means not looked yet, `null` means looked and there is nothing to preload. */
 let cached: string | null | undefined;
 
-const PRELOADABLE_FACE = /\.\.\/media\/[A-Za-z0-9_-]+-s\.p\.[A-Za-z0-9_.-]+\.woff2(\?[^)"']*)?/;
+/*
+ * The url is relative (`../media/`) in a linked stylesheet and absolute (`/_next/static/media/`)
+ * once `experimental.inlineCss` rewrites it for the document, so both spellings are read.
+ */
+const PRELOADABLE_FACE =
+  /(?:\.\.\/media\/|\/_next\/static\/media\/)[A-Za-z0-9_-]+-s\.p\.[A-Za-z0-9_.-]+\.woff2(\?[^)"']*)?/;
 
 async function findDisplayFont(): Promise<string | null> {
   try {
@@ -44,7 +49,7 @@ async function findDisplayFont(): Promise<string | null> {
 
       const css = await readFile(path.join(dir, file), "utf8");
       const match = css.match(PRELOADABLE_FACE);
-      if (match) return match[0].replace("../media/", "/_next/static/media/");
+      if (match) return match[0].replace(/^\.\.\/media\//, "/_next/static/media/");
     }
   } catch {
     // No build output to read, which is dev. Nothing to preload.

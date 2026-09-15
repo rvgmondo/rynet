@@ -81,16 +81,23 @@ async function readHomeData(featuredLimit: number): Promise<HomeData> {
 
   const live = { status: { equals: "live" } } as const;
 
-  // Over-fetch so the spread has something to choose from, then trim.
-  const recent = await payload.find({
-    collection: "vehicles",
-    where: live,
-    sort: "-publishedAt",
-    limit: featuredLimit * 6,
-    depth: 2,
-  });
-
-  const featured = spreadAcrossDealers(recent.docs.map(toCard), featuredLimit);
+  // Over-fetch so the spread has something to choose from, then trim. A limit of 0 skips the read
+  // entirely: the SHOWROOM home page picks its own photographed cars and only wants the counts.
+  const featured =
+    featuredLimit > 0
+      ? spreadAcrossDealers(
+          (
+            await payload.find({
+              collection: "vehicles",
+              where: live,
+              sort: "-publishedAt",
+              limit: featuredLimit * 6,
+              depth: 2,
+            })
+          ).docs.map(toCard),
+          featuredLimit,
+        )
+      : [];
 
   const [bodyDocs, provinceDocs, colourDocs, total, demonstration, dealers, realDealers] =
     await Promise.all([

@@ -1,79 +1,51 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
-import Link from "next/link";
+import { ThemeProvider } from "next-themes";
 
-import "@/styles/globals.css";
+import { NotFoundBody } from "@/components/layout/not-found-body";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SkipLink } from "@/components/layout/skip-link";
+import { archivo } from "@/lib/fonts";
+import { siteStylesheetUrl } from "@/lib/site-stylesheet";
 
 /**
- * The GLOBAL not-found, which had no styling at all.
+ * The GLOBAL not-found.
  *
- * Both root layouts on this site are scoped to a route group, `(marketplace)` and
- * `(agency)`, and a route group's layout does not wrap the global not-found. So any path
- * that matched neither group, which is every typo above the first segment, served Next's
- * built-in page: unstyled, no masthead, no way back, and on pure white in a light browser
- * and pure black in a dark one. The one page a lost visitor is guaranteed to reach was the
- * only page with no design on it.
+ * Both root layouts are scoped to a route group, and a route group's layout does not wrap the
+ * global not-found, so any path that matches neither group (every typo above the first segment)
+ * is served by this file, which therefore owns its own <html> and <body>.
  *
- * This file therefore owns its own `<html>` and `<body>`, because there is no layout above
- * it to provide them. It deliberately carries the minimum: one font rather than two, no
- * theme provider and no client JavaScript. Dark still works without any of that, because
- * tokens.css flips on `prefers-color-scheme` whenever no `data-theme` is stamped on the
- * root, which is exactly the state a page with no theme provider is in.
+ * It renders the marketplace chrome around the same body as `(marketplace)/not-found.tsx`, so a
+ * mistyped address, which is often a visitor's first sight of the site, looks like the site.
+ * `suppressHydrationWarning` and the ThemeProvider match the layouts: next-themes stamps
+ * data-theme before React hydrates, and the theme switch in the footer needs the provider. Before
+ * hydration tokens.css still follows the operating system.
  *
- * The route-group 404s in `(marketplace)/not-found.tsx` and the agency's own are unchanged
- * and still handle everything inside those groups, with the full header and footer.
+ * It LINKS the site stylesheet rather than importing it. An import here is carried in the React
+ * payload of every page on the site, a whole extra copy of the stylesheet per document; see
+ * src/lib/site-stylesheet.ts for the measurement. React hoists the link into the head and holds
+ * the first paint for it, so the page never flashes unstyled.
  */
-const archivo = Archivo({
-  subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: "Page not found | Rynet",
   robots: { index: false, follow: true },
 };
 
-export default function GlobalNotFound() {
+export default async function GlobalNotFound() {
+  const stylesheet = await siteStylesheetUrl();
+
   return (
-    <html lang="en-ZA" className={archivo.variable}>
+    <html lang="en-ZA" suppressHydrationWarning className={archivo.variable}>
       <body>
-        <main className="container-page flex min-h-screen flex-col justify-center py-[var(--section-base)]">
-          <p className="rn-label text-ink-muted">Rynet</p>
-
-          <h1 className="rn-head mt-6 max-w-[16ch]">That address does not exist.</h1>
-
-          <p className="rn-prose mt-5 text-ink-secondary">
-            Nothing on Rynet answers to it. Either the link is wrong, or it pointed at something
-            that has since been taken down.
-          </p>
-
-          {/* The rule carries `margin: 0` from .rn-rule, which beats a `mt-` utility of the same
-              specificity depending on source order, so it was drawing flush through the
-              paragraph above it. The gap goes on a wrapper, where nothing can reset it. */}
-          <div className="mt-12">
-            <hr className="rn-rule rn-rule--brand" />
-          </div>
-
-          <ul className="mt-8 flex flex-wrap gap-3">
-            {[
-              { href: "/", label: "Rynet Showroom" },
-              { href: "/cars", label: "Cars for sale" },
-              { href: "/dealers", label: "Dealerships" },
-              { href: "/digital", label: "Rynet Digital" },
-            ].map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="rn-label inline-flex min-h-12 items-center border border-line-interactive px-5 hover:bg-ink hover:text-ink-inverse"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </main>
+        {stylesheet ? <link rel="stylesheet" href={stylesheet} precedence="default" /> : null}
+        <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
+          <SkipLink />
+          <SiteHeader />
+          <main id="main" tabIndex={-1}>
+            <NotFoundBody />
+          </main>
+          <SiteFooter />
+        </ThemeProvider>
       </body>
     </html>
   );

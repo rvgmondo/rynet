@@ -1,203 +1,255 @@
-import { MessageCircle } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
+import { DealerBlock } from "@/components/listing/dealer-block";
+import type { FinanceAssumptions } from "@/components/listing/finance-estimate";
+import { ShareButton } from "@/components/listing/share-button";
+import { StickyActionBar } from "@/components/listing/sticky-action-bar";
+import { Badge } from "@/components/ui/badge";
+import { buttonClasses } from "@/components/ui/button-classes";
+import { Notice } from "@/components/ui/notice";
+import { PriceTag } from "@/components/ui/price-tag";
 import { EnquiryDialog } from "@/components/vehicles/enquiry-dialog";
+import { FinanceTeaser } from "@/components/vehicles/finance-panel";
 import { PhoneReveal } from "@/components/vehicles/phone-reveal";
-import { RandFigure } from "@/components/vehicles/rand-figure";
 import { formatRand } from "@/lib/format";
-import { populated, relName } from "@/lib/relations";
+import { populated, relName, relSlug } from "@/lib/relations";
+import { vehicleUrl } from "@/lib/urls";
 import type { Vehicle } from "@/payload-types";
 
+/** The id the phone action bar watches: while these buttons are on screen, the bar stays away. */
+export const LISTING_ACTIONS_ID = "listing-actions";
+
+function shortTitle(vehicle: Vehicle): string {
+  return [vehicle.modelYear, relName(vehicle.make), relName(vehicle.model)]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** The wa.me address for a South African number written the way people write it. */
+function whatsappHref(number: string, vehicle: Vehicle): string {
+  const digits = number.replace(/[^0-9]/g, "").replace(/^0/, "27");
+  const message = `Hi, I am interested in the ${shortTitle(vehicle)} (ref ${vehicle.publicRef}) on Rynet.`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+}
+
+function priceQualifier(vehicle: Vehicle): string | null {
+  const kind =
+    vehicle.priceType === "on_the_road"
+      ? "On-the-road price"
+      : vehicle.priceType === "retail"
+        ? "Retail price"
+        : null;
+  const vat =
+    vehicle.vatStatus === "vat_inclusive"
+      ? "VAT included"
+      : vehicle.vatStatus === "vat_exclusive"
+        ? "excluding VAT"
+        : null;
+  if (kind && vat) return `${kind}, ${vat}`;
+  if (vat) return vat.charAt(0).toUpperCase() + vat.slice(1);
+  return kind;
+}
+
 /**
- * The price and actions.
+ * The summary card: everything a buyer needs to decide whether to get in touch.
  *
- * Sticky on desktop, and it needs care: WCAG 2.2 SC 2.4.11 says a focused element must not
- * end up hidden behind sticky chrome. This sits in a `lg:sticky` column rather than being
- * fixed over the content, so nothing it could obscure is ever focusable behind it.
+ * In reading order: the title, the price, a one-line finance estimate, the demonstration notice,
+ * the contact actions and the selling dealership. On a phone it follows the photograph directly;
+ * from 1024px it sits beside the gallery and sticks (the page supplies the panel and the sticky
+ * wrapper, so the card's shadow is never clipped by the scroll that keeps it on screen). On a
+ * tablet, where the card runs the full width of the page, a container query splits it into two
+ * halves, the facts on the left and the actions on the right, so no button stretches to 700px.
  *
- * The mobile treatment is a bar pinned to the bottom, rendered separately below, because a
- * buyer on a phone should never have to scroll back up to enquire.
+ * THE TITLE is one h1 in two parts: year, make and model at heading size, and the variant on its
+ * own line in muted body type. It used to be one 56px sentence that took three lines on a phone
+ * and pushed the car below the fold.
  *
- * Price on application is a real state, not a missing price. Showing "R 0" or an empty
- * space where a number belongs reads as broken, and dealerships use POA deliberately.
+ * HONESTY. A demonstration listing carries one calm Notice, placed ABOVE the buttons, so nobody is
+ * invited to phone or send their details before they have been told the car is an example. The
+ * dealership underneath gets "Demo dealership", never "Verified". The notice title is the exact
+ * phrase `e2e/enquiry.spec.ts` looks for to decide whether a listing is a demonstration.
  *
- * REDRAWN. This was the last filled card on the site: a grey panel with three more bordered
- * boxes nested inside it, on a design that had spent the whole redesign taking boxes off things.
- * It is a ruled column on the page ground now, the way the dealer block beneath it already was,
- * which also puts both blocks on one left edge instead of 20px apart under rules that were
- * flush.
+ * RED is spent once: the Enquire button. Phone and WhatsApp are equal outline buttons side by side
+ * (they stack when the card is too narrow for both), and every link in the card is ink.
+ *
+ * Price on application is a real state, not a missing price, and a sold car keeps its page with
+ * the actions replaced by a plain statement and a way on to similar stock.
  */
-export function PriceRail({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }) {
+export function ListingSummary({
+  vehicle,
+  sold,
+  assumptions,
+}: {
+  vehicle: Vehicle;
+  sold: boolean;
+  assumptions: FinanceAssumptions;
+}) {
   const poa = vehicle.priceType === "poa";
-  const dropAmount =
-    typeof vehicle.previousPrice === "number" && vehicle.previousPrice > vehicle.price
-      ? vehicle.previousPrice - vehicle.price
-      : null;
   const dealer = populated(vehicle.dealer);
   const branch = populated(vehicle.branch);
-  const verified = dealer?.verificationStatus === "verified";
-
-  const priceLabel =
-    vehicle.priceType === "on_the_road"
-      ? "On the road"
-      : vehicle.priceType === "poa"
-        ? null
-        : "Retail";
+  // The same test the structured data uses: a listing or its dealership being example data.
+  const demonstration = Boolean(vehicle.isDemonstration || dealer?.isDemonstration);
+  const phone = branch?.phone ?? dealer?.principal?.phone ?? null;
+  const whatsapp = dealer?.whatsappNumber?.trim() || null;
+  const variant = relName(vehicle.variant);
+  const title = shortTitle(vehicle);
+  const qualifier = priceQualifier(vehicle);
+  const dropAmount =
+    !poa && typeof vehicle.previousPrice === "number" && vehicle.previousPrice > vehicle.price
+      ? vehicle.previousPrice - vehicle.price
+      : null;
+  const path = vehicleUrl({
+    makeSlug: relSlug(vehicle.make),
+    modelSlug: relSlug(vehicle.model),
+    modelYear: vehicle.modelYear,
+    variantName: variant,
+    publicRef: vehicle.publicRef ?? "",
+  });
 
   return (
-    /*
-     * `container-type: inline-size` is what lets the price size itself to this column rather
-     * than to the viewport. Without it RandFigure's container query has no container to measure
-     * and falls back to the viewport clamp, which is how the asking price ended up the only
-     * price on the platform set at a different size from every other price on the platform.
-     */
-    <div className="border-t-2 border-ink pt-5 [container-type:inline-size]">
-      {poa ? (
-        <>
-          <p className="rn-figure">Price on application</p>
-          <p className="mt-1 text-sm text-ink-secondary">
-            This dealership prices this one on enquiry. Ask and they will come back to you.
-          </p>
-        </>
-      ) : (
-        <>
-          {/*
-            The same figure component every card uses, so the rand mark on the page a buyer
-            makes the decision on matches the rand mark on the card that brought them here. It
-            was a full-size ink R at a viewport-clamped size: four prices in four styles on one
-            page.
-          */}
-          <RandFigure value={vehicle.price} />
-
-          {dropAmount && !sold ? (
-            /* Drawn the way the card draws it. It was a green bordered pill with a lucide arrow
-               reading "R 20 000 OFF": a second colour this palette does not use, a capsule on a
-               system with no radius, and a different sentence for the same fact. */
-            <p className="rn-label rn-card__accent mt-1.5 tabular text-accent">
-              <span aria-hidden="true">- {formatRand(dropAmount)}</span>
-              <span className="sr-only">
-                Reduced by {formatRand(dropAmount)} from {formatRand(vehicle.previousPrice ?? 0)}
+    <div className="grid gap-x-10 p-5 sm:p-6 @min-[42rem]:grid-cols-2">
+      <div className="min-w-0">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="min-w-0 text-3xl leading-[1.12] font-bold tracking-[-0.02em] text-heading lg:text-2xl">
+            <span className="block">{title}</span>
+            {variant ? (
+              <span className="mt-1.5 block text-base leading-snug font-medium tracking-normal text-muted">
+                {variant}
               </span>
-            </p>
-          ) : null}
-          <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs text-ink-muted">
-            {priceLabel ? <span>{priceLabel}</span> : null}
-            {vehicle.vatStatus === "vat_inclusive" ? <span>VAT included</span> : null}
-            {vehicle.vatStatus === "vat_exclusive" ? <span>Excluding VAT</span> : null}
-            {vehicle.previousPrice ? (
-              <span className="line-through tabular">{formatRand(vehicle.previousPrice)}</span>
             ) : null}
-          </p>
-        </>
-      )}
-
-      {verified ? (
-        <p className="mt-4 border-y border-line py-3 text-xs text-ink-secondary">
-          {/* No shield glyph. The one red object in this viewport is the enquiry button,
-              which is the action; a red icon three lines above it competes with that. */}
-          Sold by a dealership we have verified.{" "}
-          <a href="/how-verification-works" className="font-semibold underline">
-            What that means
-          </a>
-        </p>
-      ) : null}
-
-      {sold ? (
-        <p className="rn-label mt-5 border-y-2 border-ink py-4 text-ink">No longer available</p>
-      ) : (
-        <div className="mt-5 flex flex-col gap-2">
-          <EnquiryDialog
-            vehicleRef={vehicle.publicRef ?? ""}
-            vehicleTitle={[vehicle.modelYear, relName(vehicle.make), relName(vehicle.model)]
-              .filter(Boolean)
-              .join(" ")}
-            dealerName={dealer?.tradingName ?? "the dealership"}
-          />
-
-          <PhoneReveal
-            vehicleRef={vehicle.publicRef ?? ""}
-            phone={branch?.phone ?? dealer?.principal?.phone ?? null}
-          />
-
-          {dealer?.whatsappNumber ? (
-            <a
-              href={`https://wa.me/${dealer.whatsappNumber.replace(/[^0-9]/g, "").replace(/^0/, "27")}?text=${encodeURIComponent(
-                `Hi, I am interested in the ${vehicle.modelYear} ${relName(vehicle.make) ?? ""} ${relName(vehicle.model) ?? ""} (ref ${vehicle.publicRef}) on Rynet.`,
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rn-label inline-flex min-h-11 items-center justify-center gap-2 border border-line-interactive px-4 hover:bg-ink hover:text-ink-inverse"
-            >
-              <MessageCircle aria-hidden="true" className="size-4" />
-              WhatsApp the dealership
-              <span className="sr-only">, opens in a new tab</span>
-            </a>
-          ) : null}
+          </h1>
+          <ShareButton path={path} title={[title, variant].filter(Boolean).join(" ")} />
         </div>
-      )}
-
-      <dl className="mt-5 space-y-1.5 border-t border-line pt-4 text-xs">
-        <div className="flex justify-between gap-3">
-          <dt className="text-ink-muted">Reference</dt>
-          <dd className="tabular font-medium">{vehicle.publicRef}</dd>
-        </div>
-        {vehicle.stockNumber ? (
-          <div className="flex justify-between gap-3">
-            <dt className="text-ink-muted">Dealer stock number</dt>
-            <dd className="tabular">{vehicle.stockNumber}</dd>
-          </div>
+        {vehicle.derivative ? (
+          <p className="mt-1 text-sm text-muted">{vehicle.derivative}</p>
         ) : null}
-      </dl>
 
-      {vehicle.isDemonstration ? (
-        <p className="mt-4 border-t border-line pt-3 text-2xs text-ink-muted">
-          <strong className="font-semibold">Demonstration listing.</strong> This is seeded example
-          stock. The dealership is not a real business and the vehicle is not for sale.
-        </p>
-      ) : null}
+        <div className="mt-5">
+          {poa ? (
+            <>
+              <p className="text-2xl font-bold text-heading">Price on application</p>
+              <p className="mt-1 text-sm text-muted">
+                The dealership gives the price when you ask. Enquire and they will come back to you.
+              </p>
+            </>
+          ) : (
+            <>
+              <PriceTag value={vehicle.price} size="xl" />
+              {dropAmount && !sold ? (
+                <Badge tone="drop" className="mt-2.5">
+                  Reduced by {formatRand(dropAmount)}
+                  <span className="sr-only">, from {formatRand(vehicle.previousPrice ?? 0)}</span>
+                </Badge>
+              ) : null}
+              {qualifier ? <p className="mt-2 text-sm text-muted">{qualifier}</p> : null}
+            </>
+          )}
+        </div>
+
+        {!poa && !sold ? (
+          <FinanceTeaser price={vehicle.price} assumptions={assumptions} className="mt-4" />
+        ) : null}
+
+        {demonstration ? (
+          <Notice title="Demonstration listing" className="mt-5">
+            This car and its dealership are examples that show how Rynet works. The car is not for
+            sale.
+          </Notice>
+        ) : null}
+      </div>
+
+      <div className="min-w-0">
+        {sold ? (
+          <div role="status" className="mt-5 rounded-md bg-subtle p-4 @min-[42rem]:mt-0">
+            <p className="text-base font-semibold text-heading">This car has been sold</p>
+            <p className="mt-1 text-sm text-body">
+              The listing stays up for reference, and there are similar cars further down this page.
+            </p>
+            <Link
+              href={`/cars/${relSlug(vehicle.make)}/${relSlug(vehicle.model)}`}
+              className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-heading underline underline-offset-3 hover:text-accent"
+            >
+              All {relName(vehicle.model)} listings
+              <ArrowRight aria-hidden="true" className="size-4" />
+            </Link>
+          </div>
+        ) : (
+          <div id={LISTING_ACTIONS_ID} className="mt-5 grid gap-2 @min-[42rem]:mt-0">
+            <EnquiryDialog
+              vehicleRef={vehicle.publicRef ?? ""}
+              vehicleTitle={title}
+              dealerName={dealer?.tradingName ?? "the dealership"}
+              isDemonstration={demonstration}
+            />
+
+            {phone || whatsapp ? (
+              <div className={`grid gap-2 ${phone && whatsapp ? "@min-[19rem]:grid-cols-2" : ""}`}>
+                <PhoneReveal
+                  vehicleRef={vehicle.publicRef ?? ""}
+                  phone={phone}
+                  className="w-full"
+                />
+                {whatsapp ? (
+                  <a
+                    href={whatsappHref(whatsapp, vehicle)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonClasses({ variant: "outline", className: "w-full px-3" })}
+                  >
+                    <MessageCircle aria-hidden="true" />
+                    WhatsApp
+                    <span className="sr-only">, opens in a new tab</span>
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        <DealerBlock
+          dealer={dealer}
+          branch={branch}
+          demonstration={demonstration}
+          className="mt-6"
+        />
+      </div>
     </div>
   );
 }
 
 /**
- * The mobile action bar.
+ * The phone action bar: the price, Call and Enquire, on one slim row pinned to the bottom.
  *
- * Fixed to the bottom of the viewport, which is the one place a sticky element genuinely
- * earns its keep on a phone. `pb-[env(safe-area-inset-bottom)]` keeps it clear of the home
- * indicator on an iPhone, where otherwise the buttons sit under it and cannot be pressed.
+ * Only below 1024px, and only while it is useful. StickyActionBar keeps it out of the way while
+ * the summary card's own buttons are on screen (so the price and Enquire never show twice) and
+ * while the footer is, and it starts hidden so it never flashes up over a first screen that
+ * already has the buttons on it.
+ *
+ * One row of 44px targets, about 64px of bar, where it used to be a price line over two buttons
+ * at about 110px. Call is a direct `tel:` link here (see PhoneReveal), and below 375px it drops
+ * its word and keeps its icon and full accessible name so a long price still fits at 320px.
+ *
+ * Solid, never a backdrop blur: the page scrolls under this bar by definition, and a blur there
+ * is a full-viewport readback on every frame on a mid-range Android.
  */
 export function MobileActionBar({ vehicle, sold }: { vehicle: Vehicle; sold: boolean }) {
   if (sold) return null;
   const dealer = populated(vehicle.dealer);
   const branch = populated(vehicle.branch);
+  const title = shortTitle(vehicle);
 
   return (
-    // Solid, never a backdrop blur: the page scrolls under this bar by definition, and a
-    // blur there is a full-viewport readback on every frame on a mid-range Android.
-    <div className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] border-t-2 border-ink bg-surface p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
-      {/*
-        The price on its own line, and the two buttons under it.
-
-        All three were on one row, and the price was the only flexible item on it, with
-        `flex-1` and `truncate`. So at 320, 360 and 390 wide it rendered as "R 5..." while
-        the two buttons kept their full labels. A price truncated to its first digit is worse
-        than no price: it is the number the whole bar exists to show, and R 584 000 and
-        R 5 840 000 truncate identically.
-
-        Making the price rigid instead only moves the problem, because the arithmetic does
-        not close at 320: a full rand figure and two labelled buttons do not fit across a
-        screen that narrow, at any distribution of the slack. The choice is therefore between
-        cutting the buttons down to bare icons and giving the price its own line, and the
-        line wins twice over. Nothing is abbreviated, and the buttons go full width, which
-        makes both of them a thumb-sized target instead of two small ones sharing an edge.
-
-        Roughly 28px more bar. Paid for in globals.css, where scroll-padding-bottom already
-        keeps anchored content clear of this thing.
-      */}
-      <p className="font-display text-lg font-extrabold tabular [font-variation-settings:'wdth'_112]">
-        {vehicle.priceType === "poa" ? "POA" : formatRand(vehicle.price)}
-      </p>
-
-      <div className="mt-2 flex gap-2 [&>*]:flex-1">
+    <StickyActionBar watchId={LISTING_ACTIONS_ID}>
+      <div className="mx-auto flex max-w-2xl items-center gap-2">
+        <div className="min-w-0 flex-1">
+          {vehicle.priceType === "poa" ? (
+            <p className="text-sm leading-tight font-semibold text-heading">Price on application</p>
+          ) : (
+            <PriceTag value={vehicle.price} size="sm" />
+          )}
+          <p className="truncate text-xs text-muted">{title}</p>
+        </div>
         <PhoneReveal
           compact
           vehicleRef={vehicle.publicRef ?? ""}
@@ -206,12 +258,11 @@ export function MobileActionBar({ vehicle, sold }: { vehicle: Vehicle; sold: boo
         <EnquiryDialog
           compact
           vehicleRef={vehicle.publicRef ?? ""}
-          vehicleTitle={[vehicle.modelYear, relName(vehicle.make), relName(vehicle.model)]
-            .filter(Boolean)
-            .join(" ")}
+          vehicleTitle={title}
           dealerName={dealer?.tradingName ?? "the dealership"}
+          isDemonstration={Boolean(vehicle.isDemonstration || dealer?.isDemonstration)}
         />
       </div>
-    </div>
+    </StickyActionBar>
   );
 }

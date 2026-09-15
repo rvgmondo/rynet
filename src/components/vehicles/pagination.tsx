@@ -1,92 +1,95 @@
+import { ChevronLeft, ChevronRight, Ellipsis } from "lucide-react";
 import Link from "next/link";
 
+import { buttonClasses } from "@/components/ui/button-classes";
+
 /**
- * Pagination.
+ * Pagination: Previous and Next at the ends, numbered pills between.
  *
- * Real anchors, never click handlers, because Section 13 requires crawlable links and a
- * button that changes state via JavaScript is invisible to a crawler and unreachable for
- * anyone who lands on the page before the JavaScript does.
+ * Real anchors, never click handlers, because crawlers follow links and a buyer who lands before
+ * the JavaScript does still needs page two. Every link carries the whole search (the caller's
+ * `buildHref` does that), because a page two that drops the filters is the most common bug on a
+ * faceted site, and e2e/smoke.spec.ts asserts `a[rel="next"]` keeps them.
  *
- * `rel="prev"` and `rel="next"` are set on the adjacent pages. Google no longer uses them
- * as an indexing signal, but other crawlers and assistive technology still do, and they
- * cost nothing.
+ * Each number has its own accessible name ("Page 4"), and the current page is text marked
+ * `aria-current="page"`, not a link to itself. The current pill is navy rather than red: red is
+ * spent on the one action that matters on a screen, and "you are on page one" is not it.
  *
- * Every page in the window is a numbered link with its own accessible name, so a screen
- * reader user hears "Page 4 of 13" rather than "link, 4". The current page is marked with
- * `aria-current="page"` and rendered as text, not a link to itself.
- *
- * REDRAWN. It was the one un-redrawn control left in the results surface: a row of small
- * bordered boxes with a red fill on the current page and two chevron glyphs, centred. Three
- * things were wrong with it and they are the same three the redesign exists to fix. The boxes
- * are boxes. The red fill put a second red object in a viewport that already has one, and spent
- * the loudest mark on the site on saying "you are on page one", which is the least useful fact
- * on the screen. And the whole control was centred, on a page where everything else is ranged
- * left against a rule.
- *
- * So it is a ruled bar now. Previous and Next hold the two ends, where a thumb and a cursor both
- * expect them. The numbers sit in the middle at the tabular width the prices use, and the
- * current one is stated in ink under a 2px rule rather than filled: the same ink-flip logic as
- * every other selected thing on the site, drawn as an underline because a filled number in a row
- * of numbers reads as a button.
+ * On a phone the numbers give way to "Page 2 of 13" between the two buttons. Nobody jumps to page
+ * nine with a thumb; they press Next, and seven pills across 390px would wrap into a row nobody can
+ * follow.
  */
 export function Pagination({
   page,
   totalPages,
   buildHref,
+  label = "Search results pages",
 }: {
   page: number;
   totalPages: number;
   buildHref: (page: number) => string;
+  label?: string;
 }) {
   if (totalPages <= 1) return null;
 
-  // A sliding window of five, clamped to the ends, plus first and last always reachable.
-  const window = 2;
-  const start = Math.max(1, Math.min(page - window, totalPages - window * 2));
-  const end = Math.min(totalPages, Math.max(page + window, window * 2 + 1));
+  // A sliding window of five, clamped to the ends, with the first and last always reachable.
+  const reach = 2;
+  const start = Math.max(1, Math.min(page - reach, totalPages - reach * 2));
+  const end = Math.min(totalPages, Math.max(page + reach, reach * 2 + 1));
   const pages: number[] = [];
   for (let p = start; p <= end; p += 1) pages.push(p);
 
-  /** A number in the row. A line, never a box. */
-  const numberClass =
-    "inline-flex min-h-11 min-w-11 items-center justify-center px-2 text-sm font-semibold tabular text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:text-ink";
+  const pill =
+    "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-3 text-base font-semibold tabular";
+  const numberClass = `${pill} text-heading transition-colors duration-[var(--duration-micro)] hover:bg-subtle-hover`;
+  const gap = (
+    <li aria-hidden="true" className="inline-flex min-w-8 items-center justify-center text-muted">
+      <Ellipsis className="size-4" />
+    </li>
+  );
 
-  /** The two ends. These are the only two targets most people ever press. */
-  const endClass =
-    "rn-label inline-flex min-h-11 items-center px-4 transition-colors duration-[var(--duration-micro)]";
+  const end_ = (direction: "prev" | "next") => {
+    const target = direction === "prev" ? page - 1 : page + 1;
+    const available = direction === "prev" ? page > 1 : page < totalPages;
+    // Below 384px the words go and the chevrons stay, so both ends and "Page 2 of 13" fit a 320px
+    // screen. The words stay in the accessible name.
+    const content =
+      direction === "prev" ? (
+        <>
+          <ChevronLeft aria-hidden="true" />
+          <span className="max-[24rem]:sr-only">Previous</span>
+        </>
+      ) : (
+        <>
+          <span className="max-[24rem]:sr-only">Next</span>
+          <ChevronRight aria-hidden="true" />
+        </>
+      );
+    const classes = buttonClasses({ variant: "outline", size: "sm", className: "shrink-0" });
+
+    return available ? (
+      <Link href={buildHref(target)} rel={direction} className={classes}>
+        {content}
+      </Link>
+    ) : (
+      /* Held in place rather than removed, so the row does not shift on the first and last page. */
+      <span aria-hidden="true" className={`${classes} pointer-events-none border-line text-muted`}>
+        {content}
+      </span>
+    );
+  };
 
   return (
-    <nav aria-label="Search results pages" className="mt-10 border-t-2 border-ink">
-      <div className="flex items-center justify-between gap-4 pt-4">
-        {page > 1 ? (
-          <Link
-            href={buildHref(page - 1)}
-            rel="prev"
-            className={`${endClass} border border-line-interactive hover:bg-ink hover:text-ink-inverse`}
-          >
-            Previous
-          </Link>
-        ) : (
-          /* Held rather than hidden, so the numbers do not jump sideways on page one. */
-          <span className={`${endClass} border border-line text-ink-muted`} aria-hidden="true">
-            Previous
-          </span>
-        )}
+    <nav aria-label={label} className="mt-10 border-t border-line pt-6 sm:mt-12">
+      <div className="flex items-center justify-between gap-3">
+        {end_("prev")}
 
-        {/*
-          On a phone the numbers go and the position stays.
-          -------------------------------------------------
-          Previous, seven numerals and Next do not fit across 390px, and flex-wrap made a mess of
-          it: the row broke into three lines and read "1 2 3 / 4 5 ... / 13", which is not an
-          order anybody can follow. Nobody jumps to page nine on a phone anyway. They press Next.
-          So the small screen gets the one fact it needs, and the numbers come back at 640px.
-        */}
-        <p className="rn-label text-ink-secondary sm:hidden">
-          Page <span className="tabular text-ink">{page}</span> of{" "}
-          <span className="tabular text-ink">{totalPages}</span>
+        <p className="text-sm text-body sm:hidden">
+          Page <span className="font-semibold text-heading tabular">{page}</span> of{" "}
+          <span className="font-semibold text-heading tabular">{totalPages}</span>
         </p>
 
-        <ul className="hidden items-center justify-center gap-x-1 sm:flex">
+        <ul className="hidden items-center gap-1 sm:flex">
           {start > 1 ? (
             <>
               <li>
@@ -94,49 +97,28 @@ export function Pagination({
                   1
                 </Link>
               </li>
-              {start > 2 ? (
-                <li aria-hidden="true" className="px-1 text-ink-muted">
-                  ...
-                </li>
-              ) : null}
+              {start > 2 ? gap : null}
             </>
           ) : null}
 
-          {pages.map((p) =>
-            p === page ? (
-              <li key={p}>
-                {/* The current page: ink, under a rule. The rest of the site marks a chosen
-                    thing by flipping to ink, and this is that at the scale of one numeral. */}
-                <span
-                  aria-current="page"
-                  className="inline-flex min-h-11 min-w-11 items-center justify-center border-b-2 border-ink px-2 text-sm font-bold tabular text-ink"
-                >
+          {pages.map((p) => (
+            <li key={p}>
+              {p === page ? (
+                <span aria-current="page" className={`${pill} bg-secondary text-on-secondary`}>
                   <span className="sr-only">Page </span>
                   {p}
-                  <span className="sr-only">, current page</span>
                 </span>
-              </li>
-            ) : (
-              <li key={p}>
-                <Link
-                  href={buildHref(p)}
-                  aria-label={`Page ${p}`}
-                  rel={p === page - 1 ? "prev" : p === page + 1 ? "next" : undefined}
-                  className={numberClass}
-                >
+              ) : (
+                <Link href={buildHref(p)} aria-label={`Page ${p}`} className={numberClass}>
                   {p}
                 </Link>
-              </li>
-            ),
-          )}
+              )}
+            </li>
+          ))}
 
           {end < totalPages ? (
             <>
-              {end < totalPages - 1 ? (
-                <li aria-hidden="true" className="px-1 text-ink-muted">
-                  ...
-                </li>
-              ) : null}
+              {end < totalPages - 1 ? gap : null}
               <li>
                 <Link
                   href={buildHref(totalPages)}
@@ -150,19 +132,7 @@ export function Pagination({
           ) : null}
         </ul>
 
-        {page < totalPages ? (
-          <Link
-            href={buildHref(page + 1)}
-            rel="next"
-            className={`${endClass} border border-line-interactive hover:bg-ink hover:text-ink-inverse`}
-          >
-            Next
-          </Link>
-        ) : (
-          <span className={`${endClass} border border-line text-ink-muted`} aria-hidden="true">
-            Next
-          </span>
-        )}
+        {end_("next")}
       </div>
     </nav>
   );

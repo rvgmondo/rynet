@@ -1,13 +1,17 @@
 import config from "@payload-config";
+import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { getPayload } from "payload";
+import { Suspense } from "react";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { DealerCard } from "@/components/vehicles/dealer-card";
+import { assumptionsFrom } from "@/components/listing/finance-estimate";
+import { FeaturesPanel, KeyFactsPanel } from "@/components/listing/listing-overview";
+import { SellerDescription } from "@/components/listing/seller-description";
 import { FinancePanel } from "@/components/vehicles/finance-panel";
-import { MobileActionBar, PriceRail } from "@/components/vehicles/price-rail";
+import { ListingSummary, MobileActionBar } from "@/components/vehicles/price-rail";
 import { SimilarVehicles } from "@/components/vehicles/similar-vehicles";
 import { SpecTable } from "@/components/vehicles/spec-table";
 import { VehicleGallery } from "@/components/vehicles/vehicle-gallery";
@@ -66,15 +70,24 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
   return {
     title: sold ? `${title} (sold)` : `${title} for sale`,
+    /*
+     * How Rynet works, never a claim about this dealership. A demonstration listing says what
+     * it is first, the same as the page does.
+     */
     description: [
-      `${title} with ${formatKm(vehicle.mileageKm)}`,
-      vehicle.priceType === "poa" ? "price on application" : `at ${formatRand(vehicle.price)}`,
-      `from ${dealer?.tradingName ?? "a verified dealership"}`,
-      city ? `in ${city}` : null,
-      "Only verified dealerships list on Rynet.",
+      vehicle.isDemonstration ? "Demonstration listing, not for sale." : null,
+      `${[
+        `${title} with ${formatKm(vehicle.mileageKm)}`,
+        vehicle.priceType === "poa" ? "price on application" : `at ${formatRand(vehicle.price)}`,
+        dealer?.tradingName ? `from ${dealer.tradingName}` : null,
+        city ? `in ${city}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ")}.`,
+      "Every dealership is checked before it can list on Rynet.",
     ]
       .filter(Boolean)
-      .join(", "),
+      .join(" "),
     alternates: {
       canonical: vehicleUrl({
         makeSlug: relSlug(vehicle.make),
@@ -102,8 +115,30 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   };
 }
 
+/**
+ * The vehicle page, where the lead is won.
+ *
+ * ONE DOM ORDER FOR BOTH WIDTHS, so the reading order, the focus order and the visual order
+ * always agree (SC 1.3.2 and 2.4.3). Nothing is moved with CSS `order`.
+ *
+ *   1. The gallery.
+ *   2. The summary card: title, price, the finance line, the demonstration notice, the contact
+ *      actions and the dealership.
+ *   3. Key facts, the dealership's description, features, the specification, the finance
+ *      estimate.
+ *
+ * On a phone that is simply top to bottom: the photograph edge to edge, then who, how much and
+ * how to get in touch, before anything long. From 1024px the page is two columns. The gallery
+ * takes row one on the left, the long sections take row two on the left, and the summary card
+ * spans both rows on the right and sticks while the left column scrolls. The wrapper around the
+ * long sections is `display: contents` below 1024px, so on a phone its children are ordinary
+ * rows of the same grid; it only becomes a column of its own on a desktop.
+ *
+ * Similar cars stream in behind a Suspense boundary, so their queries never hold back the
+ * photograph, which is the largest contentful paint.
+ */
 export default async function VehiclePage({ params }: { params: Params }) {
-  const { slug } = await params;
+  const { make, model, slug } = await params;
   const vehicle = await loadVehicle(slug);
   if (!vehicle) notFound();
 
@@ -122,11 +157,12 @@ export default async function VehiclePage({ params }: { params: Params }) {
    * the URL. The old one still resolves because the reference is what is looked up, and it
    * redirects here permanently rather than serving the same page at two addresses.
    */
-  const requested = `/vehicles/${(await params).make}/${(await params).model}/${slug}`;
+  const requested = `/vehicles/${make}/${model}/${slug}`;
   if (requested !== canonical) permanentRedirect(canonical);
 
   const payload = await getPayload({ config });
   const financeDefaults = await payload.findGlobal({ slug: "finance-defaults" });
+  const assumptions = assumptionsFrom(financeDefaults);
 
   const title = [
     vehicle.modelYear,
@@ -136,9 +172,10 @@ export default async function VehiclePage({ params }: { params: Params }) {
   ]
     .filter(Boolean)
     .join(" ");
-  const dealer = populated(vehicle.dealer);
-  const branch = populated(vehicle.branch);
+  const makeName = relName(vehicle.make) ?? "Make";
+  const modelName = relName(vehicle.model) ?? "Model";
   const sold = vehicle.status === "sold";
+  const poa = vehicle.priceType === "poa";
 
   return (
     <>
@@ -146,8 +183,7 @@ export default async function VehiclePage({ params }: { params: Params }) {
         Vehicle, Offer and AutoDealer structured data. vehicleIdentificationNumber is
         deliberately absent: the VIN is encrypted at rest and never leaves the server for a
         public request, so it cannot be published here either.
-      */}
-      {/*
+
         No script tag at all for a demonstration listing. vehicleJsonLd returns null for
         those, and rendering `null` into JSON would publish the string "null" as structured
         data, which is worse than publishing nothing.
@@ -163,77 +199,58 @@ export default async function VehiclePage({ params }: { params: Params }) {
         ) : null;
       })()}
 
-      <div className="container-page py-6">
+      <div className="container-page pt-2 pb-[calc(var(--section-base)+4.5rem)] sm:pt-5 lg:pb-[var(--section-base)]">
+        {/*
+          The full trail from 768px. On a phone one link back to the model's listings does the
+          same job in one line, where the trail used to run off the edge of the screen.
+        */}
         <Breadcrumbs
+          className="hidden md:block"
           trail={[
             { href: "/cars", label: "Cars for sale" },
-            { href: `/cars/${makeSlug}`, label: relName(vehicle.make) ?? "Make" },
-            { href: `/cars/${makeSlug}/${modelSlug}`, label: relName(vehicle.model) ?? "Model" },
+            { href: `/cars/${makeSlug}`, label: makeName },
+            { href: `/cars/${makeSlug}/${modelSlug}`, label: modelName },
             { href: canonical, label: title },
           ]}
         />
+        <Link
+          href={`/cars/${makeSlug}/${modelSlug}`}
+          className="-ms-1.5 inline-flex min-h-11 items-center gap-1 rounded-sm pe-2 text-sm font-semibold text-body no-underline hover:text-heading md:hidden"
+        >
+          <ChevronLeft aria-hidden="true" className="size-4.5" />
+          All {modelName} listings
+        </Link>
 
-        {sold ? (
-          <div
-            role="status"
-            className="mt-4 rounded-lg border border-line-interactive bg-surface-sunken p-4"
-          >
-            <p className="font-display text-base font-bold">This one has been sold</p>
-            <p className="measure mt-1 text-sm text-ink-secondary">
-              The listing stays up so you can see what it went for. There are similar vehicles
-              further down, and{" "}
-              <Link href={`/cars/${makeSlug}/${modelSlug}`} className="text-accent hover:underline">
-                more {relName(vehicle.model)} listings
-              </Link>{" "}
-              from other verified dealerships.
-            </p>
+        <div className="mt-1 grid gap-4 sm:gap-6 md:mt-5 lg:grid-cols-[minmax(0,1fr)_23rem] lg:gap-x-8 xl:grid-cols-[minmax(0,1fr)_26rem] xl:gap-x-10">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+            <VehicleGallery vehicle={vehicle} />
           </div>
-        ) : null}
 
-        <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_22rem]">
-          <div className="min-w-0">
-            <h1 className="text-3xl">{title}</h1>
-            {vehicle.derivative ? (
-              <p className="mt-1 text-ink-secondary">{vehicle.derivative}</p>
-            ) : null}
-
-            <div className="mt-6">
-              <VehicleGallery vehicle={vehicle} />
-            </div>
-
-            <div className="mt-10">
-              <SpecTable vehicle={vehicle} />
-            </div>
-
-            <div className="mt-10">
-              <FinancePanel price={vehicle.price} defaults={financeDefaults} />
+          <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+            {/*
+              Sticky, and it has to FIT to be sticky. On a 1366 by 768 laptop the card can be
+              taller than the window, and a sticky element taller than its window scrolls its
+              own foot out of reach. Capping it at the window lets the rare overflow scroll inside
+              the card instead of taking the dealership with it. The panel is the scroller itself,
+              so its shadow is drawn outside the clip rather than cut off by it.
+            */}
+            <div className="rn-panel @container lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:max-h-[calc(100svh-var(--header-height)-3rem)] lg:overflow-y-auto lg:overscroll-contain">
+              <ListingSummary vehicle={vehicle} sold={sold} assumptions={assumptions} />
             </div>
           </div>
 
-          {/*
-            Sticky, and it has to FIT to be sticky.
-            --------------------------------------
-            The column measured 801px. On a 1366 by 768 laptop, which is still the commonest
-            desktop screen in this market, that is taller than the viewport, so the browser stops
-            honouring `sticky` partway down and the primary call to action scrolls away with it.
-            A sticky element taller than its window is just a slow element.
-
-            Capping it at the viewport minus the masthead restores the behaviour at every height,
-            and the overflow is the escape hatch for the rare case where it is genuinely too long
-            to hold: it never scrolls at 900 and above, and it scrolls a few pixels below that
-            rather than dragging the enquiry button off the screen.
-          */}
-          <div className="lg:sticky lg:top-20 lg:max-h-[calc(100svh-6rem)] lg:self-start lg:overflow-y-auto">
-            <PriceRail vehicle={vehicle} sold={sold} />
-            <div className="mt-4">
-              <DealerCard dealer={dealer} branch={branch} />
-            </div>
+          <div className="contents lg:col-start-1 lg:row-start-2 lg:flex lg:min-w-0 lg:flex-col lg:gap-6">
+            <KeyFactsPanel vehicle={vehicle} />
+            <SellerDescription vehicle={vehicle} />
+            <FeaturesPanel vehicle={vehicle} />
+            <SpecTable vehicle={vehicle} />
+            {poa || sold ? null : <FinancePanel price={vehicle.price} defaults={financeDefaults} />}
           </div>
         </div>
 
-        <div className="mt-16 lg:pb-0 pb-24">
+        <Suspense fallback={null}>
           <SimilarVehicles vehicle={vehicle} />
-        </div>
+        </Suspense>
       </div>
 
       <MobileActionBar vehicle={vehicle} sold={sold} />

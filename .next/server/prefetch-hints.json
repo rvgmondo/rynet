@@ -9,10 +9,10 @@
     }
   },
   "/_not-found": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 64,
         "slots": {
           "children": {
             "hints": 160,
@@ -23,13 +23,13 @@
     }
   },
   "/digital/about": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 0,
         "slots": {
           "children": {
-            "hints": 32,
+            "hints": 0,
             "slots": {
               "children": {
                 "hints": 64,
@@ -47,13 +47,13 @@
     }
   },
   "/digital/contact": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 0,
         "slots": {
           "children": {
-            "hints": 32,
+            "hints": 0,
             "slots": {
               "children": {
                 "hints": 64,
@@ -70,33 +70,14 @@
       }
     }
   },
-  "/digital": {
-    "hints": 64,
-    "slots": {
-      "children": {
-        "hints": 96,
-        "slots": {
-          "children": {
-            "hints": 32,
-            "slots": {
-              "children": {
-                "hints": 128,
-                "slots": null
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "/digital/pricing": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 0,
         "slots": {
           "children": {
-            "hints": 32,
+            "hints": 0,
             "slots": {
               "children": {
                 "hints": 64,
@@ -114,13 +95,13 @@
     }
   },
   "/digital/process": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 0,
         "slots": {
           "children": {
-            "hints": 32,
+            "hints": 0,
             "slots": {
               "children": {
                 "hints": 64,
@@ -138,13 +119,13 @@
     }
   },
   "/digital/services/[slug]": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 0,
         "slots": {
           "children": {
-            "hints": 32,
+            "hints": 0,
             "slots": {
               "children": {
                 "hints": 64,
@@ -167,13 +148,13 @@
     }
   },
   "/digital/services": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 96,
+        "hints": 0,
         "slots": {
           "children": {
-            "hints": 32,
+            "hints": 0,
             "slots": {
               "children": {
                 "hints": 64,
@@ -191,10 +172,10 @@
     }
   },
   "/accessibility": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 32,
+        "hints": 0,
         "slots": {
           "children": {
             "hints": 64,
@@ -210,10 +191,10 @@
     }
   },
   "/contact": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 32,
+        "hints": 0,
         "slots": {
           "children": {
             "hints": 64,
@@ -229,29 +210,10 @@
     }
   },
   "/cookies": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 32,
-        "slots": {
-          "children": {
-            "hints": 64,
-            "slots": {
-              "children": {
-                "hints": 160,
-                "slots": null
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "/how-verification-works": {
-    "hints": 64,
-    "slots": {
-      "children": {
-        "hints": 32,
+        "hints": 0,
         "slots": {
           "children": {
             "hints": 64,
@@ -267,10 +229,10 @@
     }
   },
   "/privacy": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 32,
+        "hints": 0,
         "slots": {
           "children": {
             "hints": 64,
@@ -286,10 +248,10 @@
     }
   },
   "/terms": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 32,
+        "hints": 0,
         "slots": {
           "children": {
             "hints": 64,

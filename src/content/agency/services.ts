@@ -54,7 +54,7 @@ export const SERVICES: readonly Service[] = [
     summary:
       "A fast, accessible dealership site with your stock on it, built to be found and built to be used on the connection your buyers actually have.",
     problem:
-      "Most dealership sites in South Africa are a template with a stock feed bolted on. They take eight seconds to load on 4G, the search filters do not survive a back button, and the phone number is an image. The buyer leaves before they ever see a car.",
+      "Most dealership sites in South Africa are a template with a stock feed bolted on. They are slow to load on a phone, the search filters do not survive a back button, and the phone number is an image. The buyer leaves before they ever see a car.",
     includes: [
       "A build measured on a mid-range Android over a throttled connection, because that is what your buyers are holding, not a laptop on fibre",
       "Your stock, searchable by the things people actually search by: price, monthly instalment, area, body type, transmission",
@@ -64,9 +64,9 @@ export const SERVICES: readonly Service[] = [
       "You own the code and the domain. If you leave, you take the site",
     ],
     notThis: [
-      "We do not resell a licensed template with your logo dropped into it",
-      "We do not lock the site to a monthly fee that stops it working when you stop paying",
-      "We do not fit an accessibility overlay widget. They do not fix the underlying problems and they frequently make things worse. We fix the site",
+      "We do not resell a licensed template with your logo dropped into it.",
+      "We do not lock the site to a monthly fee that stops it working when you stop paying.",
+      "We do not fit an accessibility overlay widget. They do not fix the underlying problems and they frequently make things worse. We fix the site.",
     ],
     outcome:
       "A site that is quick on a phone, that a buyer can search without frustration, and that Google can read properly.",
@@ -89,10 +89,11 @@ export const SERVICES: readonly Service[] = [
       "A rollback path, because the first import is never the last one",
     ],
     notThis: [
-      "We do not promise an integration with a DMS before we have seen its actual export",
-      "We do not build a one-way import you cannot audit or undo",
+      "We do not promise an integration with a DMS before we have seen its actual export.",
+      "We do not build a one-way import you cannot audit or undo.",
     ],
-    outcome: "One place where stock is true, and every other place following it within the hour.",
+    outcome:
+      "One place where stock is true, and every other place following it on a schedule you can see.",
   },
   {
     slug: "paid-media",
@@ -112,9 +113,9 @@ export const SERVICES: readonly Service[] = [
       "Spend and results split by branch where you have more than one",
     ],
     notThis: [
-      "We do not report impressions and reach as though they were results",
-      "We do not take a percentage of spend, because that pays us to spend more rather than to spend well",
-      "We do not run campaigns whose results we cannot attribute",
+      "We do not report impressions and reach as though they were results.",
+      "We do not take a percentage of spend, because that pays us to spend more rather than to spend well.",
+      "We do not run campaigns whose results we cannot attribute.",
     ],
     outcome:
       "A number you can defend at a management meeting: what you spent, what came back, on which cars.",
@@ -137,9 +138,9 @@ export const SERVICES: readonly Service[] = [
       "Reporting against the queries that convert, not total impressions",
     ],
     notThis: [
-      "We do not guarantee a position. Nobody can, and anyone who does is either guessing or lying",
-      "We do not buy links",
-      "We do not publish filler articles to hit a word count",
+      "We do not guarantee a position. Nobody can, and anyone who does is either guessing or lying.",
+      "We do not buy links.",
+      "We do not publish filler articles to hit a word count.",
     ],
     outcome:
       "The searches near you, answered by your pages, and a plan you can read for the ones you cannot win yet.",
@@ -152,7 +153,7 @@ export const SERVICES: readonly Service[] = [
     summary:
       "A repeatable process your own staff can run, so a car that lands on Monday is online properly on Monday.",
     problem:
-      "The single biggest reason a listing gets skipped is the photographs. Six pictures taken on a phone in a shaded corner, no interior, no dashboard, no odometer. The dealer who shoots properly gets the enquiry.",
+      "A buyer judges a listing by its photographs before reading a word of it. Six pictures taken on a phone in a shaded corner, no interior, no dashboard, no odometer. The dealer who shoots properly gets the enquiry.",
     includes: [
       "A shot list per vehicle covering the angles buyers actually look for, including the odometer and the interior",
       "A backdrop and lighting setup that works in your yard, with what to buy and where to stand",
@@ -162,8 +163,8 @@ export const SERVICES: readonly Service[] = [
       "Walkaround video for the units you want to move",
     ],
     notThis: [
-      "We do not retouch a car into a condition it is not in. That is a complaint waiting to happen",
-      "We do not composite a studio background onto a vehicle without saying so",
+      "We do not retouch a car into a condition it is not in. That is a complaint waiting to happen.",
+      "We do not composite a studio background onto a vehicle without saying so.",
     ],
     outcome:
       "Every car on your floor photographed the same way, to the same standard, within a day of arriving.",
@@ -186,8 +187,8 @@ export const SERVICES: readonly Service[] = [
       "Reporting on response time and on what happened to the lead, by salesperson and by branch",
     ],
     notThis: [
-      "We do not sell you a CRM licence you do not need if the one you have can be made to work",
-      "We do not set up automated replies that pretend to be a person",
+      "We do not sell you a CRM licence you do not need if the one you have can be made to work.",
+      "We do not set up automated replies that pretend to be a person.",
     ],
     outcome: "Nothing sits unanswered, and you can see who answered what, how fast.",
   },
@@ -209,8 +210,8 @@ export const SERVICES: readonly Service[] = [
       "The underlying data available in full if you want it, rather than instead of the summary",
     ],
     notThis: [
-      "We do not report on metrics that cannot change a decision",
-      "We do not quietly drop a number that went the wrong way",
+      "We do not report on metrics that cannot change a decision.",
+      "We do not quietly drop a number that went the wrong way.",
     ],
     outcome: "A monthly page you can read in five minutes and act on in ten.",
   },

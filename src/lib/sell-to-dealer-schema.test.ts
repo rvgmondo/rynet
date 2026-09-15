@@ -78,6 +78,19 @@ describe("a blank number field", () => {
   });
 });
 
+describe("a mileage written the way people write it", () => {
+  it("reads thousands separators, with JavaScript off too", () => {
+    for (const typed of ["128 000", "128,000", " 128 000 "]) {
+      const result = parse({ mileageKm: typed });
+      expect(result.success && result.data.mileageKm, typed).toBe(128000);
+    }
+  });
+
+  it("still refuses a blank made of spaces", () => {
+    expect(parse({ mileageKm: "   " }).success).toBe(false);
+  });
+});
+
 describe("the bounds", () => {
   it("refuses a year before the platform's floor", () => {
     expect(parse({ modelYear: "1969" }).success).toBe(false);

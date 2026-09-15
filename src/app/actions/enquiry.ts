@@ -37,7 +37,8 @@ import { rateLimit, visitorKey } from "@/lib/rate-limit";
 /** The exact wording a person agrees to. Stored verbatim, because this page will change. */
 const CONSENT_WORDING =
   "I agree that Rynet may pass the details I have given to the selling dealership so they can respond to this enquiry, and may contact me about it.";
-const POLICY_VERSION = "2026-08-privacy-v1";
+// The privacy notice this consent was given under. Bumped when /privacy changes.
+const POLICY_VERSION = "2026-09-privacy-v2";
 
 const MINIMUM_FILL_MS = 2000;
 /*

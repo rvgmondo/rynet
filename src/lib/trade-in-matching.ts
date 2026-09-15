@@ -20,6 +20,11 @@ export type MatchableDealer = {
   id: number;
   tradingName: string;
   verificationStatus?: string | null;
+  /**
+   * Seeded example data, not a real business. It never receives a real seller's name and number,
+   * whatever else it claims to accept: that would be disclosing personal information to nobody.
+   */
+  isDemonstration?: boolean | null;
   /** A dealership only receives personal information if it has asked to. */
   acceptsTradeIns?: boolean | null;
   /** Empty means it will look at anything. */
@@ -61,6 +66,7 @@ export function buysMake(dealer: MatchableDealer, sellerMake: string): boolean {
 
 export function isEligible(dealer: MatchableDealer, vehicle: SellerVehicle): boolean {
   if (dealer.verificationStatus !== "verified") return false;
+  if (dealer.isDemonstration === true) return false;
   if (!dealer.acceptsTradeIns) return false;
   if (!dealer.provinces.includes(vehicle.provinceSlug)) return false;
   return buysMake(dealer, vehicle.make);

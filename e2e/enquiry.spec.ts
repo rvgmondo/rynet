@@ -49,6 +49,21 @@ test.describe("the vehicle page", () => {
     await expect(page.getByText("Total cost of the credit")).toBeVisible();
   });
 
+  test("never calls a demonstration dealership verified", async ({ page }) => {
+    // Hard rule 1: seeded dealerships do not exist, so a listing from one says "Demo dealership"
+    // and nothing on the page states "Verified dealership" as a fact about it.
+    await openFirstListing(page);
+    const demonstration = await page
+      .getByText(/Demonstration listing/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    test.skip(!demonstration, "the first listing is real stock");
+
+    await expect(page.getByText("Demo dealership").first()).toBeVisible();
+    await expect(page.getByText(/Verified dealership/i)).toHaveCount(0);
+  });
+
   test("never publishes the VIN", async ({ page }) => {
     await openFirstListing(page);
     const html = await page.content();

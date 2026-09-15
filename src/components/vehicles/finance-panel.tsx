@@ -1,120 +1,113 @@
-import { RandFigure } from "@/components/vehicles/rand-figure";
-import { calculateFinance } from "@/lib/finance";
-import { formatRand } from "@/lib/format";
+import { LegalReviewMarker } from "@/components/layout/legal-review-marker";
+import {
+  assumptionsFrom,
+  disclaimerFrom,
+  estimateFor,
+  type FinanceAssumptions,
+  percent,
+} from "@/components/listing/finance-estimate";
+import { FinanceEstimator } from "@/components/listing/finance-estimator";
+import { formatMonthly, formatRand } from "@/lib/format";
 import type { FinanceDefault } from "@/payload-types";
+
+/**
+ * The finance estimate in one line, for the summary card beside the price.
+ *
+ * The same compliance rules as the panel, in miniature: the word "estimated" comes before the
+ * figure, the total cost of credit sits in the same sentence at the same weight as the instalment,
+ * and the deposit, term and any balloon it assumes are stated. It computes from the same assumptions as the
+ * panel, so the two can never disagree, and it links down to the panel where the assumptions can
+ * be changed and the disclaimer is printed in full.
+ *
+ * Nothing renders when the calculator refuses the input.
+ */
+export function FinanceTeaser({
+  price,
+  assumptions,
+  className = "",
+}: {
+  price: number;
+  assumptions: FinanceAssumptions;
+  className?: string;
+}) {
+  const result = estimateFor(price, assumptions);
+  if (!result) return null;
+
+  const terms = [
+    assumptions.depositPercent > 0
+      ? `a ${percent(assumptions.depositPercent)} deposit`
+      : "no deposit",
+    assumptions.balloonPercent > 0 ? `a ${percent(assumptions.balloonPercent)} balloon` : null,
+  ]
+    .filter(Boolean)
+    .join(" and ");
+
+  return (
+    <div className={`rounded-md bg-subtle px-4 py-3 text-sm text-body ${className}`}>
+      <p>
+        Estimated{" "}
+        <span className="font-semibold whitespace-nowrap text-heading tabular">
+          {formatMonthly(result.monthlyInstalment)}
+        </span>{" "}
+        over {assumptions.termMonths} months with {terms}. Total cost of credit{" "}
+        <span className="font-semibold whitespace-nowrap text-heading tabular">
+          {formatRand(result.totalCostOfCredit)}
+        </span>
+        .
+      </p>
+      <a
+        href="#finance"
+        className="mt-1 inline-flex min-h-6 items-center font-semibold text-heading underline underline-offset-3 hover:text-accent"
+      >
+        See the full estimate
+      </a>
+    </div>
+  );
+}
 
 /**
  * The finance estimate.
  *
- * Server rendered from the defaults in the CMS, so the figure is in the HTML rather than
- * appearing after hydration. The interactive calculator, where a buyer moves the deposit
- * and term, layers on top of this later; it does not replace it.
+ * A white panel with the instalment and the total cost of credit side by side, the assumptions
+ * under them, and the disclaimer at the foot. The numbers are server rendered from the CMS
+ * defaults, and FinanceEstimator layers a deposit and a term control on top once it has mounted.
  *
  * Four things here are compliance rather than design, and none of them are optional:
  *
- * 1. **The word "estimate" appears before the number**, not after it in small print. A
- *    quotation under the National Credit Act is a specific thing with specific obligations,
- *    and Rynet is not a credit provider.
- * 2. **Total cost of credit is shown next to the instalment**, at the same weight. A
- *    monthly figure on its own is how a buyer ends up in a deal they cannot carry, and it
- *    is the number a long term quietly inflates.
- * 3. **The assumptions are stated**, so the figure can be checked rather than trusted.
- * 4. **The disclaimer renders in full.** It is a required field on the global that cannot be
- *    emptied, and it ships marked as requiring legal review until an attorney has read it.
+ * 1. The word "estimate" comes before the number, not in small print after it. A quotation under
+ *    the National Credit Act is a specific thing with specific obligations, and Rynet is not a
+ *    credit provider.
+ * 2. The total cost of credit sits beside the instalment at the same size. A monthly figure on
+ *    its own is how a buyer ends up in a deal they cannot carry.
+ * 3. The assumptions are stated, fees included, so the figure can be checked rather than trusted.
+ * 4. The disclaimer renders in full, with the one "Requires legal review" marker above it until an
+ *    attorney has signed the wording off (see disclaimerFrom).
+ *
+ * Nothing renders when the calculator refuses the input: no figure is better than a broken one
+ * next to a price.
  */
 export function FinancePanel({ price, defaults }: { price: number; defaults: FinanceDefault }) {
-  const prime = defaults.primeRatePercent ?? 10.5;
-  const offset = defaults.defaultRateOffsetPercent ?? 1.5;
-  const rate = prime + offset;
-  const term = defaults.defaultTermMonths ?? 72;
-  const depositPercent = defaults.defaultDepositPercent ?? 10;
-  const deposit = (price * depositPercent) / 100;
+  const assumptions = assumptionsFrom(defaults);
+  if (!estimateFor(price, assumptions)) return null;
 
-  let estimate: ReturnType<typeof calculateFinance> | null = null;
-  try {
-    estimate = calculateFinance({
-      price,
-      deposit,
-      termMonths: term,
-      annualRatePercent: rate,
-      balloonPercent: defaults.defaultBalloonPercent ?? 0,
-      initiationFee: defaults.initiationFee ?? 0,
-      monthlyServiceFee: defaults.monthlyServiceFee ?? 0,
-    });
-  } catch {
-    // The calculator refuses input it cannot answer honestly. Showing nothing is correct;
-    // showing a broken number beside a price is not.
-    return null;
-  }
+  const disclaimer = disclaimerFrom(defaults);
 
   return (
-    <section aria-labelledby="finance-heading" className="border-t-2 border-ink pt-6">
-      <h2 id="finance-heading" className="rn-head">
+    <section id="finance" aria-labelledby="finance-heading" className="rn-panel p-5 sm:p-8">
+      <h2 id="finance-heading" className="text-xl font-bold text-heading">
         What it might cost a month
       </h2>
-      <p className="measure mt-3 text-sm text-ink-secondary">
-        An estimate, not a quotation. What you are actually offered depends on a credit assessment.
+      <p className="mt-1.5 text-sm text-muted">
+        An estimate, not a quotation. What you are offered depends on a credit assessment.
       </p>
 
-      {/*
-        Two figures on one ruled band, not two grey boxes.
-        -------------------------------------------------
-        They were filled panels with the figures set in a fourth price style, so a page that
-        already had the asking price, the instalment and the card prices carried four different
-        ways of writing a rand amount. They take RandFigure now, which is the one the whole
-        platform uses, and the divider is a hairline rather than a gap between two fills.
+      <FinanceEstimator price={price} assumptions={assumptions} />
 
-        The two are still the same weight, deliberately. Putting the cost of credit in a footnote
-        is how a monthly figure gets to look like the whole story.
-      */}
-      <div className="mt-8 grid border-y-2 border-ink sm:grid-cols-2 sm:divide-x sm:divide-line-strong">
-        <div className="py-6 sm:pe-8 [container-type:inline-size]">
-          <p className="rn-label text-ink-muted">Estimated instalment</p>
-          <div className="mt-2 flex items-baseline gap-2">
-            <RandFigure value={estimate.monthlyInstalment} />
-            <span className="rn-label text-ink-secondary">pm</span>
-          </div>
+      {disclaimer.text ? (
+        <div className="mt-6 border-t border-line pt-5">
+          <LegalReviewMarker reviewedAt={disclaimer.reviewedAt} className="mb-2" />
+          <p className="text-xs text-muted">{disclaimer.text}</p>
         </div>
-
-        <div className="border-t border-line py-6 sm:border-t-0 sm:ps-8 [container-type:inline-size]">
-          <p className="rn-label text-ink-muted">Total cost of the credit</p>
-          <div className="mt-2">
-            <RandFigure value={estimate.totalCostOfCredit} />
-          </div>
-          <p className="rn-label rn-label--light mt-2 text-ink-muted">
-            On top of the {formatRand(price)} price
-          </p>
-        </div>
-      </div>
-
-      <dl className="mt-5 grid gap-x-8 gap-y-0 text-sm sm:grid-cols-2">
-        {[
-          { label: "Deposit", value: `${formatRand(deposit)} (${depositPercent}%)` },
-          { label: "Term", value: `${term} months` },
-          {
-            label: "Interest rate",
-            value: `${rate.toFixed(2)}% (prime ${prime}% plus ${offset}%)`,
-          },
-          { label: "Amount financed", value: formatRand(estimate.amountFinanced) },
-          ...(estimate.balloonAmount > 0
-            ? [{ label: "Balloon at the end", value: formatRand(estimate.balloonAmount) }]
-            : []),
-          { label: "Total repayable", value: formatRand(estimate.totalRepayable) },
-        ].map((row) => (
-          <div
-            key={row.label}
-            className="flex justify-between gap-4 border-b border-line py-2 last:border-0"
-          >
-            <dt className="text-ink-muted">{row.label}</dt>
-            <dd className="text-right font-medium tabular">{row.value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      {defaults.disclaimer ? (
-        <p className="measure mt-5 border-t border-line pt-4 text-xs text-ink-muted">
-          {defaults.disclaimer}
-        </p>
       ) : null}
     </section>
   );

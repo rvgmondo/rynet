@@ -1,8 +1,12 @@
+import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+
 import { formatCc, formatKm } from "@/lib/format";
 import { relName } from "@/lib/relations";
 import type { Vehicle } from "@/payload-types";
 
 type Row = { label: string; value: string | null };
+type Group = { title: string; rows: Row[] };
 
 const SERVICE_HISTORY: Record<string, string> = {
   full_franchise: "Full franchise service history",
@@ -21,195 +25,179 @@ const ROADWORTHY: Record<string, string> = {
 
 const CONDITION: Record<string, string> = {
   new: "New",
-  demo: "Demo",
+  demo: "Ex-demo",
   pre_owned: "Pre-owned",
 };
 
+const numberWithUnit = (value: number | null | undefined, unit: string) =>
+  typeof value === "number"
+    ? `${value.toLocaleString("en-ZA").replace(/[, ]/g, " ")} ${unit}`
+    : null;
+
+const longDate = (value: string | null | undefined) =>
+  value
+    ? new Date(value).toLocaleDateString("en-ZA", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+
 /**
- * The specification.
+ * The specification, as tidy accordions.
  *
- * Grouped and collapsible per Section 6, using `details` so it works before hydration and
- * with the keyboard for free. The first two groups are open by default because they carry
- * what a buyer decides on; the rest are one press away.
+ * Native `details`, so every group opens before hydration, with the keyboard, and with scripting
+ * off. The group a buyer checks first, history and paperwork, leads and is open; the basics and
+ * the drivetrain are one press away because the key facts above already carry the headline of
+ * each. Whichever group actually has rows first is the one that opens, so a listing without
+ * paperwork details still opens on something.
  *
- * Rows with no value are dropped rather than rendered with a dash. A table of dashes reads
- * as a site that has lost the data, when the truth is the dealership never supplied it, and
- * the honest way to say that is to say nothing.
+ * No row counts beside the titles. "The basics 8" read as data and told a buyer nothing.
  *
- * `dl` rather than `table`: this is a set of name and value pairs about one thing, not a
- * grid comparing several. A screen reader announces "Mileage, 147 200 km" rather than
- * reading a table header for every cell.
+ * Rows with no value are dropped rather than drawn with a dash. A column of dashes reads as a site
+ * that lost the data, when the truth is the dealership never supplied it.
+ *
+ * `dl`, not `table`: name and value pairs about one car, so a screen reader hears
+ * "Mileage, 24 800 km" rather than a column header for every cell. Each row carries its own top
+ * rule, so a group with an odd number of rows ends cleanly in two columns instead of leaving a
+ * half row with a rule under one side.
  */
-function Group({
-  title,
-  rows,
-  defaultOpen = false,
-}: {
-  title: string;
-  rows: Row[];
-  defaultOpen?: boolean;
-}) {
-  const present = rows.filter((row) => row.value !== null && row.value !== "");
-  if (present.length === 0) return null;
-
-  return (
-    <details open={defaultOpen} className="group border-b border-line">
-      {/*
-        A disclosure that says it is one.
-        ---------------------------------
-        The marker was removed and nothing replaced it, so "History and paperwork" rendered as a
-        bold line with a number beside it and gave no sign at all that it opened. On a page where
-        three of the four spec groups are open by default, the one that is closed is the one
-        nobody could tell was closed.
-
-        A plus that becomes a minus, set in the label face at the right edge beside the count,
-        with the ink flip the rest of the site uses for an interactive row. `list-style: none`
-        on the summary is what takes the native triangle off in every engine.
-      */}
-      <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 px-1 font-display text-base font-bold transition-colors duration-[var(--duration-micro)] [&::-webkit-details-marker]:hidden [&::marker]:content-[''] hover:bg-ink hover:text-ink-inverse">
-        {title}
-        <span className="flex items-center gap-3">
-          <span className="rn-label text-ink-muted group-hover:text-ink-inverse">
-            {present.length}
-          </span>
-          <span aria-hidden="true" className="rn-label w-3 text-center">
-            <span className="group-open:hidden">+</span>
-            <span className="hidden group-open:inline">-</span>
-          </span>
-        </span>
-      </summary>
-      <dl className="grid gap-x-8 gap-y-0 pb-4 sm:grid-cols-2">
-        {present.map((row) => (
-          <div
-            key={row.label}
-            className="flex justify-between gap-4 border-b border-line py-2.5 text-sm last:border-0"
-          >
-            <dt className="text-ink-muted">{row.label}</dt>
-            <dd className="text-right font-medium tabular">{row.value}</dd>
-          </div>
-        ))}
-      </dl>
-    </details>
-  );
-}
-
 export function SpecTable({ vehicle }: { vehicle: Vehicle }) {
-  const num = (value: number | null | undefined, unit: string) =>
-    typeof value === "number"
-      ? `${value.toLocaleString("en-ZA").replace(/[, ]/g, " ")} ${unit}`
-      : null;
+  const groups: Group[] = [
+    {
+      title: "History and paperwork",
+      rows: [
+        {
+          label: "Service history",
+          value: vehicle.serviceHistory ? (SERVICE_HISTORY[vehicle.serviceHistory] ?? null) : null,
+        },
+        {
+          label: "Roadworthy certificate",
+          value: vehicle.roadworthy ? (ROADWORTHY[vehicle.roadworthy] ?? null) : null,
+        },
+        { label: "Licence expires", value: longDate(vehicle.licenceExpiry) },
+        {
+          label: "Warranty remaining",
+          value: vehicle.warrantyRemaining?.months
+            ? `${vehicle.warrantyRemaining.months} months${
+                vehicle.warrantyRemaining.km ? ` or ${formatKm(vehicle.warrantyRemaining.km)}` : ""
+              }`
+            : null,
+        },
+        {
+          label: "Registration year",
+          value: vehicle.registrationYear ? String(vehicle.registrationYear) : null,
+        },
+      ],
+    },
+    {
+      title: "The basics",
+      rows: [
+        { label: "Condition", value: CONDITION[vehicle.condition] ?? null },
+        { label: "Model year", value: vehicle.modelYear ? String(vehicle.modelYear) : null },
+        { label: "Mileage", value: formatKm(vehicle.mileageKm) },
+        { label: "Body type", value: relName(vehicle.bodyType) },
+        { label: "Exterior colour", value: relName(vehicle.exteriorColour) },
+        { label: "Interior colour", value: relName(vehicle.interiorColour) },
+        { label: "Doors", value: vehicle.doors ? String(vehicle.doors) : null },
+        { label: "Seats", value: vehicle.seats ? String(vehicle.seats) : null },
+      ],
+    },
+    {
+      title: "Engine and drivetrain",
+      rows: [
+        { label: "Fuel", value: relName(vehicle.fuelType) },
+        { label: "Transmission", value: relName(vehicle.transmission) },
+        { label: "Drive", value: relName(vehicle.drivetrain) },
+        {
+          label: "Engine capacity",
+          value: vehicle.engineCapacityCc ? formatCc(vehicle.engineCapacityCc) : null,
+        },
+        { label: "Cylinders", value: vehicle.cylinders ? String(vehicle.cylinders) : null },
+        { label: "Power", value: numberWithUnit(vehicle.powerKw, "kW") },
+        { label: "Torque", value: numberWithUnit(vehicle.torqueNm, "Nm") },
+      ],
+    },
+  ]
+    .map((group) => ({
+      ...group,
+      rows: group.rows.filter((row) => row.value !== null && row.value !== ""),
+    }))
+    .filter((group) => group.rows.length > 0);
 
-  const features = (vehicle.features ?? [])
-    .map((f) => relName(f))
-    .filter((n): n is string => Boolean(n))
-    .sort();
+  const listed = longDate(vehicle.publishedAt);
 
   return (
-    <section aria-labelledby="spec-heading">
-      <h2 id="spec-heading" className="text-2xl">
+    <section aria-labelledby="spec-heading" className="rn-panel p-5 sm:p-8">
+      <h2 id="spec-heading" className="text-xl font-bold text-heading">
         Specification
       </h2>
 
-      <div className="mt-4">
-        <Group
-          title="The basics"
-          defaultOpen
-          rows={[
-            { label: "Condition", value: CONDITION[vehicle.condition] ?? null },
-            { label: "Model year", value: vehicle.modelYear ? String(vehicle.modelYear) : null },
-            {
-              label: "Registration year",
-              value: vehicle.registrationYear ? String(vehicle.registrationYear) : null,
-            },
-            { label: "Mileage", value: formatKm(vehicle.mileageKm) },
-            { label: "Body type", value: relName(vehicle.bodyType) },
-            { label: "Colour", value: relName(vehicle.exteriorColour) },
-            { label: "Interior", value: relName(vehicle.interiorColour) },
-            { label: "Doors", value: vehicle.doors ? String(vehicle.doors) : null },
-            { label: "Seats", value: vehicle.seats ? String(vehicle.seats) : null },
-          ]}
-        />
-
-        <Group
-          title="Engine and drivetrain"
-          defaultOpen
-          rows={[
-            { label: "Fuel", value: relName(vehicle.fuelType) },
-            { label: "Transmission", value: relName(vehicle.transmission) },
-            { label: "Drivetrain", value: relName(vehicle.drivetrain) },
-            {
-              label: "Engine",
-              value: vehicle.engineCapacityCc ? formatCc(vehicle.engineCapacityCc) : null,
-            },
-            { label: "Cylinders", value: vehicle.cylinders ? String(vehicle.cylinders) : null },
-            { label: "Power", value: num(vehicle.powerKw, "kW") },
-            { label: "Torque", value: num(vehicle.torqueNm, "Nm") },
-          ]}
-        />
-
-        <Group
-          title="History and paperwork"
-          rows={[
-            {
-              label: "Service history",
-              value: vehicle.serviceHistory
-                ? (SERVICE_HISTORY[vehicle.serviceHistory] ?? null)
-                : null,
-            },
-            {
-              label: "Roadworthy",
-              value: vehicle.roadworthy ? (ROADWORTHY[vehicle.roadworthy] ?? null) : null,
-            },
-            {
-              label: "Licence expires",
-              value: vehicle.licenceExpiry
-                ? new Date(vehicle.licenceExpiry).toLocaleDateString("en-ZA", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })
-                : null,
-            },
-            {
-              label: "Warranty remaining",
-              value: vehicle.warrantyRemaining?.months
-                ? `${vehicle.warrantyRemaining.months} months${
-                    vehicle.warrantyRemaining.km
-                      ? ` or ${formatKm(vehicle.warrantyRemaining.km)}`
-                      : ""
-                  }`
-                : null,
-            },
-          ]}
-        />
-      </div>
-
-      {features.length > 0 ? (
-        <div className="mt-8">
-          <h3 className="text-lg">Features</h3>
-          <ul className="mt-3 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature) => (
-              <li key={feature} className="flex items-start gap-2 py-1">
-                {/*
-                  A rule, not a red tick.
-
-                  There were thirteen of these on one vehicle page, every one of them red, in
-                  a system whose rule is one red object per viewport. Red used thirteen times
-                  on a features list is not emphasis, it is decoration, and it spends the
-                  colour that has to mean "this is the action" further down the page. The
-                  feature being listed IS the information, so the mark carries none and is
-                  hidden from a screen reader either way.
-                */}
+      {groups.length > 0 ? (
+        <div className="mt-3">
+          {groups.map((group, index) => (
+            <details
+              key={group.title}
+              open={index === 0}
+              className="group border-b border-line last:border-b-0"
+            >
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 rounded-sm py-3 text-base font-semibold text-heading [&::-webkit-details-marker]:hidden">
+                {group.title}
                 <span
                   aria-hidden="true"
-                  className="mt-[0.55em] h-px w-3 shrink-0 bg-current opacity-40"
-                />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
+                  className="grid size-8 shrink-0 place-items-center rounded-full bg-subtle text-heading transition-colors duration-[var(--duration-micro)] group-hover:bg-subtle-hover"
+                >
+                  <ChevronDown className="size-4 transition-transform duration-[var(--duration-element)] group-open:rotate-180" />
+                </span>
+              </summary>
+              <dl className="grid gap-x-10 pb-5 text-sm sm:grid-cols-2">
+                {group.rows.map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-baseline justify-between gap-4 border-t border-line py-3"
+                  >
+                    <dt className="text-muted">{row.label}</dt>
+                    <dd className="text-right font-semibold text-heading tabular">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          ))}
         </div>
       ) : null}
+
+      {/*
+        The listing's own identifiers, at the foot of the specification rather than between the
+        contact buttons and the dealership, where they used to take the most valuable space on
+        the page. A buyer quotes the reference on the phone; nobody decides on it.
+      */}
+      <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 border-t border-line pt-4 text-xs text-muted">
+        {vehicle.publicRef ? (
+          <div className="flex gap-1.5">
+            <dt>Rynet reference</dt>
+            <dd className="font-semibold text-body tabular">{vehicle.publicRef}</dd>
+          </div>
+        ) : null}
+        {vehicle.stockNumber ? (
+          <div className="flex gap-1.5">
+            <dt>Dealer stock number</dt>
+            <dd className="font-semibold text-body tabular">{vehicle.stockNumber}</dd>
+          </div>
+        ) : null}
+        {listed ? (
+          <div className="flex gap-1.5">
+            <dt>Listed</dt>
+            <dd className="font-semibold text-body">{listed}</dd>
+          </div>
+        ) : null}
+      </dl>
+      <p className="mt-3 text-xs text-muted">
+        Something wrong with this listing?{" "}
+        <Link href="/contact" className="font-medium text-body underline underline-offset-3">
+          Tell us
+        </Link>{" "}
+        and quote the Rynet reference.
+      </p>
     </section>
   );
 }

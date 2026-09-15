@@ -7,14 +7,15 @@
   "segmentPaths": [
     "/_tree",
     "/_full",
+    "/_index",
     "/!KG1hcmtldHBsYWNlKQ",
     "/!KG1hcmtldHBsYWNlKQ/accessibility/__PAGE__"
   ],
   "prefetchHints": {
-    "hints": 64,
+    "hints": 0,
     "slots": {
       "children": {
-        "hints": 32,
+        "hints": 0,
         "slots": {
           "children": {
             "hints": 64,

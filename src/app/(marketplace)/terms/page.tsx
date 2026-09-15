@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LegalReviewNotice, Prose } from "@/components/layout/prose";
+import { LegalDocument } from "@/components/conversion/legal-document";
+import { LEGAL_REVIEWED_AT } from "@/content/legal-review";
 
 export const metadata: Metadata = {
   title: "Terms of use",
@@ -10,16 +11,17 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-/** A DRAFT. The review banner stays until an attorney has read it. */
+/** A DRAFT. The review marker stays until an attorney has read it: src/content/legal-review.ts. */
 export default function TermsPage() {
   return (
-    <Prose
+    <LegalDocument
+      eyebrow="Legal"
       title="Terms of use"
       intro="What you can expect from Rynet, and what we expect from you."
       updated="26 August 2026"
+      path="/terms"
+      reviewedAt={LEGAL_REVIEWED_AT.terms}
     >
-      <LegalReviewNotice />
-
       <h2>What Rynet is</h2>
       <p>
         Rynet is an advertising platform. Dealerships list vehicles, and buyers find them and get in
@@ -95,6 +97,6 @@ export default function TermsPage() {
       <p>
         <a href="mailto:hello@rynet.co.za">hello@rynet.co.za</a>
       </p>
-    </Prose>
+    </LegalDocument>
   );
 }

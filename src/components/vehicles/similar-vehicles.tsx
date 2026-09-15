@@ -1,87 +1,146 @@
 import config from "@payload-config";
-import Link from "next/link";
-import { getPayload } from "payload";
+import { getPayload, type Where } from "payload";
+
+import { SectionHeader } from "@/components/ui/section-header";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { populated, relName, relSlug } from "@/lib/relations";
 import { toCard } from "@/lib/search";
+import { vehiclePhoto } from "@/lib/vehicle-photo";
 import type { Vehicle } from "@/payload-types";
 
+const ROW = 4;
+
+const idOf = (value: number | { id: number } | null | undefined): number | null =>
+  typeof value === "number" ? value : (value?.id ?? null);
+
 /**
- * Similar vehicles, and more from this dealership.
+ * Chooses a row of cards from candidate pools, in the order the pools are given.
  *
- * Two separate lists, because they answer different questions. "Similar" is for a buyer
- * still deciding what to buy; "more from this dealership" is for one who has decided they
- * like this seller. Merging them into one carousel serves neither.
+ * Three passes, and the order of the passes is the design:
  *
- * This matters most on a SOLD listing. Section 13 says a sold vehicle keeps its URL with
- * strong similar-vehicle links rather than 404ing, and this is what makes that worth
- * keeping: the page still ranks, and the buyer who lands on it still has somewhere to go.
+ * 1. Cars with a photograph that is not already on the page. The listing's own photograph counts
+ *    as on the page. The demonstration stock is illustrated with one photograph per model, so
+ *    without this a Hilux page showed four more of the same Hilux photograph under the one in the
+ *    gallery, which reads as stock photography and undermines every photograph on the site.
+ * 2. Cars with no photograph yet. The placeholder says so honestly, which is better than the same
+ *    photograph twice.
+ * 3. Only then a repeated photograph, so a thin set of stock still fills the row.
  *
- * The current vehicle is excluded from both, which sounds obvious and is the thing that
- * gets missed.
+ * A car already chosen anywhere on the page is never chosen again, which is how the same Starlet
+ * once appeared in both rows a few hundred pixels apart.
+ */
+function pickRow(
+  pools: Vehicle[][],
+  taken: Set<number>,
+  photosOnPage: Set<string>,
+  size: number,
+): Vehicle[] {
+  const seen = new Set<number>();
+  const candidates = pools
+    .flat()
+    .filter((doc) => {
+      if (taken.has(doc.id) || seen.has(doc.id)) return false;
+      seen.add(doc.id);
+      return true;
+    })
+    .map((doc) => ({ doc, photo: vehiclePhoto(doc, "card")?.url ?? null }));
+
+  const chosen: typeof candidates = [];
+  const passes: ((candidate: (typeof candidates)[number]) => boolean)[] = [
+    (c) => c.photo !== null && !photosOnPage.has(c.photo),
+    (c) => c.photo === null,
+    () => true,
+  ];
+
+  for (const accept of passes) {
+    for (const candidate of candidates) {
+      if (chosen.length >= size) break;
+      // A photograph chosen a moment ago is on the page now, so the first pass also turns away a
+      // second car with the same one.
+      if (chosen.includes(candidate) || !accept(candidate)) continue;
+      chosen.push(candidate);
+      if (candidate.photo) photosOnPage.add(candidate.photo);
+    }
+  }
+
+  for (const { doc } of chosen) taken.add(doc.id);
+  return chosen.map(({ doc }) => doc);
+}
+
+/**
+ * Loads both rows.
+ *
+ * "Similar" draws from three pools, best match first: the same model; the same body type within
+ * a quarter of the price either way (a Hilux buyer is also looking at a Ranger and a D-Max at the
+ * same money); and the same make. "More from this dealership" is that dealership's other live
+ * stock, never repeating a car from the first row.
+ *
+ * Every query is filtered to live stock and excludes this car. They run in parallel, and the page
+ * renders this section inside a Suspense boundary, so none of it holds back the photograph.
  */
 async function loadSimilar(vehicle: Vehicle) {
   const payload = await getPayload({ config });
 
-  const modelId = typeof vehicle.model === "number" ? vehicle.model : vehicle.model?.id;
-  const makeId = typeof vehicle.make === "number" ? vehicle.make : vehicle.make?.id;
-  const dealerId = typeof vehicle.dealer === "number" ? vehicle.dealer : vehicle.dealer?.id;
+  const modelId = idOf(vehicle.model);
+  const makeId = idOf(vehicle.make);
+  const dealerId = idOf(vehicle.dealer);
+  const bodyId = idOf(vehicle.bodyType);
+  const priced = vehicle.priceType !== "poa" && vehicle.price > 0;
 
-  // Same model first, widening to the same make. A buyer looking at a Hilux wants other
-  // Hiluxes before other Toyotas.
-  const sameModel = await payload.find({
-    collection: "vehicles",
-    where: {
-      and: [
-        { status: { equals: "live" } },
-        { model: { equals: modelId } },
-        { id: { not_equals: vehicle.id } },
-      ],
-    },
-    limit: 3,
-    depth: 2,
-    sort: "-publishedAt",
-  });
-
-  let similar = sameModel.docs;
-
-  if (similar.length < 3 && makeId) {
-    const sameMake = await payload.find({
-      collection: "vehicles",
-      where: {
-        and: [
-          { status: { equals: "live" } },
-          { make: { equals: makeId } },
-          { id: { not_equals: vehicle.id } },
-        ],
-      },
-      limit: 6,
-      depth: 2,
-      sort: "-publishedAt",
-    });
-    const seen = new Set(similar.map((v) => v.id));
-    similar = [...similar, ...sameMake.docs.filter((v) => !seen.has(v.id))].slice(0, 3);
-  }
-
-  const fromDealer = dealerId
-    ? await payload.find({
+  const find = async (where: Where[], limit: number) =>
+    (
+      await payload.find({
         collection: "vehicles",
         where: {
-          and: [
-            { status: { equals: "live" } },
-            { dealer: { equals: dealerId } },
-            { id: { not_equals: vehicle.id } },
-          ],
+          and: [{ status: { equals: "live" } }, { id: { not_equals: vehicle.id } }, ...where],
         },
-        limit: 3,
+        limit,
         depth: 2,
         sort: "-publishedAt",
       })
-    : null;
+    ).docs;
 
-  return { similar, fromDealer: fromDealer?.docs ?? [] };
+  const [sameModel, sameBodyAndPrice, sameMake, fromDealer] = await Promise.all([
+    modelId ? find([{ model: { equals: modelId } }], 8) : [],
+    bodyId && priced
+      ? find(
+          [
+            { bodyType: { equals: bodyId } },
+            { priceType: { not_equals: "poa" } },
+            { price: { greater_than_equal: Math.round(vehicle.price * 0.75) } },
+            { price: { less_than_equal: Math.round(vehicle.price * 1.25) } },
+          ],
+          12,
+        )
+      : [],
+    makeId ? find([{ make: { equals: makeId } }], 8) : [],
+    dealerId ? find([{ dealer: { equals: dealerId } }], 12) : [],
+  ]);
+
+  const taken = new Set<number>([vehicle.id]);
+  const own = vehiclePhoto(vehicle, "card")?.url;
+  const photosOnPage = new Set<string>(own ? [own] : []);
+
+  const similar = pickRow([sameModel, sameBodyAndPrice, sameMake], taken, photosOnPage, ROW);
+  const dealerRow = pickRow([fromDealer], taken, photosOnPage, ROW);
+
+  return { similar, fromDealer: dealerRow };
 }
 
+/**
+ * Similar cars, and more from this dealership.
+ *
+ * Two separate rows, because they answer different questions. "Similar" is for a buyer still
+ * deciding what to buy; "more from this dealership" is for one who likes this seller.
+ *
+ * This matters most on a SOLD listing, which keeps its URL: the buyer who lands on it still has
+ * somewhere to go.
+ *
+ * Cards sit on the page ground, four across on a desktop. Below 1280px each row is a sideways
+ * scroll-snap row that runs to the screen edge with the next card peeking in, with no JavaScript,
+ * so there are never empty cells in a half-filled grid. The cards carry their own Demo listing
+ * badges; nothing here removes them.
+ */
 export async function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
   const { similar, fromDealer } = await loadSimilar(vehicle);
   const dealer = populated(vehicle.dealer);
@@ -91,26 +150,26 @@ export async function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
 
   if (similar.length === 0 && fromDealer.length === 0) return null;
 
+  const rowClass =
+    "rn-grid rn-grid--floor mt-5 max-xl:-mx-[var(--container-pad)] max-xl:px-[var(--container-pad)] max-xl:scroll-px-[var(--container-pad)]";
+
   return (
-    <div className="space-y-12">
+    <div className="mt-[var(--section-base)] grid grid-cols-1 gap-[var(--section-tight)]">
       {similar.length > 0 ? (
         <section aria-labelledby="similar-heading">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 id="similar-heading" className="text-2xl">
-              Similar vehicles
-            </h2>
-            {makeSlug && modelSlug ? (
-              <Link
-                href={`/cars/${makeSlug}/${modelSlug}`}
-                className="text-sm font-semibold text-accent hover:underline"
-              >
-                All {modelName} listings
-              </Link>
-            ) : null}
-          </div>
-          <ul className="rn-grid mt-5">
+          <SectionHeader
+            id="similar-heading"
+            title="Similar cars"
+            className="[&_h2]:text-2xl"
+            action={
+              makeSlug && modelSlug && modelName
+                ? { href: `/cars/${makeSlug}/${modelSlug}`, label: `All ${modelName} listings` }
+                : undefined
+            }
+          />
+          <ul className={rowClass}>
             {similar.map((doc) => (
-              <li key={doc.id} className="flex">
+              <li key={doc.id}>
                 <VehicleCard vehicle={toCard(doc)} />
               </li>
             ))}
@@ -120,20 +179,15 @@ export async function SimilarVehicles({ vehicle }: { vehicle: Vehicle }) {
 
       {fromDealer.length > 0 && dealer ? (
         <section aria-labelledby="dealer-stock-heading">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 id="dealer-stock-heading" className="text-2xl">
-              More from {dealer.tradingName}
-            </h2>
-            <Link
-              href={`/dealers/${dealer.slug}`}
-              className="text-sm font-semibold text-accent hover:underline"
-            >
-              All their stock
-            </Link>
-          </div>
-          <ul className="rn-grid mt-5">
+          <SectionHeader
+            id="dealer-stock-heading"
+            title={`More from ${dealer.tradingName}`}
+            className="[&_h2]:text-2xl"
+            action={{ href: `/dealers/${dealer.slug}`, label: "See all their stock" }}
+          />
+          <ul className={rowClass}>
             {fromDealer.map((doc) => (
-              <li key={doc.id} className="flex">
+              <li key={doc.id}>
                 <VehicleCard vehicle={toCard(doc)} />
               </li>
             ))}

@@ -100,8 +100,10 @@ export const sellToDealerSchema = z.object({
       .min(OLDEST_YEAR, `Year must be ${OLDEST_YEAR} or later.`)
       .max(CURRENT_YEAR + 1, "That year is in the future."),
   ),
+  // "128 000" and "128,000" are how people write kilometres; the separators go before the number is
+  // read, so the field accepts them with JavaScript off too.
   mileageKm: z.preprocess(
-    emptyToUndefined,
+    (value) => emptyToUndefined(typeof value === "string" ? value.replace(/[\s,]/g, "") : value),
     z.coerce
       .number({ message: "How many kilometres?" })
       .int()

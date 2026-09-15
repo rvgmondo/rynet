@@ -1,8 +1,11 @@
+import { BadgeCheck, CalendarDays, Camera, Fuel, Gauge, MapPin, Settings2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { Badge, DemoListingBadge } from "@/components/ui/badge";
+import { type KeyFact, KeyFacts } from "@/components/ui/key-facts";
+import { PriceTag } from "@/components/ui/price-tag";
 import { ColourPlate } from "@/components/vehicles/colour-plate";
-import { RandFigure } from "@/components/vehicles/rand-figure";
 import { formatKm, formatRand } from "@/lib/format";
 import { vehicleUrl } from "@/lib/urls";
 import type { VehiclePhoto } from "@/lib/vehicle-photo";
@@ -27,180 +30,184 @@ export type VehicleCardData = {
   cityName: string | null;
   provinceName: string | null;
   isDemonstration: boolean;
-  /**
-   * The listing's own photograph, when it has one. This is the subject of the card: every
-   * competitor in this market leads with one and a buyer scans the photographs, not the text.
-   */
+  /** The listing's first photograph at the "card" rendition (see vehiclePhoto(vehicle, "card")). */
   photo: VehiclePhoto | null;
-  /** The car's real paint colour. The fallback for a listing with no photograph, and only that. */
+  /** The car's recorded paint colour. Used by the no-photograph state, and only there. */
   colourName: string | null;
   colourSwatch: string | null;
   colourFamily: string | null;
 };
 
 /**
+ * Keep a model code such as "GD-6" or "1.5-litre" on one line. A hyphen is a break opportunity,
+ * and the title used to break "GD- / 6 Raider" across the clamp. Only short tokens are glued, so a
+ * long one can still wrap rather than push the card wider.
+ */
+function unbreakable(text: string) {
+  let offset = 0;
+  return text.split(" ").map((word) => {
+    const start = offset;
+    offset += word.length + 1;
+    const glue = word.includes("-") && word.length <= 12;
+    return (
+      <span key={start}>
+        {start > 0 ? " " : null}
+        {glue ? <span className="whitespace-nowrap">{word}</span> : word}
+      </span>
+    );
+  });
+}
+
+/**
  * A vehicle in a result grid.
  *
- * The card is not a box. It is a column on a ruled sheet: no border, no radius, no shadow.
- * The gutters between cards are hairlines showing through the grid container, which is what
- * deletes twenty-four per-card borders in one declaration. See the .rn-grid rule.
+ * A white card with a 12px radius, a soft shadow and a small lift on hover. The photograph leads
+ * at 16:10, the price is the strongest thing in the card, then the title, four key facts, and the
+ * dealership and town on one line at the foot.
  *
- * FOUR DECISIONS THAT PREDATE THIS DESIGN AND MUST SURVIVE IT. Each exists because a
- * specific bug happened.
+ * DECISIONS THAT MUST SURVIVE ANY RESTYLE, each because a specific bug happened:
  *
- * 1. **The whole card is not a link. The title is.** A card-sized anchor swallows every
- *    nested control, makes the accessible name a paragraph of text, and stops a buyer from
- *    selecting the price to copy it. `after:absolute inset-0` on the title link extends the
- *    hit area across the card without nesting anything.
+ * 1. The whole card is not a link. The title is, and its ::after covers the card, so the card is
+ *    one target without nesting controls, the accessible name is the title rather than a
+ *    paragraph, and a buyer can still select the price to copy it.
+ * 2. The title is clamped to two lines with a matching min-height, so rows never go ragged, and
+ *    model codes do not break at their hyphen.
+ * 3. `min-w-0` on the dealer name so `truncate` engages and the row never pushes the card past the
+ *    viewport at 320px. The town never truncates; the name gives way first.
+ * 4. Status is never colour alone. A price drop reads "Reduced by R 13 400" in words.
  *
- * 2. **`line-clamp-2` with a matching `min-h`.** Vehicle names run from "Suzuki Swift 1.2
- *    GL" to "Toyota Hilux 2.8 GD-6 Legend RS Double Cab 4x4 AT", and letting that decide the
- *    card height leaves every row ragged.
+ * HONESTY. A demonstration listing carries one "Demo listing" badge, always visible, on the
+ * photograph. A demonstration dealership is never marked verified: the check beside the dealer
+ * name only renders when `isDemonstration` is false, and a listing can only go live from a
+ * verified dealership (enforced in the vehicles collection hook).
  *
- * 3. **A two-column grid for the specs, not a wrapping flex row.** Flex-wrap dropped
- *    whichever item happened not to fit onto a line of its own, so one card showed "Bakkie"
- *    orphaned under three other specs while its neighbour showed all four inline.
- *
- * 4. **`min-w-0` on the dealer name.** A flex item defaults to `min-width: auto` and refuses
- *    to shrink below its content, so `truncate` never engages and the row pushes the card
- *    6px past the viewport at 320px.
- *
- * WHAT CHANGED, AND WHY
- *
- * **Every icon is gone.** A `BadgeCheck` next to a dealer name is what every template
- * ships and it persuades nobody. The word VERIFIED in a ruled box, backed by named evidence
- * on the dealership page, is a claim someone can check. It is also true by construction: a
- * listing cannot go live unless its dealership is verified, which is enforced in a hook on
- * the vehicles collection, not merely promised in copy.
- *
- * **The price leads, but not by as much as it wants to.** Two and a half to one over the
- * title, not four and a half. A buyer hunting a bakkie under R400 000 has to read
- * "Hilux 2.8 GD-6 Legend RS 4x4 AT" before they care about the number. Price-first is
- * browsing furniture; model-first is hunting a car.
- *
- * **Status is never colour alone.** A price drop carries a minus and the amount. The
- * demonstration marker carries the word and a rule, not a colour.
+ * PERFORMANCE. The photograph is the "card" rendition (640px), `sizes` tells the browser the
+ * slot is at most a third of a desktop and the full width of a phone, and only the caller's
+ * chosen card (`priority`) is preloaded: one priority image per page.
  */
 export function VehicleCard({
   vehicle,
-  index = 0,
+  priority = false,
+  foot = "dealer",
 }: {
   vehicle: VehicleCardData;
-  /** Position in the grid, for the staggered plate fade. */
+  /** Preload this card's photograph. Give it to the first card of the first grid only. */
+  priority?: boolean;
+  /**
+   * What the foot line carries. "dealer" (the default) shows the dealership and town; "town" drops
+   * the dealership, for a group's own page where every card would repeat its name; "none" drops the
+   * line, for a single-branch dealership's own page where the town would repeat too.
+   */
+  foot?: "dealer" | "town" | "none";
+  /** @deprecated Position is no longer used for anything. Kept so older call sites compile. */
   index?: number;
 }) {
-  const title = [vehicle.modelYear, vehicle.makeName, vehicle.modelName, vehicle.variantName]
-    .filter(Boolean)
-    .join(" ");
+  const name = [vehicle.modelYear, vehicle.makeName, vehicle.modelName].filter(Boolean).join(" ");
   const dropAmount =
     vehicle.previousPrice && vehicle.previousPrice > vehicle.price
       ? vehicle.previousPrice - vehicle.price
       : null;
 
+  const facts: KeyFact[] = [
+    { icon: CalendarDays, label: "Year", value: String(vehicle.modelYear) },
+    { icon: Gauge, label: "Mileage", value: formatKm(vehicle.mileageKm) },
+    ...(vehicle.transmissionName
+      ? [{ icon: Settings2, label: "Transmission", value: vehicle.transmissionName }]
+      : []),
+    ...(vehicle.fuelName ? [{ icon: Fuel, label: "Fuel", value: vehicle.fuelName }] : []),
+  ];
+
+  const conditionBadge =
+    vehicle.condition === "new" ? "New" : vehicle.condition === "demo" ? "Ex-demo" : null;
+
   return (
-    <article className="rn-card">
-      {vehicle.photo ? (
-        /*
-         * The photograph, and it is the card.
-         *
-         * `sizes` matters here and is easy to get wrong. The grid is four up at 1440, two up on
-         * a phone from 368px, and one up below that, so the widest a card ever gets is about a
-         * third of the viewport on a desktop and half of it on a phone. Telling Next that stops
-         * it serving a 1280px derivative into a 178px slot, which on a throttled connection is
-         * the difference between a page of photographs and a page of grey.
-         */
-        <div className="rn-shot">
+    <article className="rn-card rn-card--interactive rn-vcard">
+      <div className="rn-vcard__media">
+        {vehicle.photo ? (
           <Image
             src={vehicle.photo.url}
             alt={vehicle.photo.alt}
             width={vehicle.photo.width}
             height={vehicle.photo.height}
-            sizes="(min-width: 80rem) 22vw, (min-width: 48rem) 33vw, 50vw"
-            className="rn-shot__img"
-            // The first row is above the fold on every screen size, and the LCP element on a
-            // results page is now one of these rather than a paragraph.
-            priority={index < 4}
+            sizes="(min-width: 80rem) 300px, (min-width: 35rem) 50vw, 100vw"
+            className="rn-vcard__img"
+            priority={priority}
           />
-          {vehicle.photo.count > 1 ? (
-            <p className="rn-shot__count">
-              <span aria-hidden="true">{vehicle.photo.count}</span>
-              <span className="sr-only">{vehicle.photo.count} photographs</span>
-            </p>
-          ) : null}
-        </div>
-      ) : (
-        /* No photograph on this listing. The plate is the honest answer to that, and a better
-           one than the grey rectangle with a camera glyph every other site shows. */
-        <ColourPlate
-          publicRef={vehicle.publicRef}
-          mileageKm={vehicle.mileageKm}
-          colourSwatch={vehicle.colourSwatch}
-          colourFamily={vehicle.colourFamily}
-          colourName={vehicle.colourName}
-          provinceName={vehicle.provinceName}
-          cityName={vehicle.cityName}
-          condition={vehicle.condition}
-          index={index}
-        />
-      )}
+        ) : (
+          <ColourPlate
+            colourSwatch={vehicle.colourSwatch}
+            colourName={vehicle.colourName}
+            className="h-full"
+          />
+        )}
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div>
-          <RandFigure value={vehicle.price} />
+        {vehicle.isDemonstration || conditionBadge ? (
+          <div className="rn-vcard__badges">
+            {vehicle.isDemonstration ? <DemoListingBadge onPhoto /> : null}
+            {conditionBadge ? (
+              <Badge tone="new" onPhoto>
+                {conditionBadge}
+              </Badge>
+            ) : null}
+          </div>
+        ) : null}
+
+        {vehicle.photo && vehicle.photo.count > 1 ? (
+          <p className="rn-vcard__count">
+            <Camera aria-hidden="true" />
+            <span aria-hidden="true">{vehicle.photo.count}</span>
+            <span className="sr-only">{vehicle.photo.count} photographs</span>
+          </p>
+        ) : null}
+      </div>
+
+      <div className="rn-vcard__body">
+        <div className="rn-vcard__price">
+          <PriceTag value={vehicle.price} size="md" />
           {dropAmount ? (
-            <p className="rn-label rn-card__accent mt-1.5 tabular">
-              {/* The word "off" goes. The minus and the amount say it. */}
-              <span aria-hidden="true">- {formatRand(dropAmount)}</span>
-              <span className="sr-only">
-                Reduced by {formatRand(dropAmount)} from {formatRand(vehicle.previousPrice ?? 0)}
+            <Badge tone="drop">
+              <span>
+                Reduced by {formatRand(dropAmount)}
+                <span className="sr-only"> from {formatRand(vehicle.previousPrice ?? 0)}</span>
               </span>
-            </p>
+            </Badge>
           ) : null}
         </div>
 
-        <h3 className="line-clamp-2 min-h-[2.6em] text-sm font-medium leading-snug tracking-normal [font-variation-settings:'wdth'_100]">
-          <Link href={vehicleUrl(vehicle)} className="after:absolute after:inset-0">
-            {title}
+        <h3 className="rn-vcard__title">
+          <Link href={vehicleUrl(vehicle)} className="rn-vcard__link">
+            {name}
+            {vehicle.variantName ? (
+              <span className="rn-vcard__variant"> {unbreakable(vehicle.variantName)}</span>
+            ) : null}
           </Link>
         </h3>
 
-        <ul className="rn-card__muted grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-          <li className="tabular">{formatKm(vehicle.mileageKm)}</li>
-          {vehicle.bodyName ? <li className="truncate">{vehicle.bodyName}</li> : null}
-          {vehicle.transmissionName ? (
-            <li className="truncate">{vehicle.transmissionName}</li>
-          ) : null}
-          {vehicle.fuelName ? <li className="truncate">{vehicle.fuelName}</li> : null}
-        </ul>
+        <KeyFacts items={facts} className="rn-vcard__facts" />
 
-        <hr className="rn-card__rule mt-auto" />
-
-        <div className="flex items-start gap-3">
-          <p className="rn-label shrink-0 border border-current px-1.5 py-1">Verified</p>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium">{vehicle.dealerName}</p>
-            {vehicle.cityName ? (
-              <p className="rn-card__muted rn-label rn-label--light mt-1 truncate">
-                {vehicle.cityName}
-              </p>
+        {foot === "none" || (foot === "town" && !vehicle.cityName) ? null : (
+          <p className="rn-vcard__foot">
+            {foot === "dealer" ? (
+              <>
+                {vehicle.isDemonstration ? null : (
+                  <BadgeCheck aria-hidden="true" className="text-success" />
+                )}
+                <span className="rn-vcard__dealer">
+                  {vehicle.isDemonstration ? null : (
+                    <span className="sr-only">Verified dealership: </span>
+                  )}
+                  {vehicle.dealerName}
+                </span>
+              </>
             ) : null}
-          </div>
-        </div>
-
-        {/*
-          A demonstration listing says so in words a person can read.
-          ----------------------------------------------------------
-          This was a two pixel underline under the dealer name, a `title` attribute and a
-          screen-reader-only sentence. A sighted visitor saw an underline, which reads as
-          emphasis rather than as a warning, so in practice 311 listings for cars that do not
-          exist were presented as stock for sale. The client's brief forbids exactly that, and
-          a marker only a screen reader can hear is not a marker.
-        */}
-        {vehicle.isDemonstration ? (
-          <p className="rn-label rn-card__muted border-t border-current pt-2">
-            Demonstration listing, not for sale
+            {vehicle.cityName ? (
+              <>
+                <MapPin aria-hidden="true" className={foot === "dealer" ? "ml-1" : undefined} />
+                <span className="rn-vcard__town">{vehicle.cityName}</span>
+              </>
+            ) : null}
           </p>
-        ) : null}
+        )}
       </div>
     </article>
   );

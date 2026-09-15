@@ -1,114 +1,131 @@
+import { ArrowRight, Mail, MapPin, ShieldCheck, Store } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AGENCY_EMAIL, NEXT_STEPS } from "@/components/agency/agency-content";
+import { AgencyPageHead } from "@/components/agency/agency-page-head";
 import { QualificationForm } from "@/components/agency/qualification-form";
-import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { COMPANY } from "@/content/company";
 
 export const metadata: Metadata = {
-  title: "Get in touch",
+  title: "Book a free review",
   description:
-    "Tell us about your dealership and get a free written review of your site, your stock feed and your advertising. We reply within one working day.",
+    "Tell us about your dealership and get a free written review of your site, your stock feed and your advertising, with what we would fix first.",
   alternates: { canonical: "/digital/contact" },
-  // Nothing here is worth a search result on its own, and the form is the point.
   robots: { index: true, follow: true },
 };
 
 /**
- * The end of every call to action on the agency site.
+ * Where every "Book a free review" button lands.
  *
- * REDRAWN. The form itself had already been rebuilt on the shared primitives, and it was sitting
- * beside three bordered boxes and an icon-and-line list carried straight over from the old build,
- * on a page that opened with no masthead band while all four other agency pages opened with the
- * same sunken, column-ruled one. So the page that closes the argument was the one page that
- * visibly belonged to a different site.
+ * The form sits on a white panel, the widest thing on the page, with the reassurance beside it
+ * from 1024px and under it on a phone: what happens after sending, the mailbox for anyone who
+ * would rather write, a route for a dealership that wants to list stock rather than hire an
+ * agency, and how the details are handled.
+ *
+ * Only real contact details. The town comes from src/content/company.ts; a phone number appears
+ * only once the company has one. The consent wording inside the form carries the legal review
+ * marker until an attorney has read it.
  */
 export default function AgencyContactPage() {
   return (
     <>
-      <section className="rn-columns border-b border-line bg-surface-sunken">
-        <div className="container-page py-[var(--section-tight)]">
-          <Breadcrumbs trail={[{ href: "/digital/contact", label: "Get in touch" }]} />
+      <AgencyPageHead
+        trail={[{ href: "/digital/contact", label: "Book a free review" }]}
+        eyebrow="Free review"
+        title="Book a free review of your dealership's site"
+        lead="Three short steps. You get a written review of what is slowing your site down, what is stopping it being found, and what we would fix first. If the honest answer is that you do not need us yet, the review says so."
+      />
 
-          <h1 className="rn-head mt-8 max-w-[14ch]">Start with the free review</h1>
-          <p className="measure mt-6 text-lg text-ink-secondary">
-            Three short steps. You get a written review of what is slowing your site down, what is
-            stopping it being found, and what we would fix first. If the honest answer is that you
-            do not need us yet, that is what the review will say.
-          </p>
-        </div>
-      </section>
+      <section aria-label="Review request" className="py-[var(--section-base)]">
+        <div className="container-page grid gap-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
+          <div className="rn-panel p-5 sm:p-8 lg:p-10">
+            <QualificationForm />
+          </div>
 
-      <div className="container-page py-[var(--section-base)]">
-        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr] lg:items-start lg:gap-16">
-          <QualificationForm />
+          <aside aria-label="About the review" className="grid gap-4">
+            <div className="rn-card p-6">
+              <h2 className="text-lg font-semibold text-heading">What happens next</h2>
+              <ol className="mt-5 space-y-5">
+                {NEXT_STEPS.map((step, index) => (
+                  <li key={step.title} className="flex gap-4">
+                    <span
+                      aria-hidden="true"
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-on-secondary tabular"
+                    >
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 pt-1">
+                      <p className="font-semibold text-heading">{step.title}</p>
+                      <p className="mt-1 text-sm text-body">{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <Link href="/digital/process" className="rn-link-arrow mt-6">
+                How an engagement runs after that
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
 
-          {/*
-            The aside as one ruled column.
-            ------------------------------
-            It was three filled and bordered containers stacked on top of each other, each with its
-            own heading, plus a list of three glyphs labelling an email address, a town and a
-            sentence about turnaround. None of the three needed a container and none of the glyphs
-            said anything the line beside it did not. What is left is what the reader came for,
-            separated by rules.
-          */}
-          <aside className="lg:border-l lg:border-line lg:ps-16">
-            <h2 className="rn-label text-ink-muted">Would rather just email</h2>
-            <a
-              href="mailto:digital@rynet.co.za"
-              className="rn-label mt-3 inline-flex min-h-11 items-center text-ink underline decoration-line-interactive underline-offset-4 hover:decoration-ink"
-            >
-              digital@rynet.co.za
-            </a>
-            <p className="rn-label rn-label--light mt-2 text-ink-muted">
-              Pretoria, Gauteng. We reply within one working day, and usually the same day.
-            </p>
-
-            <h2 className="rn-label mt-12 border-t border-line pt-8 text-ink-muted">
-              What happens next
-            </h2>
-            <ol className="mt-4">
-              {[
-                "We reply to confirm what we are looking at, and ask for read only access if you have analytics or ad accounts.",
-                "Two to three days later you get the written review, whether or not anything comes of it.",
-                "If it is useful, we book an hour to go through it. No obligation and no pressure at that point either.",
-              ].map((step, index) => (
-                <li key={step} className="flex gap-5 border-b border-line py-4">
-                  <span
-                    aria-hidden="true"
-                    className="font-display text-base font-extrabold tabular text-ink-muted [font-variation-settings:'wdth'_112]"
+            <div className="rn-card p-6">
+              <h2 className="text-lg font-semibold text-heading">Rather write to us?</h2>
+              <ul className="mt-4 space-y-2 text-sm text-body">
+                <li className="flex min-h-11 items-center gap-3">
+                  <Mail aria-hidden="true" className="size-5 shrink-0 text-muted" />
+                  <a
+                    href={`mailto:${AGENCY_EMAIL}`}
+                    className="inline-flex min-h-11 items-center font-semibold text-accent underline underline-offset-3 hover:text-accent-hover"
                   >
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="text-sm text-ink-secondary">{step}</span>
+                    {AGENCY_EMAIL}
+                  </a>
                 </li>
-              ))}
-            </ol>
-            <p className="rn-label rn-label--light mt-4 text-ink-muted">
-              Read <Link href="/digital/process">how we work</Link> for what happens after that.
-            </p>
+                <li className="flex min-h-11 items-center gap-3">
+                  <MapPin aria-hidden="true" className="size-5 shrink-0 text-muted" />
+                  {COMPANY.streetAddress ?? COMPANY.town}
+                </li>
+              </ul>
+              <p className="mt-3 text-sm text-muted">We reply within one working day.</p>
+            </div>
 
-            <h2 className="rn-label mt-12 border-t border-line pt-8 text-ink-muted">
-              Selling a car, not buying services
-            </h2>
-            <p className="rn-prose mt-3 text-ink-secondary">
-              If you want to list your stock on the Rynet marketplace rather than hire the agency,
-              that is a different conversation and it is free.
-            </p>
-            <Link
-              href="/how-verification-works"
-              className="rn-label mt-4 inline-flex min-h-11 items-center text-ink underline decoration-line-interactive underline-offset-4 hover:decoration-ink"
-            >
-              How dealership verification works
-            </Link>
+            <div className="rounded-md border border-line bg-subtle p-6">
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="flex size-10 shrink-0 items-center justify-center rounded-md bg-card text-heading shadow-xs"
+                >
+                  <Store className="size-5" />
+                </span>
+                <h2 className="font-semibold text-heading">
+                  Here to list stock, not hire an agency?
+                </h2>
+              </div>
+              <p className="mt-3 text-sm text-body">
+                Listing a dealership on Rynet Showroom is a separate conversation, and being an
+                agency client has no bearing on it.
+              </p>
+              <Link href="/how-verification-works" className="rn-link-arrow mt-4">
+                How dealerships are checked
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
 
-            <p className="mt-12 border-t border-line pt-6 text-xs text-ink-muted">
-              What you send us is handled under our <Link href="/privacy">privacy notice</Link>. We
-              do not pass it to any dealership and we do not use it for anything except replying to
-              you.
+            <p className="flex gap-3 px-1 text-sm text-muted">
+              <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+              <span>
+                What you send is handled under our{" "}
+                <Link
+                  href="/privacy"
+                  className="font-semibold text-heading underline underline-offset-3 hover:text-accent"
+                >
+                  privacy notice
+                </Link>
+                . It is not passed to any dealership, and it is used only for this enquiry.
+              </span>
             </p>
           </aside>
         </div>
-      </div>
+      </section>
     </>
   );
 }

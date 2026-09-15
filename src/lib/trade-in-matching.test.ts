@@ -39,6 +39,19 @@ describe('"verified dealerships"', () => {
     expect(isEligible(dealer({ verificationStatus: "verified" }), hilux)).toBe(true);
   });
 
+  it("a demonstration dealership never receives a real seller's details", () => {
+    // Seeded example dealerships are verified and accept trade-ins so the public site has
+    // something to show. They are not businesses, so personal information must never reach one.
+    expect(isEligible(dealer({ isDemonstration: true }), hilux)).toBe(false);
+    expect(isEligible(dealer({ isDemonstration: false }), hilux)).toBe(true);
+    expect(
+      selectDealerships(
+        [dealer({ id: 1, isDemonstration: true }), dealer({ id: 2, isDemonstration: true })],
+        hilux,
+      ),
+    ).toEqual([]);
+  });
+
   it("a dealership that has not asked for trade-ins receives nothing", () => {
     // Personal information does not go to a business that never opted in to receive it,
     // whatever its verification status.

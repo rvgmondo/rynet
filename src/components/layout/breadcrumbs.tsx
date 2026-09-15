@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { breadcrumbJsonLd } from "@/lib/structured-data";
@@ -7,15 +8,41 @@ export type Crumb = { href: string; label: string };
 /**
  * Breadcrumbs.
  *
- * Visible and marked up, per Section 13. The last item is the current page and is not a
- * link to itself: `aria-current="page"` says where you are, and a link that goes nowhere
- * new is a wasted tab stop.
+ * The structured data always carries the whole trail, current page included, because that is what
+ * a search result draws its path from.
  *
- * The separators are `aria-hidden`, so a screen reader hears "Cars for sale, Toyota,
- * Hilux" rather than "Cars for sale, chevron, Toyota, chevron, Hilux".
+ * THE VISIBLE TRAIL IS HOME AND THE PARENTS, NOT THE CURRENT PAGE. Every page on this site puts its
+ * own name in the headline directly underneath, so the current item only repeated the H1, and on
+ * the contact, sell and verification pages the whole "trail" was one item repeating it. A
+ * breadcrumb answers "where did this come from"; the headline answers "where am I". So:
+ *
+ *   - a trail with no parent renders nothing visible (the JSON-LD still ships);
+ *   - otherwise it reads Home > parents, with the chevrons hidden from screen readers (on the
+ *     agency site "Home" is Rynet Digital);
+ *   - `showCurrent` puts the current page back on the end, marked aria-current, for the rare page
+ *     whose headline is not its name.
+ *
+ * Sentence case, 14px, muted links. Each link is at least 24px tall (SC 2.5.8). A long trail
+ * scrolls inside its own box rather than pushing a phone sideways.
  */
-export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
+export function Breadcrumbs({
+  trail,
+  showCurrent = false,
+  className = "",
+}: {
+  trail: Crumb[];
+  showCurrent?: boolean;
+  className?: string;
+}) {
   if (trail.length === 0) return null;
+
+  // The agency front door has its own home.
+  const home = trail[0]?.href.startsWith("/digital")
+    ? { href: "/digital", label: "Rynet Digital" }
+    : { href: "/", label: "Home" };
+  const parents = trail.slice(0, -1).filter((crumb) => crumb.href !== home.href);
+  const current = trail[trail.length - 1];
+  const hasVisibleTrail = parents.length > 0 || showCurrent;
 
   return (
     <>
@@ -24,44 +51,27 @@ export function Breadcrumbs({ trail }: { trail: Crumb[] }) {
         // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has no other insertion point, and this is serialised from typed data we constructed.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(trail)) }}
       />
-      {/*
-        The dateline treatment, not a row of underlined sentence-case links with chevrons.
-        ---------------------------------------------------------------------------------
-        This appears above the headline on nine route shapes and it was the last object in the
-        chrome still drawn the old way: default-size links, underlined, separated by lucide
-        chevrons, with the CURRENT page set darker than the links leading to it, so the one
-        thing on the trail that is not a destination read as the most prominent.
-
-        It is set in the label face now, the trail in muted ink and the current page in ink,
-        separated by the same 1px vertical hairline the masthead dateline uses. A slash or a
-        chevron between two label-caps items is a third glyph doing work the gap already does.
-      */}
-      <nav aria-label="Breadcrumb" className="scroll-x">
-        <ol className="flex items-center whitespace-nowrap">
-          {trail.map((crumb, index) => {
-            const last = index === trail.length - 1;
-            return (
-              <li key={crumb.href} className="flex items-center">
-                {index > 0 ? (
-                  <span aria-hidden="true" className="mx-3 h-3 w-px bg-line-strong" />
-                ) : null}
-                {last ? (
-                  <span aria-current="page" className="rn-label truncate text-ink">
-                    {crumb.label}
-                  </span>
-                ) : (
-                  <Link
-                    href={crumb.href}
-                    className="rn-label flex min-h-11 items-center text-ink-muted transition-colors duration-[var(--duration-micro)] hover:text-ink"
-                  >
-                    {crumb.label}
-                  </Link>
-                )}
+      {hasVisibleTrail ? (
+        <nav aria-label="Breadcrumb" className={`scroll-x ${className}`}>
+          <ol className="rn-crumbs">
+            <li>
+              <Link href={home.href}>{home.label}</Link>
+            </li>
+            {parents.map((crumb) => (
+              <li key={crumb.href}>
+                <ChevronRight aria-hidden="true" />
+                <Link href={crumb.href}>{crumb.label}</Link>
               </li>
-            );
-          })}
-        </ol>
-      </nav>
+            ))}
+            {showCurrent && current ? (
+              <li>
+                <ChevronRight aria-hidden="true" />
+                <span aria-current="page">{current.label}</span>
+              </li>
+            ) : null}
+          </ol>
+        </nav>
+      ) : null}
     </>
   );
 }

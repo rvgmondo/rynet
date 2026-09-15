@@ -1,3 +1,4 @@
+import { KeyRound } from "lucide-react";
 import type { Metadata } from "next";
 
 import { readTwoFactorStatus } from "@/app/actions/two-factor";
@@ -33,36 +34,40 @@ export default async function TwoFactorPage() {
 
   return (
     <>
-      <section className="rn-columns border-b border-line bg-surface-sunken">
-        <div className="container-page py-[var(--section-tight)]">
-          <Breadcrumbs
-            trail={[{ href: "/account/two-factor", label: "Two-factor authentication" }]}
-          />
+      <Breadcrumbs trail={[{ href: "/account/two-factor", label: "Two-factor authentication" }]} />
 
-          <h1 className="rn-head mt-8 max-w-[14ch]">Two-factor authentication</h1>
-          <p className="measure mt-6 text-lg text-ink-secondary">
+      <section aria-labelledby="two-factor-heading" className="border-b border-line bg-card">
+        <div className="container-page py-10 sm:py-14">
+          <p className="rn-eyebrow">Account security</p>
+          <h1 id="two-factor-heading" className="rn-h1 mt-3 max-w-[18ch]">
+            Two-factor authentication
+          </h1>
+          <p className="rn-lead mt-4 max-w-2xl">
             A second step at sign-in, from an app on your phone. It means a stolen password on its
-            own is not enough to get into an account that can see a dealership's leads, change its
-            prices, or approve a dealership as verified.
+            own is not enough to get into an account that can see a dealership&apos;s leads, change
+            its prices, or approve a dealership as verified.
           </p>
         </div>
       </section>
 
-      <div className="container-page py-[var(--section-base)]">
-        <div className="max-w-2xl">
+      <div className="container-page grid gap-8 py-[var(--section-base)] lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:gap-12">
+        <div className="min-w-0 max-w-2xl">
           <TwoFactorPanel status={status} />
         </div>
 
-        <section aria-labelledby="lost-heading" className="measure mt-14">
-          <h2 id="lost-heading" className="text-xl">
-            If you lose the phone
-          </h2>
-          <p className="mt-3 text-sm text-ink-secondary">
-            Use one of the recovery codes in place of the six digit code. Each one works once. If
-            they are gone as well, a platform admin has to clear the second factor on the account,
-            and that is deliberately a conversation with a person rather than a self-service reset:
-            an automated one would be a way around the whole thing.
-          </p>
+        <section aria-labelledby="lost-heading" className="min-w-0 lg:self-start">
+          <div className="rounded-lg bg-subtle p-6">
+            <KeyRound aria-hidden="true" className="size-6 text-heading" />
+            <h2 id="lost-heading" className="mt-4 text-lg font-semibold">
+              If you lose the phone
+            </h2>
+            <p className="mt-2 text-sm text-body">
+              Use one of your recovery codes in place of the six digit code. Each one works once. If
+              they are gone as well, a platform admin has to clear the second factor on the account,
+              and that is deliberately a conversation with a person rather than a self-service
+              reset: an automated one would be a way around the whole thing.
+            </p>
+          </div>
         </section>
       </div>
     </>

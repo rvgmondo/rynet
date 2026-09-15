@@ -1,24 +1,25 @@
 import { ImageResponse } from "next/og";
 
+import { MARK_PATHS, WORDMARK_PATH } from "@/components/brand/rynet-mark";
+
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "Rynet Showroom. Verified dealerships only, no private sellers.";
+export const alt =
+  "Rynet Showroom. Every dealership is checked before it can list, and no private sellers.";
 
 /**
  * The share card, generated rather than shipped.
  *
- * Every route on the marketplace was sharing with no image at all, so a link posted into
- * WhatsApp, which is how most of this market shares anything, rendered as a bare line of
- * text. `twitter:card` was defaulting to the imageless "summary" for the same reason.
+ * Every route on the marketplace was sharing with no image, so a link posted into WhatsApp,
+ * which is how most of this market shares anything, rendered as a bare line of text.
  *
- * It is drawn rather than photographed, and that is not a compromise: there is no vehicle
- * photography, and a stock photo of a car that is not on the platform would be the same lie
- * the colour plate exists to avoid. So the card is the design system at poster scale, which
- * is what the site looks like anyway.
+ * Drawn rather than photographed: a stock photograph of a car that is not on the platform would be
+ * a claim about stock. So it is the brand at poster scale: the navy band, the traced lockup, and a
+ * sentence about how the platform works, which is true with or without the demonstration data.
  *
  * Fixed hex rather than tokens on purpose. This renders outside the document, so there is no
- * stylesheet and no theme to read from, and a var() here would silently resolve to nothing.
- * These are the values from tokens.css and they change with it by hand.
+ * stylesheet and no theme to read from. These are the values from tokens.css and they change with
+ * it by hand.
  */
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -29,47 +30,37 @@ export default function OpengraphImage() {
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        background: "#EDEDEA",
+        background: "#001123",
         padding: 72,
       }}
     >
-      {/* The masthead rule: the tachometer sweep unrolled, silver into brand red. */}
-      <div
-        style={{
-          display: "flex",
-          height: 6,
-          width: "100%",
-          background: "linear-gradient(90deg, #B1B4BB 0%, #C2C4CA 44%, #E9505B 78%, #E32432 100%)",
-        }}
-      />
+      <svg width="420" height="75" viewBox="-30.6 -3.5 128.2 22.8" aria-hidden="true">
+        <g transform="translate(-30.5 -3.4) scale(0.2898)">
+          <path fill="#B1B4BB" d={MARK_PATHS.gauge} />
+          <path fill="#F3F6FA" d={MARK_PATHS.ink} />
+          <path fill="#E32432" d={`${MARK_PATHS.redDash}${MARK_PATHS.needle}`} />
+        </g>
+        <rect x="-2.8" y="0" width="0.8" height="18.4" fill="#E32432" />
+        <path fillRule="evenodd" fill="#F3F6FA" d={WORDMARK_PATH} />
+      </svg>
 
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
             display: "flex",
-            fontSize: 22,
-            letterSpacing: 6,
-            color: "#545E6A",
-            textTransform: "uppercase",
-          }}
-        >
-          Rynet Showroom
-        </div>
-        <div
-          style={{
-            display: "flex",
             flexDirection: "column",
-            marginTop: 28,
-            fontSize: 128,
-            lineHeight: 1,
-            fontWeight: 800,
-            letterSpacing: -4,
-            color: "#0A1017",
-            textTransform: "uppercase",
+            fontSize: 84,
+            lineHeight: 1.05,
+            fontWeight: 700,
+            letterSpacing: -2,
+            color: "#F3F6FA",
           }}
         >
-          <div style={{ display: "flex" }}>No private</div>
-          <div style={{ display: "flex" }}>sellers. Not one.</div>
+          <div style={{ display: "flex" }}>Every dealership is checked</div>
+          <div style={{ display: "flex" }}>before it can list.</div>
+        </div>
+        <div style={{ display: "flex", marginTop: 28, fontSize: 30, color: "#AEB9C9" }}>
+          No private sellers can list on Rynet.
         </div>
       </div>
 
@@ -77,16 +68,23 @@ export default function OpengraphImage() {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "flex-end",
+          alignItems: "center",
           fontSize: 24,
-          color: "#232A33",
+          color: "#AEB9C9",
         }}
       >
-        <div style={{ display: "flex" }}>
-          Every car is listed by a registered South African dealership.
-        </div>
-        <div style={{ display: "flex", fontSize: 20, letterSpacing: 4, color: "#545E6A" }}>
-          RYNET.CO.ZA
+        <div style={{ display: "flex" }}>Rynet Showroom</div>
+        <div
+          style={{
+            display: "flex",
+            padding: "14px 28px",
+            borderRadius: 10,
+            background: "#C81E2B",
+            color: "#FFFFFF",
+            fontWeight: 600,
+          }}
+        >
+          rynet.co.za
         </div>
       </div>
     </div>,

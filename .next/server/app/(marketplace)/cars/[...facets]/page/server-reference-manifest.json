@@ -1,4 +1,16 @@
 {
-  "node": {},
+  "node": {
+    "403faba9117ed2b5a66d50fb28f677bbe8ad24dc99": {
+      "workers": {
+        "app/(marketplace)/cars/[...facets]/page": {
+          "moduleId": 557218,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "countCars",
+      "filename": "src/components/search/count-action.ts"
+    }
+  },
   "edge": {}
 }
