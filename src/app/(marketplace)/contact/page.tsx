@@ -15,6 +15,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { IconTile } from "@/components/ui/icon-tile";
 import { PageHeader } from "@/components/ui/page-header";
 import { COMPANY } from "@/content/company";
 
@@ -168,9 +169,7 @@ export default function ContactPage() {
             >
               {group.routes.map((route) => (
                 <li key={route.id} id={route.id} className="rn-card flex flex-col p-6">
-                  <span aria-hidden="true" className="rn-icon-tile">
-                    <route.icon className="size-5" />
-                  </span>
+                  <IconTile icon={route.icon} />
                   <h3 className="mt-5 text-lg font-semibold">{route.title}</h3>
                   <p className="mt-2 flex-1 text-sm text-body">{route.body}</p>
 

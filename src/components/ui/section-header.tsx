@@ -1,6 +1,6 @@
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
 import type { ReactNode } from "react";
+
+import { TextLink } from "./text-link";
 
 /**
  * Section header: an optional eyebrow, the title, an optional lead, and an optional action link
@@ -42,10 +42,9 @@ export function SectionHeader({
         {lead ? <p className="rn-section-header__lead">{lead}</p> : null}
       </div>
       {action ? (
-        <Link href={action.href} className="rn-link-arrow">
+        <TextLink href={action.href} variant="action">
           {action.label}
-          <ArrowRight aria-hidden="true" />
-        </Link>
+        </TextLink>
       ) : null}
     </div>
   );
