@@ -202,10 +202,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                       </h3>
                     </div>
                     <p className="mt-3 text-sm text-body">{other.summary}</p>
-                    <span
-                      aria-hidden="true"
-                      className="rn-link-arrow mt-auto self-start pt-4 text-heading"
-                    >
+                    <span aria-hidden="true" className="rn-link-arrow mt-auto self-start pt-4">
                       Learn more
                       <ArrowRight />
                     </span>

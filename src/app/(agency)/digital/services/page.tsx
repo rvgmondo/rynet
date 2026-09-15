@@ -32,13 +32,40 @@ export default function ServicesIndexPage() {
         eyebrow="Services"
         title="Seven services, all for car dealerships"
         lead="Each one exists because of something that costs a dealership sales: a slow site, stock that is wrong, ad spend nobody can trace, leads left waiting. Start with the one that costs you most."
+        aside={
+          <nav
+            aria-label="Services on this page"
+            className="rounded-lg border border-line bg-page p-2"
+          >
+            <ol className="divide-y divide-line">
+              {SERVICES.map((service, index) => (
+                <li key={service.slug}>
+                  <Link
+                    href={`/digital/services/${service.slug}`}
+                    className="group flex min-h-12 items-center gap-3 rounded-sm px-3 text-[0.9375rem] font-medium text-heading no-underline hover:bg-subtle"
+                  >
+                    <span aria-hidden="true" className="w-5 text-sm text-muted tabular">
+                      {index + 1}
+                    </span>
+                    <service.Icon aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                    <span className="min-w-0 flex-1">{service.name}</span>
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        }
       />
 
       <section aria-label="All services" className="py-[var(--section-base)]">
         <ul className="container-page grid gap-5 md:grid-cols-2">
           {SERVICES.map((service) => (
             <li key={service.slug} className="flex">
-              <article className="rn-card rn-card--interactive p-6 sm:p-8">
+              <article className="rn-card rn-card--interactive p-6 max-sm:rounded-none max-sm:border-x-0 max-sm:border-t-0 max-sm:bg-transparent max-sm:px-0 max-sm:pt-0 max-sm:shadow-none sm:p-8">
                 <div className="flex items-center gap-4">
                   <span className="flex size-12 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary">
                     <service.Icon aria-hidden="true" className="size-6" />
@@ -61,10 +88,7 @@ export default function ServicesIndexPage() {
                   <p className="mt-1 text-sm text-body">{service.outcome}</p>
                 </div>
 
-                <span
-                  aria-hidden="true"
-                  className="rn-link-arrow mt-auto self-start pt-6 text-heading"
-                >
+                <span aria-hidden="true" className="rn-link-arrow mt-auto self-start pt-6">
                   What is included
                   <ArrowRight />
                 </span>

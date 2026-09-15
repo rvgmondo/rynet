@@ -1,8 +1,10 @@
-import { ChevronRight, Menu, Search, X } from "lucide-react";
+import { ArrowRight, ChevronRight, Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 
 import { RynetLockup } from "@/components/brand/rynet-mark";
+import { HeaderScroll } from "@/components/layout/header-scroll";
 import { HeaderSearch } from "@/components/layout/header-search";
+import { MenuPopular } from "@/components/layout/menu-popular";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { NavLink } from "@/components/layout/nav-link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -33,12 +35,17 @@ const FOR_DEALERS = { href: "/digital", label: "For dealers" } as const;
  *
  * White, sticky, 64px. The lockup on the left; the three buyer destinations with a current-page
  * state; on the right a compact search (from 1280px, and never on a page that is already a
- * search), a "For dealers" link and the one red action on the page. The theme switch is not
- * here: it is in the footer and at the bottom of the menu.
+ * search), then "Sell your car" and "For dealers" as quiet links. There is no red button here:
+ * this is a buying site, and red is spent on the one action of each page (Search, Enquire), not
+ * on a seller link that shouted over both. The theme switch is in the footer and the menu.
  *
- * Below 1024px everything but the lockup and the red action moves into a full-height sheet with
- * a scrim. It is a native <details> (works before hydration and without JavaScript) with a small
- * client island that closes it on navigation, on Escape and on a tap on the scrim.
+ * Below 1024px the bar is the lockup, a search button and the menu. The search button opens the
+ * menu with its search field focused (with scripting off it is a link to /cars, which is the
+ * search). The menu is a native <details> (works before hydration and without JavaScript) with a
+ * small client island that closes it on navigation, on Escape and on a tap on the scrim. It holds
+ * the destinations, quick routes by body type, make and price, and one outline "Sell your car".
+ * HeaderScroll tucks the bar away while a phone reader scrolls down and brings it back on the way
+ * up.
  *
  * The bar is solid, never a backdrop blur: a sticky bar has the page scrolling under it by
  * definition, and a blur there is a full-viewport readback on every frame on a mid-range phone.
@@ -46,13 +53,14 @@ const FOR_DEALERS = { href: "/digital", label: "For dealers" } as const;
 export function SiteHeader() {
   return (
     <header className="rn-header">
+      <HeaderScroll />
       <div className="container-page rn-header__bar">
         <Link
           href="/"
           aria-label="Rynet Showroom, home"
           className="-ml-1 flex shrink-0 items-center rounded-md p-1"
         >
-          <RynetLockup className="h-6 w-auto sm:h-7" />
+          <RynetLockup className="h-7 w-auto lg:h-8" />
         </Link>
 
         <nav aria-label="Main" className="ml-6 hidden lg:block">
@@ -67,8 +75,12 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1 lg:gap-2">
           <HeaderSearch className="mr-2 hidden xl:block" />
+
+          <NavLink href={SELL.href} className="rn-navlink hidden lg:inline-flex">
+            {SELL.label}
+          </NavLink>
 
           <NavLink
             href={FOR_DEALERS.href}
@@ -78,16 +90,15 @@ export function SiteHeader() {
             {FOR_DEALERS.label}
           </NavLink>
 
-          <Link
-            href={SELL.href}
-            className={buttonClasses({
-              variant: "primary",
-              size: "sm",
-              className: "hidden min-[22.5rem]:inline-flex",
-            })}
+          {/* A link to the search page until the menu island takes it over (see MobileMenu). */}
+          <a
+            href="/cars"
+            data-menu-search=""
+            aria-label="Search cars for sale"
+            className={buttonClasses({ variant: "ghost", size: "icon", className: "lg:hidden" })}
           >
-            {SELL.label}
-          </Link>
+            <Search aria-hidden="true" className="size-5" />
+          </a>
 
           <MobileMenu className="lg:hidden">
             <summary
@@ -116,7 +127,7 @@ export function SiteHeader() {
                     type="search"
                     autoComplete="off"
                     placeholder="Search make or model"
-                    className="rn-input h-12 rounded-full bg-subtle pl-11 shadow-none"
+                    className="rn-input h-12 bg-subtle pl-11 shadow-none"
                   />
                 </form>
               </search>
@@ -144,14 +155,23 @@ export function SiteHeader() {
                 </ul>
               </nav>
 
+              <MenuPopular />
+
               <div className="mt-auto border-t border-line px-4 py-4">
+                {/* Not offered on the sell page itself, where it would only reload the form. */}
                 <Link
                   href={SELL.href}
-                  className={buttonClasses({ variant: "primary", size: "lg", block: true })}
+                  className={buttonClasses({
+                    variant: "outline",
+                    size: "lg",
+                    block: true,
+                    className: "rn-menu__sell mb-4",
+                  })}
                 >
-                  {SELL.label}
+                  {SELL.label} to a dealership
+                  <ArrowRight aria-hidden="true" />
                 </Link>
-                <div className="mt-4 flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-4">
                   <span className="text-sm text-muted">Colour theme</span>
                   <ThemeToggle name="theme-menu" />
                 </div>

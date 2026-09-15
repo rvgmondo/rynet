@@ -35,6 +35,36 @@ export default function AgencyContactPage() {
         eyebrow="Free review"
         title="Book a free review of your dealership's site"
         lead="Three short steps. You get a written review of what is slowing your site down, what is stopping it being found, and what we would fix first. If the honest answer is that you do not need us yet, the review says so."
+        aside={
+          <nav
+            aria-label="Before you book"
+            className="rounded-lg border border-line bg-page p-5 sm:p-6"
+          >
+            <p className="text-sm font-semibold text-heading">Rather read first?</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              <li>
+                <Link href="/digital/services" className="rn-chip min-h-11">
+                  The seven services
+                </Link>
+              </li>
+              <li>
+                <Link href="/digital/process" className="rn-chip min-h-11">
+                  How an engagement runs
+                </Link>
+              </li>
+              <li>
+                <Link href="/digital/pricing" className="rn-chip min-h-11">
+                  Pricing and terms
+                </Link>
+              </li>
+              <li>
+                <Link href="/cars" className="rn-chip min-h-11">
+                  The site we built
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        }
       />
 
       <section aria-label="Review request" className="py-[var(--section-base)]">
@@ -85,7 +115,7 @@ export default function AgencyContactPage() {
                   {COMPANY.streetAddress ?? COMPANY.town}
                 </li>
               </ul>
-              <p className="mt-3 text-sm text-muted">We reply within one working day.</p>
+              <p className="mt-3 text-sm text-muted">We reply by email.</p>
             </div>
 
             <div className="rounded-md border border-line bg-subtle p-6">

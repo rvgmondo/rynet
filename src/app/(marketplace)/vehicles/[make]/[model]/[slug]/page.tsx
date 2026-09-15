@@ -8,7 +8,7 @@ import { Suspense } from "react";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { assumptionsFrom } from "@/components/listing/finance-estimate";
-import { FeaturesPanel, KeyFactsPanel } from "@/components/listing/listing-overview";
+import { FeaturesPanel, keyFactsFor } from "@/components/listing/listing-overview";
 import { SellerDescription } from "@/components/listing/seller-description";
 import { FinancePanel } from "@/components/vehicles/finance-panel";
 import { ListingSummary, MobileActionBar } from "@/components/vehicles/price-rail";
@@ -124,8 +124,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
  *   1. The gallery.
  *   2. The summary card: title, price, the finance line, the demonstration notice, the contact
  *      actions and the dealership.
- *   3. Key facts, the dealership's description, features, the specification, the finance
- *      estimate.
+ *   3. Key facts with the specification (one panel), the dealership's description, features,
+ *      the finance estimate.
  *
  * On a phone that is simply top to bottom: the photograph edge to edge, then who, how much and
  * how to get in touch, before anything long. From 1024px the page is two columns. The gallery
@@ -240,10 +240,9 @@ export default async function VehiclePage({ params }: { params: Params }) {
           </div>
 
           <div className="contents lg:col-start-1 lg:row-start-2 lg:flex lg:min-w-0 lg:flex-col lg:gap-6">
-            <KeyFactsPanel vehicle={vehicle} />
+            <SpecTable vehicle={vehicle} facts={keyFactsFor(vehicle)} />
             <SellerDescription vehicle={vehicle} />
             <FeaturesPanel vehicle={vehicle} />
-            <SpecTable vehicle={vehicle} />
             {poa || sold ? null : <FinancePanel price={vehicle.price} defaults={financeDefaults} />}
           </div>
         </div>

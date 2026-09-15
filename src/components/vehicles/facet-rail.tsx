@@ -41,8 +41,16 @@ import { FacetGroup, type FacetOption, FilterSection, OptionList } from "./facet
  *
  * Counts are exact. Every option shows how many cars ticking it would leave with every OTHER filter
  * applied, computed in memory from the same rows the results come from (match.ts). A zero option is
- * disabled and keeps its 0, so the list does not jump and "none right now" reads differently from
- * "not a category". The landing pages use this too, posting to /cars with their own facet already
+ * disabled, keeps its 0 and waits behind "Show more", so "none right now" reads differently from
+ * "not a category" without cluttering the list.
+ *
+ * ON A DESKTOP the sidebar is in the page's own flow, never a box that scrolls inside itself (that
+ * hid eight of ten filters behind an invisible scrollbar). With every section closed it fits a
+ * laptop screen, "Show N cars" included. That bar is not sticky: pinned to the bottom of the window
+ * it sat over whichever filter row was there, a partly hidden target (SC 2.5.8) and a focus that
+ * could land under it (SC 2.4.11).
+ *
+ * The landing pages use this too, posting to /cars with their own facet already
  * ticked, so a buyer who arrived on "Bakkies for sale" keeps the bakkie filter when they refine.
  */
 
@@ -191,12 +199,26 @@ export function FacetRail({
       <div
         data-filter-sheet
         tabIndex={-1}
-        className="flex h-full w-full flex-col bg-card shadow-overlay outline-none sm:max-w-[26rem] xl:sticky xl:top-[calc(var(--header-height)+1.5rem)] xl:h-auto xl:max-h-[calc(100dvh-var(--header-height)-3rem)] xl:max-w-none xl:overflow-hidden xl:rounded-lg xl:border xl:border-line xl:shadow-card"
+        className="flex h-full w-full flex-col bg-card shadow-overlay outline-none sm:max-w-[26rem] xl:h-auto xl:max-w-none xl:rounded-lg xl:border xl:border-line xl:shadow-card"
       >
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line py-2 ps-4 pe-2 xl:px-5 xl:py-4">
           <h2 id="filters-heading" className="text-lg font-semibold text-heading">
             Filters
+            {applied > 0 ? (
+              <span className="ms-1.5 font-normal text-muted tabular">
+                ({applied}
+                <span className="sr-only"> applied</span>)
+              </span>
+            ) : null}
           </h2>
+          {applied > 0 ? (
+            <a
+              href={clearHref}
+              className="ms-auto inline-flex min-h-11 items-center rounded-sm px-2 text-sm font-semibold text-accent underline-offset-3 hover:text-accent-hover hover:underline xl:min-h-6 xl:px-0"
+            >
+              Clear all
+            </a>
+          ) : null}
           <a
             href="#results"
             data-filters-close
@@ -226,7 +248,7 @@ export function FacetRail({
             />
           ))}
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 xl:px-5">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 xl:overflow-visible xl:px-5">
             <FilterSection
               title="Price"
               summary={rangeLabel(state.minPrice, state.maxPrice, formatRand)}
@@ -234,29 +256,47 @@ export function FacetRail({
             >
               <fieldset>
                 <legend className="sr-only">Price</legend>
-                <div className="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
-                  <label htmlFor="filter-min-price" className="text-sm font-medium text-body">
-                    From
-                  </label>
-                  <Select id="filter-min-price" name="minPrice" defaultValue={state.minPrice ?? ""}>
-                    <option value="">Any</option>
-                    {priceFrom.map((value) => (
-                      <option key={value} value={value}>
-                        {formatRand(value)}
-                      </option>
-                    ))}
-                  </Select>
-                  <label htmlFor="filter-max-price" className="text-sm font-medium text-body">
-                    To
-                  </label>
-                  <Select id="filter-max-price" name="maxPrice" defaultValue={state.maxPrice ?? ""}>
-                    <option value="">Any</option>
-                    {priceTo.map((value) => (
-                      <option key={value} value={value}>
-                        {formatRand(value)}
-                      </option>
-                    ))}
-                  </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="min-w-0">
+                    <label
+                      htmlFor="filter-min-price"
+                      className="mb-1 block text-sm font-medium text-body"
+                    >
+                      From
+                    </label>
+                    <Select
+                      id="filter-min-price"
+                      name="minPrice"
+                      defaultValue={state.minPrice ?? ""}
+                    >
+                      <option value="">Any</option>
+                      {priceFrom.map((value) => (
+                        <option key={value} value={value}>
+                          {formatRand(value)}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="min-w-0">
+                    <label
+                      htmlFor="filter-max-price"
+                      className="mb-1 block text-sm font-medium text-body"
+                    >
+                      To
+                    </label>
+                    <Select
+                      id="filter-max-price"
+                      name="maxPrice"
+                      defaultValue={state.maxPrice ?? ""}
+                    >
+                      <option value="">Any</option>
+                      {priceTo.map((value) => (
+                        <option key={value} value={value}>
+                          {formatRand(value)}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
                 </div>
               </fieldset>
             </FilterSection>
@@ -265,8 +305,7 @@ export function FacetRail({
               title="Make"
               name="make"
               options={makeOptions}
-              open
-              limit={8}
+              limit={6}
               moreLabel={(n) => `Show ${n} more ${n === 1 ? "make" : "makes"}`}
             />
 
@@ -307,7 +346,6 @@ export function FacetRail({
               title="Body type"
               name="body"
               options={listOf(taxonomy.bodies, facets.body, state.body)}
-              open
             />
 
             <FilterSection title="Year" summary={yearLabel(state.minYear, state.maxYear)}>
@@ -368,17 +406,9 @@ export function FacetRail({
             />
           </div>
 
-          <div className="flex shrink-0 items-center gap-3 border-t border-line bg-card px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] xl:px-5 xl:py-4">
-            {applied > 0 ? (
-              <a
-                href={clearHref}
-                className={buttonClasses({ variant: "outline", className: "shrink-0" })}
-              >
-                Clear all
-              </a>
-            ) : null}
+          <div className="flex shrink-0 items-center gap-3 border-t border-line bg-card px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] xl:rounded-b-lg xl:px-5 xl:py-4">
             {/* Red in the sheet, where it is the only action on screen. Navy in the sidebar, which
-                shares the viewport with the header's red "Sell your car": one red object a screen. */}
+                shares the viewport with the results: there the filters are a tool, not the action. */}
             <button
               type="submit"
               className={buttonClasses({

@@ -1,4 +1,4 @@
-import { RynetLockup, RynetMark } from "@/components/brand/rynet-mark";
+import { RynetLockup } from "@/components/brand/rynet-mark";
 
 /**
  * RYNET DIGITAL, for the navy header and footer.
@@ -12,21 +12,21 @@ import { RynetLockup, RynetMark } from "@/components/brand/rynet-mark";
  * finding it in the header, and a screen reader never hears it: the link around the wordmark
  * carries the name "Rynet Digital, home".
  *
- * Below 384px the full lockup and DIGITAL do not fit beside the review button and the menu, so
- * the mark stands in for RYNET, the way an app icon does. Below 360px DIGITAL also steps down a
- * size, which keeps the bar inside a 320px screen with room to spare.
+ * Below 384px the lockup steps down a size so it still fits beside the review button and the menu,
+ * and below 360px DIGITAL is dropped rather than RYNET: the brand word always shows, and the link
+ * around it still says "Rynet Digital, home". (The mark used to stand in for RYNET there, which
+ * left a 320px screen reading "R DIGITAL".)
  */
 export function AgencyWordmark({ size = "header" }: { size?: "header" | "footer" }) {
   const footer = size === "footer";
   return (
-    <span className="flex items-center gap-2.5">
-      <RynetMark tone="on-navy" className={footer ? "hidden" : "h-8 w-auto min-[24rem]:hidden"} />
+    <span className="flex items-center gap-2 min-[24rem]:gap-2.5">
       <RynetLockup
         tone="on-navy"
-        className={footer ? "h-7 w-auto" : "hidden h-5 w-auto min-[24rem]:block sm:h-6"}
+        className={footer ? "h-7 w-auto" : "h-4 w-auto min-[24rem]:h-5 sm:h-6"}
       />
       <span
-        className={`font-semibold leading-none tracking-[0.18em] text-on-navy-muted ${footer ? "pt-0.5 text-base" : "pt-px text-[0.8125rem] max-[359px]:text-[0.6875rem] max-[359px]:tracking-[0.14em] sm:text-sm"}`}
+        className={`font-semibold leading-none tracking-[0.18em] text-on-navy-muted ${footer ? "pt-0.5 text-base" : "pt-px text-[0.6875rem] max-[359px]:hidden min-[24rem]:text-[0.8125rem] sm:text-sm"}`}
       >
         DIGITAL
       </span>

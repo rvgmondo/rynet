@@ -3,13 +3,15 @@ import Link from "next/link";
 
 import type { PhotoCreditLine } from "@/components/home/home-stock";
 import { buttonClasses } from "@/components/ui/button-classes";
-import { SectionHeader } from "@/components/ui/section-header";
 import { VERIFICATION_CHECKS } from "@/content/verification-checks";
 
 /**
  * The checks, in the order a dealership goes through them, read from the same list as
  * /how-verification-works (src/content/verification-checks.ts) so this summary can never promise
  * more than the full page.
+ *
+ * A short numbered list, not four cards: the full version, with every sentence, is one link away,
+ * and the cards repeated it almost word for word. Each step is its title and one sentence.
  */
 export function VerificationSteps() {
   return (
@@ -17,33 +19,37 @@ export function VerificationSteps() {
       aria-labelledby="checks-heading"
       className="rn-defer border-y border-line bg-card py-[var(--section-base)]"
     >
-      <div className="container-page">
-        <SectionHeader
-          id="checks-heading"
-          eyebrow="Before a dealership can list"
-          title="How Rynet checks dealerships"
-          lead="The checks cover the business behind every listing, not the car itself. Still look the car over properly, or have it inspected, before you buy."
-          action={{ href: "/how-verification-works", label: "Read how we verify dealerships" }}
-        />
+      <div className="container-page grid gap-8 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-16">
+        <div>
+          <p className="rn-eyebrow">Before a dealership can list</p>
+          <h2 id="checks-heading" className="rn-h2 mt-2">
+            How Rynet checks dealerships
+          </h2>
+          <p className="mt-3 text-body">
+            The checks cover the business behind every listing, not the car itself. Still look the
+            car over properly, or have it inspected, before you buy.
+          </p>
+          <Link href="/how-verification-works" className="rn-link-arrow mt-5 min-h-11">
+            Read how we verify dealerships
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </div>
 
-        <ol className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
-          {VERIFICATION_CHECKS.map((check, index) => {
-            const Icon = check.icon;
-            return (
-              <li key={check.title} className="flex flex-col rounded-md bg-page p-5 sm:p-6">
-                <div className="flex items-center gap-3">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-sm bg-card text-heading shadow-xs">
-                    <Icon aria-hidden="true" className="size-5" />
-                  </span>
-                  <span aria-hidden="true" className="text-sm font-semibold text-muted">
-                    Step {index + 1}
-                  </span>
-                </div>
-                <h3 className="rn-h3 mt-4 text-lg sm:text-xl">{check.title}</h3>
-                <p className="mt-2 text-body">{check.summary}</p>
-              </li>
-            );
-          })}
+        <ol className="grid gap-x-10 sm:grid-cols-2">
+          {VERIFICATION_CHECKS.map((check, index) => (
+            <li key={check.title} className="flex gap-4 border-t border-line py-5">
+              <span
+                aria-hidden="true"
+                className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-on-secondary tabular"
+              >
+                {index + 1}
+              </span>
+              <div className="min-w-0">
+                <h3 className="rn-h3 text-lg leading-snug">{check.title}</h3>
+                <p className="mt-1 text-sm text-body">{check.summary}</p>
+              </div>
+            </li>
+          ))}
         </ol>
       </div>
     </section>
@@ -65,27 +71,27 @@ export function SellAndListBands() {
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
         <section
           aria-labelledby="sell-heading"
-          className="on-navy flex flex-col rounded-lg border border-line-on-navy p-6 sm:p-8 lg:p-10"
+          className="rn-panel flex flex-col p-6 sm:p-8 lg:p-10"
         >
-          <span className="grid size-12 place-items-center rounded-md bg-navy-raised text-on-navy">
+          <span className="grid size-12 place-items-center rounded-md bg-subtle text-heading">
             <HandCoins aria-hidden="true" className="size-6" />
           </span>
-          <h2 id="sell-heading" className="rn-h2 mt-6 text-on-navy lg:text-[2rem]">
+          <h2 id="sell-heading" className="rn-h2 mt-6">
             Selling your car? Offer it to dealerships
           </h2>
-          <p className="mt-4 max-w-[34rem] text-on-navy-muted">
+          <p className="mt-4 max-w-[34rem] text-body">
             Tell us what you drive and we pass it to no more than five dealerships in your province
             that buy that kind of car, so they can make you an offer. Your car is never listed on
             the site, and Rynet takes no cut.
           </p>
-          <p className="mt-3 max-w-[34rem] text-sm text-on-navy-muted">
+          <p className="mt-3 max-w-[34rem] text-sm text-muted">
             We are signing dealerships now, so there may not be one near you yet. If we cannot place
             your car, we email you and say so.
           </p>
           <div className="mt-auto pt-8">
             <Link
               href="/sell-to-a-dealer"
-              className={buttonClasses({ variant: "primary", size: "lg", block: "mobile" })}
+              className={buttonClasses({ variant: "secondary", size: "lg", block: "mobile" })}
             >
               Offer your car to dealerships
               <ArrowRight aria-hidden="true" />
@@ -100,7 +106,7 @@ export function SellAndListBands() {
           <span className="grid size-12 place-items-center rounded-md bg-subtle text-heading">
             <Store aria-hidden="true" className="size-6" />
           </span>
-          <h2 id="list-heading" className="rn-h2 mt-6 lg:text-[2rem]">
+          <h2 id="list-heading" className="rn-h2 mt-6">
             Run a dealership? List your stock on Rynet
           </h2>
           <p className="mt-4 max-w-[34rem] text-body">
@@ -135,9 +141,9 @@ export function PhotoCredits({ credits }: { credits: PhotoCreditLine[] }) {
   if (credits.length === 0) return null;
 
   return (
-    <div className="container-page pb-[var(--section-base)]">
-      <details className="group rounded-md border border-line bg-card px-4 text-sm text-muted sm:px-5">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold text-heading [&::-webkit-details-marker]:hidden">
+    <div className="container-page pb-8">
+      <details id="photo-credits" className="group border-t border-line pt-2 text-xs text-muted">
+        <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1.5 font-semibold text-body hover:text-heading [&::-webkit-details-marker]:hidden">
           Photograph credits
           <ChevronDown
             aria-hidden="true"
@@ -149,7 +155,7 @@ export function PhotoCredits({ credits }: { credits: PhotoCreditLine[] }) {
             The photographs on this page show each model, not the car listed. Credits as their
             licences require:
           </p>
-          <ul className="mt-3 grid gap-x-8 gap-y-1.5 md:grid-cols-2">
+          <ul className="mt-2 grid gap-x-8 gap-y-1 md:grid-cols-2 lg:grid-cols-3">
             {credits.map((line) => (
               <li key={`${line.subject}|${line.credit}`}>
                 <span className="font-medium text-body">{line.subject}:</span> {line.credit}

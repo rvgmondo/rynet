@@ -341,6 +341,26 @@
   .on-navy :where(h1, h2, h3, h4, h5, h6) {
     color: var(--rn-on-navy);
   }
+
+  /* The menu's Sell button is not offered on the sell page. In utilities, to beat the button's own display. */
+  body:has([data-sell-page]) .rn-menu__sell {
+    display: none;
+  }
+
+  /*
+   * A results page's Filters and Sort bar rides up to the top edge while the phone header is tucked
+   * away (see .rn-header below). Here, in utilities, because the bar's own `top-[...]` utility
+   * would otherwise win over a component rule.
+   */
+  @media (max-width: 63.9375rem) {
+    [data-sticky-toolbar] {
+      transition: top var(--duration-element) var(--rn-ease-out);
+    }
+
+    html[data-header-hidden]:not([data-menu-open]) [data-sticky-toolbar] {
+      top: 0;
+    }
+  }
 }
 
 /* ====================================================================== COMPONENTS */
@@ -362,30 +382,35 @@
     color: var(--rn-accent);
   }
 
+  /*
+   * The heading scale steps down hard on purpose: a page title near 56px, section titles at 32px,
+   * card and item titles at 20px. At 48 over 40 every section shouted as loud as the page.
+   */
   .rn-h1 {
-    font-size: var(--rn-text-4xl);
+    font-size: var(--rn-text-h1);
     font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: var(--tracking-display);
+    line-height: 1.08;
+    letter-spacing: -0.018em;
     color: var(--rn-heading);
     text-wrap: balance;
   }
 
   .rn-h2 {
-    font-size: var(--rn-text-head);
-    font-weight: 700;
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tighter);
+    font-size: var(--rn-text-h2);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
     color: var(--rn-heading);
     text-wrap: balance;
   }
 
   .rn-h3 {
-    font-size: var(--rn-text-xl);
+    font-size: var(--rn-text-h3);
     font-weight: 600;
     line-height: var(--leading-snug);
-    letter-spacing: var(--tracking-tight);
+    letter-spacing: -0.006em;
     color: var(--rn-heading);
+    text-wrap: pretty;
   }
 
   .rn-lead {
@@ -826,6 +851,23 @@
   }
 
   /* A mid grey chevron that holds 3:1 on the card in both themes, so one image serves both. */
+  /*
+   * A text field with suggestions (the sell form's make and model) draws the same chevron as a
+   * select, in place of the browser's own dropdown triangle, which looked like browser chrome
+   * inside a designed control. The suggestions still open as the buyer types.
+   */
+  input[list]::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
+
+  input[list] {
+    padding-inline-end: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23748196' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.125rem;
+  }
+
   .rn-select {
     appearance: none;
     padding-inline-end: 2.5rem;
@@ -1343,12 +1385,14 @@
     height: 0.9375rem;
   }
 
-  @container (min-width: 22rem) {
-    .rn-vcard__facts {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.375rem 1rem;
-    }
+  /*
+   * Always two by two. A wrapping row put "Diesel" alone on a second line on a large share of
+   * cards, so card heights and rhythm changed card to card; the rail cards were already a grid.
+   */
+  .rn-vcard__facts .rn-facts__value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .rn-vcard__foot {
@@ -1386,26 +1430,38 @@
 
   /* ----------------------------------------------------------- no photograph yet */
 
+  /*
+   * The caption is --rn-body, not muted: over a paint wash muted grey can fall under 4.5:1 (a
+   * black car's wash darkens the ground), and body ink holds it on every wash in both themes.
+   */
   .rn-noimage {
+    --plate-paint: var(--rn-subtle-hover);
+    --plate-wash: color-mix(in oklab, var(--plate-paint) 12%, var(--rn-subtle));
+
     position: relative;
     display: grid;
     place-content: center;
     justify-items: center;
-    gap: 0.625rem;
+    gap: 0.5rem;
     aspect-ratio: 16 / 10;
     padding: 1rem;
     overflow: hidden;
     background-color: var(--rn-subtle);
-    background-image: linear-gradient(180deg, var(--rn-subtle) 0%, var(--rn-subtle-hover) 100%);
-    color: var(--rn-muted);
+    background-image: linear-gradient(
+      160deg,
+      var(--rn-subtle) 0%,
+      var(--plate-wash) 70%,
+      color-mix(in oklab, var(--plate-paint) 18%, var(--rn-subtle)) 100%
+    );
+    color: var(--rn-body);
     text-align: center;
   }
 
   /* Fixed widths: a percentage inside a centred grid resolves against its own content. */
   .rn-noimage__car {
-    width: 6.5rem;
+    width: 7rem;
     height: auto;
-    color: var(--rn-line-strong);
+    color: color-mix(in oklab, var(--rn-body) 42%, transparent);
   }
 
   .rn-noimage__caption {
@@ -1413,7 +1469,32 @@
     justify-items: center;
     gap: 0.25rem;
     font-size: var(--rn-text-xs);
+    font-weight: 500;
     line-height: 1.35;
+  }
+
+  /* The panel fills whatever frame the card gives it, rather than sizing itself to 16:10 from its height. */
+  .rn-vcard__media--empty .rn-noimage {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  /* A photo-less card in a one-column phone grid is a short band, not a photo-sized hole. */
+  @media (max-width: 34.9375rem) {
+    .rn-grid:not(.rn-grid--floor) .rn-vcard__media--empty {
+      aspect-ratio: 16 / 7;
+    }
+
+    .rn-grid:not(.rn-grid--floor) .rn-vcard__media--empty .rn-noimage {
+      grid-auto-flow: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .rn-grid:not(.rn-grid--floor) .rn-vcard__media--empty .rn-noimage__car {
+      width: 5.5rem;
+    }
   }
 
   .rn-noimage__colour {
@@ -1480,20 +1561,26 @@
     background-color: var(--rn-card);
     border-bottom: 1px solid var(--rn-line);
     box-shadow: var(--rn-shadow-xs);
+    transition: transform var(--duration-element) var(--rn-ease-out);
   }
 
   /*
-   * A vehicle page below 1024px pins its own action bar to the bottom, so the header scrolls away
-   * rather than stacking a second band of chrome on a phone. It snaps back to sticky while the menu
-   * is open, because the menu sheet is positioned under it.
+   * Below 1024px the header slides away while the reader scrolls down and returns on the way up
+   * (HeaderScroll sets the attribute). Never while the menu is open, since the sheet hangs under
+   * it, and never while something in it has focus. A results page's Filters and Sort bar follows
+   * it up to the top edge, so the two never leave a gap.
    */
   @media (max-width: 63.9375rem) {
-    html:not([data-menu-open]) body:has([data-action-bar]) .rn-header {
-      position: static;
+    html[data-header-hidden]:not([data-menu-open]) .rn-header:not(:has(:focus-visible)) {
+      transform: translateY(-100%);
     }
 
-    html:has([data-action-bar]):not([data-menu-open]) {
+    html[data-header-hidden]:not([data-menu-open]) {
       scroll-padding-top: 1rem;
+    }
+
+    html[data-header-hidden]:not([data-menu-open]):has([data-sticky-toolbar]) {
+      scroll-padding-top: 5rem;
     }
   }
 

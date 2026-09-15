@@ -83,7 +83,7 @@ export function SiteFooter() {
   const identity = companyIdentityLine();
 
   return (
-    <footer className="on-navy">
+    <footer className="on-navy border-t border-line-on-navy">
       <div className="container-page pt-12 pb-8 md:pt-16">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)] lg:gap-16">
           <div className="max-w-sm">

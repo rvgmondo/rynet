@@ -1,6 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
+import { type KeyFact, KeyFacts } from "@/components/ui/key-facts";
 import { formatCc, formatKm } from "@/lib/format";
 import { relName } from "@/lib/relations";
 import type { Vehicle } from "@/payload-types";
@@ -44,7 +45,11 @@ const longDate = (value: string | null | undefined) =>
     : null;
 
 /**
- * The specification, as tidy accordions.
+ * Key facts and the specification, in one panel.
+ *
+ * The eight headline facts lead as an icon grid, and the full specification follows under its own
+ * heading as accordions. They used to be two separate white cards of equal weight, and with
+ * Features and Finance the listing was a stack of four identical panels.
  *
  * Native `details`, so every group opens before hydration, with the keyboard, and with scripting
  * off. The group a buyer checks first, history and paperwork, leads and is open; the basics and
@@ -62,7 +67,7 @@ const longDate = (value: string | null | undefined) =>
  * rule, so a group with an odd number of rows ends cleanly in two columns instead of leaving a
  * half row with a rule under one side.
  */
-export function SpecTable({ vehicle }: { vehicle: Vehicle }) {
+export function SpecTable({ vehicle, facts = [] }: { vehicle: Vehicle; facts?: KeyFact[] }) {
   const groups: Group[] = [
     {
       title: "History and paperwork",
@@ -128,13 +133,38 @@ export function SpecTable({ vehicle }: { vehicle: Vehicle }) {
   const listed = longDate(vehicle.publishedAt);
 
   return (
-    <section aria-labelledby="spec-heading" className="rn-panel p-5 sm:p-8">
-      <h2 id="spec-heading" className="text-xl font-bold text-heading">
-        Specification
-      </h2>
+    <section
+      aria-labelledby={facts.length > 0 ? "facts-heading" : "spec-heading"}
+      className="rn-panel p-5 sm:p-8"
+    >
+      {facts.length > 0 ? (
+        <>
+          <h2 id="facts-heading" className="text-xl font-bold text-heading">
+            Key facts
+          </h2>
+          <KeyFacts
+            items={facts}
+            variant="grid"
+            className="mt-5 grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4 sm:gap-x-6"
+          />
+        </>
+      ) : null}
+
+      {facts.length > 0 ? (
+        <h3
+          id="spec-heading"
+          className="mt-8 border-t border-line pt-6 text-lg font-semibold text-heading"
+        >
+          Specification
+        </h3>
+      ) : (
+        <h2 id="spec-heading" className="text-xl font-bold text-heading">
+          Specification
+        </h2>
+      )}
 
       {groups.length > 0 ? (
-        <div className="mt-3">
+        <div className="mt-2">
           {groups.map((group, index) => (
             <details
               key={group.title}

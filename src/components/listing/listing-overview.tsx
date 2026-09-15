@@ -10,19 +10,19 @@ import {
   Waypoints,
 } from "lucide-react";
 
-import { type KeyFact, KeyFacts } from "@/components/ui/key-facts";
+import type { KeyFact } from "@/components/ui/key-facts";
 import { formatCc, formatKm } from "@/lib/format";
 import { relName } from "@/lib/relations";
 import type { Vehicle } from "@/payload-types";
 
 /**
- * Key facts: the eight things a buyer checks before anything else, as an icon grid.
+ * Key facts: the eight things a buyer checks before anything else, for the icon grid at the top of
+ * the specification panel (SpecTable).
  *
  * Every value comes from the record, and a fact the dealership did not supply is left out rather
- * than drawn as a dash. On a phone this sits straight after the price and the contact buttons; on
- * a desktop it sits under the gallery while the summary card stays in view beside it.
+ * than drawn as a dash.
  */
-export function KeyFactsPanel({ vehicle }: { vehicle: Vehicle }) {
+export function keyFactsFor(vehicle: Vehicle): KeyFact[] {
   const candidates: (KeyFact | null)[] = [
     { icon: CalendarDays, label: "Year", value: String(vehicle.modelYear) },
     { icon: Gauge, label: "Mileage", value: formatKm(vehicle.mileageKm) },
@@ -33,20 +33,7 @@ export function KeyFactsPanel({ vehicle }: { vehicle: Vehicle }) {
     fact(CarFront, "Body", relName(vehicle.bodyType)),
     fact(Palette, "Colour", relName(vehicle.exteriorColour)),
   ];
-  const items = candidates.filter((item): item is KeyFact => item !== null);
-
-  return (
-    <section aria-labelledby="facts-heading" className="rn-panel p-5 sm:p-8">
-      <h2 id="facts-heading" className="text-xl font-bold text-heading">
-        Key facts
-      </h2>
-      <KeyFacts
-        items={items}
-        variant="grid"
-        className="mt-5 grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-4 sm:gap-x-6"
-      />
-    </section>
-  );
+  return candidates.filter((item): item is KeyFact => item !== null);
 }
 
 function fact(icon: KeyFact["icon"], label: string, value: string | null): KeyFact | null {

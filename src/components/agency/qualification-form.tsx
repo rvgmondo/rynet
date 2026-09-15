@@ -617,7 +617,7 @@ export function QualificationForm() {
 
         <p className="flex basis-full items-center gap-2 text-sm text-muted sm:basis-auto">
           {last ? <Mail aria-hidden="true" className="size-4 shrink-0" /> : null}
-          {last ? "We reply within one working day." : "Nothing is sent until the last step."}
+          {last ? "We reply by email." : "Nothing is sent until the last step."}
         </p>
       </div>
     </form>

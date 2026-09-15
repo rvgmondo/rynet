@@ -24,8 +24,14 @@ import { PER_PAGE, type SearchRun } from "./stock";
  * landing page; this layout puts it at roughly 350 to 450px.
  *
  * The sticky bar's wrapper is `display: contents` below 1280px so the bar sticks for the whole
- * length of the results rather than only inside its own row, and becomes one flex row with the
- * chips beside the sort control on a desktop.
+ * length of the results rather than only inside its own row. The bar carries the count in small
+ * type beside Filters, so a buyer three thousand pixels down still knows how big the set is.
+ *
+ * AT 1280px the filters run down the left from the top of the page, and the heading, the count and
+ * the sort order share one row above the results, the way the big marketplaces lay it out. The DOM
+ * order does not change: heading, filters, results, each placed in the grid. The desktop sort is
+ * its own small form (the phone one lives in the sticky bar and is not drawn at that width), so
+ * only one of the two is ever rendered visible.
  */
 export function SearchScreen({
   run,
@@ -57,38 +63,62 @@ export function SearchScreen({
   const { query, widened, filters, effective } = run.resolved;
 
   return (
-    <div className="container-page pt-6 pb-[var(--section-base)] sm:pt-8 xl:pt-10">
-      <ResultsHeader
-        heading={heading}
-        trail={trail}
-        intro={intro}
-        total={run.total}
-        demo={run.demo}
-        page={run.page}
-        totalPages={run.totalPages}
-        perPage={PER_PAGE}
-      />
+    <div className="container-page pt-6 pb-[var(--section-base)] sm:pt-8 xl:grid xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-x-8 xl:pt-10">
+      <div className="xl:col-start-2 xl:row-start-1 xl:flex xl:items-end xl:justify-between xl:gap-6">
+        <ResultsHeader
+          heading={heading}
+          trail={trail}
+          intro={intro}
+          total={run.total}
+          demo={run.demo}
+          page={run.page}
+          totalPages={run.totalPages}
+          perPage={PER_PAGE}
+        />
+        <div className="hidden shrink-0 xl:block">
+          <SortControl
+            key={`desk|${effective.sort}|${JSON.stringify(sortCarried)}`}
+            id="sort-desk"
+            action={sortAction}
+            sort={effective.sort}
+            carried={sortCarried}
+          />
+        </div>
+      </div>
 
-      <div className="mt-5 xl:mt-8 xl:grid xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-x-8">
+      <div className="mt-5 xl:col-start-1 xl:row-span-2 xl:row-start-1 xl:mt-0">
         <FacetRail set={run} total={run.total} applied={chips.length} extra={extra} />
+      </div>
 
+      <div className="min-w-0 xl:col-start-2 xl:row-start-2 xl:mt-6">
         <section id="results" aria-labelledby="results-heading" className="min-w-0">
-          <div className="contents xl:mb-6 xl:flex xl:items-center xl:gap-4">
-            <AppliedFilters chips={chips} className="mb-2 xl:mb-0 xl:min-w-0 xl:flex-1" />
+          <AppliedFilters chips={chips} className="mb-2 xl:mb-5" />
 
-            <div
-              data-sticky-toolbar
-              className="sticky top-[var(--header-height)] z-[var(--z-sticky)] -mx-[var(--container-pad)] mb-4 flex items-center gap-2 border-b border-line bg-page px-[var(--container-pad)] py-2 xl:static xl:z-auto xl:m-0 xl:ms-auto xl:shrink-0 xl:border-0 xl:bg-transparent xl:p-0"
+          <div
+            data-sticky-toolbar
+            className="sticky top-[var(--header-height)] z-[var(--z-sticky)] -mx-[var(--container-pad)] mb-4 flex items-center gap-2 border-b border-line bg-page px-[var(--container-pad)] py-2 xl:hidden"
+          >
+            <FiltersButton count={chips.length} className="shrink-0" />
+            {/*
+              One line, never three: the heading above already says what kind of listings these
+              are, and every card carries its own Demo listing badge, so the bar only keeps count.
+            */}
+            <p
+              aria-hidden="true"
+              className="shrink-0 text-[0.8125rem] whitespace-nowrap text-muted max-[22rem]:hidden"
             >
-              <FiltersButton count={chips.length} className="shrink-0 xl:hidden" />
-              <SortControl
-                key={`${effective.sort}|${JSON.stringify(sortCarried)}`}
-                action={sortAction}
-                sort={effective.sort}
-                carried={sortCarried}
-                className="min-w-0 flex-1 justify-end xl:flex-none"
-              />
-            </div>
+              <span className="font-semibold text-heading tabular">
+                {run.total.toLocaleString("en-ZA")}
+              </span>{" "}
+              {run.total === 1 ? "result" : "results"}
+            </p>
+            <SortControl
+              key={`${effective.sort}|${JSON.stringify(sortCarried)}`}
+              action={sortAction}
+              sort={effective.sort}
+              carried={sortCarried}
+              className="ms-auto min-w-0 flex-1 justify-end"
+            />
           </div>
 
           {query && !filters.nothing ? (
@@ -130,9 +160,9 @@ export function SearchScreen({
             emptyAction={empty.action}
           />
         </section>
-      </div>
 
-      {related}
+        {related}
+      </div>
     </div>
   );
 }

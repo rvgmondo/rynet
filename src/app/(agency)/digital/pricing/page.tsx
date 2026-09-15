@@ -80,6 +80,28 @@ export default function PricingPage() {
         eyebrow="Pricing"
         title="What it costs, and the terms behind it"
         lead="What each kind of engagement covers, what moves the price up or down, and the terms that apply whatever the figure turns out to be."
+        aside={
+          <div className="rounded-lg border border-line bg-page p-5 sm:p-6">
+            <p className="text-sm font-semibold text-heading">How a figure is reached</p>
+            <ol className="mt-4 grid gap-3">
+              {[
+                "A free review of your site, stock feed and advertising",
+                "A call to agree what matters this year",
+                "A scope and a figure in writing, before you commit",
+              ].map((step, index) => (
+                <li key={step} className="flex items-start gap-3 text-[0.9375rem] text-body">
+                  <span
+                    aria-hidden="true"
+                    className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-on-secondary tabular"
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        }
       />
 
       <section aria-labelledby="terms-heading" className="py-[var(--section-base)]">
@@ -89,14 +111,17 @@ export default function PricingPage() {
             eyebrow="Fixed, whatever the figure"
             title="Three terms that do not change"
           />
-          <ul className="mt-8 grid gap-4 md:grid-cols-3">
+          <ul className="mt-8 grid divide-y divide-line border-y border-line md:grid-cols-3 md:divide-x md:divide-y-0">
             {TERMS.map((term) => (
-              <li key={term.title} className="rn-card p-6">
-                <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-on-secondary">
-                  <term.icon aria-hidden="true" className="size-5" />
-                </span>
-                <h3 className="mt-5 text-lg font-semibold text-heading">{term.title}</h3>
-                <p className="mt-2 text-body">{term.body}</p>
+              <li
+                key={term.title}
+                className="flex gap-4 py-5 md:flex-col md:gap-0 md:px-6 md:py-6 md:first:ps-0"
+              >
+                <term.icon aria-hidden="true" className="mt-0.5 size-6 shrink-0 text-heading" />
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold text-heading md:mt-4">{term.title}</h3>
+                  <p className="mt-1.5 text-body">{term.body}</p>
+                </div>
               </li>
             ))}
           </ul>

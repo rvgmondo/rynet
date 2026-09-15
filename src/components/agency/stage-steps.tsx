@@ -6,7 +6,7 @@ import { STAGES } from "@/components/agency/agency-content";
  *
  * Used on the home page and on every service page, so the sequence is described one way.
  * The ordered list carries the order for assistive technology; the drawn numbers are hidden.
- * The first step is the free one, and it is the only number drawn in red.
+ * Every number is the same navy disc, the one step-number style on the site.
  */
 export function StageSteps({ headingLevel = 3 }: { headingLevel?: 3 | 4 }) {
   const Heading = headingLevel === 4 ? "h4" : "h3";
@@ -22,13 +22,15 @@ export function StageSteps({ headingLevel = 3 }: { headingLevel?: 3 | 4 }) {
           ) : null}
           <span
             aria-hidden="true"
-            className={`relative flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold tabular ${index === 0 ? "bg-primary text-on-primary" : "bg-secondary text-on-secondary"}`}
+            className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold text-on-secondary tabular"
           >
             {index + 1}
           </span>
           <div className="min-w-0 lg:mt-5">
             <Heading className="text-base font-semibold text-heading">{stage.name}</Heading>
-            <p className="mt-0.5 text-sm font-medium text-muted">{stage.duration}</p>
+            {stage.duration ? (
+              <p className="mt-0.5 text-sm font-medium text-muted">{stage.duration}</p>
+            ) : null}
             <p className="mt-2 text-sm text-body">{stage.short}</p>
           </div>
         </li>

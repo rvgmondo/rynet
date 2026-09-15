@@ -90,7 +90,7 @@ test.describe("responsive", () => {
 // The two page grounds, --rn-page in each theme: a cool light grey and a deep navy. See
 // docs/DESIGN-SHOWROOM.md.
 const LIGHT = "rgb(245, 247, 250)";
-const DARK = "rgb(8, 22, 41)";
+const DARK = "rgb(10, 26, 48)";
 
 const bodyBg = (page: import("@playwright/test").Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);

@@ -36,11 +36,11 @@ export const NEXT_STEPS = [
   },
   {
     title: "You get the written review",
-    body: "Two to three days later: what is slowing your site down, what is stopping it being found, and what we would fix first.",
+    body: "In writing: what is slowing your site down, what is stopping it being found, and what we would fix first.",
   },
   {
     title: "We go through it together, if it helps",
-    body: "An hour on a call. No obligation, and if the answer is that you do not need us yet, the review says so.",
+    body: "A call about the review. No obligation, and if the answer is that you do not need us yet, the review says so.",
   },
 ] as const;
 
@@ -63,11 +63,17 @@ export const TERMS: readonly { icon: LucideIcon; title: string; body: string }[]
   },
 ];
 
-/** The five stages of an engagement. The process page shows all of it; the home page the first line. */
+/**
+ * The five stages of an engagement. The process page shows all of it; the home page the first line.
+ *
+ * `duration` is optional and only set where it is a term rather than a turnaround. How long the
+ * review, the call or the first build takes is a commitment the owner has not made yet
+ * (docs/CONTENT-NEEDED.md section 8), so no stage states one.
+ */
 export const STAGES = [
   {
     name: "The review",
-    duration: "Two to three days, free",
+    duration: "Free",
     short:
       "We look at your site, stock feed, Google profile and ads, and write down what is wrong.",
     what: "We look at your site, your stock feed, your Google Business Profile and whatever advertising you are running. You get a written list of what is wrong, in priority order, with effort set against impact.",
@@ -75,14 +81,14 @@ export const STAGES = [
   },
   {
     name: "The call",
-    duration: "An hour",
+    duration: null,
     short: "We agree what matters this year. The scope and figure follow in writing.",
     what: "We go through the review together and agree what actually matters to you this year. You get a scope and a figure in writing afterwards, not on the call.",
     you: "Bring whoever makes the decision. A call without them is a call that has to happen twice.",
   },
   {
     name: "The first slice",
-    duration: "Two to six weeks, depending on scope",
+    duration: null,
     short:
       "The smallest piece that works on its own, usually the stock feed or the site, goes live.",
     what: "We build the smallest thing that produces a result on its own, and ship it. Usually that is the stock feed or the site, because everything else is worth less until the stock is correct.",
@@ -102,7 +108,13 @@ export const STAGES = [
     what: "A one page report: spend, leads, cost per lead and what moved. A written recommendation for the coming month, and what we got wrong in the last one.",
     you: "Read one page and tell us if the recommendation is wrong. You know your floor better than we do.",
   },
-] as const;
+] as const satisfies readonly {
+  name: string;
+  duration: string | null;
+  short: string;
+  what: string;
+  you: string;
+}[];
 
 /** Adds the full stop some content strings were written without. */
 export function sentence(text: string): string {

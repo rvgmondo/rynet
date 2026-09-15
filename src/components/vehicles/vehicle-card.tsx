@@ -77,13 +77,18 @@ function unbreakable(text: string) {
  * 4. Status is never colour alone. A price drop reads "Reduced by R 13 400" in words.
  *
  * HONESTY. A demonstration listing carries one "Demo listing" badge, always visible, on the
- * photograph. A demonstration dealership is never marked verified: the check beside the dealer
+ * photograph, and it is the only thing on the photograph: condition ("New", "Ex-demo") sits beside
+ * the price as a plain badge, because "Demo listing" next to "Ex-demo" read as a repeat or a
+ * contradiction. A demonstration dealership is never marked verified: the check beside the dealer
  * name only renders when `isDemonstration` is false, and a listing can only go live from a
  * verified dealership (enforced in the vehicles collection hook).
  *
+ * THE FACTS are always two by two, and "Automatic" is "Auto" here (the listing page spells it
+ * out), so no card grows a line for one word.
+ *
  * PERFORMANCE. The photograph is the "card" rendition (640px), `sizes` tells the browser the
  * slot is at most a third of a desktop and the full width of a phone, and only the caller's
- * chosen card (`priority`) is preloaded: one priority image per page.
+ * chosen card (`priority`) is preloaded and fetched at high priority: one priority image per page.
  */
 export function VehicleCard({
   vehicle,
@@ -112,7 +117,13 @@ export function VehicleCard({
     { icon: CalendarDays, label: "Year", value: String(vehicle.modelYear) },
     { icon: Gauge, label: "Mileage", value: formatKm(vehicle.mileageKm) },
     ...(vehicle.transmissionName
-      ? [{ icon: Settings2, label: "Transmission", value: vehicle.transmissionName }]
+      ? [
+          {
+            icon: Settings2,
+            label: "Transmission",
+            value: vehicle.transmissionName.replace(/^Automatic$/i, "Auto"),
+          },
+        ]
       : []),
     ...(vehicle.fuelName ? [{ icon: Fuel, label: "Fuel", value: vehicle.fuelName }] : []),
   ];
@@ -122,7 +133,7 @@ export function VehicleCard({
 
   return (
     <article className="rn-card rn-card--interactive rn-vcard">
-      <div className="rn-vcard__media">
+      <div className={`rn-vcard__media ${vehicle.photo ? "" : "rn-vcard__media--empty"}`}>
         {vehicle.photo ? (
           <Image
             src={vehicle.photo.url}
@@ -132,23 +143,20 @@ export function VehicleCard({
             sizes="(min-width: 80rem) 300px, (min-width: 35rem) 50vw, 100vw"
             className="rn-vcard__img"
             priority={priority}
+            fetchPriority={priority ? "high" : undefined}
           />
         ) : (
           <ColourPlate
             colourSwatch={vehicle.colourSwatch}
             colourName={vehicle.colourName}
+            bodyName={vehicle.bodyName}
             className="h-full"
           />
         )}
 
-        {vehicle.isDemonstration || conditionBadge ? (
+        {vehicle.isDemonstration ? (
           <div className="rn-vcard__badges">
-            {vehicle.isDemonstration ? <DemoListingBadge onPhoto /> : null}
-            {conditionBadge ? (
-              <Badge tone="new" onPhoto>
-                {conditionBadge}
-              </Badge>
-            ) : null}
+            <DemoListingBadge onPhoto />
           </div>
         ) : null}
 
@@ -164,6 +172,7 @@ export function VehicleCard({
       <div className="rn-vcard__body">
         <div className="rn-vcard__price">
           <PriceTag value={vehicle.price} size="md" />
+          {conditionBadge ? <Badge tone="new">{conditionBadge}</Badge> : null}
           {dropAmount ? (
             <Badge tone="drop">
               <span>

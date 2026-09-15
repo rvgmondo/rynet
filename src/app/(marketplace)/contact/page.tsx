@@ -173,7 +173,7 @@ export default function ContactPage() {
                 <li key={route.id} id={route.id} className="rn-card flex flex-col p-6">
                   <span
                     aria-hidden="true"
-                    className="grid size-11 place-items-center rounded-sm bg-subtle text-heading"
+                    className="grid size-11 place-items-center rounded-md bg-subtle text-heading"
                   >
                     <route.icon className="size-5" />
                   </span>

@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import { AgencyClose } from "@/components/agency/agency-close";
 import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
-import { GaugeMotif } from "@/components/agency/gauge-motif";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
 import { StageSteps } from "@/components/agency/stage-steps";
@@ -98,21 +97,19 @@ const FIT = [
  * question. The proof is Rynet Showroom: real, on the same domain, and shown here as itself in a
  * browser frame with live listings, clearly labelled as demonstration data.
  *
- * Order: the outcome and the terms, the working example, the seven services as cards, the five
- * steps, who it suits and who it does not, then the offer.
+ * Order: the outcome and the terms, the working example, the seven services (cards from 640px, a
+ * divided list on a phone), the five steps, who it suits and who it does not, then the offer.
  */
 export default async function AgencyHomePage() {
   const cards = await getShowroomSample(2);
 
   return (
     <>
-      <section className="relative overflow-hidden bg-navy">
-        <GaugeMotif className="-top-40 -right-40 hidden w-[44rem] opacity-40 lg:block" />
-
+      <section className="relative overflow-hidden border-b border-line-on-navy bg-navy">
         <div className="container-page relative grid gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-14 lg:py-20 xl:gap-20">
           <div className="on-navy">
             <p className="rn-eyebrow text-on-navy-muted">For South African car dealerships</p>
-            <h1 className="rn-h1 mt-4 text-display">Turn your stock into test drives.</h1>
+            <h1 className="rn-h1 mt-4">Turn your stock into test drives.</h1>
             <p className="mt-5 max-w-xl text-[1.0625rem] leading-relaxed sm:text-lg">
               Dealership websites, stock feeds and advertising, built by the team behind Rynet
               Showroom. We work with car dealerships and nobody else, and you own everything we
@@ -178,9 +175,12 @@ export default async function AgencyHomePage() {
               </Link>
             </div>
 
-            <ul className="grid gap-4 sm:grid-cols-2 lg:order-1">
+            <ul className="grid border-t border-line sm:gap-4 sm:border-0 sm:grid-cols-2 lg:order-1">
               {PROOF.map((item) => (
-                <li key={item.title} className="flex flex-col rounded-md border border-line p-5">
+                <li
+                  key={item.title}
+                  className="flex flex-col border-b border-line py-5 sm:rounded-md sm:border sm:p-5"
+                >
                   <span className="flex size-10 items-center justify-center rounded-md bg-subtle text-heading">
                     <item.icon aria-hidden="true" className="size-5" />
                   </span>
@@ -206,30 +206,36 @@ export default async function AgencyHomePage() {
             action={{ href: "/digital/services", label: "All services" }}
           />
 
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/*
+            From 640px a grid of cards; on a phone a divided list with the icon inline, because
+            seven stacked cards with an icon tile each read as a template, not a menu of services.
+          */}
+          <ul className="mt-6 grid border-t border-line sm:mt-10 sm:gap-4 sm:border-0 sm:grid-cols-2 lg:grid-cols-4">
             {SERVICES.map((service) => (
               <li key={service.slug} className="flex">
-                <article className="rn-card rn-card--interactive p-6">
-                  <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-on-secondary">
+                <article className="rn-card rn-card--interactive gap-4 p-6 max-sm:flex-row max-sm:rounded-none max-sm:border-x-0 max-sm:border-t-0 max-sm:bg-transparent max-sm:px-0 max-sm:py-4 max-sm:shadow-none sm:gap-0">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary sm:size-11">
                     <service.Icon aria-hidden="true" className="size-5" />
                   </span>
-                  <h3 className="mt-5 text-lg font-semibold text-heading">
-                    <Link
-                      href={`/digital/services/${service.slug}`}
-                      className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-[color:var(--rn-focus-ring)] focus-visible:after:outline-solid"
-                    >
-                      {service.name}
-                    </Link>
-                  </h3>
-                  <p className="mt-2 text-sm text-body">{service.summary}</p>
-                  <span aria-hidden="true" className="rn-link-arrow mt-auto pt-5 text-heading">
-                    Learn more
-                    <ArrowRight />
-                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <h3 className="text-base font-semibold text-heading sm:mt-5 sm:text-lg">
+                      <Link
+                        href={`/digital/services/${service.slug}`}
+                        className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-[color:var(--rn-focus-ring)] focus-visible:after:outline-solid"
+                      >
+                        {service.name}
+                      </Link>
+                    </h3>
+                    <p className="mt-1 text-sm text-body sm:mt-2">{service.summary}</p>
+                    <span aria-hidden="true" className="rn-link-arrow mt-auto pt-5 max-sm:hidden">
+                      Learn more
+                      <ArrowRight />
+                    </span>
+                  </div>
                 </article>
               </li>
             ))}
-            <li className="flex">
+            <li className="mt-4 flex sm:mt-0">
               <div className="on-navy flex w-full flex-col rounded-md p-6">
                 <h3 className="text-lg font-semibold">Not sure which you need?</h3>
                 <p className="mt-2 text-sm">
@@ -276,9 +282,12 @@ export default async function AgencyHomePage() {
             lead="Being wrong about this wastes your time and ours, so here it is plainly."
           />
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-2">
+          <div className="mt-6 grid gap-2 sm:mt-10 sm:gap-4 lg:grid-cols-2">
             {FIT.map((column) => (
-              <div key={column.heading} className="rn-card p-6 sm:p-8">
+              <div
+                key={column.heading}
+                className="rn-card p-6 max-sm:rounded-none max-sm:border-x-0 max-sm:border-b-0 max-sm:bg-transparent max-sm:px-0 max-sm:shadow-none sm:p-8"
+              >
                 <h3 className="rn-h3">{column.heading}</h3>
                 <ul className="mt-5 space-y-4">
                   {column.items.map((item) => (

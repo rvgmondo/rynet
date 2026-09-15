@@ -17,7 +17,13 @@ dealership page they appear on.
 
 They were built to be obviously generic rather than to resemble any real business. The addresses
 are real streets so the geocoding and the province facets exercise properly. The phone numbers use
-the 08600 non-geographic range, so none of them can ring a real person.
+the 08600 non-geographic range, which was chosen so they should not ring a real person, but nobody
+has verified that the range is unassigned. So no demonstration phone number or WhatsApp link is
+shown anywhere: a demonstration listing has no Show number, no Call in the phone bar and no
+WhatsApp button, only "Calling and WhatsApp switch on for real dealerships", and an end-to-end test
+(`e2e/enquiry.spec.ts`) fails if a `tel:` or `wa.me` link appears on a demonstration listing or its
+dealership's page. A demonstration dealership's trading hours are labelled "Example hours" and are
+never compared with today's date.
 
 **Needed:** real signed dealerships, with their own trading names, registration numbers, branches,
 trading hours and contacts. Until then the demonstration flag stays on.
@@ -125,7 +131,20 @@ light placeholder with a car silhouette, the recorded paint colour and "Photos c
 (`src/components/vehicles/colour-plate.tsx`), because some dealers will always upload late.
 
 **Needed:** real dealer photography, and a per-photo focal point if dealer shots turn out to be
-framed inconsistently (the card crops to 16:10 at `object-position: 50% 55%`).
+framed inconsistently (the card crops to 16:10 at `object-position: 50% 55%`). The library's median
+aspect ratio is 1.65, which is why cards stay 16:10 rather than 4:3: a 4:3 frame would cut the
+bumpers off the wide shots.
+
+**Before launch:** commissioned or dealer studio photography for the home page. Until then the home
+hero prefers a short list of the cleanest Commons photographs (plain or showroom ground, the whole
+car, no other company's banners), set in `HERO_PHOTOS` in `src/components/home/home-stock.ts`, and the
+body type tiles prefer a second such list, `TILE_PHOTOS`, in the same file.
+Most of the library is street and motor-show photography, and it shows.
+
+**Not built:** a stored average colour per photograph, to paint behind a slow-loading image. It
+needs a field on Media, a migration and a step in the demo-photo manifest. The listing and home
+photographs now load the 640px copy on a phone with a scoped preload, which shortens the empty
+moment instead.
 
 ## 7. Rynet Digital has no prices
 
@@ -156,10 +175,20 @@ the end-to-end locator is unchanged.
 **Promises in the agency copy that Ruben must confirm or change** (they are commitments, not facts
 we can check in code):
 
-- "We reply within one working day", which the server action also sends back after a submission
-  and an end-to-end test asserts.
-- "Two to three days" for the written review.
-- "Month to month after three months on thirty days notice", and the durations on `/digital/process`.
+- **A reply time.** "We reply within one working day" was removed from every agency page, the form
+  and the server action's success message; they now say "We reply by email." Set the real figure
+  here, then put it back in `agency-close.tsx`, `digital/contact/page.tsx`, `qualification-form.tsx`,
+  `actions/agency-enquiry.ts` and `e2e/agency.spec.ts` together.
+- **Stage durations.** "Two to three days" for the written review, "An hour" for the call and "Two
+  to six weeks" for the first build were removed from `STAGES` and `NEXT_STEPS` in
+  `src/components/agency/agency-content.ts`. Only "Free" and the contract term remain.
+- "Month to month after three months on thirty days notice", which is a contract term shown on the
+  pricing page and the agency home page.
+- **One name for the marketplace.** The agency pages call it "Rynet Showroom" (header link, hero,
+  footer, FAQ, "Open Rynet Showroom"), while the marketplace itself is branded RYNET and never uses
+  that name, so a dealer who clicks through lands on a differently named product. Decide: say
+  "Rynet" throughout `agency-content.ts`, `agency-header.tsx` and `agency-footer.tsx`, or add a
+  "Showroom" descriptor to the marketplace. Nothing was renamed without that decision.
 - A WhatsApp number for Rynet Digital, if one exists. None is shown until there is one.
 - Real team names for `/digital/about`, which currently says honestly who you will deal with.
 

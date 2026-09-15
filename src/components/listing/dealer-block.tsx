@@ -93,7 +93,7 @@ export function DealerBlock({
           <h2 id="dealer-heading" className="text-base leading-snug font-semibold text-heading">
             <Link
               href={`/dealers/${dealer.slug}`}
-              className="rounded-xs no-underline hover:text-accent hover:underline hover:underline-offset-3"
+              className="inline-flex min-h-6 items-center rounded-xs no-underline hover:text-accent hover:underline hover:underline-offset-3"
             >
               {dealer.tradingName}
             </Link>
@@ -140,10 +140,7 @@ export function DealerBlock({
         </Link>
       </p>
 
-      <Link
-        href={`/dealers/${dealer.slug}`}
-        className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-heading no-underline hover:text-accent hover:underline hover:underline-offset-3"
-      >
+      <Link href={`/dealers/${dealer.slug}`} className="rn-link-arrow mt-2 min-h-11">
         See all their stock
         <ArrowRight aria-hidden="true" className="size-4" />
       </Link>

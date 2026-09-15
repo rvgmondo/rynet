@@ -14,6 +14,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Notice } from "@/components/ui/notice";
 import { relId, relName, relSlug } from "@/lib/relations";
+import { vehiclePhoto } from "@/lib/vehicle-photo";
+import type { Vehicle } from "@/payload-types";
 
 /**
  * Rendered on demand, not prerendered.
@@ -99,6 +101,35 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
     : { docs: [] };
   const makeName = new Map(makes.docs.map((m) => [m.id, m.name]));
 
+  /*
+   * Three photographs per dealership, from its newest photographed stock, so the directory shows
+   * what each one sells rather than twelve identical text cards. One small query per dealership,
+   * in parallel, reading only the gallery; thumbnails are the 320px rendition and lazy.
+   */
+  const photosFor = new Map<number, { url: string; width: number; height: number }[]>();
+  await Promise.all(
+    dealers.docs.map(async (dealer) => {
+      const found = await payload.find({
+        collection: "vehicles",
+        where: { and: [{ dealer: { equals: dealer.id } }, { status: { equals: "live" } }] },
+        sort: "-publishedAt",
+        limit: 12,
+        depth: 1,
+        select: { gallery: true, make: true, model: true },
+      });
+      const seen = new Set<string>();
+      const shots: { url: string; width: number; height: number }[] = [];
+      for (const doc of found.docs as unknown as Vehicle[]) {
+        const photo = vehiclePhoto(doc, "thumbnail");
+        if (!photo || seen.has(photo.url)) continue;
+        seen.add(photo.url);
+        shots.push({ url: photo.url, width: photo.width, height: photo.height });
+        if (shots.length === 3) break;
+      }
+      photosFor.set(dealer.id, shots);
+    }),
+  );
+
   const branchesFor = new Map<number, typeof branches.docs>();
   for (const branch of branches.docs) {
     const dealerId = relId(branch.dealer);
@@ -147,6 +178,7 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
         : [],
       minPrice: tally?.min ?? null,
       maxPrice: tally?.max ?? null,
+      photos: photosFor.get(dealer.id) ?? [],
       provinces: [...new Set(own.map((b) => relSlug(b.province)).filter(Boolean))],
     };
   });
@@ -245,10 +277,19 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
         className="container-page pt-8 pb-[var(--section-base)] sm:pt-10"
       >
         {demoCount > 0 ? (
-          <Notice title="Demonstration dealerships" className="mb-8">
+          <Notice
+            compact
+            title={
+              allDemo
+                ? "These are demo dealerships. None is a real business."
+                : "Dealerships marked Demo dealership are not real businesses."
+            }
+            details="What that means"
+            className="mb-8"
+          >
             {allDemo
-              ? "Every dealership in this directory is a demonstration, created to show how Rynet works. None of them is a real business, and none of their cars is for sale."
-              : "Dealerships marked Demo dealership are demonstrations, created to show how Rynet works. They are not real businesses, and their cars are not for sale."}
+              ? "Every dealership in this directory is a demonstration, created to show how Rynet works. None of their cars is for sale."
+              : "They are demonstrations, created to show how Rynet works, and their cars are not for sale."}
           </Notice>
         ) : null}
 
@@ -306,27 +347,6 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
         className="container-page pb-[var(--section-base)]"
       >
         <div className="on-navy relative isolate overflow-hidden rounded-lg px-6 py-10 sm:px-10 sm:py-12 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-16 lg:px-14">
-          {/* A quarter of the gauge from the mark, drawn large and quiet behind the copy. */}
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 200 200"
-            className="pointer-events-none absolute -right-16 -bottom-24 -z-10 size-[22rem] sm:-right-10 lg:size-[26rem]"
-            fill="none"
-          >
-            <path
-              d="M20 180A160 160 0 0 1 180 20"
-              stroke="var(--rn-line-on-navy)"
-              strokeWidth="14"
-              strokeLinecap="round"
-            />
-            <path
-              d="M128 28A160 160 0 0 1 180 20"
-              stroke="var(--rn-brand-red)"
-              strokeWidth="14"
-              strokeLinecap="round"
-            />
-          </svg>
-
           <div className="max-w-2xl">
             <p className="rn-eyebrow text-on-navy-muted">For dealerships</p>
             <h2 id="list-your-stock" className="rn-h2 mt-3">

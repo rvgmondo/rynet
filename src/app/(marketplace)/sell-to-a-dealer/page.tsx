@@ -214,6 +214,7 @@ export default async function SellToADealerPage() {
       */}
       <section
         aria-labelledby="sell-heading"
+        data-sell-page=""
         className="border-b border-line bg-[linear-gradient(180deg,var(--rn-card)_0%,var(--rn-page)_22rem)]"
       >
         <div className="container-page grid gap-8 py-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,35rem)] lg:gap-x-16 lg:gap-y-10 lg:py-16">
@@ -292,7 +293,7 @@ export default async function SellToADealerPage() {
             Three things Rynet does not do
           </h2>
         </div>
-        <ul className="mt-8 grid gap-4 md:grid-cols-3">
+        <ul className="mt-6 grid border-t border-line md:mt-8 md:gap-4 md:border-0 md:grid-cols-3">
           {[
             {
               icon: Ban,
@@ -310,15 +311,20 @@ export default async function SellToADealerPage() {
               body: "Rynet is not a party to the sale. Nothing here costs you anything, and nothing comes out of what you are paid.",
             },
           ].map(({ icon: Icon, title, body }) => (
-            <li key={title} className="rn-card p-6">
+            <li
+              key={title}
+              className="flex gap-4 border-b border-line py-5 md:block md:rounded-md md:border md:bg-card md:p-6 md:shadow-card"
+            >
               <span
                 aria-hidden="true"
-                className="grid size-11 place-items-center rounded-sm bg-subtle text-heading"
+                className="grid size-10 shrink-0 place-items-center rounded-md bg-subtle text-heading md:size-11"
               >
                 <Icon className="size-5" />
               </span>
-              <h3 className="mt-5 text-lg font-semibold">{title}</h3>
-              <p className="mt-2 text-sm text-body">{body}</p>
+              <div className="min-w-0">
+                <h3 className="text-lg font-semibold md:mt-5">{title}</h3>
+                <p className="mt-1 text-sm text-body md:mt-2">{body}</p>
+              </div>
             </li>
           ))}
         </ul>

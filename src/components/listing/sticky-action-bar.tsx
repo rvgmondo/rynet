@@ -3,17 +3,19 @@
 import { type ReactNode, useEffect, useState } from "react";
 
 /**
- * The phone action bar's behaviour: it arrives once the buyer has scrolled past the real buttons.
+ * The phone action bar's behaviour: it is there whenever the real buttons are not.
  *
- * The bar exists so a buyer never has to scroll back up to enquire. Before the summary card's own
- * buttons have been reached it would only offer them early, ahead of the demonstration notice that
- * sits above them, and while they are on screen it would repeat them (two prices and two Enquire
- * buttons at once, on the audit's captures). While the footer is on screen it would cover the last
- * lines of the page. So an IntersectionObserver watches both: the bar shows only when the card's
- * buttons are above the viewport and the footer is not in it.
+ * The bar exists so a buyer never has to hunt for Enquire. While the summary card's own buttons are
+ * on screen it would repeat them (two prices and two Enquire buttons at once, on the audit's
+ * captures), and while the footer is on screen it would cover the last lines of the page. So an
+ * IntersectionObserver watches both, and the bar shows whenever the card's buttons are off screen
+ * in either direction (not yet reached, or scrolled past) and the footer is not in view. The
+ * demonstration disclosure travels in the bar itself ("Demo listing" under the price), so showing
+ * it before the page's notice has been reached tells a buyer nothing false.
  *
- * It starts hidden. Without JavaScript the enquiry dialog cannot open either, so a bar that never
- * appears loses a no-script visitor nothing the summary card does not already offer.
+ * It starts hidden, and shows on the observer's first report. Without JavaScript the enquiry dialog
+ * cannot open either, so a bar that never appears loses a no-script visitor nothing the summary
+ * card does not already offer.
  *
  * Hidden means `invisible` as well as moved off screen, so nothing in it can take focus or be
  * reached by a screen reader while it is away. `inert` would do the same; visibility has the
@@ -33,18 +35,14 @@ export function StickyActionBar({ watchId, children }: { watchId: string; childr
       return;
     }
 
-    let passedActions = false;
+    let actionsOnScreen = true;
     let footerOnScreen = false;
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
-        if (entry.target === actions) {
-          // Passed means scrolled up and out of the top, not still waiting below the fold.
-          passedActions = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
-        } else {
-          footerOnScreen = entry.isIntersecting;
-        }
+        if (entry.target === actions) actionsOnScreen = entry.isIntersecting;
+        else footerOnScreen = entry.isIntersecting;
       }
-      setVisible(passedActions && !footerOnScreen);
+      setVisible(!actionsOnScreen && !footerOnScreen);
     });
     observer.observe(actions);
     if (footer) observer.observe(footer);

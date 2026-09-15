@@ -16,8 +16,10 @@ export type FacetOption = {
  * is chosen, and its controls.
  *
  * A `<details>`, so every section opens and closes with a keyboard and with no JavaScript, and a
- * closed section is out of the tab order. The summary line says what is set ("Toyota, Ford") so a
- * buyer can read the whole search with every section closed.
+ * closed section is out of the tab order. The summary line says what is set ("Toyota, Ford", or
+ * "Any") so a buyer can read the whole search with every section closed, which is how the panel
+ * opens: one 48px row per filter, with only the sections that hold a choice open. All ten fit a
+ * laptop screen that way, where open lists once pushed eight of them out of sight.
  */
 export function FilterSection({
   title,
@@ -32,9 +34,11 @@ export function FilterSection({
 }) {
   return (
     <details open={open} className="group border-b border-line last:border-b-0">
-      <summary className="-mx-2 flex min-h-14 cursor-pointer list-none items-center gap-3 rounded-sm px-2 py-2 hover:bg-subtle [&::-webkit-details-marker]:hidden">
+      <summary className="-mx-2 flex min-h-12 cursor-pointer list-none items-center gap-3 rounded-sm px-2 py-2 hover:bg-subtle [&::-webkit-details-marker]:hidden">
         <span className="shrink-0 text-base font-semibold text-heading">{title}</span>
-        <span className="min-w-0 flex-1 truncate text-end text-sm text-muted">{summary}</span>
+        <span className="min-w-0 flex-1 truncate text-end text-sm text-muted">
+          {summary || "Any"}
+        </span>
         <ChevronDown
           aria-hidden="true"
           className="size-5 shrink-0 text-muted transition-transform duration-[var(--duration-micro)] group-open:rotate-180 motion-reduce:transition-none"
@@ -98,8 +102,8 @@ export function OptionList({
  * as filters change and a buyer can tell "nothing matches" from "this category does not exist".
  *
  * A long list shows its `limit` best-stocked options and tucks the rest into a nested disclosure,
- * both halves in the order they arrived (alphabetical for makes). A ticked option always stays in
- * view, so nothing that is set is ever hidden.
+ * both halves in the order they arrived (alphabetical for makes), with any option at 0 in the tucked
+ * half. A ticked option always stays in view, so nothing that is set is ever hidden.
  */
 export function FacetGroup({
   title,
@@ -131,17 +135,21 @@ export function FacetGroup({
         ? chosen.map((option) => option.label).join(", ")
         : `${chosen.length} selected`;
 
-  let shown = options;
-  let rest: FacetOption[] = [];
-  if (limit && options.length > limit + 2) {
+  // An option that would leave no cars waits behind "Show more" with the long tail, rather than
+  // sitting in the list as a disabled row. A ticked one always stays in view, and the "Any" row of
+  // a radio group is never tucked away.
+  const live = (option: FacetOption) => option.checked || option.value === "" || option.count > 0;
+  let shown = options.filter(live);
+  let rest = options.filter((option) => !live(option));
+  if (limit && shown.length > limit + 2) {
     const best = new Set(
-      [...options]
+      [...shown]
         .sort((a, b) => b.count - a.count)
         .slice(0, limit)
         .map((option) => option.value),
     );
-    shown = options.filter((option) => best.has(option.value) || option.checked);
-    rest = options.filter((option) => !best.has(option.value) && !option.checked);
+    rest = [...shown.filter((option) => !best.has(option.value) && !option.checked), ...rest];
+    shown = shown.filter((option) => best.has(option.value) || option.checked);
   }
 
   return (

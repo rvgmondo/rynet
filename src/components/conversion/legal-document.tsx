@@ -134,7 +134,8 @@ export function LegalDocument({
             </>
           ) : null}
 
-          <article className="rn-card w-full min-w-0 px-5 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
+          {/* Sized to the reading column, so the white card never carries an empty right third. */}
+          <article className="rn-card w-full max-w-[46rem] min-w-0 px-5 py-8 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
             <div className="rn-doc measure break-words [&>h2:first-child]:mt-0 [&>h2:first-child]:border-t-0 [&>h2:first-child]:pt-0 [&_a]:font-medium [&_a]:text-accent">
               {withHeadingIds(children)}
             </div>
