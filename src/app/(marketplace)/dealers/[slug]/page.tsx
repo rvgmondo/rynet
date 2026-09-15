@@ -429,6 +429,25 @@ export default async function DealerPage({
                 <KeyFacts items={facts} variant="grid" />
               </div>
 
+              {/*
+                On a phone and a tablet the contact panel stacks under this column, which put the
+                first car two screens down. One button straight to the stock keeps it on the first.
+              */}
+              {total > 0 ? (
+                <a
+                  href="#stock-heading"
+                  className={buttonClasses({
+                    variant: "secondary",
+                    size: "md",
+                    block: "mobile",
+                    className: "mt-6 lg:hidden",
+                  })}
+                >
+                  See their {carsCount(total)}
+                  <ArrowRight aria-hidden="true" />
+                </a>
+              ) : null}
+
               {strip.length > 0 ? (
                 <div aria-hidden="true" className="mt-8 hidden grid-cols-4 gap-2 sm:grid">
                   {strip.map((photo) => (
@@ -473,7 +492,7 @@ export default async function DealerPage({
         className="container-page pt-[var(--section-tight)] pb-[var(--section-base)]"
       >
         <div className="max-w-3xl">
-          <h2 id="stock-heading" className="rn-h2">
+          <h2 id="stock-heading" className="rn-h2 scroll-mt-24">
             {total > 0
               ? `${carsCount(total)} at ${dealer.tradingName}`
               : `Stock at ${dealer.tradingName}`}

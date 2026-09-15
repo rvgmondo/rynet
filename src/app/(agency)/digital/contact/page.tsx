@@ -131,8 +131,8 @@ export default function AgencyContactPage() {
                 </h2>
               </div>
               <p className="mt-3 text-sm text-body">
-                Listing a dealership on Rynet Showroom is a separate conversation, and being an
-                agency client has no bearing on it.
+                Listing a dealership on the Rynet marketplace is a separate conversation, and being
+                an agency client has no bearing on it.
               </p>
               <Link href="/how-verification-works" className="rn-link-arrow mt-4">
                 How dealerships are checked

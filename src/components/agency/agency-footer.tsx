@@ -29,7 +29,7 @@ const COLUMNS = [
     id: "agency-footer-rynet",
     heading: "Rynet",
     links: [
-      { href: "/", label: "Rynet Showroom" },
+      { href: "/", label: "Rynet marketplace" },
       { href: "/accessibility", label: "Accessibility" },
       { href: "/privacy", label: "Privacy and POPIA" },
       { href: "/cookies", label: "Cookies" },
@@ -66,7 +66,7 @@ export function AgencyFooter() {
             </Link>
             <p className="mt-5 text-[0.9375rem] leading-relaxed">
               Websites, stock feeds and advertising for South African car dealerships, from the team
-              that built Rynet Showroom.
+              that built the Rynet marketplace.
             </p>
             <ul className="mt-5 space-y-1 text-sm">
               <li className="flex min-h-8 items-center gap-2">
@@ -124,8 +124,8 @@ export function AgencyFooter() {
             <p>&copy; {new Date().getFullYear()} Rynet. All rights reserved.</p>
             {identity ? <p>{identity}</p> : null}
             <p className="max-w-xl">
-              Rynet Digital and Rynet Showroom are one company. Being an agency client never buys a
-              dealership a better position on Showroom.
+              Rynet Digital and the Rynet marketplace are one company. Being an agency client never
+              buys a dealership a better position on the marketplace.
             </p>
           </div>
           <div className="flex items-center gap-3">

@@ -204,7 +204,12 @@ export function SellForm({
           modelError={form.errorFor("model")}
         />
 
-        <div className="grid gap-5 sm:grid-cols-2">
+        {/*
+          Year and mileage share a row at every width: a four-digit year never needs a full phone
+          width, and the pair reads as one line of the car's papers. Mileage carries its unit
+          inside the box, so the hint no longer has to explain kilometres.
+        */}
+        <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-x-3 gap-y-5 sm:grid-cols-2 sm:gap-x-5">
           <Field name="modelYear" label="Year" error={form.errorFor("modelYear")}>
             <input
               id="modelYear"
@@ -222,22 +227,30 @@ export function SellForm({
           <Field
             name="mileageKm"
             label="Mileage"
-            hint="In kilometres, as close as you can."
+            hint="As close as you can."
             error={form.errorFor("mileageKm")}
           >
-            <input
-              id="mileageKm"
-              name="mileageKm"
-              type="text"
-              inputMode="numeric"
-              autoComplete="off"
-              maxLength={9}
-              aria-invalid={form.errorFor("mileageKm") ? true : undefined}
-              aria-describedby={
-                form.errorFor("mileageKm") ? "mileageKm-hint mileageKm-error" : "mileageKm-hint"
-              }
-              className={`${INPUT_CLASS} tabular`}
-            />
+            <div className="relative">
+              <input
+                id="mileageKm"
+                name="mileageKm"
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={9}
+                aria-invalid={form.errorFor("mileageKm") ? true : undefined}
+                aria-describedby={
+                  form.errorFor("mileageKm") ? "mileageKm-hint mileageKm-error" : "mileageKm-hint"
+                }
+                className={`${INPUT_CLASS} pe-12 tabular`}
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 end-0 mt-2 flex items-center pe-4 text-sm font-medium text-muted"
+              >
+                km
+              </span>
+            </div>
           </Field>
         </div>
       </fieldset>
@@ -439,7 +452,7 @@ function ConsentBlock({ error }: { error?: string }) {
       <p className="text-sm text-body">
         Your details go only to dealerships in your province that buy this kind of car, so they can
         contact you with an offer. Giving them is voluntary, and you can withdraw at any time.{" "}
-        <a href="#popia-heading" className="font-semibold text-heading">
+        <a href="#popia-heading" className="rn-link">
           Read the full notice
         </a>
       </p>
@@ -543,7 +556,7 @@ function SellSuccess({ message, sent }: { message: string; sent: Sent | null }) 
         </Link>
         <p className="text-sm text-muted">
           Changed your mind? Email{" "}
-          <a href="mailto:privacy@rynet.co.za" className="font-semibold text-heading">
+          <a href="mailto:privacy@rynet.co.za" className="rn-link">
             privacy@rynet.co.za
           </a>{" "}
           and we stop passing it on.

@@ -50,8 +50,13 @@ export function StockToolbar({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       {bodies.length > 1 ? (
+        /*
+         * On a phone the chips run in one row that scrolls sideways, so a fourth body type does
+         * not wrap onto a line of its own; the row bleeds to the screen edge and keeps the gutter
+         * as padding. From 640px they wrap as before.
+         */
         <nav aria-label="Filter this stock by body type" className="min-w-0">
-          <ul className="flex flex-wrap gap-2">
+          <ul className="mx-[calc(var(--container-pad)*-1)] flex gap-2 overflow-x-auto px-[var(--container-pad)] py-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             <li>
               <Link
                 href={stockHref(slug, { sort })}

@@ -115,16 +115,29 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
       </section>
 
       <section aria-labelledby="includes-heading" className="bg-card py-[var(--section-base)]">
-        <div className="container-page">
-          <SectionHeader id="includes-heading" eyebrow={name} title="What is included" />
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/*
+          A heading column and a ruled checklist beside it, rather than six tinted boxes: the items
+          are a specification to read down, not six things to click.
+        */}
+        <div className="container-page grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <p className="rn-eyebrow">{name}</p>
+            <h2 id="includes-heading" className="rn-h2 mt-2">
+              What is included
+            </h2>
+            <p className="mt-3 text-body">
+              Each of these is something you can check once it is built, not a promise about
+              results.
+            </p>
+          </div>
+          <ul className="grid border-t border-line sm:grid-cols-2 sm:gap-x-10">
             {includes.map((item) => (
-              <li key={item} className="flex gap-3 rounded-md border border-line bg-page p-5">
+              <li key={item} className="flex gap-4 border-b border-line py-5">
                 <span
                   aria-hidden="true"
-                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-success-subtle text-success"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-success-subtle text-success"
                 >
-                  <Check className="size-3.5" />
+                  <Check className="size-4" />
                 </span>
                 <span className="text-body">{sentence(item)}</span>
               </li>

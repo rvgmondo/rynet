@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 /**
  * The services index.
  *
- * Seven rich cards, one per service, each a single link to its page. The home page introduces
+ * One ruled sheet with a row per service, each row a single link to its page. The home page introduces
  * the services by name and summary; this page leads with the outcome each one is for and what a
  * dealer walks away with, so the two lists say different things. What is included and where the
  * line is live on each service's own page.
@@ -62,54 +62,72 @@ export default function ServicesIndexPage() {
       />
 
       <section aria-label="All services" className="py-[var(--section-base)]">
-        <ul className="container-page grid gap-5 md:grid-cols-2">
-          {SERVICES.map((service) => (
-            <li key={service.slug} className="flex">
-              <article className="rn-card rn-card--interactive p-6 max-sm:rounded-none max-sm:border-x-0 max-sm:border-t-0 max-sm:bg-transparent max-sm:px-0 max-sm:pt-0 max-sm:shadow-none sm:p-8">
-                <div className="flex items-center gap-4">
+        <div className="container-page">
+          {/*
+            One ruled sheet, a row per service, rather than seven cards: the number, the service
+            and its icon; the outcome as a headline with the summary; and what the dealer walks
+            away with, set off by a rule. The whole row is the one link, and its focus ring is
+            drawn inside the sheet so the sheet's rounded edge never clips it.
+          */}
+          <ol className="rn-panel divide-y divide-line overflow-hidden">
+            {SERVICES.map((service, index) => (
+              <li
+                key={service.slug}
+                className="group relative grid gap-5 p-6 transition-colors duration-[var(--duration-micro)] hover:bg-subtle sm:p-8 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_minmax(0,19rem)] lg:gap-12 lg:px-10 lg:py-9"
+              >
+                <div className="flex items-center gap-4 lg:flex-col lg:items-start lg:gap-5">
                   <span className="rn-icon-tile rn-icon-tile--lg">
                     <service.Icon aria-hidden="true" className="size-6" />
                   </span>
-                  <p className="text-sm font-semibold text-muted">{service.name}</p>
+                  <p className="flex items-baseline gap-2 text-sm font-semibold text-heading">
+                    <span aria-hidden="true" className="text-muted tabular">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    {service.name}
+                  </p>
                 </div>
 
-                <h2 className="rn-h3 mt-5">
-                  <Link
-                    href={`/digital/services/${service.slug}`}
-                    className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-solid focus-visible:after:outline-[color:var(--rn-focus-ring)]"
-                  >
-                    {service.title}
-                  </Link>
-                </h2>
-                <p className="mt-3 text-body">{service.summary}</p>
-
-                <div className="mt-6 rounded-md bg-subtle p-4">
-                  <p className="text-sm font-semibold text-heading">What you walk away with</p>
-                  <p className="mt-1 text-sm text-body">{service.outcome}</p>
+                <div className="min-w-0">
+                  <h2 className="rn-h3">
+                    <Link
+                      href={`/digital/services/${service.slug}`}
+                      className="transition-colors duration-[var(--duration-micro)] group-hover:text-accent after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-4 focus-visible:after:outline-solid focus-visible:after:outline-[color:var(--rn-focus-ring)]"
+                    >
+                      {service.title}
+                    </Link>
+                  </h2>
+                  <p className="mt-3 text-body">{service.summary}</p>
+                  <span aria-hidden="true" className="rn-link-arrow mt-4">
+                    What is included
+                    <ArrowRight />
+                  </span>
                 </div>
 
-                <span aria-hidden="true" className="rn-link-arrow mt-auto self-start pt-6">
-                  What is included
-                  <ArrowRight />
-                </span>
-              </article>
-            </li>
-          ))}
+                <div className="border-t border-line pt-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8">
+                  <p className="rn-eyebrow">What you walk away with</p>
+                  <p className="mt-2 font-semibold leading-snug text-heading">{service.outcome}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
 
-          <li className="flex">
-            <div className="flex w-full flex-col justify-center rounded-md border border-dashed border-line-strong p-6 sm:p-8">
-              <h2 className="rn-h3">Not sure where to start?</h2>
-              <p className="mt-3 text-body">
+          <div className="mt-6 flex flex-col gap-3 rounded-lg border border-dashed border-line-strong px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8 sm:px-8">
+            <div>
+              <h2 className="text-lg font-semibold text-heading">Not sure where to start?</h2>
+              <p className="mt-1 text-body">
                 The free review puts these seven in order for your dealership: what to fix first,
                 what can wait, and what you do not need at all.
               </p>
-              <Link href="/digital/process" className="rn-link-arrow mt-5 self-start">
-                How an engagement runs
-                <ArrowRight aria-hidden="true" />
-              </Link>
             </div>
-          </li>
-        </ul>
+            <Link
+              href="/digital/process"
+              className="rn-link-arrow shrink-0 self-start sm:self-center"
+            >
+              How an engagement runs
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
       </section>
 
       <AgencyClose id="services-close" title="Find out which of these you need">

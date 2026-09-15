@@ -57,7 +57,7 @@ export function SiteHeader() {
       <div className="container-page rn-header__bar">
         <Link
           href="/"
-          aria-label="Rynet Showroom, home"
+          aria-label="Rynet, home"
           className="-ml-1 flex shrink-0 items-center rounded-md p-1"
         >
           <RynetLockup className="h-7 w-auto lg:h-8" />

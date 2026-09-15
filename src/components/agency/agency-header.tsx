@@ -20,11 +20,11 @@ const RING = "focus-visible:outline-[color:var(--rn-focus-ring-on-navy)]";
  * The agency header. Navy, sticky, 64px.
  *
  * Deliberately not the marketplace header with different links. Rynet Digital sells to dealer
- * principals and Rynet Showroom sells to car buyers, so the agency bar is navy where the
+ * principals and the Rynet marketplace sells to car buyers, so the agency bar is navy where the
  * marketplace bar is white, and a visitor can tell at a glance which front door they are on.
  *
  * Left: RYNET DIGITAL. Then the four agency destinations with a current-page underline in brand
- * red. Right: a quiet way back to Rynet Showroom (the agency's working example) and the one red
+ * red. Right: a quiet way back to the Rynet marketplace (the agency's working example) and the one red
  * action, "Book a free review", which is on every page at every width, phones included.
  *
  * Below 1024px the destinations move into the same native <details> sheet the marketplace uses
@@ -63,7 +63,7 @@ export function AgencyHeader() {
             href="/"
             className={`rn-navlink hidden gap-1.5 text-on-navy-muted hover:bg-navy-raised hover:text-on-navy lg:inline-flex ${RING}`}
           >
-            Rynet Showroom
+            Rynet marketplace
             <ArrowUpRight aria-hidden="true" className="size-4" />
           </Link>
 
@@ -117,7 +117,7 @@ export function AgencyHeader() {
                   className="flex min-h-12 items-center gap-2 rounded-sm px-2 text-[0.9375rem] font-medium text-body hover:bg-subtle hover:text-heading"
                 >
                   <ArrowLeft aria-hidden="true" className="size-4 text-muted" />
-                  Rynet Showroom, buy a car
+                  Rynet marketplace, buy a car
                 </Link>
               </div>
 

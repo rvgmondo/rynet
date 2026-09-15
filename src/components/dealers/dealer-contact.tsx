@@ -233,12 +233,13 @@ export function ContactActions({
 
 export function DemoContactNote({ className = "" }: { className?: string }) {
   return (
-    <p className={`flex items-start gap-3 rounded-md bg-subtle p-4 text-sm text-body ${className}`}>
+    <p
+      className={`flex items-start gap-3 rounded-md bg-subtle px-4 py-3 text-sm text-body ${className}`}
+    >
       <PhoneOff aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0 text-muted" />
       <span>
-        Call, WhatsApp, directions and the street address switch on for real dealerships. This one
-        is a demonstration, so there is nobody to call and no showroom to visit. The hours below are
-        examples.
+        Calls, WhatsApp and directions switch on for real dealerships. This one is a demonstration,
+        so there is nobody to call.
       </span>
     </p>
   );

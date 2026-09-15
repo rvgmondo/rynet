@@ -5,7 +5,7 @@ import { RynetLockup } from "@/components/brand/rynet-mark";
 import { VehicleCard, type VehicleCardData } from "@/components/vehicles/vehicle-card";
 
 /**
- * Rynet Showroom in a browser window: the agency's working example, shown rather than described.
+ * The Rynet marketplace in a browser window: the agency's working example, shown rather than described.
  *
  * Not a screenshot. The window chrome is drawn, and the cards inside it are the marketplace's own
  * VehicleCard rendering real listings, so the frame is always current, every card keeps its
@@ -95,7 +95,7 @@ export function ShowroomFrame({
         className={`mt-4 flex flex-col gap-1 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4 ${navy ? "text-on-navy-muted" : "text-muted"}`}
       >
         <span>
-          Rynet Showroom, which we built. Every listing on it today is demonstration data.
+          The Rynet marketplace, which we built. Every listing on it today is demonstration data.
         </span>
         <Link
           href="/cars"
@@ -105,7 +105,7 @@ export function ShowroomFrame({
               : "rn-link-arrow"
           }
         >
-          Open Rynet Showroom
+          Open the marketplace
           <ArrowRight aria-hidden="true" className="size-4" />
         </Link>
       </figcaption>

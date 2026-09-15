@@ -293,7 +293,11 @@ export default async function SellToADealerPage() {
             Three things Rynet does not do
           </h2>
         </div>
-        <ul className="mt-6 grid border-t border-line md:mt-8 md:gap-4 md:border-0 md:grid-cols-3">
+        {/*
+          Three statements, not three things to click, so no card chrome at any width: a divided
+          list on a phone, and from 768px three columns under one rule with hairlines between.
+        */}
+        <ul className="mt-6 grid border-t border-line md:mt-10 md:grid-cols-3 md:divide-x md:divide-line">
           {[
             {
               icon: Ban,
@@ -313,14 +317,14 @@ export default async function SellToADealerPage() {
           ].map(({ icon: Icon, title, body }) => (
             <li
               key={title}
-              className="flex gap-4 border-b border-line py-5 md:block md:rounded-md md:border md:bg-card md:p-6 md:shadow-card"
+              className="flex gap-4 border-b border-line py-5 md:block md:border-b-0 md:px-8 md:pt-8 md:pb-2 md:first:ps-0 md:last:pe-0"
             >
               <span aria-hidden="true" className="rn-icon-tile">
                 <Icon className="size-5" />
               </span>
               <div className="min-w-0">
-                <h3 className="text-lg font-semibold md:mt-5">{title}</h3>
-                <p className="mt-1 text-sm text-body md:mt-2">{body}</p>
+                <h3 className="rn-h3 md:mt-5">{title}</h3>
+                <p className="mt-1 text-body md:mt-2">{body}</p>
               </div>
             </li>
           ))}

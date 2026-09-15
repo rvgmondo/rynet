@@ -6,7 +6,7 @@ import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { toCard } from "@/lib/search";
 
 /**
- * A few real Rynet Showroom listings for the agency home page's browser frame.
+ * A few real Rynet marketplace listings for the agency home page's browser frame.
  *
  * Real rows through the marketplace's own `toCard`, so the frame shows exactly what a buyer
  * sees, demonstration badges included, and never a mocked-up screenshot. Live listings only,
@@ -49,7 +49,7 @@ export async function getShowroomSample(limit = 2): Promise<VehicleCardData[]> {
       },
     )();
   } catch (error) {
-    console.error("Agency home: could not read the Showroom sample.", error);
+    console.error("Agency home: could not read the marketplace sample.", error);
     return [];
   }
 }

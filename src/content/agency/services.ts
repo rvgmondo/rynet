@@ -23,7 +23,7 @@ import { BarChart3, Camera, Globe, Megaphone, RefreshCw, Search, Workflow } from
  *    brochure. `notThis` is the part a buyer actually trusts.
  *
  * Every claim here is about method. The only results claimed anywhere on this site are
- * Rynet Showroom's own, because that is the one build we can show.
+ * the Rynet marketplace's own, because that is the one build we can show.
  */
 
 export type Service = {

@@ -166,7 +166,7 @@ The home page says so in as many words, under the heading "We have not done this
 there is an end-to-end test asserting that heading is on the page. The temptation to add
 "trusted by 40 dealerships" arrives the week before launch, when nobody is rereading the brief.
 
-The proof used instead is Rynet Showroom itself, which is real, on the same domain, and something
+The proof used instead is the Rynet marketplace itself, which is real, on the same domain, and something
 a dealer principal can open and judge in ten seconds.
 
 The heading now sits as an h3 in a panel under the H2 "Judge us on a site you can open right now";
@@ -184,11 +184,16 @@ we can check in code):
   `src/components/agency/agency-content.ts`. Only "Free" and the contract term remain.
 - "Month to month after three months on thirty days notice", which is a contract term shown on the
   pricing page and the agency home page.
-- **One name for the marketplace.** The agency pages call it "Rynet Showroom" (header link, hero,
-  footer, FAQ, "Open Rynet Showroom"), while the marketplace itself is branded RYNET and never uses
-  that name, so a dealer who clicks through lands on a differently named product. Decide: say
-  "Rynet" throughout `agency-content.ts`, `agency-header.tsx` and `agency-footer.tsx`, or add a
-  "Showroom" descriptor to the marketplace. Nothing was renamed without that decision.
+- **One name for the marketplace: decided as "Rynet".** The agency pages used to call it "Rynet
+  Showroom" (header link, hero, footer, FAQ, "Open Rynet Showroom"), the tab titles, share card and
+  WebSite structured data said the same, and the marketplace itself is branded RYNET and says
+  "Rynet" in every line of copy. A dealer who clicked through landed on a differently named product.
+  In the September 2026 polish it became "Rynet" for the name and "the Rynet marketplace" where the
+  agency needs to tell the two halves apart: the agency header and footer link read "Rynet
+  marketplace", buttons say "Open the marketplace", the tab title template is "%s | Rynet", and
+  `websiteJsonLd()` names the site "Rynet". If Ruben wants "Showroom" as a product name, it has to go
+  on the marketplace lockup and header too, not only on the agency pages. "SHOWROOM" survives only
+  as the name of the design system in `docs/DESIGN-SHOWROOM.md`, which no visitor sees.
 - A WhatsApp number for Rynet Digital, if one exists. None is shown until there is one.
 - Real team names for `/digital/about`, which currently says honestly who you will deal with.
 

@@ -4,8 +4,7 @@ import { MARK_PATHS, WORDMARK_PATH } from "@/components/brand/rynet-mark";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt =
-  "Rynet Showroom. Every dealership is checked before it can list, and no private sellers.";
+export const alt = "Rynet. Every dealership is checked before it can list, and no private sellers.";
 
 /**
  * The share card, generated rather than shipped.
@@ -73,7 +72,7 @@ export default function OpengraphImage() {
           color: "#AEB9C9",
         }}
       >
-        <div style={{ display: "flex" }}>Rynet Showroom</div>
+        <div style={{ display: "flex" }}>Rynet</div>
         <div
           style={{
             display: "flex",

@@ -1,4 +1,5 @@
-import { ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown, FileText } from "lucide-react";
+import Link from "next/link";
 import { Children, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
@@ -18,6 +19,10 @@ import { slugify } from "@/lib/slug";
  * The legal review marker is the standard one, once, in the title block beside the date. A page
  * without a `reviewedAt` key (the accessibility statement, which is a description rather than a
  * legal draft) shows no marker at all. Pass `null` to show it.
+ *
+ * From 1280px a third column lists the other documents in the set, with this one marked, and a
+ * route to a person, so the band to the right of the reading column is a way on rather than
+ * empty grey. The review marker is not repeated there: one marker per page.
  *
  * The index is read off the document's own h2 headings, so it cannot drift from them, and each
  * heading gets a stable id from its words, so a shared link survives an edit that moves the
@@ -59,6 +64,53 @@ function ContentsList({ headings }: { headings: Heading[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** The documents a reader of one of them most often wants next. */
+const DOCUMENTS = [
+  { href: "/privacy", label: "Privacy notice" },
+  { href: "/terms", label: "Terms of use" },
+  { href: "/cookies", label: "Cookie notice" },
+  { href: "/accessibility", label: "Accessibility statement" },
+] as const;
+
+function DocumentsAside({ path }: { path: string }) {
+  return (
+    <aside
+      aria-labelledby="documents-heading"
+      className="hidden xl:sticky xl:top-24 xl:block xl:self-start"
+    >
+      <h2 id="documents-heading" className="px-3 text-sm font-semibold text-heading">
+        Related documents
+      </h2>
+      <ul className="mt-3 space-y-0.5">
+        {DOCUMENTS.map((doc) => {
+          const current = doc.href === path;
+          return (
+            <li key={doc.href}>
+              <Link
+                href={doc.href}
+                aria-current={current ? "page" : undefined}
+                className={`flex min-h-10 items-center gap-2.5 rounded-sm px-3 py-2 text-sm transition-colors duration-[var(--duration-micro)] hover:bg-subtle hover:text-heading ${
+                  current ? "bg-card font-semibold text-heading shadow-xs" : "text-body"
+                }`}
+              >
+                <FileText aria-hidden="true" className="size-4 shrink-0 text-muted" />
+                {doc.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="mt-6 border-t border-line px-3 pt-5">
+        <p className="text-sm text-body">Something here unclear, or wrong about you?</p>
+        <Link href="/contact" className="rn-link-arrow mt-2 text-sm">
+          Ask a person
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      </div>
+    </aside>
   );
 }
 
@@ -104,7 +156,11 @@ export function LegalDocument({
 
       <div className="container-page py-8 sm:py-12 lg:py-16">
         <div
-          className={`grid gap-6 ${hasIndex ? "lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-12" : ""}`}
+          className={`grid gap-6 ${
+            hasIndex
+              ? "lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[14rem_minmax(0,46rem)_minmax(0,1fr)]"
+              : "xl:grid-cols-[minmax(0,46rem)_minmax(0,16rem)] xl:gap-12"
+          }`}
         >
           {hasIndex ? (
             <>
@@ -141,6 +197,8 @@ export function LegalDocument({
               {withHeadingIds(children)}
             </div>
           </article>
+
+          <DocumentsAside path={path} />
         </div>
       </div>
     </>

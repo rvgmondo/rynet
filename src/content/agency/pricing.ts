@@ -91,7 +91,7 @@ export const PRICING_FAQS = [
       "Monthly work runs month to month after the first three months, with thirty days notice. The first three exist because nothing we do shows a result inside one month, so a shorter commitment would mean you paying for the setup and leaving before the return.",
   },
   {
-    question: "Do agency clients get better placement on Rynet Showroom?",
+    question: "Do agency clients get better placement on the Rynet marketplace?",
     answer:
       "No, and they never will. The marketplace ranks and verifies dealerships on the same rules whether they are an agency client or not. A marketplace that sold placement to its own agency clients would not be worth listing on.",
   },
