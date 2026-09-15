@@ -243,27 +243,41 @@ export default async function HowVerificationWorksPage() {
           </p>
         </div>
 
-        <ol className="mt-6 grid border-t border-line md:mt-8 md:gap-4 md:border-0 md:grid-cols-2">
+        {/*
+          The four checks as the path a dealership takes, not four cards: numbered stops joined by
+          a line from 1024px, a ruled list below that. The number is the order; the icon says
+          what is looked at.
+        */}
+        <ol className="mt-8 grid border-t border-line md:grid-cols-2 md:gap-x-10 lg:mt-10 lg:grid-cols-4 lg:gap-x-8 lg:border-t-0">
           {CHECKS.map(({ icon: Icon, title, body }, index) => (
             <li
               key={title}
-              className="border-b border-line py-6 md:rounded-md md:border md:bg-card md:p-7 md:shadow-card"
+              className="relative flex gap-5 border-b border-line py-6 lg:flex-col lg:gap-0 lg:border-b-0 lg:py-0"
             >
-              <div className="flex items-center justify-between gap-4">
-                <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
-                  <Icon className="size-6" />
-                </span>
-                <span className="text-sm font-semibold text-muted tabular">
-                  Check {index + 1} of {CHECKS.length}
-                </span>
+              {index < CHECKS.length - 1 ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-6 left-14 hidden h-px w-[calc(100%-2rem)] bg-line-strong lg:block"
+                />
+              ) : null}
+              <span
+                aria-hidden="true"
+                className="relative grid size-12 shrink-0 place-items-center rounded-full bg-secondary text-base font-semibold text-on-secondary tabular"
+              >
+                {index + 1}
+              </span>
+              <div className="min-w-0 lg:mt-6">
+                <div className="flex items-start gap-2.5">
+                  <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted" />
+                  <h3 className="rn-h3">{title}</h3>
+                </div>
+                <p className="mt-2 text-body">{body}</p>
               </div>
-              <h3 className="mt-5 text-xl font-semibold">{title}</h3>
-              <p className="mt-2 text-body">{body}</p>
             </li>
           ))}
         </ol>
 
-        <div className="rn-card mt-4 gap-6 p-6 sm:p-7 lg:flex-row lg:gap-12">
+        <div className="rn-card mt-8 gap-6 p-6 sm:p-7 lg:mt-12 lg:flex-row lg:gap-12">
           <div className="min-w-0 lg:w-72 lg:shrink-0">
             <h3 className="text-xl font-semibold">What a dealership&apos;s record holds</h3>
             <p className="mt-2 text-sm text-body">
