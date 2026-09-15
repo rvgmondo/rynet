@@ -1,7 +1,8 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { AlertCircle, CircleCheck, Mail, X } from "lucide-react";
+import { AlertCircle, Car, CircleCheck, Info, Mail, X } from "lucide-react";
+import Image from "next/image";
 import * as React from "react";
 import { useActionState } from "react";
 
@@ -14,6 +15,13 @@ import { LEGAL_REVIEWED_AT } from "@/content/legal-review";
 import type { EnquiryState } from "@/lib/enquiry-schema";
 
 const initial: EnquiryState = { status: "idle" };
+
+export type EnquirySummary = {
+  /** The first photograph's small rendition, or null for a listing with none. */
+  photo: { url: string; width: number; height: number } | null;
+  /** "R 584 000", or "Price on application". */
+  price: string | null;
+};
 
 /**
  * The enquiry form: the one form on the platform that exists to sell a car.
@@ -46,6 +54,7 @@ export function EnquiryDialog({
   dealerName,
   isDemonstration = false,
   compact = false,
+  summary,
   className = "",
 }: {
   vehicleRef: string;
@@ -56,6 +65,8 @@ export function EnquiryDialog({
   isDemonstration?: boolean;
   /** The short trigger for the phone action bar. */
   compact?: boolean;
+  /** The car as a small card at the top of the dialog: its first photograph and its price. */
+  summary?: EnquirySummary;
   className?: string;
 }) {
   const [state, formAction, pending] = useActionState(submitEnquiry, initial);
@@ -97,12 +108,14 @@ export function EnquiryDialog({
               <Dialog.Title className="text-xl font-bold text-heading">
                 Enquire about this vehicle
               </Dialog.Title>
-              <Dialog.Description className="mt-1 text-sm text-muted">
-                {vehicleTitle}, at {dealerName}.
-                {isDemonstration
-                  ? " This is a demonstration listing and the car is not for sale."
-                  : null}
-              </Dialog.Description>
+              {summary ? null : (
+                <Dialog.Description className="mt-1 text-sm text-muted">
+                  {vehicleTitle}, at {dealerName}.
+                  {isDemonstration
+                    ? " This is a demonstration listing and the car is not for sale."
+                    : null}
+                </Dialog.Description>
+              )}
             </div>
             <Dialog.Close asChild>
               <button
@@ -118,6 +131,63 @@ export function EnquiryDialog({
               </button>
             </Dialog.Close>
           </div>
+
+          {summary ? (
+            /*
+             * The car the enquiry is about, the way a buyer recognises it: its photograph, name,
+             * price and dealership. A demonstration listing says under it, in words, that the car
+             * is not for sale, because this dialog is often opened from the phone bar long after
+             * the page's notice has scrolled away. The whole card is the dialog's description.
+             */
+            <Dialog.Description asChild>
+              <div className="mt-4 overflow-hidden rounded-md border border-line">
+                <div className="flex items-center gap-3 p-2.5 sm:gap-4">
+                  {summary.photo ? (
+                    <Image
+                      src={summary.photo.url}
+                      alt=""
+                      width={summary.photo.width}
+                      height={summary.photo.height}
+                      sizes="6rem"
+                      className="aspect-[4/3] w-20 shrink-0 rounded-sm bg-subtle object-cover sm:w-24"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden="true"
+                      className="grid aspect-[4/3] w-20 shrink-0 place-items-center rounded-sm bg-subtle text-muted sm:w-24"
+                    >
+                      <Car className="size-6" />
+                    </span>
+                  )}
+                  <span className="grid min-w-0 gap-0.5">
+                    <span className="truncate text-base font-semibold text-heading">
+                      {vehicleTitle}
+                      <span className="sr-only">,</span>
+                    </span>
+                    {summary.price ? (
+                      <span className="text-base font-bold text-heading tabular">
+                        {summary.price}
+                        <span className="sr-only">,</span>
+                      </span>
+                    ) : null}
+                    <span className="truncate text-sm text-muted">
+                      <span className="sr-only">at </span>
+                      {dealerName}
+                    </span>
+                  </span>
+                </div>
+                {isDemonstration ? (
+                  <span className="flex items-start gap-2 border-t border-line bg-subtle px-3 py-2 text-sm text-body">
+                    <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-info" />
+                    <span>
+                      <span className="sr-only">. </span>A demonstration listing. The car is not for
+                      sale.
+                    </span>
+                  </span>
+                ) : null}
+              </div>
+            </Dialog.Description>
+          ) : null}
 
           {state.status === "success" ? (
             <div role="status" className="mt-6 rounded-md bg-success-subtle p-5">
@@ -215,7 +285,7 @@ export function EnquiryDialog({
                   <span className="text-sm text-body">
                     I agree that Rynet may pass the details I have given to the selling dealership
                     so they can respond to this enquiry, and may contact me about it. See our{" "}
-                    <a href="/privacy" className="text-accent underline underline-offset-3">
+                    <a href="/privacy" className="rn-link">
                       privacy notice
                     </a>
                     .

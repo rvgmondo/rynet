@@ -32,7 +32,7 @@ export function SellerDescription({ vehicle }: { vehicle: Vehicle }) {
       </h2>
       <RichText
         data={description}
-        className="measure mt-4 space-y-4 text-base text-body [&_a]:text-accent [&_a]:underline [&_li]:ms-5 [&_ol]:list-decimal [&_ul]:list-disc"
+        className="rn-links measure mt-4 space-y-4 text-base text-body [&_li]:ms-5 [&_ol]:list-decimal [&_ul]:list-disc"
       />
     </section>
   );

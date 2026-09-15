@@ -90,7 +90,7 @@ test.describe("responsive", () => {
 // The two page grounds, --rn-page in each theme: a cool light grey and a deep navy. See
 // docs/DESIGN-SHOWROOM.md.
 const LIGHT = "rgb(245, 247, 250)";
-const DARK = "rgb(8, 22, 41)";
+const DARK = "rgb(10, 26, 48)";
 
 const bodyBg = (page: import("@playwright/test").Page) =>
   page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -198,6 +198,35 @@ test.describe("search", () => {
     await page.goto("/cars?make=toyota&minPrice=9000000");
     await expect(page.getByText("No cars match that combination")).toBeVisible();
     await expect(page.getByRole("link", { name: "Clear all filters" })).toBeVisible();
+  });
+
+  test("the desktop filter sidebar sticks only while all of it fits the window", async ({
+    page,
+  }) => {
+    /*
+     * A sidebar that scrolled inside itself once hid eight of ten filters behind an invisible
+     * scrollbar, and a sticky sidebar taller than the window hides its own foot ("Show N cars")
+     * until the end of the results. So it sticks beside the results only while the whole of it
+     * fits, sits in the page's flow when it does not, and is never a scroll box of its own.
+     */
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/cars");
+    const rail = page.locator("#filters");
+    await expect(rail).toHaveAttribute("data-fits", "");
+    await expect(rail).toHaveCSS("position", "sticky");
+    const trapped = await rail.evaluate((root) =>
+      [...root.querySelectorAll("*")].some((el) => {
+        const overflow = getComputedStyle(el).overflowY;
+        return (
+          (overflow === "auto" || overflow === "scroll") && el.scrollHeight > el.clientHeight + 1
+        );
+      }),
+    );
+    expect(trapped, "a part of the sidebar scrolls inside itself").toBe(false);
+
+    await page.setViewportSize({ width: 1440, height: 560 });
+    await expect(rail).not.toHaveAttribute("data-fits");
+    await expect(rail).toHaveCSS("position", "static");
   });
 });
 

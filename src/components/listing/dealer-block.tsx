@@ -23,8 +23,9 @@ function initials(name: string): string {
  * HONESTY FIRST. `DealershipStatusBadge` decides the badge, and the caller passes `demonstration`
  * as true when either the listing or the dealership is demonstration data, so an example car can
  * never sit under a "Verified dealership" badge. A real dealership only gets the verified badge
- * while its status actually is verified. The sentence under it says how Rynet works, not
- * something about this business.
+ * while its status actually is verified. For a real dealership one sentence under it says how Rynet
+ * works, never something about this business; a demonstration one gets no sentence, because the
+ * listing's notice right above already says the dealership is an example.
  *
  * The street address and the directions link are shown only for a real dealership. For a
  * demonstration one they would be a real-looking address for a business that does not exist, and
@@ -93,7 +94,7 @@ export function DealerBlock({
           <h2 id="dealer-heading" className="text-base leading-snug font-semibold text-heading">
             <Link
               href={`/dealers/${dealer.slug}`}
-              className="rounded-xs no-underline hover:text-accent hover:underline hover:underline-offset-3"
+              className="inline-flex min-h-6 items-center rounded-xs no-underline hover:text-accent hover:underline hover:underline-offset-3"
             >
               {dealer.tradingName}
             </Link>
@@ -118,7 +119,7 @@ export function DealerBlock({
               href={directions}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-6 w-fit items-center gap-1.5 font-semibold text-heading underline underline-offset-3 hover:text-accent"
+              className="rn-link inline-flex min-h-6 w-fit items-center gap-1.5"
             >
               <Navigation aria-hidden="true" className="size-4" />
               Get directions
@@ -128,25 +129,30 @@ export function DealerBlock({
         </address>
       ) : null}
 
-      <p className="mt-4 text-sm text-muted">
-        {demonstration
-          ? "Demo dealerships show how Rynet works. Real dealerships are checked before they can list."
-          : "Every dealership is checked before it can list on Rynet."}{" "}
+      {demonstration ? null : (
+        <p className="mt-4 text-sm text-muted">
+          Every dealership is checked before it can list on Rynet.
+        </p>
+      )}
+
+      {/*
+        The two ways on, on one row. A demonstration dealership has no sentence above them: its
+        badge and the card's Demonstration listing notice already say what it is, and the extra two
+        lines were what pushed the card taller than a 1440 by 900 window, where its foot then had to
+        be scrolled to inside the sticky card.
+      */}
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-5">
+        <Link href={`/dealers/${dealer.slug}`} className="rn-link-arrow min-h-11">
+          See all their stock
+          <ArrowRight aria-hidden="true" className="size-4" />
+        </Link>
         <Link
           href="/how-verification-works"
-          className="font-medium text-body underline underline-offset-3 hover:text-heading"
+          className="rn-link inline-flex min-h-11 items-center text-sm"
         >
           How we check
         </Link>
-      </p>
-
-      <Link
-        href={`/dealers/${dealer.slug}`}
-        className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-heading no-underline hover:text-accent hover:underline hover:underline-offset-3"
-      >
-        See all their stock
-        <ArrowRight aria-hidden="true" className="size-4" />
-      </Link>
+      </div>
     </section>
   );
 }

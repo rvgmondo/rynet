@@ -46,7 +46,9 @@ test.describe("the vehicle page", () => {
     await expect(page.getByText("Estimated instalment")).toBeVisible();
     // The cost of credit sits beside the instalment at equal weight. It is an NCA point,
     // not a design preference, so it gets an assertion.
-    await expect(page.getByText("Total cost of the credit")).toBeVisible();
+    await expect(
+      page.locator("#finance").getByText("Total cost of credit", { exact: true }),
+    ).toBeVisible();
   });
 
   test("never calls a demonstration dealership verified", async ({ page }) => {
@@ -62,6 +64,62 @@ test.describe("the vehicle page", () => {
 
     await expect(page.getByText("Demo dealership").first()).toBeVisible();
     await expect(page.getByText(/Verified dealership/i)).toHaveCount(0);
+
+    // The enquiry dialog says it in words as well, because it is often opened from the phone bar
+    // long after the page's notice has scrolled away.
+    await page
+      .getByRole("button", { name: /Enquire about this vehicle/i })
+      .first()
+      .click();
+    await expect(page.getByRole("dialog")).toContainText("The car is not for sale.");
+  });
+
+  test("offers no phone number or WhatsApp for a dealership that does not exist", async ({
+    page,
+  }) => {
+    /*
+     * Hard rules 1 and 2. A demonstration dealership's number rings no business (and the range it
+     * was seeded in is not proven unassignable), so neither the listing nor the dealership's own
+     * page may offer it: no Show number, no Call in the phone bar, no WhatsApp link. Asserted on
+     * the served markup, hidden bars included, not only on what happens to be on screen.
+     */
+    await openFirstListing(page);
+    const demonstration = await page
+      .getByText(/Demonstration listing/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    test.skip(!demonstration, "the first listing is real stock");
+
+    await expect(page.locator('a[href^="tel:"]')).toHaveCount(0);
+    await expect(page.locator('a[href*="wa.me"]')).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Show number/i })).toHaveCount(0);
+
+    const dealerHref = await page.locator('a[href^="/dealers/"]').first().getAttribute("href");
+    expect(dealerHref, "the listing does not link its dealership").toBeTruthy();
+    await page.goto(dealerHref as string);
+    await expect(page.getByText("Demo dealership").first()).toBeVisible();
+    await expect(page.locator('a[href^="tel:"]')).toHaveCount(0);
+    await expect(page.locator('a[href*="wa.me"]')).toHaveCount(0);
+    await expect(page.locator('a[href*="google.com/maps"]')).toHaveCount(0);
+    // Its week is an example: labelled so, and never measured against today's date.
+    await expect(page.getByText("Example hours").first()).toBeVisible();
+    await expect(page.getByText(/Trading hours|Open now|Closed now/)).toHaveCount(0);
+  });
+
+  test("shows no verified stamp on the verification page while nobody is verified", async ({
+    page,
+  }) => {
+    // The specimen explains what the badge stands for; while every dealership is a demonstration
+    // it must not wear the green stamp the page's own notice says nobody has earned.
+    await page.goto("/how-verification-works");
+    const allDemonstration = await page
+      .getByText(/Every dealership on Rynet today is a demonstration/)
+      .isVisible()
+      .catch(() => false);
+    test.skip(!allDemonstration, "some dealerships are real");
+    await expect(page.locator(".rn-badge--verified")).toHaveCount(0);
+    await expect(page.getByText("Example of the verified badge")).toBeVisible();
   });
 
   test("never publishes the VIN", async ({ page }) => {

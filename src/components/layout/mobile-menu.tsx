@@ -65,6 +65,20 @@ export function MobileMenu({
 
     const onSubmit = () => close(false);
 
+    /*
+     * The header's search button is a link to /cars, so it works with scripting off. Once this has
+     * mounted it opens the menu with the search field focused instead, which is one tap to typing
+     * rather than a page load to a results screen.
+     */
+    const onSearch = (event: MouseEvent) => {
+      const target = event.target as Element | null;
+      if (!target?.closest("[data-menu-search]")) return;
+      if (getComputedStyle(details).display === "none") return;
+      event.preventDefault();
+      if (!details.open) details.open = true;
+      details.querySelector<HTMLInputElement>("input[type='search']")?.focus();
+    };
+
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && details.open) {
         event.preventDefault();
@@ -76,11 +90,13 @@ export function MobileMenu({
     details.addEventListener("click", onClick);
     details.addEventListener("submit", onSubmit);
     document.addEventListener("keydown", onKey);
+    document.addEventListener("click", onSearch);
     return () => {
       details.removeEventListener("toggle", onToggle);
       details.removeEventListener("click", onClick);
       details.removeEventListener("submit", onSubmit);
       document.removeEventListener("keydown", onKey);
+      document.removeEventListener("click", onSearch);
       root.removeAttribute("data-menu-open");
     };
   }, []);

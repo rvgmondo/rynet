@@ -177,7 +177,8 @@ test.describe("the qualification form", () => {
     await page.waitForTimeout(4200);
 
     await page.getByRole("button", { name: "Send it" }).click();
-    await expect(page.getByRole("status")).toContainText(/within one working day/i, {
+    // No reply time is promised until one is agreed (docs/CONTENT-NEEDED.md section 8).
+    await expect(page.getByRole("status")).toContainText(/will reply by email/i, {
       timeout: 15000,
     });
   });

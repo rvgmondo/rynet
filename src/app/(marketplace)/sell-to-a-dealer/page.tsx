@@ -214,6 +214,7 @@ export default async function SellToADealerPage() {
       */}
       <section
         aria-labelledby="sell-heading"
+        data-sell-page=""
         className="border-b border-line bg-[linear-gradient(180deg,var(--rn-card)_0%,var(--rn-page)_22rem)]"
       >
         <div className="container-page grid gap-8 py-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,35rem)] lg:gap-x-16 lg:gap-y-10 lg:py-16">
@@ -292,7 +293,11 @@ export default async function SellToADealerPage() {
             Three things Rynet does not do
           </h2>
         </div>
-        <ul className="mt-8 grid gap-4 md:grid-cols-3">
+        {/*
+          Three statements, not three things to click, so no card chrome at any width: a divided
+          list on a phone, and from 768px three columns under one rule with hairlines between.
+        */}
+        <ul className="mt-6 grid border-t border-line md:mt-10 md:grid-cols-3 md:divide-x md:divide-line">
           {[
             {
               icon: Ban,
@@ -310,15 +315,17 @@ export default async function SellToADealerPage() {
               body: "Rynet is not a party to the sale. Nothing here costs you anything, and nothing comes out of what you are paid.",
             },
           ].map(({ icon: Icon, title, body }) => (
-            <li key={title} className="rn-card p-6">
-              <span
-                aria-hidden="true"
-                className="grid size-11 place-items-center rounded-sm bg-subtle text-heading"
-              >
+            <li
+              key={title}
+              className="flex gap-4 border-b border-line py-5 md:block md:border-b-0 md:px-8 md:pt-8 md:pb-2 md:first:ps-0 md:last:pe-0"
+            >
+              <span aria-hidden="true" className="rn-icon-tile">
                 <Icon className="size-5" />
               </span>
-              <h3 className="mt-5 text-lg font-semibold">{title}</h3>
-              <p className="mt-2 text-sm text-body">{body}</p>
+              <div className="min-w-0">
+                <h3 className="rn-h3 md:mt-5">{title}</h3>
+                <p className="mt-1 text-body md:mt-2">{body}</p>
+              </div>
             </li>
           ))}
         </ul>

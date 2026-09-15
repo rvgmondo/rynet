@@ -89,22 +89,34 @@ export function OpeningStatusLine({
   );
 }
 
-function HoursTable({ branch, now }: { branch: Branch; now: Date }) {
+function HoursTable({
+  branch,
+  now,
+  demonstration,
+}: {
+  branch: Branch;
+  now: Date;
+  demonstration: boolean;
+}) {
   const rows = weekRows(branch, now);
   return (
     <dl className="grid gap-y-0.5 text-sm">
-      {rows.map((row) => (
-        <div
-          key={row.day}
-          className={`flex min-h-7 items-center justify-between gap-4 rounded-sm px-2 ${row.isToday ? "bg-subtle font-semibold text-heading" : "text-body"}`}
-        >
-          <dt>
-            {row.label}
-            {row.isToday ? <span className="sr-only"> (today)</span> : null}
-          </dt>
-          <dd className="tabular">{row.hours}</dd>
-        </div>
-      ))}
+      {rows.map((row) => {
+        // An example week has no "today": marking one would read as a live timetable.
+        const today = row.isToday && !demonstration;
+        return (
+          <div
+            key={row.day}
+            className={`flex min-h-7 items-center justify-between gap-4 rounded-sm px-2 ${today ? "bg-subtle font-semibold text-heading" : "text-body"}`}
+          >
+            <dt>
+              {row.label}
+              {today ? <span className="sr-only"> (today)</span> : null}
+            </dt>
+            <dd className="tabular">{row.hours}</dd>
+          </div>
+        );
+      })}
     </dl>
   );
 }
@@ -115,23 +127,31 @@ function HoursTable({ branch, now }: { branch: Branch; now: Date }) {
  * pushed the first row of stock below the fold on a laptop; a real dealership's "Open now" line
  * sits above this, visible, so nothing a buyer needs first is hidden. No JavaScript: a native
  * disclosure.
+ *
+ * A demonstration dealership's week is labelled "Example hours" and computes nothing against the
+ * date: a collapsed row reading "Today 08:00 to 17:30" is the part people scan, and for a business
+ * that does not exist it would read as a live fact.
  */
 export function TradingHours({
   branch,
   now,
+  demonstration = false,
   className = "",
 }: {
   branch: Branch;
   now: Date;
+  demonstration?: boolean;
   className?: string;
 }) {
   if (!branch.tradingHours?.length) return null;
-  const today = todaysHours(branch, now);
+  const today = demonstration ? null : todaysHours(branch, now);
   return (
     <details className={`group ${className}`}>
       <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-sm text-sm [&::-webkit-details-marker]:hidden">
         <Clock aria-hidden="true" className="size-4 shrink-0 text-muted" />
-        <span className="font-semibold text-heading">Trading hours</span>
+        <span className="font-semibold text-heading">
+          {demonstration ? "Example hours" : "Trading hours"}
+        </span>
         {today ? <span className="ml-auto truncate text-muted tabular">{today}</span> : null}
         <ChevronDown
           aria-hidden="true"
@@ -139,7 +159,7 @@ export function TradingHours({
         />
       </summary>
       <div className="pt-1 pb-1">
-        <HoursTable branch={branch} now={now} />
+        <HoursTable branch={branch} now={now} demonstration={demonstration} />
       </div>
     </details>
   );
@@ -213,12 +233,13 @@ export function ContactActions({
 
 export function DemoContactNote({ className = "" }: { className?: string }) {
   return (
-    <p className={`flex items-start gap-3 rounded-md bg-subtle p-4 text-sm text-body ${className}`}>
+    <p
+      className={`flex items-start gap-3 rounded-md bg-subtle px-4 py-3 text-sm text-body ${className}`}
+    >
       <PhoneOff aria-hidden="true" className="mt-0.5 size-[1.125rem] shrink-0 text-muted" />
       <span>
-        Call, WhatsApp, directions and the street address switch on for real dealerships. This one
-        is a demonstration, so there is nobody to call and no showroom to visit. The hours below are
-        examples.
+        Calls, WhatsApp and directions switch on for real dealerships. This one is a demonstration,
+        so there is nobody to call.
       </span>
     </p>
   );
@@ -262,7 +283,12 @@ export function DealerContactPanel({
           )}
 
           <BranchAddress branch={branch} demonstration={isDemonstration} className="mt-5" />
-          <TradingHours branch={branch} now={now} className="mt-4 border-t border-line pt-3" />
+          <TradingHours
+            branch={branch}
+            now={now}
+            demonstration={isDemonstration}
+            className="mt-4 border-t border-line pt-3"
+          />
 
           {branchCount > 1 ? (
             <a href="#branches-heading" className="rn-link-arrow mt-4">
@@ -296,7 +322,12 @@ export function BranchCard({ dealer, branch, now }: { dealer: Dealer; branch: Br
           <ContactActions dealer={dealer} branch={branch} compact />
         </div>
       )}
-      <TradingHours branch={branch} now={now} className="mt-4 border-t border-line pt-3" />
+      <TradingHours
+        branch={branch}
+        now={now}
+        demonstration={isDemonstration}
+        className="mt-4 border-t border-line pt-3"
+      />
     </article>
   );
 }

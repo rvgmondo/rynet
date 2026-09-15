@@ -15,6 +15,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { IconTile } from "@/components/ui/icon-tile";
+import { PageHeader } from "@/components/ui/page-header";
 import { COMPANY } from "@/content/company";
 
 export const metadata: Metadata = {
@@ -36,8 +38,9 @@ export const metadata: Metadata = {
  * vehicle and a dealership; a general one would be a second surface to rate-limit, spam-check
  * and monitor, for no gain over an email address.
  *
- * SHOWROOM. The routes are cards grouped by who is asking, with the address as the largest and
- * clearest thing on each card, in normal case, because it is the one thing anybody came for.
+ * SHOWROOM. The routes are a routing table grouped by who is asking: one panel per group, a ruled
+ * row per route, and the address in the same column on every row, because it is the one thing
+ * anybody came for.
  */
 
 type Route = {
@@ -136,17 +139,13 @@ export default function ContactPage() {
     <>
       <Breadcrumbs trail={[{ href: "/contact", label: "Contact" }]} />
 
-      <section aria-labelledby="contact-heading" className="border-b border-line bg-card">
-        <div className="container-page py-10 sm:py-14 lg:py-16">
-          <p className="rn-eyebrow">Contact</p>
-          <h1 id="contact-heading" className="rn-h1 mt-3">
-            How can we help?
-          </h1>
-          <p className="rn-lead mt-4 max-w-2xl">
-            Pick the route that fits and your message goes straight to the person who deals with it.
-          </p>
-
-          <nav aria-label="Contact routes" className="mt-8">
+      <PageHeader
+        id="contact-heading"
+        eyebrow="Contact"
+        title="How can we help?"
+        lead="Pick the route that fits and your message goes straight to the person who deals with it."
+        actions={
+          <nav aria-label="Contact routes">
             <ul className="flex flex-wrap gap-2">
               {GROUPS.map((group) => (
                 <li key={group.id}>
@@ -157,47 +156,53 @@ export default function ContactPage() {
               ))}
             </ul>
           </nav>
-        </div>
-      </section>
+        }
+      />
 
-      <div className="container-page space-y-14 py-[var(--section-base)]">
+      <div className="container-page space-y-10 py-[var(--section-base)] lg:space-y-14">
         {GROUPS.map((group) => (
-          <section key={group.id} id={group.id} aria-labelledby={`${group.id}-heading`}>
-            <h2 id={`${group.id}-heading`} className="rn-h3">
+          <section
+            key={group.id}
+            id={group.id}
+            aria-labelledby={`${group.id}-heading`}
+            className="grid scroll-mt-24 gap-5 lg:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] lg:gap-12"
+          >
+            <h2 id={`${group.id}-heading`} className="rn-h3 lg:pt-7">
               {group.title}
             </h2>
-            <ul
-              className={`mt-5 grid gap-4 ${group.routes.length === 3 ? "md:grid-cols-2 lg:grid-cols-3" : "md:grid-cols-2"}`}
-            >
+            {/*
+              A routing table rather than a wall of cards: one panel per group, a ruled row per
+              route. From 1024px each row reads across, who it is for, what to send, and the
+              address, so the address sits in the same place on every row.
+            */}
+            <ul className="rn-panel divide-y divide-line">
               {group.routes.map((route) => (
-                <li key={route.id} id={route.id} className="rn-card flex flex-col p-6">
-                  <span
-                    aria-hidden="true"
-                    className="grid size-11 place-items-center rounded-sm bg-subtle text-heading"
-                  >
-                    <route.icon className="size-5" />
-                  </span>
-                  <h3 className="mt-5 text-lg font-semibold">{route.title}</h3>
-                  <p className="mt-2 flex-1 text-sm text-body">{route.body}</p>
-
-                  <div className="mt-5 border-t border-line pt-4">
+                <li
+                  key={route.id}
+                  id={route.id}
+                  className="grid scroll-mt-24 gap-3 p-5 sm:p-6 lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_minmax(0,16rem)] lg:items-start lg:gap-8 lg:px-7"
+                >
+                  <div className="flex items-center gap-4">
+                    <IconTile icon={route.icon} />
+                    <h3 className="text-lg leading-snug font-semibold">{route.title}</h3>
+                  </div>
+                  <p className="text-body lg:pt-2.5 lg:text-[0.9375rem]">{route.body}</p>
+                  <div className="flex flex-col items-start lg:pt-1">
                     <a
                       href={`mailto:${route.email}`}
-                      className="inline-flex min-h-11 max-w-full items-center gap-2 break-all text-base font-semibold text-accent underline decoration-1 underline-offset-4 hover:text-accent-hover"
+                      className="rn-link inline-flex min-h-11 max-w-full items-center gap-2 break-all text-base"
                     >
                       <Mail aria-hidden="true" className="size-4 shrink-0" />
                       {route.email}
                     </a>
                     {route.link ? (
-                      <div>
-                        <Link
-                          href={route.link.href}
-                          className="rn-link-arrow min-h-11 whitespace-normal"
-                        >
-                          {route.link.label}
-                          <ArrowRight aria-hidden="true" />
-                        </Link>
-                      </div>
+                      <Link
+                        href={route.link.href}
+                        className="rn-link-arrow min-h-11 text-sm whitespace-normal"
+                      >
+                        {route.link.label}
+                        <ArrowRight aria-hidden="true" />
+                      </Link>
                     ) : null}
                   </div>
                 </li>
@@ -236,7 +241,7 @@ export default function ContactPage() {
                 {COMPANY.phone ? (
                   <a
                     href={`tel:${COMPANY.phone.replace(/[^0-9+]/g, "")}`}
-                    className="inline-flex min-h-11 items-center font-semibold text-heading underline underline-offset-4 tabular"
+                    className="rn-link inline-flex min-h-11 items-center tabular"
                   >
                     {COMPANY.phone}
                   </a>

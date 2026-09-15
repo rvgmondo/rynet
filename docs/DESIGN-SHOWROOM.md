@@ -60,15 +60,15 @@ Brand: navy `#001123`, red `#E32432`, silver `#B1B4BB`.
 
 | Role | Token | Tailwind | Light | Dark |
 |---|---|---|---|---|
-| Page ground | `--rn-page` | `bg-page` | `#F5F7FA` | `#081629` |
-| Card, header, input | `--rn-card` | `bg-card` | `#FFFFFF` | `#0F2139` |
-| Tinted panel, chip, placeholder | `--rn-subtle` | `bg-subtle` | `#EEF2F6` | `#0B1B31` |
-| Navy band (footer), both themes | `--rn-navy` | `bg-navy` or `.on-navy` | `#001123` | `#040F1E` |
+| Page ground | `--rn-page` | `bg-page` | `#F5F7FA` | `#0A1A30` |
+| Card, header, input | `--rn-card` | `bg-card` | `#FFFFFF` | `#112642` |
+| Tinted panel, chip, placeholder | `--rn-subtle` | `bg-subtle` | `#EEF2F6` | `#0D203A` |
+| Navy band (hero, footer), darker than the page in dark | `--rn-navy` | `bg-navy` or `.on-navy` | `#001123` | `#030B17` |
 | Heading ink | `--rn-heading` | `text-heading` | `#001123` | `#F3F6FA` |
 | Body ink | `--rn-body` | `text-body` | `#26324A` | `#D3DBE6` |
 | Muted ink (4.5:1 on every ground) | `--rn-muted` | `text-muted` | `#5B6678` | `#9DABBF` |
-| Decorative line | `--rn-line` | `border-line` | `#E3E8EF` | `#1C3150` |
-| Stronger decorative line | `--rn-line-strong` | `border-line-strong` | `#CDD5DF` | `#2A4163` |
+| Decorative line | `--rn-line` | `border-line` | `#E3E8EF` | `#1F3657` |
+| Stronger decorative line | `--rn-line-strong` | `border-line-strong` | `#CDD5DF` | `#2D4668` |
 | Control border (3:1) | `--rn-line-control` | `border-line-control` | `#748196` | `#6F819C` |
 | Primary action fill | `--rn-primary` | `bg-primary` | `#C81E2B` | `#C81E2B` |
 | Secondary action fill | `--rn-secondary` | `bg-secondary` | `#001123` | `#24426B` |
@@ -95,9 +95,9 @@ preloaded on dynamic routes by `src/lib/font-preload.ts`. No serif, no width axi
 
 | Role | Class | Size | Weight | Notes |
 |---|---|---|---|---|
-| Page title | `.rn-h1` | 32 to 48px | 700 | tracking -0.022em, balanced |
-| Section title | `.rn-h2` | 28 to 40px | 700 | |
-| Sub-section, card group | `.rn-h3` | 20 to 24px | 600 | |
+| Page title | `.rn-h1` | 34 to 56px | 700 | tracking -0.018em, balanced |
+| Section title | `.rn-h2` | 24 to 32px | 600 | tracking -0.012em; about 1.75 below the page title, so sections never shout as loud as it |
+| Sub-section, card and item title | `.rn-h3` | 18 to 20px | 600 | tracking -0.006em, `text-wrap: pretty` |
 | Lead paragraph | `.rn-lead` | 17 to 20px | 400 | |
 | Body | (default) | 16px / 1.55 | 400 | |
 | Small | `text-sm` | 14px | 400 to 600 | |
@@ -136,7 +136,10 @@ All in `src/components/ui/` (barrel: `@/components/ui`). None is a client compon
 | `Container` | 1280px or `size="narrow"`. |
 | `Field` + `Input`, `Textarea`, `Select`, `Checkbox`, `Radio`, `Choice` | Field wires label, id, hint, error, `aria-describedby`, `aria-invalid`. Controls are 44px, 16px text, native. |
 | `SectionHeader` | eyebrow, title (h2 by default), lead, and an arrow link action. |
-| `PriceTag` | the price. `RandFigure` in `components/vehicles` delegates to it. |
+| `PageHeader` | the opening band of a content page: eyebrow, H1, lead, `meta` (date, legal marker), `actions`, optional `aside`. From 1024px it is split (title left, lead and actions right) or, with an aside, title and lead left and real content right. The right half of the band is never empty. Used by /contact, /dealers and every legal document. |
+| `TextLink` | the two link styles and the only two: `action` (red words and an arrow, `.rn-link-arrow`, a section's next step) and `inline` (heading ink, semibold, a quiet underline that turns red on hover, `.rn-link`, for links in sentences, notices, captions, cards, forms and email addresses). Copy nobody marks up (a legal document, a dealer's description) gets `.rn-links` on its container. |
+| `IconTile` | the one icon tile: 44px, 12px radius, tinted ground, heading ink icon; `size="lg"` is 48px; raised navy inside `.on-navy`. `.rn-icon-tile` for markup that maps icons itself. |
+| `PriceTag` | the price. `RandFigure` in `components/vehicles` delegates to it. Every figure from `formatRand`, `formatMonthly`, `formatKm` and `formatCc` joins its parts with no-break spaces, so "R 1 020 800" or "103 900 km" never breaks across lines anywhere; compare with `plain()` in tests. |
 | `KeyFacts` | icon, label, value. `inline` on cards, `grid` on listings. |
 | `EmptyState` | icon, title, body, one action. |
 | `Notice` | `info`, `warning`, `neutral`. `role="note"`. The demonstration disclosure is an info Notice. |
@@ -150,10 +153,13 @@ Brand: `RynetMark` (the R and gauge) and `RynetLockup` (mark, red divider, RYNET
 
 - **Header** (`site-header.tsx`): white, sticky, 64px, 1px line and a whisper of shadow. Lockup;
   Buy a car, Dealerships, How we verify with `aria-current` and a red underline; a compact search
-  from 1280px (hidden on / and /cars); For dealers; the red "Sell your car" button to
-  `/sell-to-a-dealer`. Below 1024px a full-height sheet (native `<details>`, closes on navigation,
-  Escape and scrim tap, locks page scroll) with search, the destinations, the primary action and the
-  theme switch.
+  from 1280px (hidden on / and /cars); "Sell your car" and "For dealers" as quiet links. No red
+  button: red is spent on each page's own action. Below 1024px the bar is the lockup, a search
+  button (a link to /cars that opens the menu with its search focused once hydrated) and the menu:
+  a full-height sheet (native `<details>`, closes on navigation, Escape and scrim tap, locks page
+  scroll) with search, the destinations, quick searches by body type, make and price, one outline
+  "Sell your car to a dealership" (not shown on that page) and the theme switch. Below 1024px the
+  header slides away on scroll down and returns on scroll up (`header-scroll.tsx`).
 - **Footer** (`site-footer.tsx`): navy in both themes. Lockup and a how-it-works line, three link
   columns, quick searches as chips from 768px, copyright, the dealer-supplied-prices disclaimer, the
   company identity line only when every part of it is real, and the theme switch.
@@ -168,19 +174,20 @@ Brand: `RynetMark` (the R and gauge) and `RynetLockup` (mark, red divider, RYNET
 
 - White card, 12px radius, soft shadow, 2px lift on hover. The title link's `::after` covers the card.
 - 16:10 photograph from the "card" rendition, `object-fit: cover`, `object-position: 50% 55%`,
-  gently scales on hover. Photo count chip bottom right. `Demo listing` badge (and New or Ex-demo)
-  top left.
+  gently scales on hover. Photo count chip bottom right. `Demo listing` badge top left, and
+  nothing else on the photograph: New or Ex-demo is a badge beside the price.
 - Price first (`PriceTag md`). A reduction is a green `Reduced by R 13 400` badge, never a negative.
 - Title: year, make and model in semibold, variant in muted, clamped to two lines, model codes kept
   whole.
-- Key facts: year, mileage, transmission, fuel, as icon and value; 2 by 2 in a narrow card, one row
-  from 352px of card.
+- Key facts: year, mileage, transmission ("Auto" on cards), fuel, as icon and value; always 2 by 2.
 - Foot: dealership name (truncates first) and town. The verified check renders only for a real
   dealership.
 - Grid: one up on a phone, two from 560px, three beside a filter rail, four on a full-width page.
   Only the first card of a page is `priority`.
-- No photograph: `ColourPlate` (same file name, new drawing) is a light panel with a car silhouette,
-  the recorded colour swatch and name, and "Photos coming soon". Variants `card`, `hero`, `thumb`.
+- No photograph: `ColourPlate` (same file name, new drawing) is a light panel washed with the
+  recorded paint colour, a line drawing of the body type (bakkie, SUV, hatchback, sedan) and "Photos
+  coming soon". Variants `card`, `hero` (which also names the colour), `thumb`. In a one-column phone
+  grid a photo-less card's media is a short 16:7 band.
 
 ## 9. Retiring STOCKLIST
 

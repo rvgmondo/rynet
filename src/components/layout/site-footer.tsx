@@ -83,15 +83,11 @@ export function SiteFooter() {
   const identity = companyIdentityLine();
 
   return (
-    <footer className="on-navy">
+    <footer className="on-navy border-t border-line-on-navy">
       <div className="container-page pt-12 pb-8 md:pt-16">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)] lg:gap-16">
           <div className="max-w-sm">
-            <Link
-              href="/"
-              aria-label="Rynet Showroom, home"
-              className="-ml-1 inline-flex rounded-md p-1"
-            >
+            <Link href="/" aria-label="Rynet, home" className="-ml-1 inline-flex rounded-md p-1">
               <RynetLockup tone="on-navy" className="h-7 w-auto" />
             </Link>
             <p className="mt-5 text-[0.9375rem] leading-relaxed text-on-navy-muted">

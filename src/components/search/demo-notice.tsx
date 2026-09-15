@@ -5,9 +5,11 @@ import { Notice } from "@/components/ui/notice";
  *
  * Every listing on the platform today is seeded example data, and so is every dealership behind
  * one. Each card already carries a quiet "Demo listing" badge; this says what that means, once,
- * above the first car, in two sentences a buyer can read in the time it takes to scroll. It
- * disappears on its own for a set with no demonstration listings in it, and it names the share
- * when real and seeded stock are mixed. It is never removed while a demonstration listing is shown.
+ * above the first car. The fact itself (demo listings, nothing here for sale) is in the title and
+ * always visible; the why folds behind a native disclosure, because the full paragraph ran five
+ * lines on a phone and read as the page's headline. It disappears on its own for a set with no
+ * demonstration listings in it, and it names the share when real and seeded stock are mixed. It is
+ * never removed while a demonstration listing is shown.
  *
  * The photograph caveat lives here too, because on a results page it is the same fact: a seeded
  * listing's photographs are of the model, not of a car that exists.
@@ -25,21 +27,27 @@ export function DemoNotice({
 
   if (demo === total) {
     return (
-      <Notice title="These are demo listings" className={className}>
-        Every car and dealership on this page is example data that shows how Rynet works, so nothing
-        here is for sale. Photos show the model, not the individual car.
+      <Notice
+        compact
+        title="These are demo listings. Nothing here is for sale."
+        details="Why these are examples"
+        className={className}
+      >
+        Every car and dealership on this page is example data that shows how Rynet works. Photos
+        show the model, not the individual car.
       </Notice>
     );
   }
 
   return (
     <Notice
-      title={`${demo.toLocaleString("en-ZA")} of these ${total.toLocaleString("en-ZA")} listings are demos`}
+      compact
+      title={`${demo.toLocaleString("en-ZA")} of these ${total.toLocaleString("en-ZA")} listings are demos, and those are not for sale.`}
+      details="What that means"
       className={className}
     >
-      Demo listings and their dealerships are example data that shows how Rynet works, and are not
-      for sale. Each one carries a Demo listing badge, and its photos show the model, not the
-      individual car.
+      Demo listings and their dealerships are example data that shows how Rynet works. Each one
+      carries a Demo listing badge, and its photos show the model, not the individual car.
     </Notice>
   );
 }

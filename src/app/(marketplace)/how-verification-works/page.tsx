@@ -1,12 +1,12 @@
 import config from "@payload-config";
-import { ArrowRight, CircleX, Flag, Mail, ShieldCheck, Store } from "lucide-react";
+import { ArrowRight, BadgeCheck, CircleX, Flag, Mail, ShieldCheck, Store } from "lucide-react";
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { getPayload } from "payload";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
-import { Badge, Notice } from "@/components/ui";
+import { Notice } from "@/components/ui";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { VERIFICATION_CHECKS } from "@/content/verification-checks";
 
@@ -146,11 +146,13 @@ export default async function HowVerificationWorksPage() {
 
             {showNotice ? (
               <Notice
+                compact
                 title={
                   allDemonstration
-                    ? "Every dealership on Rynet today is a demonstration"
-                    : "About the Demo dealership badge"
+                    ? "Every dealership on Rynet today is a demonstration, not a verified business."
+                    : "A Demo dealership has not been through these checks."
                 }
+                details="What that means"
                 className="mt-8 max-w-2xl"
               >
                 {allDemonstration
@@ -174,13 +176,22 @@ export default async function HowVerificationWorksPage() {
           </div>
 
           {/*
-            A specimen of the badge, drawn in HTML, with what each part of it stands for. It is
-            labelled as a specimen twice, in the eyebrow and in the caption, because it shows the
-            verified badge on a business that does not exist.
+            A specimen of a dealership listing, drawn in HTML, with what the verified badge stands
+            for. It sits in a dashed frame marked Example, and the caption says it is not a real
+            dealership before anything else. The badge itself is drawn as a grey dashed outline
+            that names itself an example, never the green stamp: on a page whose notice says no
+            dealership is verified yet, a green "Verified dealership" is the one thing a skimming
+            buyer would take away.
           */}
-          <figure className="min-w-0">
+          <figure className="relative min-w-0 rounded-lg border-2 border-dashed border-line-control p-3 pt-5 sm:p-4 sm:pt-6">
+            <span className="absolute -top-3 left-4 rounded-full bg-page px-2.5 text-xs font-semibold text-heading ring-1 ring-line-control">
+              Example
+            </span>
+            <figcaption className="mb-3 px-1 text-base font-medium text-heading">
+              Specimen. Not a real dealership.
+            </figcaption>
             <div className="rn-panel p-5 sm:p-6">
-              <p className="rn-eyebrow">Specimen</p>
+              <p className="rn-eyebrow">What a verified badge stands for</p>
               <div className="mt-4 flex flex-wrap items-center gap-4 rounded-md border border-line bg-page p-4">
                 <span
                   aria-hidden="true"
@@ -192,7 +203,10 @@ export default async function HowVerificationWorksPage() {
                   <p className="font-semibold text-heading">Specimen Motors</p>
                   <p className="text-sm text-muted">A town, a province</p>
                 </div>
-                <Badge tone="verified">Verified dealership</Badge>
+                <span className="rn-badge border border-dashed border-line-control bg-transparent text-body">
+                  <BadgeCheck aria-hidden="true" />
+                  Example of the verified badge
+                </span>
               </div>
 
               <ol className="mt-5 space-y-3.5">
@@ -213,9 +227,6 @@ export default async function HowVerificationWorksPage() {
                 ))}
               </ol>
             </div>
-            <figcaption className="mt-3 text-sm text-muted">
-              Specimen. Not a real dealership.
-            </figcaption>
           </figure>
         </div>
       </section>
@@ -232,27 +243,41 @@ export default async function HowVerificationWorksPage() {
           </p>
         </div>
 
-        <ol className="mt-8 grid gap-4 md:grid-cols-2">
+        {/*
+          The four checks as the path a dealership takes, not four cards: numbered stops joined by
+          a line from 1024px, a ruled list below that. The number is the order; the icon says
+          what is looked at.
+        */}
+        <ol className="mt-8 grid border-t border-line md:grid-cols-2 md:gap-x-10 lg:mt-10 lg:grid-cols-4 lg:gap-x-8 lg:border-t-0">
           {CHECKS.map(({ icon: Icon, title, body }, index) => (
-            <li key={title} className="rn-card p-6 sm:p-7">
-              <div className="flex items-center justify-between gap-4">
+            <li
+              key={title}
+              className="relative flex gap-5 border-b border-line py-6 lg:flex-col lg:gap-0 lg:border-b-0 lg:py-0"
+            >
+              {index < CHECKS.length - 1 ? (
                 <span
                   aria-hidden="true"
-                  className="grid size-12 place-items-center rounded-sm bg-subtle text-heading"
-                >
-                  <Icon className="size-6" />
-                </span>
-                <span className="text-sm font-semibold text-muted tabular">
-                  Check {index + 1} of {CHECKS.length}
-                </span>
+                  className="absolute top-6 left-14 hidden h-px w-[calc(100%-2rem)] bg-line-strong lg:block"
+                />
+              ) : null}
+              <span
+                aria-hidden="true"
+                className="relative grid size-12 shrink-0 place-items-center rounded-full bg-secondary text-base font-semibold text-on-secondary tabular"
+              >
+                {index + 1}
+              </span>
+              <div className="min-w-0 lg:mt-6">
+                <div className="flex items-start gap-2.5">
+                  <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted" />
+                  <h3 className="rn-h3">{title}</h3>
+                </div>
+                <p className="mt-2 text-body">{body}</p>
               </div>
-              <h3 className="mt-5 text-xl font-semibold">{title}</h3>
-              <p className="mt-2 text-body">{body}</p>
             </li>
           ))}
         </ol>
 
-        <div className="rn-card mt-4 gap-6 p-6 sm:p-7 lg:flex-row lg:gap-12">
+        <div className="rn-card mt-8 gap-6 p-6 sm:p-7 lg:mt-12 lg:flex-row lg:gap-12">
           <div className="min-w-0 lg:w-72 lg:shrink-0">
             <h3 className="text-xl font-semibold">What a dealership&apos;s record holds</h3>
             <p className="mt-2 text-sm text-body">
@@ -322,10 +347,7 @@ export default async function HowVerificationWorksPage() {
       <section aria-labelledby="report-heading" className="container-page py-[var(--section-base)]">
         <div className="rn-card flex flex-col gap-6 p-6 sm:p-8 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 gap-4">
-            <span
-              aria-hidden="true"
-              className="grid size-12 shrink-0 place-items-center rounded-sm bg-subtle text-heading"
-            >
+            <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
               <Flag className="size-6" />
             </span>
             <div className="min-w-0">

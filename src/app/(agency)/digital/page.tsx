@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import { AgencyClose } from "@/components/agency/agency-close";
 import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
-import { GaugeMotif } from "@/components/agency/gauge-motif";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
 import { StageSteps } from "@/components/agency/stage-steps";
@@ -20,17 +19,17 @@ export const metadata: Metadata = {
 };
 
 /*
- * Rendered on demand, because the browser frame shows real Showroom listings from a database
+ * Rendered on demand, because the browser frame shows real marketplace listings from a database
  * that does not exist during `next build`. The listings are cached on the data (see
  * showroom-sample.ts), so this costs one cached read per request.
  */
 export const dynamic = "force-dynamic";
 
 /*
- * What Rynet Showroom lets a dealer check for themselves, as outcomes for a dealership rather
+ * What the Rynet marketplace lets a dealer check for themselves, as outcomes for a dealership rather
  * than as build notes. Each has a place to check it. Search engine markup is deliberately not in
  * the list: structured data is withheld from demonstration listings, so there is nothing on
- * Showroom today that would prove it.
+ * the marketplace today that would prove it.
  */
 const PROOF = [
   {
@@ -57,7 +56,7 @@ const PROOF = [
   {
     icon: BadgeInfo,
     title: "Honest about what is not real",
-    body: "Every listing on Showroom today is demonstration data, and every card and page says so. Your site gets the same care.",
+    body: "Every listing on the marketplace today is demonstration data, and every card and page says so. Your site gets the same care.",
     href: "/cars",
     link: "See the labels",
   },
@@ -95,27 +94,27 @@ const FIT = [
  *
  * Rynet Digital has no clients yet, so the usual furniture of an agency home page (logo wall,
  * testimonials, case study numbers) is unavailable, and inventing any of it is out of the
- * question. The proof is Rynet Showroom: real, on the same domain, and shown here as itself in a
+ * question. The proof is the Rynet marketplace: real, on the same domain, and shown here as itself in a
  * browser frame with live listings, clearly labelled as demonstration data.
  *
- * Order: the outcome and the terms, the working example, the seven services as cards, the five
- * steps, who it suits and who it does not, then the offer.
+ * Order: the outcome and the terms, the working example (four numbered checks under one rule), the
+ * seven services as a ruled index, the five steps, who it suits and who it does not (one split
+ * panel), then the offer. Each section has its own shape on purpose, so the page never repeats
+ * one icon-card module down its length.
  */
 export default async function AgencyHomePage() {
   const cards = await getShowroomSample(2);
 
   return (
     <>
-      <section className="relative overflow-hidden bg-navy">
-        <GaugeMotif className="-top-40 -right-40 hidden w-[44rem] opacity-40 lg:block" />
-
+      <section className="relative overflow-hidden border-b border-line-on-navy bg-navy">
         <div className="container-page relative grid gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-14 lg:py-20 xl:gap-20">
           <div className="on-navy">
             <p className="rn-eyebrow text-on-navy-muted">For South African car dealerships</p>
-            <h1 className="rn-h1 mt-4 text-display">Turn your stock into test drives.</h1>
+            <h1 className="rn-h1 mt-4">Turn your stock into test drives.</h1>
             <p className="mt-5 max-w-xl text-[1.0625rem] leading-relaxed sm:text-lg">
-              Dealership websites, stock feeds and advertising, built by the team behind Rynet
-              Showroom. We work with car dealerships and nobody else, and you own everything we
+              Dealership websites, stock feeds and advertising, built by the team behind the Rynet
+              marketplace. We work with car dealerships and nobody else, and you own everything we
               build.
             </p>
 
@@ -155,44 +154,56 @@ export default async function AgencyHomePage() {
             id="proof-heading"
             eyebrow="The working example"
             title="Judge us on a site you can open right now"
-            lead="Rynet Showroom is the marketplace on this domain, and we built it. Everything below is something you can check on it in the next five minutes."
+            lead="The Rynet marketplace is on this domain, and we built it. Everything below is something you can check on it in the next five minutes."
           />
 
-          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
+          <div className="mt-10 grid gap-10">
             <ShowroomFrame cards={cards} className="lg:hidden" />
 
-            <div className="rounded-lg border border-line bg-subtle p-6 sm:p-8 lg:order-2 lg:self-start">
-              <h3 className="rn-h3">We have not done this for you yet</h3>
-              <p className="mt-3 text-body">
-                Rynet Digital is new, so there are no client logos, testimonials or case studies
-                here. Inventing them would be the easiest thing on this site to do, and the fastest
-                way to lose the dealer who checks.
-              </p>
-              <p className="mt-3 text-body">
-                What we can show you is what we built for ourselves. When there is client work to
-                show, it will be here, with the dealership&apos;s permission and real numbers.
-              </p>
-              <Link href="/cars" className="rn-link-arrow mt-5">
-                Open Rynet Showroom
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </div>
-
-            <ul className="grid gap-4 sm:grid-cols-2 lg:order-1">
-              {PROOF.map((item) => (
-                <li key={item.title} className="flex flex-col rounded-md border border-line p-5">
-                  <span className="flex size-10 items-center justify-center rounded-md bg-subtle text-heading">
-                    <item.icon aria-hidden="true" className="size-5" />
-                  </span>
-                  <h3 className="mt-4 text-base font-semibold text-heading">{item.title}</h3>
-                  <p className="mt-1.5 text-sm text-body">{item.body}</p>
+            {/*
+              Four things to check, numbered under one rule, with no card chrome: they are claims
+              to test, not tiles to click, and the link under each is where to test it.
+            */}
+            <ol className="grid gap-x-10 border-t-2 border-heading sm:grid-cols-2 lg:grid-cols-4">
+              {PROOF.map((item, index) => (
+                <li
+                  key={item.title}
+                  className="flex flex-col border-b border-line py-6 lg:border-b-0 lg:pt-7 lg:pb-0"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <span aria-hidden="true" className="text-sm font-semibold text-muted tabular">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <item.icon aria-hidden="true" className="size-5 text-muted" />
+                  </div>
+                  <h3 className="rn-h3 mt-4">{item.title}</h3>
+                  <p className="mt-2 text-body">{item.body}</p>
                   <Link href={item.href} className="rn-link-arrow mt-auto self-start pt-4">
                     {item.link}
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 </li>
               ))}
-            </ul>
+            </ol>
+
+            <div className="grid gap-4 rounded-lg bg-subtle p-6 sm:p-8 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)_auto] lg:items-center lg:gap-12 lg:px-10">
+              <h3 className="rn-h3">We have not done this for you yet</h3>
+              <div className="space-y-3 text-body">
+                <p>
+                  Rynet Digital is new, so there are no client logos, testimonials or case studies
+                  here. Inventing them would be the easiest thing on this site to do, and the
+                  fastest way to lose the dealer who checks.
+                </p>
+                <p>
+                  What we can show you is what we built for ourselves. When there is client work to
+                  show, it will be here, with the dealership&apos;s permission and real numbers.
+                </p>
+              </div>
+              <Link href="/cars" className="rn-link-arrow self-start lg:self-center">
+                Open the marketplace
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -206,47 +217,48 @@ export default async function AgencyHomePage() {
             action={{ href: "/digital/services", label: "All services" }}
           />
 
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/*
+            An index, not a wall of cards: one ruled row per service, two columns from 1024px, the
+            whole row the link. The last row is the way in for somebody who does not know which.
+          */}
+          <ul className="mt-6 grid border-t border-line sm:mt-10 lg:grid-cols-2 lg:gap-x-12">
             {SERVICES.map((service) => (
-              <li key={service.slug} className="flex">
-                <article className="rn-card rn-card--interactive p-6">
-                  <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-on-secondary">
-                    <service.Icon aria-hidden="true" className="size-5" />
-                  </span>
-                  <h3 className="mt-5 text-lg font-semibold text-heading">
+              <li
+                key={service.slug}
+                className="group relative flex items-start gap-4 border-b border-line py-5 sm:gap-5 sm:py-6"
+              >
+                <span className="rn-icon-tile">
+                  <service.Icon aria-hidden="true" className="size-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-semibold text-heading sm:text-lg">
                     <Link
                       href={`/digital/services/${service.slug}`}
-                      className="after:absolute after:inset-0 after:rounded-md focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-[color:var(--rn-focus-ring)] focus-visible:after:outline-solid"
+                      className="transition-colors duration-[var(--duration-micro)] group-hover:text-accent after:absolute after:inset-0 after:rounded-sm focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-[color:var(--rn-focus-ring)] focus-visible:after:outline-solid"
                     >
                       {service.name}
                     </Link>
                   </h3>
-                  <p className="mt-2 text-sm text-body">{service.summary}</p>
-                  <span aria-hidden="true" className="rn-link-arrow mt-auto pt-5 text-heading">
-                    Learn more
-                    <ArrowRight />
-                  </span>
-                </article>
+                  <p className="mt-1 text-sm text-body sm:text-[0.9375rem]">{service.summary}</p>
+                </div>
+                <ArrowRight
+                  aria-hidden="true"
+                  className="mt-3 size-5 shrink-0 text-muted transition-transform duration-[var(--duration-micro)] group-hover:translate-x-0.5 group-hover:text-accent motion-reduce:transition-none"
+                />
               </li>
             ))}
-            <li className="flex">
-              <div className="on-navy flex w-full flex-col rounded-md p-6">
-                <h3 className="text-lg font-semibold">Not sure which you need?</h3>
-                <p className="mt-2 text-sm">
-                  Most dealerships need three or four of these, and nobody needs all seven on day
-                  one. The free review tells you where to start.
-                </p>
-                <Link
-                  href={REVIEW_CTA.href}
-                  className={buttonClasses({
-                    variant: "primary",
-                    size: "sm",
-                    className: "mt-auto self-start",
-                  })}
-                >
-                  {REVIEW_CTA.label}
-                </Link>
-              </div>
+            <li className="flex flex-col justify-center gap-2 border-b border-line py-5 sm:py-6">
+              <h3 className="text-base font-semibold text-heading sm:text-lg">
+                Not sure which you need?
+              </h3>
+              <p className="text-sm text-body sm:text-[0.9375rem]">
+                Most dealerships need three or four of these, and nobody needs all seven on day one.
+                The free review tells you where to start.
+              </p>
+              <Link href={REVIEW_CTA.href} className="rn-link-arrow mt-1 self-start">
+                {REVIEW_CTA.label}
+                <ArrowRight aria-hidden="true" />
+              </Link>
             </li>
           </ul>
         </div>
@@ -276,16 +288,23 @@ export default async function AgencyHomePage() {
             lead="Being wrong about this wastes your time and ours, so here it is plainly."
           />
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-2">
-            {FIT.map((column) => (
-              <div key={column.heading} className="rn-card p-6 sm:p-8">
+          {/*
+            One panel split down the middle rather than two cards: the halves are one answer to one
+            question, and the second is tinted so "probably not" reads as the other side of it.
+          */}
+          <div className="rn-panel mt-6 grid overflow-hidden sm:mt-10 lg:grid-cols-2">
+            {FIT.map((column, index) => (
+              <div
+                key={column.heading}
+                className={`p-6 sm:p-8 lg:p-10 ${index === 1 ? "border-t border-line bg-subtle lg:border-t-0 lg:border-l" : ""}`}
+              >
                 <h3 className="rn-h3">{column.heading}</h3>
                 <ul className="mt-5 space-y-4">
                   {column.items.map((item) => (
                     <li key={item} className="flex gap-3 text-body">
                       <span
                         aria-hidden="true"
-                        className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ${column.tone}`}
+                        className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full ${index === 1 ? "bg-card text-muted" : column.tone}`}
                       >
                         <column.icon className="size-3.5" />
                       </span>

@@ -46,6 +46,30 @@ export default function ProcessPage() {
         eyebrow="How we work"
         title="Five stages, and you know your part in each"
         lead="The first stage is free and the second ends with a figure in writing. What you have to do at each stage is listed too, because that is usually the part nobody mentions until it is late."
+        aside={
+          <ol aria-label="The five stages at a glance" className="relative grid gap-4">
+            {STAGES.map((stage, index) => (
+              <li key={stage.name} className="relative flex items-start gap-4">
+                {index < STAGES.length - 1 ? (
+                  <span
+                    aria-hidden="true"
+                    className="absolute top-9 bottom-[-1rem] left-[1.0625rem] w-px bg-line-strong"
+                  />
+                ) : null}
+                <span
+                  aria-hidden="true"
+                  className="relative grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-on-secondary tabular"
+                >
+                  {index + 1}
+                </span>
+                <span className="min-w-0 pt-1.5">
+                  <span className="block font-semibold text-heading">{stage.name}</span>
+                  <span className="mt-0.5 block text-sm text-muted">{stage.short}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        }
       />
 
       <section aria-labelledby="stages-heading" className="py-[var(--section-base)]">
@@ -59,7 +83,7 @@ export default function ProcessPage() {
                 <div className="flex flex-col items-center">
                   <span
                     aria-hidden="true"
-                    className={`flex size-11 shrink-0 items-center justify-center rounded-full font-semibold tabular ${index === 0 ? "bg-primary text-on-primary" : "bg-secondary text-on-secondary"}`}
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary font-semibold text-on-secondary tabular"
                   >
                     {index + 1}
                   </span>
@@ -71,12 +95,14 @@ export default function ProcessPage() {
                 <article className="rn-card min-w-0 p-5 sm:p-7">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <h3 className="rn-h3">{stage.name}</h3>
-                    <Badge
-                      icon={<Clock aria-hidden="true" />}
-                      className="max-w-full whitespace-normal"
-                    >
-                      {stage.duration}
-                    </Badge>
+                    {stage.duration ? (
+                      <Badge
+                        icon={<Clock aria-hidden="true" />}
+                        className="max-w-full whitespace-normal"
+                      >
+                        {stage.duration}
+                      </Badge>
+                    ) : null}
                   </div>
                   <p className="mt-3 text-body">{stage.what}</p>
                   <div className="mt-5 flex gap-3 rounded-md bg-subtle p-4">

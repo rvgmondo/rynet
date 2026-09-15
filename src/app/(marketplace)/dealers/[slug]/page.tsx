@@ -27,10 +27,17 @@ import { Pagination } from "@/components/vehicles/pagination";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { formatRand } from "@/lib/format";
 import { relId, relName } from "@/lib/relations";
-import { PER_PAGE, SORTS, safePage, toCard } from "@/lib/search";
+import { SORTS, safePage, toCard } from "@/lib/search";
 import type { Dealer } from "@/payload-types";
 
 type Params = Promise<{ slug: string }>;
+
+/**
+ * Twelve cards a page, not the search's twenty-four. A dealership page is read on a phone one card
+ * to a row, and twenty-four made it thirteen screens long with the branches and the footer out of
+ * reach; the pagination and the body-type chips carry the rest.
+ */
+const PER_PAGE = 12;
 type Search = Promise<Record<string, string | string[] | undefined>>;
 
 const one = (value: string | string[] | undefined) =>
@@ -102,10 +109,7 @@ function RegistrationRecord({ dealer }: { dealer: Dealer }) {
       <h2 className="text-base font-semibold text-heading">Registration details</h2>
       <p className="mt-1 text-sm text-muted">
         As recorded on this dealership's Rynet account.{" "}
-        <Link
-          href="/how-verification-works"
-          className="font-semibold text-accent underline underline-offset-3 hover:text-accent-hover"
-        >
+        <Link href="/how-verification-works" className="rn-link">
           What we check before a dealership can list
         </Link>
       </p>
@@ -142,6 +146,10 @@ function RegistrationRecord({ dealer }: { dealer: Dealer }) {
  * `aggregateRating`, because no reviews have been collected. Marking up a rating that does not
  * exist is the single worst thing to publish on a trust-led platform, and Google penalises it
  * besides.
+ *
+ * From 640px a strip of four photographs from the stock on this page runs under the key facts, so
+ * the header shows what the dealership sells rather than only text. They are decorative (the
+ * cards below carry the names), lazy, and not drawn on a phone, where the cards follow at once.
  *
  * PERFORMANCE. No image is preloaded. On a phone the whole first screen is text, so the headline
  * is the largest paint, and preloading a card photograph below the fold would only compete with
@@ -248,6 +256,13 @@ export default async function DealerPage({
     depth: 2,
   });
   const cards = stock.docs.map(toCard);
+  const strip = cards
+    .map((card) => card.photo)
+    .filter(
+      (photo, index, all): photo is NonNullable<typeof photo> =>
+        Boolean(photo) && all.findIndex((other) => other?.url === photo?.url) === index,
+    )
+    .slice(0, 4);
 
   const primary = branches.docs.find((b) => b.isPrimary) ?? branches.docs[0] ?? null;
   const branchCount = branches.docs.length;
@@ -262,9 +277,14 @@ export default async function DealerPage({
             icon: Tag,
             label: "Price range",
             value:
-              minPrice === maxPrice
-                ? formatRand(minPrice)
-                : `${formatRand(minPrice)} to ${formatRand(maxPrice)}`,
+              minPrice === maxPrice ? (
+                <span className="whitespace-nowrap">{formatRand(minPrice)}</span>
+              ) : (
+                <>
+                  <span className="whitespace-nowrap">{formatRand(minPrice)}</span> to{" "}
+                  <span className="whitespace-nowrap">{formatRand(maxPrice)}</span>
+                </>
+              ),
           },
         ]
       : []),
@@ -384,10 +404,15 @@ export default async function DealerPage({
               </div>
 
               {isDemonstration ? (
-                <Notice title="Demonstration dealership" className="mt-6 max-w-3xl">
+                <Notice
+                  compact
+                  title="Demonstration dealership. Not a real business, and nothing here is for sale."
+                  details="What that means"
+                  className="mt-6 max-w-3xl"
+                >
                   This dealership is example data, created to show how a dealership page works on
-                  Rynet. It is not a real business, so it has no registration record and none of its
-                  cars is for sale. Car photographs show the model, not the individual car.
+                  Rynet, so it has no registration record. Car photographs show the model, not the
+                  individual car.
                 </Notice>
               ) : null}
 
@@ -403,6 +428,42 @@ export default async function DealerPage({
                 <h2 className="sr-only">At a glance</h2>
                 <KeyFacts items={facts} variant="grid" />
               </div>
+
+              {/*
+                On a phone and a tablet the contact panel stacks under this column, which put the
+                first car two screens down. One button straight to the stock keeps it on the first.
+              */}
+              {total > 0 ? (
+                <a
+                  href="#stock-heading"
+                  className={buttonClasses({
+                    variant: "secondary",
+                    size: "md",
+                    block: "mobile",
+                    className: "mt-6 lg:hidden",
+                  })}
+                >
+                  See their {carsCount(total)}
+                  <ArrowRight aria-hidden="true" />
+                </a>
+              ) : null}
+
+              {strip.length > 0 ? (
+                <div aria-hidden="true" className="mt-8 hidden grid-cols-4 gap-2 sm:grid">
+                  {strip.map((photo) => (
+                    <img
+                      key={photo.url}
+                      src={photo.url}
+                      alt=""
+                      width={photo.width}
+                      height={photo.height}
+                      loading="lazy"
+                      decoding="async"
+                      className="aspect-[4/3] w-full rounded-md bg-subtle object-cover"
+                    />
+                  ))}
+                </div>
+              ) : null}
 
               {isDemonstration ? null : <RegistrationRecord dealer={dealer} />}
 
@@ -431,7 +492,7 @@ export default async function DealerPage({
         className="container-page pt-[var(--section-tight)] pb-[var(--section-base)]"
       >
         <div className="max-w-3xl">
-          <h2 id="stock-heading" className="rn-h2">
+          <h2 id="stock-heading" className="rn-h2 scroll-mt-24">
             {total > 0
               ? `${carsCount(total)} at ${dealer.tradingName}`
               : `Stock at ${dealer.tradingName}`}

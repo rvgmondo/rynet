@@ -44,6 +44,10 @@ export type BodyTypeTile = {
 
 export type StockOption = { slug: string; name: string; count: number };
 export type ModelOption = StockOption & { makeSlug: string };
+/** A make with its best-stocked model names, for the make tiles. */
+export type MakeTile = StockOption & { models: string[] };
+/** A price band with the live count behind the same URL it links to. */
+export type BudgetBand = { label: string; href: string; count: number };
 export type PriceOption = { value: number; label: string };
 export type PhotoCreditLine = { subject: string; credit: string };
 
@@ -53,6 +57,9 @@ export type HomeStock = {
   bodyTypes: BodyTypeTile[];
   /** Alphabetical, for the select. */
   makes: StockOption[];
+  /** Most stocked first, each with its three best-stocked models. */
+  makeTiles: MakeTile[];
+  budgets: BudgetBand[];
   models: ModelOption[];
   prices: PriceOption[];
   /** Every Commons photograph the page shows, so the attribution the licence asks for is on it. */
@@ -76,6 +83,72 @@ function priceOptions(min: number, max: number): PriceOption[] {
   }
   return out;
 }
+
+/**
+ * Price bands for "Browse by budget". Each count uses exactly the rule /cars applies to the URL
+ * it links to (minPrice is at least, maxPrice is at most), so a tile never promises more cars than
+ * the page it opens. A band with nothing in it is left out.
+ */
+const BUDGETS: { min?: number; max?: number }[] = [
+  { max: 200_000 },
+  { min: 200_000, max: 350_000 },
+  { min: 350_000, max: 600_000 },
+  { min: 600_000 },
+];
+
+function budgetBands(prices: number[]): BudgetBand[] {
+  return BUDGETS.map(({ min, max }) => {
+    const params = new URLSearchParams();
+    if (min) params.set("minPrice", String(min));
+    if (max) params.set("maxPrice", String(max));
+    const label =
+      min && max
+        ? `${formatRand(min)} to ${formatRand(max)}`
+        : max
+          ? `Under ${formatRand(max)}`
+          : `Over ${formatRand(min ?? 0)}`;
+    const count = prices.filter((p) => (!min || p >= min) && (!max || p <= max)).length;
+    return { label, href: `/cars?${params.toString()}`, count };
+  }).filter((band) => band.count > 0);
+}
+
+/**
+ * Photographs clean enough to open the site on, in order of preference: the whole car, a plain
+ * or showroom ground, and no other company's banners or crowds behind it. Chosen by eye from the
+ * demonstration library's contact sheet. The Audi A3 on a studio plinth against a dark wall is the
+ * one true studio shot in the library, a clean front three-quarter that sits on the navy band as if
+ * it were lit for it; the white Hilux on a show stand follows. The hero is the newest live listing that leads with one
+ * of these; with none live it falls back to the newest landscape photograph, as before. When
+ * dealerships upload their own studio photography this list stops mattering.
+ */
+const HERO_PHOTOS = [
+  "demo-audi-a3--3.webp",
+  "demo-toyota-hilux--2.webp",
+  "demo-toyota-hilux--3.webp",
+  "demo-haval-h6--2.webp",
+  "demo-mahindra-xuv700--2.webp",
+  "demo-bmw-3-series--3.webp",
+];
+
+/**
+ * The same judgement for the body type tiles, which are the other large photographs on the home
+ * page: plain, studio or showroom grounds first. A tile takes the first of these its body type has
+ * live and not already on the page, and otherwise falls back to the newest photographed listing.
+ */
+const TILE_PHOTOS = [
+  "demo-mahindra-xuv700--2.webp",
+  "demo-haval-h6--2.webp",
+  "demo-kia-sonet--3.webp",
+  "demo-nissan-magnite--3.webp",
+  "demo-hyundai-i20--3.webp",
+  "demo-mercedes-benz-a-class--1.webp",
+  "demo-suzuki-swift--1.webp",
+  "demo-volkswagen-amarok--1.webp",
+  "demo-toyota-hilux--3.webp",
+  "demo-ford-ranger--2.webp",
+  "demo-bmw-3-series--2.webp",
+  "demo-mercedes-benz-c-class--1.webp",
+];
 
 /** A photograph wide enough to crop to the hero's 16:9 without losing the car. */
 const isLandscape = (photo: VehiclePhoto) => photo.width / photo.height >= 1.45;
@@ -123,6 +196,58 @@ function pickFeatured(docs: Vehicle[], used: Set<string>, limit: number, perDeal
     }
   }
   return chosen;
+}
+
+const firstFilename = (doc: Vehicle): string | null => {
+  const image = doc.gallery?.[0]?.image;
+  return image && typeof image === "object" ? (image.filename ?? null) : null;
+};
+
+type Payload = Awaited<ReturnType<typeof getPayload>>;
+
+/**
+ * Live listings that LEAD with one of `files`, ordered by that list (then newest first), so the
+ * caller can take the first that suits it. Any failure returns nothing: a preference is never a
+ * reason for the home page to fail.
+ */
+async function leadingWith(
+  payload: Payload,
+  files: readonly string[],
+  query: { depth: number; select?: Record<string, true> },
+): Promise<Vehicle[]> {
+  try {
+    const media = await payload.find({
+      collection: "media",
+      where: { filename: { in: [...files] } },
+      depth: 0,
+      pagination: false,
+      select: { filename: true },
+    });
+    if (media.docs.length === 0) return [];
+    const found = await payload.find({
+      collection: "vehicles",
+      where: { and: [LIVE, { "gallery.image": { in: media.docs.map((m) => m.id) } }] },
+      sort: "-publishedAt",
+      limit: 100,
+      depth: query.depth,
+      ...(query.select ? { select: query.select } : {}),
+    });
+    const docs = (found.docs as unknown as Vehicle[]).filter((doc) => {
+      const file = firstFilename(doc);
+      return file !== null && files.includes(file);
+    });
+    return docs.sort(
+      (a, b) =>
+        files.indexOf(firstFilename(a) as string) - files.indexOf(firstFilename(b) as string),
+    );
+  } catch {
+    return [];
+  }
+}
+
+async function cleanHero(payload: Payload): Promise<Vehicle | null> {
+  const docs = await leadingWith(payload, HERO_PHOTOS, { depth: 2 });
+  return docs.find((doc) => vehiclePhoto(doc, "gallery") !== null) ?? null;
 }
 
 async function readHomeStock(): Promise<HomeStock> {
@@ -205,13 +330,16 @@ async function readHomeStock(): Promise<HomeStock> {
     .filter((model) => model.count > 0 && model.makeSlug)
     .sort((a, b) => a.name.localeCompare(b.name, "en-ZA"));
 
-  // The hero: the newest photographed listing whose photograph is wide enough to crop well.
+  // The hero: the newest listing that leads with one of the clean photographs, else the newest
+  // photographed listing whose photograph is wide enough to crop well.
   const docs = recent.docs;
   const heroDoc =
+    (await cleanHero(payload)) ??
     docs.find((doc) => {
       const photo = vehiclePhoto(doc, "gallery");
       return photo ? isLandscape(photo) : false;
-    }) ?? docs.find((doc) => vehiclePhoto(doc, "gallery"));
+    }) ??
+    docs.find((doc) => vehiclePhoto(doc, "gallery"));
 
   const used = new Set<string>();
   const credits = new Map<string, PhotoCreditLine>();
@@ -260,8 +388,34 @@ async function readHomeStock(): Promise<HomeStock> {
     .filter((entry) => entry.count > 0)
     .sort((a, b) => b.count - a.count || a.body.name.localeCompare(b.body.name, "en-ZA"));
 
+  const cleanTiles = await leadingWith(payload, TILE_PHOTOS, {
+    depth: 1,
+    select: {
+      gallery: true,
+      make: true,
+      model: true,
+      modelYear: true,
+      variant: true,
+      bodyType: true,
+    },
+  });
+
   const bodyTypes: BodyTypeTile[] = [];
   for (const { body, count } of bodyOrder) {
+    const clean = cleanTiles.find((doc) => {
+      const photo = vehiclePhoto(doc, "card");
+      return relId(doc.bodyType) === body.id && photo !== null && !used.has(photo.url);
+    });
+    if (clean) {
+      const photo = vehiclePhoto(clean, "card");
+      if (photo) {
+        used.add(photo.url);
+        credit(clean);
+        bodyTypes.push({ slug: body.slug, name: body.name, count, photo });
+        continue;
+      }
+    }
+
     const found = await payload.find({
       collection: "vehicles",
       where: { and: [LIVE, { bodyType: { equals: body.id } }] },
@@ -284,11 +438,24 @@ async function readHomeStock(): Promise<HomeStock> {
     bodyTypes.push({ slug: body.slug, name: body.name, count, photo });
   }
 
+  const makeTiles: MakeTile[] = [...makes]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "en-ZA"))
+    .map((make) => ({
+      ...make,
+      models: models
+        .filter((model) => model.makeSlug === make.slug)
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "en-ZA"))
+        .slice(0, 3)
+        .map((model) => model.name),
+    }));
+
   return {
     hero,
     featured: featuredDocs.map(toCard),
     bodyTypes,
     makes,
+    makeTiles,
+    budgets: budgetBands(prices),
     models,
     prices: prices.length ? priceOptions(Math.min(...prices), Math.max(...prices)) : [],
     credits: [...credits.values()].sort((a, b) => a.subject.localeCompare(b.subject, "en-ZA")),

@@ -35,6 +35,36 @@ export default function AgencyContactPage() {
         eyebrow="Free review"
         title="Book a free review of your dealership's site"
         lead="Three short steps. You get a written review of what is slowing your site down, what is stopping it being found, and what we would fix first. If the honest answer is that you do not need us yet, the review says so."
+        aside={
+          <nav
+            aria-label="Before you book"
+            className="rounded-lg border border-line bg-page p-5 sm:p-6"
+          >
+            <p className="text-sm font-semibold text-heading">Rather read first?</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              <li>
+                <Link href="/digital/services" className="rn-chip min-h-11">
+                  The seven services
+                </Link>
+              </li>
+              <li>
+                <Link href="/digital/process" className="rn-chip min-h-11">
+                  How an engagement runs
+                </Link>
+              </li>
+              <li>
+                <Link href="/digital/pricing" className="rn-chip min-h-11">
+                  Pricing and terms
+                </Link>
+              </li>
+              <li>
+                <Link href="/cars" className="rn-chip min-h-11">
+                  The site we built
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        }
       />
 
       <section aria-label="Review request" className="py-[var(--section-base)]">
@@ -75,7 +105,7 @@ export default function AgencyContactPage() {
                   <Mail aria-hidden="true" className="size-5 shrink-0 text-muted" />
                   <a
                     href={`mailto:${AGENCY_EMAIL}`}
-                    className="inline-flex min-h-11 items-center font-semibold text-accent underline underline-offset-3 hover:text-accent-hover"
+                    className="rn-link inline-flex min-h-11 items-center"
                   >
                     {AGENCY_EMAIL}
                   </a>
@@ -85,7 +115,7 @@ export default function AgencyContactPage() {
                   {COMPANY.streetAddress ?? COMPANY.town}
                 </li>
               </ul>
-              <p className="mt-3 text-sm text-muted">We reply within one working day.</p>
+              <p className="mt-3 text-sm text-muted">We reply by email.</p>
             </div>
 
             <div className="rounded-md border border-line bg-subtle p-6">
@@ -101,8 +131,8 @@ export default function AgencyContactPage() {
                 </h2>
               </div>
               <p className="mt-3 text-sm text-body">
-                Listing a dealership on Rynet Showroom is a separate conversation, and being an
-                agency client has no bearing on it.
+                Listing a dealership on the Rynet marketplace is a separate conversation, and being
+                an agency client has no bearing on it.
               </p>
               <Link href="/how-verification-works" className="rn-link-arrow mt-4">
                 How dealerships are checked
@@ -114,10 +144,7 @@ export default function AgencyContactPage() {
               <ShieldCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
               <span>
                 What you send is handled under our{" "}
-                <Link
-                  href="/privacy"
-                  className="font-semibold text-heading underline underline-offset-3 hover:text-accent"
-                >
+                <Link href="/privacy" className="rn-link">
                   privacy notice
                 </Link>
                 . It is not passed to any dealership, and it is used only for this enquiry.

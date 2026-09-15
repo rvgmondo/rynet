@@ -21,6 +21,11 @@ import { countCars } from "./count-action";
  *     riding along as a hidden input.
  *   - Submitting drops the empty fields a GET form always sends, so the URL a buyer shares reads
  *     `/cars?make=toyota` rather than a row of blanks.
+ *   - At 1280px, `data-fits` on the panel while the whole sidebar fits the window under the header,
+ *     which is what lets it stick beside the results. A sidebar taller than the window is never
+ *     sticky, because its foot would be out of reach until the end of the page. When opening a
+ *     section tips it over, the page is scrolled by however far the clicked row moved, so the row
+ *     stays under the pointer instead of the sidebar leaping away.
  *
  * Every listener is delegated from the document and every element is looked up when it is needed,
  * because the form is keyed on the search and is replaced whenever the search changes.
@@ -161,9 +166,37 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
       }
     };
 
+    // What the buyer last pressed inside the sidebar, and where it was on screen, so a change in
+    // stickiness can put it back under their pointer.
+    let anchor: { element: Element; top: number; at: number } | null = null;
+
+    const fit = () => {
+      const p = panel();
+      const s = sheet();
+      if (!p || !s) return;
+      const header = document.querySelector<HTMLElement>(".rn-header")?.offsetHeight ?? 64;
+      const rem = Number.parseFloat(getComputedStyle(root).fontSize) || 16;
+      // 1.5rem above the sidebar (its sticky offset) and the same below it.
+      const fits = wide.matches && s.offsetHeight + header + rem * 3 <= window.innerHeight;
+      if (fits === p.hasAttribute("data-fits")) return;
+
+      const held =
+        anchor?.element.isConnected && performance.now() - anchor.at < 1000 ? anchor : null;
+      p.toggleAttribute("data-fits", fits);
+      if (held) {
+        const moved = held.element.getBoundingClientRect().top - held.top;
+        if (Math.abs(moved) > 1) window.scrollBy({ top: moved, behavior: "instant" });
+      }
+    };
+
     const onClick = (event: MouseEvent) => {
       const target = event.target as Element | null;
       if (!target) return;
+
+      if (wide.matches && panel()?.contains(target)) {
+        const element = target.closest("summary, label") ?? target;
+        anchor = { element, top: element.getBoundingClientRect().top, at: performance.now() };
+      }
 
       const trigger = target.closest<HTMLElement>(`[data-filters-open="${panelId}"]`);
       if (trigger) {
@@ -242,6 +275,7 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
 
     const onWide = () => {
       if (wide.matches) close(false);
+      fit();
     };
     const onHide = () => close(false, true);
 
@@ -249,11 +283,18 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
     // `:target` sheet with no dialog semantics and a page that still scrolls underneath.
     if (panel()?.matches(":target") && !wide.matches) open(null);
 
+    // The sheet's height changes when a section, "Show more" or a make's models open or close.
+    const sized = sheet();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
+    if (sized) observer?.observe(sized);
+    fit();
+
     document.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
     document.addEventListener("change", onChange);
     document.addEventListener("submit", onSubmit);
     wide.addEventListener("change", onWide);
+    window.addEventListener("resize", fit);
     window.addEventListener("pagehide", onHide);
 
     return () => {
@@ -262,7 +303,9 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
       document.removeEventListener("change", onChange);
       document.removeEventListener("submit", onSubmit);
       wide.removeEventListener("change", onWide);
+      window.removeEventListener("resize", fit);
       window.removeEventListener("pagehide", onHide);
+      observer?.disconnect();
       window.clearTimeout(timer);
       root.removeAttribute("data-menu-open");
     };

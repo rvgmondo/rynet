@@ -78,17 +78,19 @@ export function DemoListingBadge({
  */
 export function DealershipStatusBadge({
   isDemonstration,
+  onPhoto = false,
   className = "",
 }: {
   isDemonstration: boolean;
+  onPhoto?: boolean;
   className?: string;
 }) {
   return isDemonstration ? (
-    <Badge tone="demo" className={className}>
+    <Badge tone="demo" onPhoto={onPhoto} className={className}>
       Demo dealership
     </Badge>
   ) : (
-    <Badge tone="verified" className={className}>
+    <Badge tone="verified" onPhoto={onPhoto} className={className}>
       Verified dealership
     </Badge>
   );

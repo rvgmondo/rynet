@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 /**
  * Key facts: an icon, a label and a value.
@@ -12,7 +13,8 @@ import type { LucideIcon } from "lucide-react";
 export type KeyFact = {
   icon: LucideIcon;
   label: string;
-  value: string;
+  /** Text, or a node when part of it must not break (a price range keeps each figure whole). */
+  value: ReactNode;
 };
 
 export function KeyFacts({

@@ -72,8 +72,11 @@ export function Pagination({
         {content}
       </Link>
     ) : (
-      /* Held in place rather than removed, so the row does not shift on the first and last page. */
-      <span aria-hidden="true" className={`${classes} pointer-events-none border-line text-muted`}>
+      /*
+       * An empty space the size of the button, so the row does not shift on the first and last
+       * page. It used to be a greyed, inert button, which read as broken.
+       */
+      <span aria-hidden="true" className={`${classes} invisible`}>
         {content}
       </span>
     );

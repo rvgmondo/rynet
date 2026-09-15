@@ -182,7 +182,9 @@
 /* ================================================================= DARK ===== */
 /*
  * Deep navy, not black. Surfaces step up in lightness rather than down, and the accents are
- * re-tuned for the darker ground.
+ * re-tuned for the darker ground. The navy band (hero, footer) sits clearly DARKER than the page
+ * and cards clearly lighter, so the hero and the footer keep an edge and a card never looks
+ * recessed next to the ground it sits on.
  *
  * Three states, not two. An explicit choice stamps data-theme on the root; the default "system"
  * setting stamps nothing, so only prefers-color-scheme separates the two. Both blocks below
@@ -190,12 +192,12 @@
  */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --rn-page: #081629;
-    --rn-card: #0f2139;
-    --rn-subtle: #0b1b31;
-    --rn-subtle-hover: #152a47;
+    --rn-page: #0a1a30;
+    --rn-card: #112642;
+    --rn-subtle: #0d203a;
+    --rn-subtle-hover: #18304f;
 
-    --rn-navy: #040f1e;
+    --rn-navy: #030b17;
     --rn-navy-raised: #0f2139;
     --rn-on-navy: #f3f6fa;
     --rn-on-navy-muted: #9dabbf;
@@ -205,8 +207,8 @@
     --rn-body: #d3dbe6;
     --rn-muted: #9dabbf;
 
-    --rn-line: #1c3150;
-    --rn-line-strong: #2a4163;
+    --rn-line: #1f3657;
+    --rn-line-strong: #2d4668;
     --rn-line-control: #6f819c;
 
     --rn-primary: #c81e2b;
@@ -263,12 +265,12 @@
 }
 
 :root[data-theme="dark"] {
-  --rn-page: #081629;
-  --rn-card: #0f2139;
-  --rn-subtle: #0b1b31;
-  --rn-subtle-hover: #152a47;
+  --rn-page: #0a1a30;
+  --rn-card: #112642;
+  --rn-subtle: #0d203a;
+  --rn-subtle-hover: #18304f;
 
-  --rn-navy: #040f1e;
+  --rn-navy: #030b17;
   --rn-navy-raised: #0f2139;
   --rn-on-navy: #f3f6fa;
   --rn-on-navy-muted: #9dabbf;
@@ -278,8 +280,8 @@
   --rn-body: #d3dbe6;
   --rn-muted: #9dabbf;
 
-  --rn-line: #1c3150;
-  --rn-line-strong: #2a4163;
+  --rn-line: #1f3657;
+  --rn-line-strong: #2d4668;
   --rn-line-control: #6f819c;
 
   --rn-primary: #c81e2b;
@@ -367,6 +369,11 @@
   --rn-text-display: clamp(2.25rem, 1.6rem + 2.8vw, 3.75rem); /* 36 -> 60 */
   --rn-text-5xl: var(--rn-text-display);
   --rn-text-mega: clamp(2.75rem, 1.9rem + 3.8vw, 4.5rem); /* 44 -> 72 */
+
+  /* The three heading roles (.rn-h1, .rn-h2, .rn-h3). About 1.75 between page and section title. */
+  --rn-text-h1: clamp(2.125rem, 1.5rem + 2.6vw, 3.5rem); /* 34 -> 56 */
+  --rn-text-h2: clamp(1.5rem, 1.3rem + 0.8vw, 2rem); /* 24 -> 32 */
+  --rn-text-h3: clamp(1.125rem, 1.08rem + 0.2vw, 1.25rem); /* 18 -> 20 */
 
   --leading-tight: 1.15;
   --leading-snug: 1.3;

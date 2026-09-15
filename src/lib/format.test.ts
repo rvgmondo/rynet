@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatCc, formatKm, formatMonthly, formatRand, vehicleAlt } from "./format";
+import { formatCc, formatKm, formatMonthly, formatRand, plain, vehicleAlt } from "./format";
 
 /**
  * Formatting.
@@ -12,12 +12,15 @@ import { formatCc, formatKm, formatMonthly, formatRand, vehicleAlt } from "./for
  * `toLocaleString("en-ZA")` is not consistent across Node builds and ICU versions: some
  * emit a comma, some a non-breaking space, some a regular one. These tests pin the output
  * rather than trusting the runtime, which is why the implementation normalises afterwards.
+ *
+ * Every space inside a figure is a no-break space (U+00A0), so a figure never breaks across two
+ * lines. `plain()` turns them back into ordinary spaces for comparison.
  */
 
 describe("formatRand", () => {
   it("groups thousands with a space, the South African way", () => {
-    expect(formatRand(249900)).toBe("R 249 900");
-    expect(formatRand(1249900)).toBe("R 1 249 900");
+    expect(plain(formatRand(249900))).toBe("R 249 900");
+    expect(plain(formatRand(1249900))).toBe("R 1 249 900");
   });
 
   it("never emits a comma, whatever the runtime's locale data does", () => {
@@ -26,18 +29,25 @@ describe("formatRand", () => {
     }
   });
 
-  it("never emits a non-breaking space, which breaks copy and paste", () => {
-    expect(formatRand(1249900)).not.toMatch(/ /);
+  it("never lets a figure break across two lines", () => {
+    // "R 1 020" at the end of one line and "800" on the next happened in a narrow price range.
+    for (const value of [0, 999, 1000, 249900, 1249900, 12345678]) {
+      const text = formatRand(value);
+      expect(text, `${plain(text)} holds a breaking space`).not.toMatch(/[ \t\n]/);
+      expect(text).toMatch(/^R\u00a0\d/);
+    }
+    expect(formatMonthly(5480)).not.toMatch(/ /);
+    expect(formatKm(147200)).not.toMatch(/ /);
   });
 
   it("shows no decimals, because no dealership prices a car at R 249 900,00", () => {
-    expect(formatRand(249900.49)).toBe("R 249 900");
-    expect(formatRand(249900.5)).toBe("R 249 901");
+    expect(plain(formatRand(249900.49))).toBe("R 249 900");
+    expect(plain(formatRand(249900.5))).toBe("R 249 901");
   });
 
   it("handles small and zero values without breaking", () => {
-    expect(formatRand(0)).toBe("R 0");
-    expect(formatRand(999)).toBe("R 999");
+    expect(plain(formatRand(0))).toBe("R 0");
+    expect(plain(formatRand(999))).toBe("R 999");
   });
 });
 
@@ -45,18 +55,18 @@ describe("formatMonthly", () => {
   it("marks an instalment clearly as per month", () => {
     // Always shown beside the NCA disclaimer. The `pm` is what stops a monthly figure
     // reading as a price.
-    expect(formatMonthly(5480)).toBe("R 5 480 pm");
+    expect(plain(formatMonthly(5480))).toBe("R 5 480 pm");
   });
 });
 
 describe("formatKm and formatCc", () => {
   it("groups mileage with a space and keeps the unit", () => {
-    expect(formatKm(147200)).toBe("147 200 km");
-    expect(formatKm(0)).toBe("0 km");
+    expect(plain(formatKm(147200))).toBe("147 200 km");
+    expect(plain(formatKm(0))).toBe("0 km");
   });
 
   it("formats engine capacity the same way", () => {
-    expect(formatCc(2755)).toBe("2 755 cc");
+    expect(plain(formatCc(2755))).toBe("2 755 cc");
   });
 });
 

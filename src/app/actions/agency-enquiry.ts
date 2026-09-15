@@ -83,7 +83,7 @@ export async function submitAgencyEnquiry(
 
   const succeeded: AgencyEnquiryState = {
     status: "success",
-    message: "Thanks. We will come back to you within one working day.",
+    message: "Thanks. We have your details and will reply by email.",
   };
 
   if (data.hp && data.hp.length > 0) return succeeded;

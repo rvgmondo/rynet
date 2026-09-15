@@ -93,7 +93,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
         }
         aside={
           <div className="on-navy rounded-lg p-6 shadow-card sm:p-8">
-            <span className="flex size-12 items-center justify-center rounded-md bg-navy-raised text-on-navy">
+            <span className="rn-icon-tile rn-icon-tile--lg">
               <Icon aria-hidden="true" className="size-6" />
             </span>
             <p className="rn-eyebrow mt-6 text-on-navy-muted">What you walk away with</p>
@@ -115,16 +115,29 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
       </section>
 
       <section aria-labelledby="includes-heading" className="bg-card py-[var(--section-base)]">
-        <div className="container-page">
-          <SectionHeader id="includes-heading" eyebrow={name} title="What is included" />
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/*
+          A heading column and a ruled checklist beside it, rather than six tinted boxes: the items
+          are a specification to read down, not six things to click.
+        */}
+        <div className="container-page grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
+          <div className="lg:sticky lg:top-24 lg:self-start">
+            <p className="rn-eyebrow">{name}</p>
+            <h2 id="includes-heading" className="rn-h2 mt-2">
+              What is included
+            </h2>
+            <p className="mt-3 text-body">
+              Each of these is something you can check once it is built, not a promise about
+              results.
+            </p>
+          </div>
+          <ul className="grid border-t border-line sm:grid-cols-2 sm:gap-x-10">
             {includes.map((item) => (
-              <li key={item} className="flex gap-3 rounded-md border border-line bg-page p-5">
+              <li key={item} className="flex gap-4 border-b border-line py-5">
                 <span
                   aria-hidden="true"
-                  className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-success-subtle text-success"
+                  className="flex size-7 shrink-0 items-center justify-center rounded-full bg-success-subtle text-success"
                 >
-                  <Check className="size-3.5" />
+                  <Check className="size-4" />
                 </span>
                 <span className="text-body">{sentence(item)}</span>
               </li>
@@ -189,7 +202,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                 <li key={other.slug} className="flex">
                   <article className="rn-card rn-card--interactive p-5">
                     <div className="flex items-center gap-3">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary">
+                      <span className="rn-icon-tile">
                         <other.Icon aria-hidden="true" className="size-5" />
                       </span>
                       <h3 className="text-base font-semibold text-heading">
@@ -202,10 +215,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                       </h3>
                     </div>
                     <p className="mt-3 text-sm text-body">{other.summary}</p>
-                    <span
-                      aria-hidden="true"
-                      className="rn-link-arrow mt-auto self-start pt-4 text-heading"
-                    >
+                    <span aria-hidden="true" className="rn-link-arrow mt-auto self-start pt-4">
                       Learn more
                       <ArrowRight />
                     </span>

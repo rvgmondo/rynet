@@ -76,59 +76,59 @@ border tokens rather than one.
 
 | Pair | Foreground | Background | Ratio | Required | Result |
 |---|---|---|---:|---:|---|
-| Heading on page | `#f3f6fa` | `#081629` | 16.74 | 4.5 | pass |
-| Heading on card | `#f3f6fa` | `#0f2139` | 14.94 | 4.5 | pass |
-| Heading on subtle panel | `#f3f6fa` | `#0b1b31` | 15.94 | 4.5 | pass |
-| Body on page | `#d3dbe6` | `#081629` | 13.00 | 4.5 | pass |
-| Body on card | `#d3dbe6` | `#0f2139` | 11.60 | 4.5 | pass |
-| Body on subtle panel | `#d3dbe6` | `#0b1b31` | 12.38 | 4.5 | pass |
-| Muted on page | `#9dabbf` | `#081629` | 7.79 | 4.5 | pass |
-| Muted on card | `#9dabbf` | `#0f2139` | 6.95 | 4.5 | pass |
-| Muted on subtle panel | `#9dabbf` | `#0b1b31` | 7.41 | 4.5 | pass |
-| On-navy text on navy band | `#f3f6fa` | `#040f1e` | 17.74 | 4.5 | pass |
-| On-navy muted text on navy band | `#9dabbf` | `#040f1e` | 8.25 | 4.5 | pass |
+| Heading on page | `#f3f6fa` | `#0a1a30` | 16.10 | 4.5 | pass |
+| Heading on card | `#f3f6fa` | `#112642` | 14.04 | 4.5 | pass |
+| Heading on subtle panel | `#f3f6fa` | `#0d203a` | 15.08 | 4.5 | pass |
+| Body on page | `#d3dbe6` | `#0a1a30` | 12.50 | 4.5 | pass |
+| Body on card | `#d3dbe6` | `#112642` | 10.90 | 4.5 | pass |
+| Body on subtle panel | `#d3dbe6` | `#0d203a` | 11.71 | 4.5 | pass |
+| Muted on page | `#9dabbf` | `#0a1a30` | 7.49 | 4.5 | pass |
+| Muted on card | `#9dabbf` | `#112642` | 6.53 | 4.5 | pass |
+| Muted on subtle panel | `#9dabbf` | `#0d203a` | 7.01 | 4.5 | pass |
+| On-navy text on navy band | `#f3f6fa` | `#030b17` | 18.21 | 4.5 | pass |
+| On-navy muted text on navy band | `#9dabbf` | `#030b17` | 8.47 | 4.5 | pass |
 | On-navy muted text on raised navy | `#9dabbf` | `#0f2139` | 6.95 | 4.5 | pass |
-| Focus ring on navy band | `#8db4ff` | `#040f1e` | 9.25 | 3.0 | pass |
+| Focus ring on navy band | `#8db4ff` | `#030b17` | 9.50 | 3.0 | pass |
 | White on primary button | `#ffffff` | `#c81e2b` | 5.71 | 4.5 | pass |
 | White on primary button, hover | `#ffffff` | `#a81825` | 7.44 | 4.5 | pass |
 | White on secondary button | `#ffffff` | `#24426b` | 10.16 | 4.5 | pass |
 | White on secondary button, hover | `#ffffff` | `#2d5184` | 8.01 | 4.5 | pass |
-| Accent words on page | `#ff7079` | `#081629` | 6.78 | 4.5 | pass |
-| Accent words on card | `#ff7079` | `#0f2139` | 6.05 | 4.5 | pass |
-| Accent hover on card | `#ff9aa1` | `#0f2139` | 8.01 | 4.5 | pass |
+| Accent words on page | `#ff7079` | `#0a1a30` | 6.52 | 4.5 | pass |
+| Accent words on card | `#ff7079` | `#112642` | 5.69 | 4.5 | pass |
+| Accent hover on card | `#ff9aa1` | `#112642` | 7.53 | 4.5 | pass |
 | Accent words on subtle accent | `#ff7079` | `#2a1220` | 6.51 | 4.5 | pass |
-| Accent words on subtle panel | `#ff7079` | `#0b1b31` | 6.46 | 4.5 | pass |
+| Accent words on subtle panel | `#ff7079` | `#0d203a` | 6.11 | 4.5 | pass |
 | Accent words on subtle info (links inside a notice) | `#ff7079` | `#0e2544` | 5.74 | 4.5 | pass |
 | Muted on subtle info (small print inside a notice) | `#9dabbf` | `#0e2544` | 6.59 | 4.5 | pass |
-| Success on card | `#4fcb86` | `#0f2139` | 7.88 | 4.5 | pass |
+| Success on card | `#4fcb86` | `#112642` | 7.41 | 4.5 | pass |
 | Success on subtle success | `#4fcb86` | `#0d2a22` | 7.45 | 4.5 | pass |
-| Warning on card | `#f0b44a` | `#0f2139` | 8.74 | 4.5 | pass |
+| Warning on card | `#f0b44a` | `#112642` | 8.21 | 4.5 | pass |
 | Warning on subtle warning | `#f0b44a` | `#2a2210` | 8.49 | 4.5 | pass |
-| Danger on card | `#ff7079` | `#0f2139` | 6.05 | 4.5 | pass |
+| Danger on card | `#ff7079` | `#112642` | 5.69 | 4.5 | pass |
 | Danger on subtle danger | `#ff7079` | `#2a1220` | 6.51 | 4.5 | pass |
-| Info on card | `#7cb8f5` | `#0f2139` | 7.73 | 4.5 | pass |
+| Info on card | `#7cb8f5` | `#112642` | 7.27 | 4.5 | pass |
 | Info on subtle info | `#7cb8f5` | `#0e2544` | 7.34 | 4.5 | pass |
 | Body on subtle info (notice text) | `#d3dbe6` | `#0e2544` | 11.01 | 4.5 | pass |
 | Body on subtle warning (notice text) | `#d3dbe6` | `#2a2210` | 11.27 | 4.5 | pass |
 | Heading on subtle info (notice title) | `#f3f6fa` | `#0e2544` | 14.17 | 4.5 | pass |
 | Heading on subtle warning (notice title) | `#f3f6fa` | `#2a2210` | 14.51 | 4.5 | pass |
-| Control border on card | `#6f819c` | `#0f2139` | 4.08 | 3.0 | pass |
-| Control border on page | `#6f819c` | `#081629` | 4.58 | 3.0 | pass |
-| Control border on subtle panel | `#6f819c` | `#0b1b31` | 4.36 | 3.0 | pass |
-| Checked checkbox or radio fill on card | `#8db4ff` | `#0f2139` | 7.79 | 3.0 | pass |
-| Checked checkbox or radio fill on subtle panel | `#8db4ff` | `#0b1b31` | 8.31 | 3.0 | pass |
-| Focus ring on page | `#8db4ff` | `#081629` | 8.73 | 3.0 | pass |
-| Focus ring on card | `#8db4ff` | `#0f2139` | 7.79 | 3.0 | pass |
-| Focus ring on subtle panel | `#8db4ff` | `#0b1b31` | 8.31 | 3.0 | pass |
+| Control border on card | `#6f819c` | `#112642` | 3.84 | 3.0 | pass |
+| Control border on page | `#6f819c` | `#0a1a30` | 4.40 | 3.0 | pass |
+| Control border on subtle panel | `#6f819c` | `#0d203a` | 4.12 | 3.0 | pass |
+| Checked checkbox or radio fill on card | `#8db4ff` | `#112642` | 7.32 | 3.0 | pass |
+| Checked checkbox or radio fill on subtle panel | `#8db4ff` | `#0d203a` | 7.86 | 3.0 | pass |
+| Focus ring on page | `#8db4ff` | `#0a1a30` | 8.40 | 3.0 | pass |
+| Focus ring on card | `#8db4ff` | `#112642` | 7.32 | 3.0 | pass |
+| Focus ring on subtle panel | `#8db4ff` | `#0d203a` | 7.86 | 3.0 | pass |
 | Inverse text on inverse ground | `#081629` | `#f3f6fa` | 16.74 | 4.5 | pass |
 | Inverse muted text on inverse ground | `#4a5669` | `#f3f6fa` | 6.85 | 4.5 | pass |
 | Inverse accent words on inverse ground | `#b81b29` | `#f3f6fa` | 6.00 | 4.5 | pass |
 | Inverse focus ring on inverse ground | `#1d5bd6` | `#f3f6fa` | 5.50 | 3.0 | pass |
-| Divider on card | `#1c3150` | `#0f2139` | 1.24 | n/a | pass |
-| Strong divider on page | `#2a4163` | `#081629` | 1.76 | n/a | pass |
-| Divider on navy band | `#1c3150` | `#040f1e` | 1.47 | n/a | pass |
-| Brand red as a graphic mark | `#e32432` | `#0f2139` | 3.52 | n/a | pass |
-| Brand mark ink on card | `#d7dce3` | `#0f2139` | 11.75 | n/a | pass |
+| Divider on card | `#1f3657` | `#112642` | 1.25 | n/a | pass |
+| Strong divider on page | `#2d4668` | `#0a1a30` | 1.82 | n/a | pass |
+| Divider on navy band | `#1c3150` | `#030b17` | 1.51 | n/a | pass |
+| Brand red as a graphic mark | `#e32432` | `#112642` | 3.31 | n/a | pass |
+| Brand mark ink on card | `#d7dce3` | `#112642` | 11.04 | n/a | pass |
 | Plate ink on the worst of all 360 hues (H 159) | `#EDEDEA` | `#1E6141` | 6.30 | 4.5 | pass |
 | Plate ink on the lightest neutral plate | `#EDEDEA` | `#5F6469` | 5.10 | 4.5 | pass |
 | Plate ink on the darkest neutral plate | `#EDEDEA` | `#2F3338` | 10.84 | 4.5 | pass |

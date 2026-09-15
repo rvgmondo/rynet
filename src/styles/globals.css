@@ -341,6 +341,52 @@
   .on-navy :where(h1, h2, h3, h4, h5, h6) {
     color: var(--rn-on-navy);
   }
+
+  /* The menu's Sell button is not offered on the sell page. In utilities, to beat the button's own display. */
+  body:has([data-sell-page]) .rn-menu__sell {
+    display: none;
+  }
+
+  /*
+   * A results page's Filters and Sort bar rides up to the top edge while the phone header is tucked
+   * away (see .rn-header below). Here, in utilities, because the bar's own `top-[...]` utility
+   * would otherwise win over a component rule.
+   */
+  @media (max-width: 63.9375rem) {
+    [data-sticky-toolbar] {
+      transition: top var(--duration-element) var(--rn-ease-out);
+    }
+
+    html[data-header-hidden]:not([data-menu-open]) [data-sticky-toolbar] {
+      top: 0;
+    }
+  }
+
+  /*
+   * The bar's result count repeats the count printed under the heading, which sits just above the
+   * bar until the bar sticks. Where scroll-state queries exist the count waits until then; it keeps
+   * its space, so nothing in the bar moves when it appears. Elsewhere it simply always shows.
+   */
+  @supports (container-type: scroll-state) {
+    [data-sticky-toolbar] {
+      container-type: scroll-state;
+    }
+
+    [data-toolbar-count] {
+      visibility: hidden;
+      opacity: 0;
+      transition:
+        opacity var(--duration-element) var(--rn-ease-out),
+        visibility var(--duration-element);
+    }
+
+    @container scroll-state(stuck: top) {
+      [data-toolbar-count] {
+        visibility: visible;
+        opacity: 1;
+      }
+    }
+  }
 }
 
 /* ====================================================================== COMPONENTS */
@@ -362,30 +408,35 @@
     color: var(--rn-accent);
   }
 
+  /*
+   * The heading scale steps down hard on purpose: a page title near 56px, section titles at 32px,
+   * card and item titles at 20px. At 48 over 40 every section shouted as loud as the page.
+   */
   .rn-h1 {
-    font-size: var(--rn-text-4xl);
+    font-size: var(--rn-text-h1);
     font-weight: 700;
-    line-height: 1.1;
-    letter-spacing: var(--tracking-display);
+    line-height: 1.08;
+    letter-spacing: -0.018em;
     color: var(--rn-heading);
     text-wrap: balance;
   }
 
   .rn-h2 {
-    font-size: var(--rn-text-head);
-    font-weight: 700;
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tighter);
+    font-size: var(--rn-text-h2);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.012em;
     color: var(--rn-heading);
     text-wrap: balance;
   }
 
   .rn-h3 {
-    font-size: var(--rn-text-xl);
+    font-size: var(--rn-text-h3);
     font-weight: 600;
     line-height: var(--leading-snug);
-    letter-spacing: var(--tracking-tight);
+    letter-spacing: -0.006em;
     color: var(--rn-heading);
+    text-wrap: pretty;
   }
 
   .rn-lead {
@@ -430,6 +481,96 @@
 
   .rn-link-arrow:hover svg {
     transform: translateX(2px);
+  }
+
+  /*
+   * THE TWO LINK STYLES. There are exactly two, and <TextLink> draws both:
+   *
+   *   .rn-link-arrow  red words and an arrow, for a section's next step ("See all their stock")
+   *   .rn-link        heading ink with a quiet underline that turns red on hover, for a link
+   *                   inside a sentence, a notice, a caption, a card or a form: "How we check",
+   *                   "See the full estimate", "Photo credit", an email address
+   *
+   * There used to be four (black underlined, body underlined, red underlined, red with an arrow),
+   * which read as several people building one site. The underline is always there, so a link is
+   * never told apart by colour alone (SC 1.4.1).
+   */
+  .rn-link {
+    font-weight: 600;
+    color: var(--rn-heading);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rn-line-control);
+    text-underline-offset: 3px;
+    transition:
+      color var(--duration-micro) var(--rn-ease-out),
+      text-decoration-color var(--duration-micro) var(--rn-ease-out);
+  }
+
+  .rn-link:hover {
+    color: var(--rn-accent);
+    text-decoration-color: currentColor;
+  }
+
+  .on-navy .rn-link {
+    color: var(--rn-on-navy);
+    text-decoration-color: var(--rn-on-navy-muted);
+  }
+
+  .on-navy .rn-link:hover {
+    color: var(--rn-on-navy);
+    text-decoration-color: currentColor;
+  }
+
+  /* Links inside copy nobody on the team marks up (a legal document, a dealer's description). */
+  .rn-links :where(a:not([class])) {
+    font-weight: 600;
+    color: var(--rn-heading);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rn-line-control);
+    text-underline-offset: 3px;
+  }
+
+  .rn-links :where(a:not([class])):hover {
+    color: var(--rn-accent);
+    text-decoration-color: currentColor;
+  }
+
+  /*
+   * The icon tile: one style on every page, marketplace and agency. A 44px rounded square on the
+   * tinted ground with the icon in heading ink (48px with `--lg`, for a feature card), and the
+   * raised navy on a navy band. It used to be pale grey on one page and solid navy on the next.
+   */
+  .rn-icon-tile {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--rn-radius-md);
+    background-color: var(--rn-subtle);
+    color: var(--rn-heading);
+  }
+
+  .rn-icon-tile svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .rn-icon-tile--lg {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .rn-icon-tile--lg svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .on-navy .rn-icon-tile {
+    background-color: var(--rn-navy-raised);
+    color: var(--rn-on-navy);
   }
 
   /* ---------------------------------------------------------------------- button */
@@ -556,17 +697,20 @@
     background-color: var(--rn-subtle);
   }
 
+  /* Drawn like .rn-link, so a button that reads as a link is the same link as everywhere else. */
   .rn-btn--link {
     min-height: 1.5rem;
     padding-inline: 0;
-    color: var(--rn-accent);
-    text-decoration: underline;
+    color: var(--rn-heading);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--rn-line-control);
     text-underline-offset: 3px;
   }
 
   .rn-btn--link:hover {
-    color: var(--rn-accent-hover);
-    text-decoration-thickness: 2px;
+    color: var(--rn-accent);
+    text-decoration-color: currentColor;
   }
 
   /* Outline and ghost on a navy band. */
@@ -826,6 +970,23 @@
   }
 
   /* A mid grey chevron that holds 3:1 on the card in both themes, so one image serves both. */
+  /*
+   * A text field with suggestions (the sell form's make and model) draws the same chevron as a
+   * select, in place of the browser's own dropdown triangle, which looked like browser chrome
+   * inside a designed control. The suggestions still open as the buyer types.
+   */
+  input[list]::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
+
+  input[list] {
+    padding-inline-end: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23748196' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.125rem;
+  }
+
   .rn-select {
     appearance: none;
     padding-inline-end: 2.5rem;
@@ -1069,6 +1230,78 @@
   .rn-section-header__lead {
     font-size: var(--rn-text-base);
     color: var(--rn-muted);
+  }
+
+  /* ------------------------------------------------------------------ page header */
+
+  /* See <PageHeader>: split (title left, lead right) or aside (title and lead left, content right). */
+  .rn-pagehead {
+    background-color: var(--rn-card);
+    border-bottom: 1px solid var(--rn-line);
+  }
+
+  .rn-pagehead__inner {
+    padding-block: clamp(2rem, 1.25rem + 3vw, 4rem);
+  }
+
+  .rn-pagehead__title {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .rn-pagehead__body {
+    display: grid;
+    gap: 1.25rem;
+    min-width: 0;
+    max-width: 42rem;
+    margin-top: 1rem;
+  }
+
+  .rn-pagehead__title .rn-pagehead__body {
+    margin-top: 0.25rem;
+  }
+
+  .rn-pagehead__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    font-size: var(--rn-text-sm);
+    color: var(--rn-muted);
+  }
+
+  .rn-pagehead__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+  }
+
+  @media (min-width: 64rem) {
+    .rn-pagehead__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      align-items: start;
+      column-gap: clamp(3rem, 7vw, 7rem);
+    }
+
+    /* The lead's first line starts level with the top of the title, below the eyebrow. */
+    .rn-pagehead__grid > .rn-pagehead__body {
+      margin-top: 0;
+      padding-top: 0.625rem;
+    }
+
+    .rn-pagehead__grid:has(> .rn-pagehead__title > .rn-eyebrow) > .rn-pagehead__body {
+      padding-top: 2.25rem;
+    }
+
+    .rn-pagehead__grid--aside {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      align-items: start;
+      column-gap: 4rem;
+    }
   }
 
   /* ------------------------------------------------------------------ empty state */
@@ -1343,12 +1576,14 @@
     height: 0.9375rem;
   }
 
-  @container (min-width: 22rem) {
-    .rn-vcard__facts {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.375rem 1rem;
-    }
+  /*
+   * Always two by two. A wrapping row put "Diesel" alone on a second line on a large share of
+   * cards, so card heights and rhythm changed card to card; the rail cards were already a grid.
+   */
+  .rn-vcard__facts .rn-facts__value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .rn-vcard__foot {
@@ -1386,26 +1621,38 @@
 
   /* ----------------------------------------------------------- no photograph yet */
 
+  /*
+   * The caption is --rn-body, not muted: over a paint wash muted grey can fall under 4.5:1 (a
+   * black car's wash darkens the ground), and body ink holds it on every wash in both themes.
+   */
   .rn-noimage {
+    --plate-paint: var(--rn-subtle-hover);
+    --plate-wash: color-mix(in oklab, var(--plate-paint) 12%, var(--rn-subtle));
+
     position: relative;
     display: grid;
     place-content: center;
     justify-items: center;
-    gap: 0.625rem;
+    gap: 0.5rem;
     aspect-ratio: 16 / 10;
     padding: 1rem;
     overflow: hidden;
     background-color: var(--rn-subtle);
-    background-image: linear-gradient(180deg, var(--rn-subtle) 0%, var(--rn-subtle-hover) 100%);
-    color: var(--rn-muted);
+    background-image: linear-gradient(
+      160deg,
+      var(--rn-subtle) 0%,
+      var(--plate-wash) 70%,
+      color-mix(in oklab, var(--plate-paint) 18%, var(--rn-subtle)) 100%
+    );
+    color: var(--rn-body);
     text-align: center;
   }
 
   /* Fixed widths: a percentage inside a centred grid resolves against its own content. */
   .rn-noimage__car {
-    width: 6.5rem;
+    width: 7rem;
     height: auto;
-    color: var(--rn-line-strong);
+    color: color-mix(in oklab, var(--rn-body) 42%, transparent);
   }
 
   .rn-noimage__caption {
@@ -1413,7 +1660,32 @@
     justify-items: center;
     gap: 0.25rem;
     font-size: var(--rn-text-xs);
+    font-weight: 500;
     line-height: 1.35;
+  }
+
+  /* The panel fills whatever frame the card gives it, rather than sizing itself to 16:10 from its height. */
+  .rn-vcard__media--empty .rn-noimage {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  /* A photo-less card in a one-column phone grid is a short band, not a photo-sized hole. */
+  @media (max-width: 34.9375rem) {
+    .rn-grid:not(.rn-grid--floor) .rn-vcard__media--empty {
+      aspect-ratio: 16 / 7;
+    }
+
+    .rn-grid:not(.rn-grid--floor) .rn-vcard__media--empty .rn-noimage {
+      grid-auto-flow: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .rn-grid:not(.rn-grid--floor) .rn-vcard__media--empty .rn-noimage__car {
+      width: 5.5rem;
+    }
   }
 
   .rn-noimage__colour {
@@ -1480,20 +1752,26 @@
     background-color: var(--rn-card);
     border-bottom: 1px solid var(--rn-line);
     box-shadow: var(--rn-shadow-xs);
+    transition: transform var(--duration-element) var(--rn-ease-out);
   }
 
   /*
-   * A vehicle page below 1024px pins its own action bar to the bottom, so the header scrolls away
-   * rather than stacking a second band of chrome on a phone. It snaps back to sticky while the menu
-   * is open, because the menu sheet is positioned under it.
+   * Below 1024px the header slides away while the reader scrolls down and returns on the way up
+   * (HeaderScroll sets the attribute). Never while the menu is open, since the sheet hangs under
+   * it, and never while something in it has focus. A results page's Filters and Sort bar follows
+   * it up to the top edge, so the two never leave a gap.
    */
   @media (max-width: 63.9375rem) {
-    html:not([data-menu-open]) body:has([data-action-bar]) .rn-header {
-      position: static;
+    html[data-header-hidden]:not([data-menu-open]) .rn-header:not(:has(:focus-visible)) {
+      transform: translateY(-100%);
     }
 
-    html:has([data-action-bar]):not([data-menu-open]) {
+    html[data-header-hidden]:not([data-menu-open]) {
       scroll-padding-top: 1rem;
+    }
+
+    html[data-header-hidden]:not([data-menu-open]):has([data-sticky-toolbar]) {
+      scroll-padding-top: 5rem;
     }
   }
 
@@ -1598,9 +1876,20 @@
     color: var(--rn-muted);
   }
 
+  /* The current page: tinted row and a short red bar that sits inside the row's rounded corner. */
   .rn-menu__link[aria-current="page"] {
+    position: relative;
     background-color: var(--rn-subtle);
-    box-shadow: inset 3px 0 0 var(--rn-primary);
+  }
+
+  .rn-menu__link[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    inset-block: 0.875rem;
+    inset-inline-start: 0.375rem;
+    width: 3px;
+    border-radius: 3px;
+    background-color: var(--rn-primary);
   }
 
   @keyframes rn-fade-in {

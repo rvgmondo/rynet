@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AGENCY_EMAIL, NEXT_STEPS, REVIEW_CTA } from "@/components/agency/agency-content";
-import { GaugeMotif } from "@/components/agency/gauge-motif";
 import { buttonClasses } from "@/components/ui/button-classes";
 
 /**
@@ -31,8 +30,6 @@ export function AgencyClose({
   return (
     <section aria-labelledby={id} className="container-page pb-[var(--section-base)]">
       <div className="on-navy relative overflow-hidden rounded-lg px-5 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
-        <GaugeMotif className="-right-40 -bottom-56 hidden w-[28rem] opacity-40 md:block" />
-
         <div className="relative grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
           <div>
             <p className="rn-eyebrow text-on-navy-muted">Free, with no obligation</p>
@@ -58,7 +55,7 @@ export function AgencyClose({
                 </a>
               )}
             </div>
-            <p className="mt-4 text-sm">We reply within one working day.</p>
+            <p className="mt-4 text-sm">We reply by email.</p>
           </div>
 
           <div className="lg:border-l lg:border-line-on-navy lg:ps-16">

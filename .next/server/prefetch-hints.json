@@ -22,30 +22,6 @@
       }
     }
   },
-  "/digital/about": {
-    "hints": 0,
-    "slots": {
-      "children": {
-        "hints": 0,
-        "slots": {
-          "children": {
-            "hints": 0,
-            "slots": {
-              "children": {
-                "hints": 64,
-                "slots": {
-                  "children": {
-                    "hints": 160,
-                    "slots": null
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "/digital/contact": {
     "hints": 0,
     "slots": {

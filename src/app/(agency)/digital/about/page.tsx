@@ -20,6 +20,8 @@ import Link from "next/link";
 
 import { AgencyClose } from "@/components/agency/agency-close";
 import { AgencyPageHead } from "@/components/agency/agency-page-head";
+import { ShowroomFrame } from "@/components/agency/showroom-frame";
+import { getShowroomSample } from "@/components/agency/showroom-sample";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { SectionHeader } from "@/components/ui/section-header";
 import { COMPANY } from "@/content/company";
@@ -43,7 +45,7 @@ const AT_A_GLANCE = [
   {
     icon: Store,
     label: "What we have built",
-    value: "Rynet Showroom, the marketplace on this domain",
+    value: "The Rynet marketplace, on this domain",
   },
   {
     icon: Sparkles,
@@ -71,7 +73,7 @@ const ALREADY_KNOWN = [
   },
 ] as const;
 
-/* What a dealer principal can open on Rynet Showroom and check for themselves. */
+/* What a dealer principal can open on the Rynet marketplace and check for themselves. */
 const BUILT = [
   {
     icon: Link2,
@@ -103,8 +105,14 @@ const BUILT = [
 const CONFLICT_RULES = [
   "Search results are ordered by what the buyer asked for, never by who pays us.",
   "Every dealership is checked on the same evidence, whether or not it is an agency client.",
-  "There is no paid placement of any kind on Rynet Showroom. If that ever changes, it will be labelled on the page where it happens.",
+  "There is no paid placement of any kind on the Rynet marketplace. If that ever changes, it will be labelled on the page where it happens.",
 ] as const;
+
+/*
+ * Rendered on demand, like the agency home page, because the browser frame shows real listings
+ * from a database that does not exist during `next build`. The sample is cached on the data.
+ */
+export const dynamic = "force-dynamic";
 
 /**
  * About.
@@ -120,7 +128,9 @@ const CONFLICT_RULES = [
  * Order: who we are (with the facts beside the headline), why only dealerships, what we have
  * built, the conflict, who you will deal with, then the offer.
  */
-export default function AboutPage() {
+export default async function AboutPage() {
+  const cards = await getShowroomSample(2);
+
   return (
     <>
       <script
@@ -133,14 +143,14 @@ export default function AboutPage() {
         trail={[{ href: "/digital/about", label: "About" }]}
         eyebrow="About Rynet Digital"
         title="A digital team that only works with car dealerships"
-        lead="Rynet Digital is the agency half of Rynet. We take on South African dealerships and nobody else, and we built Rynet Showroom, the marketplace this site sits on."
+        lead="Rynet Digital is the agency half of Rynet. We take on South African dealerships and nobody else, and we built the Rynet marketplace this site sits on."
         actions={
           <>
             <Link
               href="/cars"
               className={buttonClasses({ variant: "secondary", size: "lg", block: "mobile" })}
             >
-              Open Rynet Showroom
+              Open the marketplace
               <ArrowRight aria-hidden="true" />
             </Link>
             <Link
@@ -157,10 +167,7 @@ export default function AboutPage() {
             <ul className="mt-5 divide-y divide-line">
               {AT_A_GLANCE.map((fact) => (
                 <li key={fact.label} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  <span
-                    aria-hidden="true"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-md bg-subtle text-heading"
-                  >
+                  <span aria-hidden="true" className="rn-icon-tile">
                     <fact.icon className="size-5" />
                   </span>
                   <div className="min-w-0">
@@ -196,13 +203,10 @@ export default function AboutPage() {
             <h3 className="text-base font-semibold text-heading">
               What we do not have to learn on your time
             </h3>
-            <ul className="mt-5 grid gap-4">
+            <ul className="mt-5 divide-y divide-line border-y border-line">
               {ALREADY_KNOWN.map((item) => (
-                <li key={item.title} className="rn-card flex-row gap-4 p-5 sm:p-6">
-                  <span
-                    aria-hidden="true"
-                    className="flex size-11 shrink-0 items-center justify-center rounded-md bg-secondary text-on-secondary"
-                  >
+                <li key={item.title} className="flex gap-4 py-5 sm:gap-5">
+                  <span aria-hidden="true" className="rn-icon-tile">
                     <item.icon className="size-5" />
                   </span>
                   <div className="min-w-0">
@@ -221,43 +225,48 @@ export default function AboutPage() {
           <SectionHeader
             id="built-heading"
             eyebrow="What we have built"
-            title="The working example is Rynet Showroom"
+            title="The working example is the Rynet marketplace"
             lead="It is the marketplace on this domain, and you can open it and judge it on your own phone. Here is what to look at."
-            action={{ href: "/cars", label: "Open Rynet Showroom" }}
+            action={{ href: "/cars", label: "Open the marketplace" }}
           />
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:gap-10">
-            <ul className="grid gap-4 sm:grid-cols-2">
-              {BUILT.map((item) => (
-                <li
-                  key={item.title}
-                  className="flex gap-4 rounded-md border border-line bg-page p-5"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-md bg-card text-heading shadow-xs"
-                  >
-                    <item.icon className="size-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-heading">{item.title}</h3>
-                    <p className="mt-1 text-sm text-body">{item.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+          {/*
+            The product itself, large, beside what to look for on it. The frame draws real
+            listings through the marketplace's own card, demonstration badges included; the list
+            beside it is ruled and numbered rather than five more icon cards.
+          */}
+          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-start lg:gap-16">
+            <ShowroomFrame cards={cards} />
 
-            <div className="flex flex-col rounded-lg border border-line bg-subtle p-6 sm:p-8 lg:self-start">
-              <h3 className="rn-h3">No case studies yet, on purpose</h3>
-              <p className="mt-3 text-body">
-                Rynet Digital is new and has not done client work yet, so a case study would have to
-                be invented. We would rather show you something real than describe something that is
-                not.
-              </p>
-              <p className="mt-3 text-body">
-                When there is client work, it will be on this site with the dealership&apos;s
-                permission and numbers we can stand behind.
-              </p>
+            <div className="min-w-0">
+              <ol className="border-t border-line">
+                {BUILT.map((item, index) => (
+                  <li key={item.title} className="flex gap-4 border-b border-line py-4 sm:gap-5">
+                    <span
+                      aria-hidden="true"
+                      className="w-6 shrink-0 pt-0.5 text-sm font-semibold text-muted tabular"
+                    >
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-heading">{item.title}</h3>
+                      <p className="mt-1 text-[0.9375rem] text-body">{item.body}</p>
+                    </div>
+                    <item.icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-muted" />
+                  </li>
+                ))}
+              </ol>
+
+              <div className="mt-6 rounded-lg bg-subtle p-5 sm:p-6">
+                <h3 className="text-base font-semibold text-heading">
+                  No case studies yet, on purpose
+                </h3>
+                <p className="mt-2 text-[0.9375rem] text-body">
+                  Rynet Digital is new and has not done client work yet, so a case study would have
+                  to be invented. When there is client work, it will be on this site with the
+                  dealership&apos;s permission and numbers we can stand behind.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -268,10 +277,7 @@ export default function AboutPage() {
           <div className="on-navy relative overflow-hidden rounded-lg px-5 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-16">
             <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-16">
               <div>
-                <span
-                  aria-hidden="true"
-                  className="flex size-12 items-center justify-center rounded-md bg-navy-raised text-on-navy"
-                >
+                <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
                   <Scale className="size-6" />
                 </span>
                 <p className="rn-eyebrow mt-6 text-on-navy-muted">Said up front</p>
@@ -287,7 +293,7 @@ export default function AboutPage() {
               </div>
 
               <div className="lg:border-l lg:border-line-on-navy lg:ps-16">
-                <h3 className="text-base font-semibold">The rules on Rynet Showroom</h3>
+                <h3 className="text-base font-semibold">The rules on the marketplace</h3>
                 <ul className="mt-5 space-y-4">
                   {CONFLICT_RULES.map((rule) => (
                     <li key={rule} className="flex gap-3">
@@ -315,10 +321,7 @@ export default function AboutPage() {
         <div className="container-page">
           <div className="rn-panel grid gap-6 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:gap-16 lg:p-10">
             <div className="flex items-start gap-4">
-              <span
-                aria-hidden="true"
-                className="flex size-12 shrink-0 items-center justify-center rounded-md bg-subtle text-heading"
-              >
+              <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
                 <UserRound className="size-6" />
               </span>
               <div className="min-w-0">
@@ -343,8 +346,8 @@ export default function AboutPage() {
       </section>
 
       <AgencyClose id="about-close" title="See the work, then tell us about yours">
-        Open Rynet Showroom on your phone, then send us your own site. The free review says what we
-        would do differently on it, and what we would leave alone.
+        Open the Rynet marketplace on your phone, then send us your own site. The free review says
+        what we would do differently on it, and what we would leave alone.
       </AgencyClose>
     </>
   );

@@ -55,10 +55,7 @@ export function FinanceTeaser({
         </span>
         .
       </p>
-      <a
-        href="#finance"
-        className="mt-1 inline-flex min-h-6 items-center font-semibold text-heading underline underline-offset-3 hover:text-accent"
-      >
+      <a href="#finance" className="rn-link mt-1 inline-flex min-h-6 items-center">
         See the full estimate
       </a>
     </div>
@@ -104,7 +101,7 @@ export function FinancePanel({ price, defaults }: { price: number; defaults: Fin
       <FinanceEstimator price={price} assumptions={assumptions} />
 
       {disclaimer.text ? (
-        <div className="mt-6 border-t border-line pt-5">
+        <div className="mt-5">
           <LegalReviewMarker reviewedAt={disclaimer.reviewedAt} className="mb-2" />
           <p className="text-xs text-muted">{disclaimer.text}</p>
         </div>

@@ -1,4 +1,6 @@
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
+import { preload } from "react-dom";
 
 import { GalleryControls } from "@/components/listing/gallery-controls";
 import { ColourPlate } from "@/components/vehicles/colour-plate";
@@ -47,10 +49,12 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
       const big = pick(media, "gallery");
       if (!big) return null;
       const small = pick(media, "thumbnail");
+      const card = pick(media, "card");
       return {
         url: big.url,
         width: big.width,
         height: big.height,
+        phone: card && card.url !== big.url ? card : null,
         thumb: small ?? big,
         alt: row.alt?.trim() || media.alt?.trim() || name,
       };
@@ -60,6 +64,8 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
   if (shots.length === 0) {
     const colour = vehicle.exteriorColour;
     const colourName = relName(colour);
+    // A short band, not a photograph-sized box: the page opens on the facts beside it instead of
+    // on a large empty picture.
     return (
       <figure className="m-0">
         <div className="-mx-[var(--container-pad)] sm:mx-0">
@@ -67,7 +73,8 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
             variant="hero"
             colourSwatch={colour && typeof colour === "object" ? (colour.swatch ?? null) : null}
             colourName={colourName}
-            className="aspect-[16/10] rounded-none sm:aspect-[16/9] sm:rounded-lg"
+            bodyName={relName(vehicle.bodyType)}
+            className="aspect-[2/1] max-h-[17.5rem] w-full rounded-none sm:aspect-[3/1] sm:rounded-lg"
           />
         </div>
         <figcaption className="mt-2 text-xs text-muted">
@@ -79,6 +86,24 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
   }
 
   const many = shots.length > 1;
+  const first = shots[0];
+
+  /*
+   * The first photograph is the page's largest paint. It is a plain <picture> rather than
+   * next/image, because with the optimiser off next/image writes one 1280px src with no preload
+   * and no fetch priority: a phone gets the 640px card copy whatever its pixel density, a wider
+   * screen the gallery copy, and each has a preload scoped to its width.
+   */
+  if (first?.phone) {
+    preload(first.phone.url, {
+      as: "image",
+      fetchPriority: "high",
+      media: "(max-width: 39.9375rem)",
+    });
+    preload(first.url, { as: "image", fetchPriority: "high", media: "(min-width: 40rem)" });
+  } else if (first) {
+    preload(first.url, { as: "image", fetchPriority: "high" });
+  }
 
   return (
     <figure className="m-0">
@@ -97,19 +122,39 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
             ? { tabIndex: 0, role: "region", "aria-label": `Photographs, ${shots.length} in all` }
             : {})}
         >
-          {shots.map((shot, index) => (
-            <Image
-              key={`${shot.url}-${index}`}
-              id={`photo-${index + 1}`}
-              src={shot.url}
-              alt={many ? `${shot.alt}, photograph ${index + 1} of ${shots.length}` : shot.alt}
-              width={shot.width}
-              height={shot.height}
-              sizes="(min-width: 64rem) 60vw, 100vw"
-              className="h-full w-full shrink-0 snap-start snap-always object-cover object-[50%_55%]"
-              priority={index === 0}
-            />
-          ))}
+          {shots.map((shot, index) => {
+            const alt = many ? `${shot.alt}, photograph ${index + 1} of ${shots.length}` : shot.alt;
+            const classes =
+              "h-full w-full shrink-0 snap-start snap-always object-cover object-[50%_55%]";
+            return index === 0 ? (
+              <picture key={`${shot.url}-${index}`} className="contents">
+                {shot.phone ? (
+                  <source media="(max-width: 39.9375rem)" srcSet={shot.phone.url} />
+                ) : null}
+                <img
+                  id="photo-1"
+                  src={shot.url}
+                  alt={alt}
+                  width={shot.width}
+                  height={shot.height}
+                  fetchPriority="high"
+                  decoding="async"
+                  className={classes}
+                />
+              </picture>
+            ) : (
+              <Image
+                key={`${shot.url}-${index}`}
+                id={`photo-${index + 1}`}
+                src={shot.url}
+                alt={alt}
+                width={shot.width}
+                height={shot.height}
+                sizes="(min-width: 64rem) 60vw, 100vw"
+                className={classes}
+              />
+            );
+          })}
         </div>
 
         {many ? (
@@ -143,9 +188,26 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
         </div>
       ) : null}
 
+      {/*
+        The caveat on one line, always visible; the photographer and licence one tap away in a
+        native disclosure, so the attribution the licence asks for stays with the photograph
+        without pushing the title and price further down the most valuable screen of the page.
+      */}
       {credit ? (
         <figcaption className="mt-2 text-xs text-muted">
-          Photograph of this model, not of this car. {credit}
+          <details className="group">
+            <summary className="flex min-h-6 cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
+              <span className="min-w-0 truncate">Photograph of this model, not of this car.</span>
+              <span className="rn-link inline-flex shrink-0 items-center gap-0.5">
+                Photo credit
+                <ChevronDown
+                  aria-hidden="true"
+                  className="size-3.5 transition-transform group-open:rotate-180"
+                />
+              </span>
+            </summary>
+            <p className="pt-0.5">{credit}</p>
+          </details>
         </figcaption>
       ) : null}
     </figure>

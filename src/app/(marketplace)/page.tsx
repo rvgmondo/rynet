@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 
-import { BodyTypeTiles, ChipLinks, MakeGrid } from "@/components/home/home-browse";
+import { HomeBrowse } from "@/components/home/home-browse";
 import { HomeHero } from "@/components/home/home-hero";
 import { PhotoCredits, SellAndListBands, VerificationSteps } from "@/components/home/home-sections";
 import { getHomeStock } from "@/components/home/home-stock";
 import { HeroSearch } from "@/components/marketplace/hero-search";
 import { Notice } from "@/components/ui/notice";
 import { SectionHeader } from "@/components/ui/section-header";
-import { ColourWall } from "@/components/vehicles/colour-wall";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
 import { getHomeData } from "@/lib/home-data";
 import { organisationJsonLd, websiteJsonLd } from "@/lib/structured-data";
@@ -17,10 +16,13 @@ import { organisationJsonLd, websiteJsonLd } from "@/lib/structured-data";
  *
  * The first screen answers the two things a buyer arrives with: are there cars here, and can I
  * search them. So it opens on a navy band with a photographed listing beside the promise, and a
- * white search panel with make, model, price and province lifted over the band's edge. After it,
- * in order: the newest cars as a scroll-snap row, body types as photo tiles, makes with counts,
- * provinces and colours, the three checks every dealership goes through, and the two other doors
- * (selling a car to dealerships, and a dealership applying to list).
+ * white search panel lifted over the band's edge (on a phone the search comes before the
+ * photograph). After it, in order: the newest cars as a scroll-snap row, one "Browse cars" section
+ * that switches between body type photo tiles, make tiles, budget bands and provinces (no
+ * JavaScript), the four checks every dealership goes through as a short numbered list, and one
+ * panel with the two other doors (selling a car to dealerships, and a dealership applying to
+ * list). Paint colours are a filter on /cars, not a home page section: nobody shops by a
+ * manufacturer's paint name.
  *
  * Every figure is a live query and nothing is invented: no statistics, no reviews, no logos, no
  * testimonials. The listings are demonstration data today, so the one count the page shows (on
@@ -65,6 +67,13 @@ export default async function HomePage() {
 
   const allCarsLabel = allDemonstration ? "Browse every demo listing" : "Browse every car";
 
+  /*
+   * Body types with enough stock to be worth a photo tile. A tile reading "Sedan: 2 cars" looked
+   * empty beside "SUV: 122 cars"; a small type is still one tap away in the filters. Four at most,
+   * so the row is always whole.
+   */
+  const bodyTiles = stock.bodyTypes.filter((tile) => tile.count >= 10).slice(0, 4);
+
   return (
     <>
       {/* Structured data about Rynet itself, so neither block depends on whether the stock is real. */}
@@ -79,9 +88,42 @@ export default async function HomePage() {
       <HomeHero
         hero={stock.hero}
         eyebrow="Cars for sale from dealerships only"
-        lead="Only registered dealerships can list on Rynet, and our team checks each one before its first car goes live. No private sellers, and no way to become one."
+        shortLead="Only checked, registered dealerships can list. No private sellers."
+        lead="Only registered dealerships can list on Rynet, and our team checks each one before its first car goes live. No private sellers."
+        secondary={{
+          href: "/sell-to-a-dealer",
+          label: "Selling a car instead? Offer it to dealerships",
+        }}
+        below={
+          hasDemonstration ? (
+            <Notice
+              compact
+              title={
+                allDemonstration
+                  ? "Every listing is a demonstration for now. Nothing here is for sale."
+                  : "Some listings are demonstrations, and those are not for sale."
+              }
+              details={allDemonstration ? "Why these are examples" : "What that means"}
+              className="mt-4 sm:mt-6"
+            >
+              {allDemonstration ? (
+                <p>
+                  The cars and dealerships you can browse are example data, there to show how Rynet
+                  works. None of these cars is for sale and none of these dealerships exists. The
+                  search, the filters and the checks a dealership must pass before it can list are
+                  all real.
+                </p>
+              ) : (
+                <p>
+                  A listing marked Demo listing is example data, there to show how Rynet works. That
+                  car is not for sale.
+                </p>
+              )}
+            </Notice>
+          ) : null
+        }
       >
-        <div className="rn-panel p-4 shadow-overlay min-[22.5rem]:p-5 sm:p-6 lg:p-8">
+        <div className="rn-panel p-4 shadow-overlay min-[22.5rem]:p-5 sm:p-6 lg:p-7">
           <HeroSearch
             makes={stock.makes}
             models={stock.models}
@@ -90,31 +132,6 @@ export default async function HomePage() {
             submitLabel={submitLabel}
           />
         </div>
-
-        {hasDemonstration ? (
-          <Notice
-            title={
-              allDemonstration
-                ? "Every listing on Rynet is a demonstration for now"
-                : "Some listings are demonstrations"
-            }
-            className="mt-4 sm:mt-6"
-          >
-            {allDemonstration ? (
-              <p>
-                The cars and dealerships you can browse are example data, there to show how Rynet
-                works. None of these cars is for sale and none of these dealerships exists. The
-                search, the filters and the checks a dealership must pass before it can list are all
-                real.
-              </p>
-            ) : (
-              <p>
-                A listing marked Demo listing is example data, there to show how Rynet works. That
-                car is not for sale.
-              </p>
-            )}
-          </Notice>
-        ) : null}
       </HomeHero>
 
       {stock.featured.length > 0 ? (
@@ -144,45 +161,12 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {stock.bodyTypes.length > 0 ? (
-        <section aria-labelledby="body-heading" className="container-page pt-[var(--section-base)]">
-          <SectionHeader id="body-heading" title="Browse by body type" />
-          <div className="mt-6">
-            <BodyTypeTiles tiles={stock.bodyTypes} />
-          </div>
-        </section>
-      ) : null}
-
-      {stock.makes.length > 0 ? (
-        <section
-          aria-labelledby="make-heading"
-          className="rn-defer container-page py-[var(--section-base)]"
-        >
-          <SectionHeader id="make-heading" title="Browse by make" />
-          <div className="mt-6">
-            <MakeGrid makes={stock.makes} />
-          </div>
-
-          {data.provinces.length > 0 || data.colours.length > 0 ? (
-            <div className="mt-10 grid gap-8 lg:grid-cols-2 lg:gap-12">
-              {data.provinces.length > 0 ? (
-                <div>
-                  <h3 className="rn-h3 text-lg">By province</h3>
-                  <div className="mt-4">
-                    <ChipLinks items={data.provinces} href={(slug) => `/cars/in/${slug}`} />
-                  </div>
-                </div>
-              ) : null}
-              {data.colours.length > 0 ? (
-                <div>
-                  <h3 className="rn-h3 text-lg">By colour</h3>
-                  <ColourWall colours={data.colours} limit={10} className="mt-4" />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
+      <HomeBrowse
+        bodyTiles={bodyTiles}
+        makes={stock.makeTiles}
+        budgets={stock.budgets}
+        provinces={data.provinces}
+      />
 
       <VerificationSteps />
 

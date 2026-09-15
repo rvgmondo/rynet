@@ -33,7 +33,7 @@ export function HeaderSearch({ className = "" }: { className?: string }) {
           type="search"
           autoComplete="off"
           placeholder="Search make or model"
-          className="rn-input h-11 w-[16rem] rounded-full bg-subtle pl-9 text-[0.9375rem] shadow-none"
+          className="rn-input h-11 w-[16rem] bg-subtle pl-9 text-[0.9375rem] shadow-none"
         />
       </form>
     </search>

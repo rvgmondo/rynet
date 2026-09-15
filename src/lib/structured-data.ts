@@ -281,7 +281,7 @@ export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Rynet Showroom",
+    name: "Rynet",
     url: SITE,
     /*
      * No SearchAction.

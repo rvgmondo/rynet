@@ -11,15 +11,15 @@ import "@/styles/globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000"),
   title: {
-    default: "Rynet Showroom | Cars for sale from South African dealerships",
-    template: "%s | Rynet Showroom",
+    default: "Rynet | Cars for sale from South African dealerships",
+    template: "%s | Rynet",
   },
   description:
     "Cars for sale from South African dealerships only. Every dealership is checked before it can list, and there are no private sellers. Search stock across the country by make, model, price and area.",
   openGraph: {
     type: "website",
     locale: "en_ZA",
-    siteName: "Rynet Showroom",
+    siteName: "Rynet",
   },
   /*
    * Large card rather than the imageless default.
@@ -40,7 +40,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f2139" },
+    { media: "(prefers-color-scheme: dark)", color: "#112642" },
   ],
 };
 

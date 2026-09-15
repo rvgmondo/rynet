@@ -46,11 +46,17 @@ function recordReveal(vehicleRef: string) {
 export function PhoneReveal({
   phone,
   vehicleRef,
+  isDemonstration = false,
   compact = false,
   className = "",
 }: {
   phone: string | null;
   vehicleRef: string;
+  /**
+   * A demonstration dealership does not exist, so its number belongs to no business and is never
+   * offered. The callers already pass no number for one; this is the second lock on the same door.
+   */
+  isDemonstration?: boolean;
   compact?: boolean;
   className?: string;
 }) {
@@ -63,7 +69,7 @@ export function PhoneReveal({
     if (revealed) revealedLink.current?.focus();
   }, [revealed]);
 
-  if (!phone) return null;
+  if (!phone || isDemonstration) return null;
 
   const dial = phone.replace(/[^0-9+]/g, "");
 

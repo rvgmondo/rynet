@@ -32,10 +32,7 @@ export function SellToDealerBand({ dealer }: { dealer: Dealer }) {
     <section aria-labelledby="sell-heading" className="container-page pb-[var(--section-base)]">
       <div className="rn-panel flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:px-10">
         <div className="flex max-w-2xl gap-4 sm:gap-5">
-          <span
-            aria-hidden="true"
-            className="grid size-12 shrink-0 place-items-center rounded-md bg-subtle text-heading"
-          >
+          <span aria-hidden="true" className="rn-icon-tile rn-icon-tile--lg">
             <CarFront className="size-6" />
           </span>
           <div className="min-w-0">

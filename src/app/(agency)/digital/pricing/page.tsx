@@ -55,6 +55,22 @@ const DRIVERS = [
   },
 ] as const;
 
+/** The figure for a package: "On application" until a real `from` is set. */
+function BandPrice({ from }: { from: number | null }) {
+  return from === null ? (
+    <>
+      <p className="text-xl font-semibold text-heading">On application</p>
+      <p className="mt-1 text-sm text-muted">Quoted in writing after your free review.</p>
+    </>
+  ) : (
+    <>
+      <p className="text-sm text-muted">From</p>
+      <PriceTag value={from} size="lg" />
+      <p className="mt-1 text-sm text-muted">Excluding VAT.</p>
+    </>
+  );
+}
+
 /**
  * Pricing.
  *
@@ -80,6 +96,28 @@ export default function PricingPage() {
         eyebrow="Pricing"
         title="What it costs, and the terms behind it"
         lead="What each kind of engagement covers, what moves the price up or down, and the terms that apply whatever the figure turns out to be."
+        aside={
+          <div className="rounded-lg border border-line bg-page p-5 sm:p-6">
+            <p className="text-sm font-semibold text-heading">How a figure is reached</p>
+            <ol className="mt-4 grid gap-3">
+              {[
+                "A free review of your site, stock feed and advertising",
+                "A call to agree what matters this year",
+                "A scope and a figure in writing, before you commit",
+              ].map((step, index) => (
+                <li key={step} className="flex items-start gap-3 text-[0.9375rem] text-body">
+                  <span
+                    aria-hidden="true"
+                    className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-on-secondary tabular"
+                  >
+                    {index + 1}
+                  </span>
+                  <span className="pt-0.5">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        }
       />
 
       <section aria-labelledby="terms-heading" className="py-[var(--section-base)]">
@@ -89,14 +127,17 @@ export default function PricingPage() {
             eyebrow="Fixed, whatever the figure"
             title="Three terms that do not change"
           />
-          <ul className="mt-8 grid gap-4 md:grid-cols-3">
+          <ul className="mt-8 grid divide-y divide-line border-y border-line md:grid-cols-3 md:divide-x md:divide-y-0">
             {TERMS.map((term) => (
-              <li key={term.title} className="rn-card p-6">
-                <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-on-secondary">
-                  <term.icon aria-hidden="true" className="size-5" />
-                </span>
-                <h3 className="mt-5 text-lg font-semibold text-heading">{term.title}</h3>
-                <p className="mt-2 text-body">{term.body}</p>
+              <li
+                key={term.title}
+                className="flex gap-4 py-5 md:flex-col md:gap-0 md:px-6 md:py-6 md:first:ps-0"
+              >
+                <term.icon aria-hidden="true" className="mt-0.5 size-6 shrink-0 text-heading" />
+                <div className="min-w-0">
+                  <h3 className="text-lg font-semibold text-heading md:mt-4">{term.title}</h3>
+                  <p className="mt-1.5 text-body">{term.body}</p>
+                </div>
               </li>
             ))}
           </ul>
@@ -120,7 +161,106 @@ export default function PricingPage() {
             </Notice>
           ) : null}
 
-          <ul className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {/*
+            From 1024px the four packages are one comparison table: a column each, and the same
+            rows across (how it is charged, who it suits, what it includes, the figure), so a
+            dealer reads across a row instead of hunting through four cards. Below that the same
+            content stacks as one card per package, because four columns do not fit a phone.
+          */}
+          <div className="mt-8 hidden overflow-hidden rounded-lg border border-line lg:block">
+            <table className="w-full table-fixed border-collapse text-left">
+              <caption className="sr-only">The four packages compared</caption>
+              <colgroup>
+                <col className="w-[11rem] xl:w-[13rem]" />
+                {PRICE_BANDS.map((band) => (
+                  <col key={band.slug} />
+                ))}
+              </colgroup>
+              <thead>
+                <tr className="bg-navy text-on-navy">
+                  <td className="px-5 py-5 align-bottom">
+                    <span className="sr-only">Package</span>
+                  </td>
+                  {PRICE_BANDS.map((band) => (
+                    <th
+                      key={band.slug}
+                      scope="col"
+                      className="border-l border-line-on-navy px-5 py-5 align-bottom text-lg leading-snug font-semibold"
+                    >
+                      {band.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line bg-card">
+                <tr>
+                  <th scope="row" className="px-5 py-4 align-top text-sm font-semibold text-muted">
+                    How it is charged
+                  </th>
+                  {PRICE_BANDS.map((band) => (
+                    <td key={band.slug} className="border-l border-line px-5 py-4 align-top">
+                      <Badge>{band.basis}</Badge>
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <th scope="row" className="px-5 py-4 align-top text-sm font-semibold text-muted">
+                    Suits
+                  </th>
+                  {PRICE_BANDS.map((band) => (
+                    <td
+                      key={band.slug}
+                      className="border-l border-line px-5 py-4 align-top text-[0.9375rem] text-body"
+                    >
+                      {band.who}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <th scope="row" className="px-5 py-4 align-top text-sm font-semibold text-muted">
+                    Includes
+                  </th>
+                  {PRICE_BANDS.map((band) => (
+                    <td
+                      key={band.slug}
+                      className="border-l border-line px-5 py-4 align-top text-[0.9375rem] text-body"
+                    >
+                      {band.what}
+                    </td>
+                  ))}
+                </tr>
+                <tr className="bg-subtle">
+                  <th scope="row" className="px-5 py-5 align-top text-sm font-semibold text-muted">
+                    Price
+                  </th>
+                  {PRICE_BANDS.map((band) => {
+                    const interest = BAND_INTEREST[band.slug];
+                    return (
+                      <td key={band.slug} className="border-l border-line px-5 py-5 align-top">
+                        <BandPrice from={band.from} />
+                        <Link
+                          href={
+                            interest ? `${REVIEW_CTA.href}?interest=${interest}` : REVIEW_CTA.href
+                          }
+                          className={buttonClasses({
+                            variant: "outline",
+                            size: "sm",
+                            block: true,
+                            className: "mt-4",
+                          })}
+                        >
+                          Ask for a quote
+                          <span className="sr-only"> for {band.name.toLowerCase()}</span>
+                        </Link>
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <ul className="mt-8 grid gap-4 md:grid-cols-2 lg:hidden">
             {PRICE_BANDS.map((band) => {
               const interest = BAND_INTEREST[band.slug];
               return (
@@ -141,20 +281,7 @@ export default function PricingPage() {
 
                     <div className="mt-auto pt-6">
                       <div className="border-t border-line pt-5">
-                        {band.from === null ? (
-                          <>
-                            <p className="text-xl font-semibold text-heading">On application</p>
-                            <p className="mt-1 text-sm text-muted">
-                              Quoted in writing after your free review.
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-sm text-muted">From</p>
-                            <PriceTag value={band.from} size="lg" />
-                            <p className="mt-1 text-sm text-muted">Excluding VAT.</p>
-                          </>
-                        )}
+                        <BandPrice from={band.from} />
                       </div>
                       <Link
                         href={
@@ -186,11 +313,17 @@ export default function PricingPage() {
             title="Why two dealerships rarely pay the same"
             lead="Worth knowing before the call rather than after the quote."
           />
-          <div className="mt-8 grid gap-4 lg:grid-cols-2">
-            {DRIVERS.map((column) => (
-              <div key={column.heading} className="rn-card p-6 sm:p-8">
+          {/*
+            One panel split in two, not two cards: the halves are the two sides of one question.
+          */}
+          <div className="rn-panel mt-8 grid overflow-hidden lg:grid-cols-2">
+            {DRIVERS.map((column, index) => (
+              <div
+                key={column.heading}
+                className={`p-6 sm:p-8 lg:p-10 ${index === 1 ? "border-t border-line bg-subtle lg:border-t-0 lg:border-l" : ""}`}
+              >
                 <div className="flex items-center gap-3">
-                  <span className="flex size-10 items-center justify-center rounded-md bg-subtle text-heading">
+                  <span className={`rn-icon-tile ${index === 1 ? "bg-card" : ""}`}>
                     <column.icon aria-hidden="true" className="size-5" />
                   </span>
                   <h3 className="rn-h3">{column.heading}</h3>

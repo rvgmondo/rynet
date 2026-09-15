@@ -59,7 +59,10 @@ export function ResultsHeader({
   return (
     <header>
       {trail ? <Breadcrumbs trail={trail} className="mb-3" /> : null}
-      <h1 id="results-heading" className="rn-h1 max-w-[24ch]">
+      <h1
+        id="results-heading"
+        className="rn-h1 max-w-[24ch] text-[clamp(2rem,1.6rem+1.4vw,2.75rem)]"
+      >
         {heading}
       </h1>
       <p className="mt-2 text-base text-body">
@@ -71,7 +74,7 @@ export function ResultsHeader({
           </span>
         ) : null}
       </p>
-      {intro ? <p className="mt-3 max-w-[68ch] text-base text-muted sm:text-lg">{intro}</p> : null}
+      {intro ? <p className="mt-2 max-w-[68ch] text-base text-muted">{intro}</p> : null}
     </header>
   );
 }
