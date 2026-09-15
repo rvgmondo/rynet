@@ -102,8 +102,11 @@ export function SearchScreen({
             {/*
               One line, never three: the heading above already says what kind of listings these
               are, and every card carries its own Demo listing badge, so the bar only keeps count.
+              Where the browser can tell a sticky bar is stuck, the count only fades in once it is,
+              so the first screen does not print the number twice, one line under the other.
             */}
             <p
+              data-toolbar-count
               aria-hidden="true"
               className="shrink-0 text-[0.8125rem] whitespace-nowrap text-muted max-[22rem]:hidden"
             >

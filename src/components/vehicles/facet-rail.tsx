@@ -44,11 +44,15 @@ import { FacetGroup, type FacetOption, FilterSection, OptionList } from "./facet
  * disabled, keeps its 0 and waits behind "Show more", so "none right now" reads differently from
  * "not a category" without cluttering the list.
  *
- * ON A DESKTOP the sidebar is in the page's own flow, never a box that scrolls inside itself (that
- * hid eight of ten filters behind an invisible scrollbar). With every section closed it fits a
- * laptop screen, "Show N cars" included. That bar is not sticky: pinned to the bottom of the window
- * it sat over whichever filter row was there, a partly hidden target (SC 2.5.8) and a focus that
- * could land under it (SC 2.4.11).
+ * ON A DESKTOP the sidebar is never a box that scrolls inside itself (that hid eight of ten filters
+ * behind an invisible scrollbar). With every section closed it fits a laptop screen, "Show N cars"
+ * included, and while the whole panel fits the window it sticks under the header, so a buyer
+ * twenty cars down still has the filters beside the results instead of an empty column. The moment
+ * it would not fit (a section opened on a short screen) it drops back into the page's flow, where
+ * every row can be scrolled to; FilterBehaviour measures that and keeps whatever was just clicked
+ * where it was on screen. Without JavaScript it simply stays in the flow. The "Show N cars" bar is
+ * not pinned to the window: there it sat over whichever filter row was under it, a partly hidden
+ * target (SC 2.5.8) and a focus that could land under it (SC 2.4.11).
  *
  * The landing pages use this too, posting to /cars with their own facet already
  * ticked, so a buyer who arrived on "Bakkies for sale" keeps the bakkie filter when they refine.
@@ -194,7 +198,7 @@ export function FacetRail({
     <aside
       id="filters"
       aria-labelledby="filters-heading"
-      className="fixed inset-0 z-[var(--z-modal)] hidden bg-[var(--rn-scrim)] target:flex data-[open]:flex data-[open]:animate-[rn-fade-in_var(--duration-element)_var(--rn-ease-out)_both] xl:static xl:z-auto xl:block xl:bg-transparent xl:target:block"
+      className="fixed inset-0 z-[var(--z-modal)] hidden bg-[var(--rn-scrim)] target:flex data-[open]:flex data-[open]:animate-[rn-fade-in_var(--duration-element)_var(--rn-ease-out)_both] xl:static xl:z-auto xl:block xl:bg-transparent xl:target:block xl:data-[fits]:sticky xl:data-[fits]:top-[calc(var(--header-height)+1.5rem)] xl:data-[fits]:bottom-auto"
     >
       <div
         data-filter-sheet
@@ -249,10 +253,14 @@ export function FacetRail({
           ))}
 
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 xl:overflow-visible xl:px-5">
+            {/*
+              Closed like every other section until a price is set. Open, its two selects made the
+              sidebar about 100px too tall to stick beside the results on a 1366 by 768 laptop.
+            */}
             <FilterSection
               title="Price"
               summary={rangeLabel(state.minPrice, state.maxPrice, formatRand)}
-              open
+              open={Boolean(state.minPrice || state.maxPrice)}
             >
               <fieldset>
                 <legend className="sr-only">Price</legend>

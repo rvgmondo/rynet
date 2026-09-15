@@ -361,6 +361,32 @@
       top: 0;
     }
   }
+
+  /*
+   * The bar's result count repeats the count printed under the heading, which sits just above the
+   * bar until the bar sticks. Where scroll-state queries exist the count waits until then; it keeps
+   * its space, so nothing in the bar moves when it appears. Elsewhere it simply always shows.
+   */
+  @supports (container-type: scroll-state) {
+    [data-sticky-toolbar] {
+      container-type: scroll-state;
+    }
+
+    [data-toolbar-count] {
+      visibility: hidden;
+      opacity: 0;
+      transition:
+        opacity var(--duration-element) var(--rn-ease-out),
+        visibility var(--duration-element);
+    }
+
+    @container scroll-state(stuck: top) {
+      [data-toolbar-count] {
+        visibility: visible;
+        opacity: 1;
+      }
+    }
+  }
 }
 
 /* ====================================================================== COMPONENTS */

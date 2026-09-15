@@ -101,7 +101,7 @@ export function FinancePanel({ price, defaults }: { price: number; defaults: Fin
       <FinanceEstimator price={price} assumptions={assumptions} />
 
       {disclaimer.text ? (
-        <div className="mt-6 border-t border-line pt-5">
+        <div className="mt-5">
           <LegalReviewMarker reviewedAt={disclaimer.reviewedAt} className="mb-2" />
           <p className="text-xs text-muted">{disclaimer.text}</p>
         </div>

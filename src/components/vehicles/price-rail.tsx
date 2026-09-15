@@ -9,12 +9,13 @@ import { Badge, DemoListingBadge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { Notice } from "@/components/ui/notice";
 import { PriceTag } from "@/components/ui/price-tag";
-import { EnquiryDialog } from "@/components/vehicles/enquiry-dialog";
+import { EnquiryDialog, type EnquirySummary } from "@/components/vehicles/enquiry-dialog";
 import { FinanceTeaser } from "@/components/vehicles/finance-panel";
 import { PhoneReveal } from "@/components/vehicles/phone-reveal";
 import { formatRand } from "@/lib/format";
 import { populated, relName, relSlug } from "@/lib/relations";
 import { vehicleUrl } from "@/lib/urls";
+import { vehiclePhoto } from "@/lib/vehicle-photo";
 import type { Vehicle } from "@/payload-types";
 
 /** The id the phone action bar watches: while these buttons are on screen, the bar stays away. */
@@ -24,6 +25,15 @@ function shortTitle(vehicle: Vehicle): string {
   return [vehicle.modelYear, relName(vehicle.make), relName(vehicle.model)]
     .filter(Boolean)
     .join(" ");
+}
+
+/** The car as the enquiry dialog shows it: the small photograph and the price. */
+function enquirySummary(vehicle: Vehicle): EnquirySummary {
+  const photo = vehiclePhoto(vehicle, "thumbnail");
+  return {
+    photo: photo ? { url: photo.url, width: photo.width, height: photo.height } : null,
+    price: vehicle.priceType === "poa" ? "Price on application" : formatRand(vehicle.price),
+  };
 }
 
 /** The wa.me address for a South African number written the way people write it. */
@@ -190,6 +200,7 @@ export function ListingSummary({
               vehicleTitle={title}
               dealerName={dealer?.tradingName ?? "the dealership"}
               isDemonstration={demonstration}
+              summary={enquirySummary(vehicle)}
             />
 
             {phone || whatsapp ? (
@@ -305,6 +316,7 @@ export function MobileActionBar({ vehicle, sold }: { vehicle: Vehicle; sold: boo
           vehicleTitle={title}
           dealerName={dealer?.tradingName ?? "the dealership"}
           isDemonstration={demonstration}
+          summary={enquirySummary(vehicle)}
         />
       </div>
     </StickyActionBar>

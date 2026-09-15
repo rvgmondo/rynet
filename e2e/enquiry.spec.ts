@@ -46,7 +46,9 @@ test.describe("the vehicle page", () => {
     await expect(page.getByText("Estimated instalment")).toBeVisible();
     // The cost of credit sits beside the instalment at equal weight. It is an NCA point,
     // not a design preference, so it gets an assertion.
-    await expect(page.getByText("Total cost of the credit")).toBeVisible();
+    await expect(
+      page.locator("#finance").getByText("Total cost of credit", { exact: true }),
+    ).toBeVisible();
   });
 
   test("never calls a demonstration dealership verified", async ({ page }) => {
@@ -62,6 +64,14 @@ test.describe("the vehicle page", () => {
 
     await expect(page.getByText("Demo dealership").first()).toBeVisible();
     await expect(page.getByText(/Verified dealership/i)).toHaveCount(0);
+
+    // The enquiry dialog says it in words as well, because it is often opened from the phone bar
+    // long after the page's notice has scrolled away.
+    await page
+      .getByRole("button", { name: /Enquire about this vehicle/i })
+      .first()
+      .click();
+    await expect(page.getByRole("dialog")).toContainText("The car is not for sale.");
   });
 
   test("offers no phone number or WhatsApp for a dealership that does not exist", async ({

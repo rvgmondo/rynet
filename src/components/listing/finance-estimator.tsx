@@ -116,16 +116,25 @@ export function FinanceEstimator({
 
       <div aria-live="polite" className="mt-6">
         {result ? (
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <div className="rounded-md bg-subtle p-3.5 sm:p-5">
-              <p className="text-sm font-medium text-muted">Estimated instalment</p>
+          /*
+           * One tinted surface split by a hairline, not two boxes with a gap: the two figures read
+           * as one answer, and on a phone each half gains the width its label needs to stay on
+           * one line.
+           */
+          <div className="grid grid-cols-2 divide-x divide-line-strong rounded-md bg-subtle">
+            <div className="min-w-0 px-3 py-4 sm:p-5">
+              <p className="text-[0.8125rem] font-medium text-muted sm:text-sm">
+                Estimated instalment
+              </p>
               <p className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5">
                 <PriceTag as="span" value={result.monthlyInstalment} size="lg" />
                 <span className="text-sm font-semibold text-muted">pm</span>
               </p>
             </div>
-            <div className="rounded-md bg-subtle p-3.5 sm:p-5">
-              <p className="text-sm font-medium text-muted">Total cost of the credit</p>
+            <div className="min-w-0 px-3 py-4 sm:p-5">
+              <p className="text-[0.8125rem] font-medium text-muted sm:text-sm">
+                Total cost of credit
+              </p>
               <PriceTag value={result.totalCostOfCredit} size="lg" className="mt-1.5" />
               <p className="mt-1 text-xs text-muted">
                 On top of the <span className="whitespace-nowrap">{formatRand(price)}</span> price
@@ -154,7 +163,7 @@ export function FinanceEstimator({
                 </div>
               ))}
           </dl>
-          <details className="group border-t border-line">
+          <details className="group border-y border-line">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold text-heading [&::-webkit-details-marker]:hidden">
               See the breakdown
               <ChevronDown
