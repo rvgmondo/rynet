@@ -70,10 +70,12 @@ export interface Config {
   collections: {
     vehicles: Vehicle;
     dealers: Dealer;
-    branches: Branch;
-    plans: Plan;
     leads: Lead;
-    'consent-records': ConsentRecord;
+    branches: Branch;
+    media: Media;
+    users: User;
+    buyers: Buyer;
+    plans: Plan;
     makes: Make;
     models: Model;
     variants: Variant;
@@ -89,9 +91,7 @@ export interface Config {
     franchises: Franchise;
     'dealer-groups': DealerGroup;
     accreditations: Accreditation;
-    media: Media;
-    users: User;
-    buyers: Buyer;
+    'consent-records': ConsentRecord;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -101,10 +101,12 @@ export interface Config {
   collectionsSelect: {
     vehicles: VehiclesSelect<false> | VehiclesSelect<true>;
     dealers: DealersSelect<false> | DealersSelect<true>;
-    branches: BranchesSelect<false> | BranchesSelect<true>;
-    plans: PlansSelect<false> | PlansSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
-    'consent-records': ConsentRecordsSelect<false> | ConsentRecordsSelect<true>;
+    branches: BranchesSelect<false> | BranchesSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
+    buyers: BuyersSelect<false> | BuyersSelect<true>;
+    plans: PlansSelect<false> | PlansSelect<true>;
     makes: MakesSelect<false> | MakesSelect<true>;
     models: ModelsSelect<false> | ModelsSelect<true>;
     variants: VariantsSelect<false> | VariantsSelect<true>;
@@ -120,9 +122,7 @@ export interface Config {
     franchises: FranchisesSelect<false> | FranchisesSelect<true>;
     'dealer-groups': DealerGroupsSelect<false> | DealerGroupsSelect<true>;
     accreditations: AccreditationsSelect<false> | AccreditationsSelect<true>;
-    media: MediaSelect<false> | MediaSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
-    buyers: BuyersSelect<false> | BuyersSelect<true>;
+    'consent-records': ConsentRecordsSelect<false> | ConsentRecordsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1367,20 +1367,28 @@ export interface PayloadLockedDocument {
         value: number | Dealer;
       } | null)
     | ({
-        relationTo: 'branches';
-        value: number | Branch;
-      } | null)
-    | ({
-        relationTo: 'plans';
-        value: number | Plan;
-      } | null)
-    | ({
         relationTo: 'leads';
         value: number | Lead;
       } | null)
     | ({
-        relationTo: 'consent-records';
-        value: number | ConsentRecord;
+        relationTo: 'branches';
+        value: number | Branch;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'buyers';
+        value: number | Buyer;
+      } | null)
+    | ({
+        relationTo: 'plans';
+        value: number | Plan;
       } | null)
     | ({
         relationTo: 'makes';
@@ -1443,16 +1451,8 @@ export interface PayloadLockedDocument {
         value: number | Accreditation;
       } | null)
     | ({
-        relationTo: 'media';
-        value: number | Media;
-      } | null)
-    | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
-        relationTo: 'buyers';
-        value: number | Buyer;
+        relationTo: 'consent-records';
+        value: number | ConsentRecord;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1646,75 +1646,6 @@ export interface DealersSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "branches_select".
- */
-export interface BranchesSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  dealer?: T;
-  isPrimary?: T;
-  addressLine1?: T;
-  addressLine2?: T;
-  suburb?: T;
-  city?: T;
-  province?: T;
-  postalCode?: T;
-  latitude?: T;
-  longitude?: T;
-  directionsNote?: T;
-  phone?: T;
-  whatsapp?: T;
-  email?: T;
-  tradingHours?:
-    | T
-    | {
-        day?: T;
-        closed?: T;
-        opensAt?: T;
-        closesAt?: T;
-        id?: T;
-      };
-  holidayOverrides?:
-    | T
-    | {
-        date?: T;
-        label?: T;
-        closed?: T;
-        opensAt?: T;
-        closesAt?: T;
-        id?: T;
-      };
-  photos?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plans_select".
- */
-export interface PlansSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  monthlyPrice?: T;
-  listingLimit?: T;
-  branchLimit?: T;
-  userLimit?: T;
-  allowsMicrositeTheming?: T;
-  allowsFeedImport?: T;
-  summary?: T;
-  includedFeatures?:
-    | T
-    | {
-        label?: T;
-        id?: T;
-      };
-  isPublic?: T;
-  sortOrder?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "leads_select".
  */
 export interface LeadsSelect<T extends boolean = true> {
@@ -1779,17 +1710,203 @@ export interface LeadsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "consent-records_select".
+ * via the `definition` "branches_select".
  */
-export interface ConsentRecordsSelect<T extends boolean = true> {
-  purpose?: T;
-  subjectEmail?: T;
-  subjectPhone?: T;
-  policyVersion?: T;
-  grantedAt?: T;
-  withdrawnAt?: T;
-  evidence?: T;
-  ipHash?: T;
+export interface BranchesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  dealer?: T;
+  isPrimary?: T;
+  addressLine1?: T;
+  addressLine2?: T;
+  suburb?: T;
+  city?: T;
+  province?: T;
+  postalCode?: T;
+  latitude?: T;
+  longitude?: T;
+  directionsNote?: T;
+  phone?: T;
+  whatsapp?: T;
+  email?: T;
+  tradingHours?:
+    | T
+    | {
+        day?: T;
+        closed?: T;
+        opensAt?: T;
+        closesAt?: T;
+        id?: T;
+      };
+  holidayOverrides?:
+    | T
+    | {
+        date?: T;
+        label?: T;
+        closed?: T;
+        opensAt?: T;
+        closesAt?: T;
+        id?: T;
+      };
+  photos?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  isDecorative?: T;
+  credit?: T;
+  isDemonstration?: T;
+  folder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        gallery?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        hero?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  dealer?: T;
+  phone?: T;
+  status?: T;
+  twoFactorEnabled?: T;
+  twoFactorSecret?: T;
+  twoFactorRecoveryCodes?:
+    | T
+    | {
+        hash?: T;
+        id?: T;
+      };
+  twoFactorConfirmedAt?: T;
+  lastLoginAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "buyers_select".
+ */
+export interface BuyersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  province?: T;
+  city?: T;
+  alertFrequency?: T;
+  marketingConsent?: T;
+  status?: T;
+  deletionRequestedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plans_select".
+ */
+export interface PlansSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  monthlyPrice?: T;
+  listingLimit?: T;
+  branchLimit?: T;
+  userLimit?: T;
+  allowsMicrositeTheming?: T;
+  allowsFeedImport?: T;
+  summary?: T;
+  includedFeatures?:
+    | T
+    | {
+        label?: T;
+        id?: T;
+      };
+  isPublic?: T;
+  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2020,136 +2137,19 @@ export interface AccreditationsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "media_select".
+ * via the `definition` "consent-records_select".
  */
-export interface MediaSelect<T extends boolean = true> {
-  alt?: T;
-  isDecorative?: T;
-  credit?: T;
-  isDemonstration?: T;
-  folder?: T;
+export interface ConsentRecordsSelect<T extends boolean = true> {
+  purpose?: T;
+  subjectEmail?: T;
+  subjectPhone?: T;
+  policyVersion?: T;
+  grantedAt?: T;
+  withdrawnAt?: T;
+  evidence?: T;
+  ipHash?: T;
   updatedAt?: T;
   createdAt?: T;
-  url?: T;
-  thumbnailURL?: T;
-  filename?: T;
-  mimeType?: T;
-  filesize?: T;
-  width?: T;
-  height?: T;
-  focalX?: T;
-  focalY?: T;
-  sizes?:
-    | T
-    | {
-        thumbnail?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        card?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        gallery?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-        hero?:
-          | T
-          | {
-              url?: T;
-              width?: T;
-              height?: T;
-              mimeType?: T;
-              filesize?: T;
-              filename?: T;
-            };
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  role?: T;
-  dealer?: T;
-  phone?: T;
-  status?: T;
-  twoFactorEnabled?: T;
-  twoFactorSecret?: T;
-  twoFactorRecoveryCodes?:
-    | T
-    | {
-        hash?: T;
-        id?: T;
-      };
-  twoFactorConfirmedAt?: T;
-  lastLoginAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "buyers_select".
- */
-export interface BuyersSelect<T extends boolean = true> {
-  name?: T;
-  phone?: T;
-  province?: T;
-  city?: T;
-  alertFrequency?: T;
-  marketingConsent?: T;
-  status?: T;
-  deletionRequestedAt?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

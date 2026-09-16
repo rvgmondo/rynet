@@ -7,6 +7,7 @@ import {
   scopedToOwnDealer,
   writableByOwnDealer,
 } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 import { slugify } from "@/lib/slug";
 
 const DAYS = [
@@ -37,7 +38,7 @@ export const Branches: CollectionConfig = {
   admin: {
     useAsTitle: "name",
     defaultColumns: ["name", "dealer", "city", "province", "isPrimary"],
-    group: "Dealers",
+    group: ADMIN_GROUP.details,
   },
   access: {
     read: () => true,

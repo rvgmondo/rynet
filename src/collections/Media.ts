@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 
 import { isDealerStaff, isPlatformStaff } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * The media library.
@@ -20,9 +21,9 @@ import { isDealerStaff, isPlatformStaff } from "@/access/roles";
  */
 export const Media: CollectionConfig = {
   slug: "media",
-  labels: { singular: "Image or file", plural: "Media" },
+  labels: { singular: "Photo or file", plural: "Photos and files" },
   admin: {
-    group: "Content",
+    group: ADMIN_GROUP.details,
     defaultColumns: ["filename", "alt", "isDecorative", "updatedAt"],
     description: "Every image needs alt text, or an explicit decorative flag. This is enforced.",
   },

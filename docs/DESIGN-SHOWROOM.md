@@ -153,16 +153,24 @@ Brand: `RynetMark` (the R and gauge) and `RynetLockup` (mark, red divider, RYNET
 
 - **Header** (`site-header.tsx`): white, sticky, 64px, 1px line and a whisper of shadow. Lockup;
   Buy a car, Dealerships, How we verify with `aria-current` and a red underline; a compact search
-  from 1280px (hidden on / and /cars); "Sell your car" and "For dealers" as quiet links. No red
-  button: red is spent on each page's own action. Below 1024px the bar is the lockup, a search
-  button (a link to /cars that opens the menu with its search focused once hydrated) and the menu:
-  a full-height sheet (native `<details>`, closes on navigation, Escape and scrim tap, locks page
-  scroll) with search, the destinations, quick searches by body type, make and price, one outline
-  "Sell your car to a dealership" (not shown on that page) and the theme switch. Below 1024px the
-  header slides away on scroll down and returns on scroll up (`header-scroll.tsx`).
+  from 1280px (hidden on / and /cars); "Sell your car" and "For dealers" as quiet links; last, the
+  theme menu. No red button: red is spent on each page's own action. Below 1024px the bar is the
+  lockup, a search button (a link to /cars that opens the menu with its search focused once
+  hydrated), the theme menu and the menu, three 44px icon buttons with no gap between them. The
+  menu is a full-height sheet (native `<details>`, closes on navigation, Escape and scrim tap,
+  locks page scroll) with search, the destinations, quick searches by body type, make and price, and one
+  outline "Sell your car to a dealership" (not shown on that page). Below 1024px the header slides
+  away on scroll down and returns on scroll up (`header-scroll.tsx`), never while the theme menu
+  is open.
+- **Theme menu** (`theme-menu.tsx`), in the marketplace header and the agency header, and nowhere
+  else: one icon button showing the current choice (sun, monitor, moon) and naming it ("Colour
+  theme: Dark"), opening a small card with Light, System and Dark as `menuitemradio` items, a tick
+  on the current one. Arrow keys, Home, End and first letters move; Enter, Space or a click chooses
+  and closes; Escape, Tab and a click outside close. next-themes keeps the choice in localStorage
+  under "theme" and writes `data-theme` on `<html>` before first paint.
 - **Footer** (`site-footer.tsx`): navy in both themes. Lockup and a how-it-works line, three link
   columns, quick searches as chips from 768px, copyright, the dealer-supplied-prices disclaimer, the
-  company identity line only when every part of it is real, and the theme switch.
+  company identity line only when every part of it is real.
 - **Breadcrumbs:** Home and parents only, never a single crumb repeating the H1. JSON-LD carries the
   full trail.
 - **404:** one body (`not-found-body.tsx`) in both the route-group and the global 404, inside the

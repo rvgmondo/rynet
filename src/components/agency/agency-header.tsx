@@ -5,14 +5,15 @@ import { AGENCY_EMAIL, AGENCY_NAV, REVIEW_CTA } from "@/components/agency/agency
 import { AgencyWordmark } from "@/components/agency/agency-wordmark";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { NavLink } from "@/components/layout/nav-link";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ThemeMenu } from "@/components/layout/theme-menu";
 import { buttonClasses } from "@/components/ui/button-classes";
 
 /*
  * The focus ring for anything sitting directly on the navy bar. The product ring is a mid blue
  * that disappears on navy, so the bar's own controls use the lighter on-navy blue. The bar is
  * deliberately NOT an `.on-navy` region: the menu sheet opens inside it on a white card, and
- * everything `.on-navy` sets (light ink, light ring, light theme switch) would be wrong there.
+ * everything `.on-navy` sets (light ink, light ring) would be wrong there, and on the theme
+ * menu's card too.
  */
 const RING = "focus-visible:outline-[color:var(--rn-focus-ring-on-navy)]";
 
@@ -24,12 +25,15 @@ const RING = "focus-visible:outline-[color:var(--rn-focus-ring-on-navy)]";
  * marketplace bar is white, and a visitor can tell at a glance which front door they are on.
  *
  * Left: RYNET DIGITAL. Then the four agency destinations with a current-page underline in brand
- * red. Right: a quiet way back to the Rynet marketplace (the agency's working example) and the one red
- * action, "Book a free review", which is on every page at every width, phones included.
+ * red. Right: a quiet way back to the Rynet marketplace (the agency's working example), the one
+ * red action, "Book a free review", which is on every page at every width, phones included, and
+ * the colour theme menu, the only theme control on the site.
  *
  * Below 1024px the destinations move into the same native <details> sheet the marketplace uses
  * (works before hydration and without JavaScript; closes on navigation, Escape and a scrim tap).
- * The colour theme switch lives in the footer and at the bottom of that sheet, not in the bar.
+ * The theme menu and the menu button sit side by side with no gap between them, and below 640px
+ * the review button's label is a size smaller. That is what lets the lockup, the button and both
+ * icons share a 320px bar (AgencyWordmark describes how the wordmark steps down).
  */
 export function AgencyHeader() {
   return (
@@ -58,12 +62,15 @@ export function AgencyHeader() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex items-center lg:gap-2">
+          {/* "Marketplace" until 1280px, which is what leaves room for the theme menu beside it. */}
           <Link
             href="/"
+            aria-label="Rynet marketplace"
             className={`rn-navlink hidden gap-1.5 text-on-navy-muted hover:bg-navy-raised hover:text-on-navy lg:inline-flex ${RING}`}
           >
-            Rynet marketplace
+            <span className="xl:hidden">Marketplace</span>
+            <span className="hidden xl:inline">Rynet marketplace</span>
             <ArrowUpRight aria-hidden="true" className="size-4" />
           </Link>
 
@@ -72,12 +79,16 @@ export function AgencyHeader() {
             className={buttonClasses({
               variant: "primary",
               size: "sm",
-              className: `px-3 sm:px-4 ${RING}`,
+              className: `mr-1 px-2.5 text-[0.8125rem] sm:mr-2 sm:px-4 sm:text-sm lg:mr-0 ${RING}`,
             })}
           >
             <span className="sm:hidden">{REVIEW_CTA.short}</span>
             <span className="hidden sm:inline">{REVIEW_CTA.label}</span>
           </NavLink>
+
+          <ThemeMenu
+            buttonClassName={`flex size-11 cursor-pointer items-center justify-center rounded-sm text-on-navy hover:bg-navy-raised aria-expanded:bg-navy-raised ${RING}`}
+          />
 
           <MobileMenu className="lg:hidden">
             <summary
@@ -135,10 +146,6 @@ export function AgencyHeader() {
                   <Mail aria-hidden="true" className="size-4 text-muted" />
                   {AGENCY_EMAIL}
                 </a>
-                <div className="mt-3 flex items-center justify-between gap-4">
-                  <span className="text-sm text-muted">Colour theme</span>
-                  <ThemeToggle name="agency-theme-menu" />
-                </div>
               </div>
             </div>
           </MobileMenu>

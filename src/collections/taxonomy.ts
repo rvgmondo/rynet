@@ -1,6 +1,7 @@
 import type { CollectionConfig, CollectionSlug, Field } from "payload";
 
 import { isPlatformStaff, platformStaffOnly } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 import { dropTag } from "@/lib/revalidate";
 import { isReservedSlug, slugify } from "@/lib/slug";
 
@@ -40,7 +41,7 @@ export function taxonomyCollection(options: TaxonomyOptions): CollectionConfig {
     slug,
     singular,
     plural,
-    group = "Taxonomy",
+    group = ADMIN_GROUP.lists,
     fields = [],
     guardReservedSlugs = false,
     description,

@@ -1,6 +1,7 @@
 import type { CollectionConfig, Where } from "payload";
 
 import { dealerIdOf, isDealerStaff, isPlatformAdmin, isPlatformStaff } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * Leads.
@@ -17,11 +18,11 @@ import { dealerIdOf, isDealerStaff, isPlatformAdmin, isPlatformStaff } from "@/a
  */
 export const Leads: CollectionConfig = {
   slug: "leads",
-  labels: { singular: "Lead", plural: "Leads" },
+  labels: { singular: "Enquiry", plural: "Enquiries" },
   admin: {
     useAsTitle: "name",
     defaultColumns: ["name", "type", "dealer", "status", "createdAt"],
-    group: "Leads",
+    group: ADMIN_GROUP.daily,
   },
   access: {
     /**

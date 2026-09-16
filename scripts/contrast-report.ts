@@ -258,6 +258,17 @@ const PAIRS: Pair[] = [
   t("Inverse accent words on inverse ground", "--rn-red-text-inverse", "--rn-surface-inverse"),
   ui("Inverse focus ring on inverse ground", "--rn-focus-ring-inverse", "--rn-surface-inverse"),
 
+  // The Payload admin (src/app/(payload)/custom.scss maps Payload's grey ramp onto these tokens).
+  // Most admin text is already one of the ink pairs above; these are the grounds only it uses.
+  t(
+    "Admin: body text on a line-coloured pill",
+    "--rn-body",
+    "--rn-line",
+    "Payload's default pill (list filters, version counts, relationship chips) fills with its elevation-150 step, which the admin maps to the line token.",
+  ),
+  t("Admin: current page number (card ink on heading fill)", "--rn-card", "--rn-heading"),
+  t("Admin: card ink on a body-ink fill (dark pills, tooltips)", "--rn-card", "--rn-body"),
+
   // Decorative
   deco(
     "Divider on card",

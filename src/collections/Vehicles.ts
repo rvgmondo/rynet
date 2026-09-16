@@ -8,6 +8,7 @@ import {
   isPlatformAdmin,
   isPlatformStaff,
 } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 import { dropTag } from "@/lib/revalidate";
 import { generatePublicRef } from "@/lib/slug";
 
@@ -36,11 +37,11 @@ const SOLD_VISIBLE_DAYS = 90;
 
 export const Vehicles: CollectionConfig = {
   slug: "vehicles",
-  labels: { singular: "Vehicle", plural: "Vehicles" },
+  labels: { singular: "Car", plural: "Cars" },
   admin: {
     useAsTitle: "title",
     defaultColumns: ["title", "dealer", "price", "status", "mileageKm", "publishedAt"],
-    group: "Stock",
+    group: ADMIN_GROUP.daily,
     listSearchableFields: ["title", "stockNumber", "publicRef"],
   },
   versions: {

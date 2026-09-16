@@ -14,6 +14,7 @@ import {
   ROLES,
 } from "@/access/roles";
 import { enforceSecondFactor } from "@/access/two-factor";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * Staff and dealer staff.
@@ -29,7 +30,7 @@ import { enforceSecondFactor } from "@/access/two-factor";
  */
 export const Users: CollectionConfig = {
   slug: "users",
-  labels: { singular: "Team member", plural: "Team members" },
+  labels: { singular: "Staff account", plural: "Staff accounts" },
   auth: {
     tokenExpiration: 60 * 60 * 8,
     maxLoginAttempts: 8,
@@ -43,7 +44,7 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: "name",
     defaultColumns: ["name", "email", "role", "dealer", "status"],
-    group: "People",
+    group: ADMIN_GROUP.people,
   },
   access: {
     // Platform staff see everyone. Dealer staff see only their own dealership's team.

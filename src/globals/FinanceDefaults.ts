@@ -1,6 +1,7 @@
 import type { GlobalConfig } from "payload";
 
 import { platformStaffOnly } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * Finance calculator defaults.
@@ -20,9 +21,9 @@ import { platformStaffOnly } from "@/access/roles";
  */
 export const FinanceDefaults: GlobalConfig = {
   slug: "finance-defaults",
-  label: "Finance calculator defaults",
+  label: "Finance calculator",
   admin: {
-    group: "Settings",
+    group: ADMIN_GROUP.settings,
     description:
       "Drives every instalment estimate on the site. Changing the prime rate recalculates all stock.",
   },

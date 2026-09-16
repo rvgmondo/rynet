@@ -12,9 +12,9 @@ import { useEffect } from "react";
  *
  * It only sets `data-header-hidden` on the root; globals.css decides what that means and only
  * below 1024px, so a desktop never sees the header move. The header is never hidden while the page
- * is near the top, while the menu is open, or while anything in the header has keyboard focus (a
- * keyboard user tabbing into it brings it back, and SC 2.4.11 is about the reverse case). The slide is a
- * transform; the global reduced-motion policy turns it into a cut.
+ * is near the top, while the menu or the theme menu is open, or while anything in the header has
+ * keyboard focus (a keyboard user tabbing into it brings it back, and SC 2.4.11 is about the
+ * reverse case). The slide is a transform; the global reduced-motion policy turns it into a cut.
  *
  * Passive listener and one frame of work per scroll burst. No layout is read but scrollY.
  */
@@ -34,7 +34,8 @@ export function HeaderScroll() {
       const pinned =
         y < TOP_ZONE ||
         root.hasAttribute("data-menu-open") ||
-        Boolean(header?.querySelector(":focus-visible"));
+        // An open theme menu hangs off the header, so the header stays while it is open.
+        Boolean(header?.querySelector(':focus-visible, [aria-expanded="true"]'));
 
       if (pinned) {
         root.removeAttribute("data-header-hidden");

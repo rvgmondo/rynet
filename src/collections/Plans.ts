@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 
 import { platformStaffOnly } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * Dealer subscription plans.
@@ -11,11 +12,11 @@ import { platformStaffOnly } from "@/access/roles";
  */
 export const Plans: CollectionConfig = {
   slug: "plans",
-  labels: { singular: "Plan", plural: "Plans" },
+  labels: { singular: "Dealer plan", plural: "Dealer plans" },
   admin: {
     useAsTitle: "name",
     defaultColumns: ["name", "monthlyPrice", "listingLimit", "isPublic", "sortOrder"],
-    group: "Commercial",
+    group: ADMIN_GROUP.settings,
   },
   access: {
     read: () => true,

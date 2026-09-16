@@ -3,15 +3,15 @@
 13:X
 13:C
 0:{"buildId":"","data":[{"rsc":["$","$1","c",{"children":[[["$","script",null,{"type":"application/ld+json","dangerouslySetInnerHTML":{"__html":"$2"}}],["$","section",null,{"className":"border-b border-line bg-card","children":["$","div",null,{"className":"container-page py-10 sm:py-14 lg:py-16","children":[[["$","script",null,{"type":"application/ld+json","dangerouslySetInnerHTML":{"__html":"{\"@context\":\"https://schema.org\",\"@type\":\"BreadcrumbList\",\"itemListElement\":[{\"@type\":\"ListItem\",\"position\":1,\"name\":\"Pricing\",\"item\":\"https://rynet.co.za/digital/pricing\"}]}"}}],null],["$","div",null,{"className":"grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-center lg:gap-16","children":[["$","div",null,{"className":"min-w-0 max-w-3xl","children":[["$","p",null,{"className":"rn-eyebrow mb-3","children":"Pricing"}],["$","h1",null,{"className":"rn-h1","children":"What it costs, and the terms behind it"}],["$","p",null,{"className":"rn-lead mt-4 max-w-2xl","children":"What each kind of engagement covers, what moves the price up or down, and the terms that apply whatever the figure turns out to be."}],null]}],["$","div",null,{"className":"min-w-0","children":["$","div",null,{"className":"rounded-lg border border-line bg-page p-5 sm:p-6","children":[["$","p",null,{"className":"text-sm font-semibold text-heading","children":"How a figure is reached"}],["$","ol",null,{"className":"mt-4 grid gap-3","children":[["$","li","A free review of your site, stock feed and advertising",{"className":"flex items-start gap-3 text-[0.9375rem] text-body","children":["$L3","$L4"]}],"$L5","$L6"]}]]}]}]]}]]}]}],"$L7","$L8","$L9","$La","$Lb"],null,"$Lc"]}],"isPartial":"$@d","staleTime":"$e","varyParams":null},{"rsc":"$Lf","isPartial":"$@10","staleTime":"$e","varyParams":null},{"rsc":"$L11","isPartial":"$@12","staleTime":"$e","varyParams":"$13"}],"isUpgradeableISRFallback":false,"a":"$@14","rootVaryParams":null,"needsRuntimeRequest":"$@15"}
-16:I[505014,["/_next/static/chunks/1wg380slgkk3w.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],"default"]
-1e:I[522016,["/_next/static/chunks/1wg380slgkk3w.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],""]
-1f:I[897367,["/_next/static/chunks/33t46atd3n2zd.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],"OutletBoundary"]
+16:I[505014,["/_next/static/chunks/39yga6yu7d98x.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],"default"]
+1e:I[522016,["/_next/static/chunks/39yga6yu7d98x.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],""]
+1f:I[897367,["/_next/static/chunks/33t46atd3n2zd.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],"OutletBoundary"]
 20:"$Sreact.suspense"
-22:I[897367,["/_next/static/chunks/33t46atd3n2zd.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],"ViewportBoundary"]
-23:I[897367,["/_next/static/chunks/33t46atd3n2zd.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],"MetadataBoundary"]
-24:I[27201,["/_next/static/chunks/33t46atd3n2zd.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],"IconMark"]
-25:I[339756,["/_next/static/chunks/33t46atd3n2zd.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],"default"]
-26:I[837457,["/_next/static/chunks/33t46atd3n2zd.js?dpl=14014f0d2746932cf703608d1d9cd7e25738957f"],"default"]
+22:I[897367,["/_next/static/chunks/33t46atd3n2zd.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],"ViewportBoundary"]
+23:I[897367,["/_next/static/chunks/33t46atd3n2zd.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],"MetadataBoundary"]
+24:I[27201,["/_next/static/chunks/33t46atd3n2zd.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],"IconMark"]
+25:I[339756,["/_next/static/chunks/33t46atd3n2zd.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],"default"]
+26:I[837457,["/_next/static/chunks/33t46atd3n2zd.js?dpl=961ed52749f4e18b37de94b5fd879de9dced0118"],"default"]
 3:["$","span",null,{"aria-hidden":"true","className":"grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-on-secondary tabular","children":1}]
 4:["$","span",null,{"className":"pt-0.5","children":"A free review of your site, stock feed and advertising"}]
 5:["$","li","A call to agree what matters this year",{"className":"flex items-start gap-3 text-[0.9375rem] text-body","children":[["$","span",null,{"aria-hidden":"true","className":"grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-on-secondary tabular","children":2}],["$","span",null,{"className":"pt-0.5","children":"A call to agree what matters this year"}]]}]
