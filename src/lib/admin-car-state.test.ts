@@ -26,7 +26,7 @@ describe("carVisibility", () => {
   });
 
   it("says why every other car is hidden", () => {
-    expect(carVisibility("draft", null, NOW).label).toBe("Hidden from the site: Draft");
+    expect(carVisibility("draft", null, NOW).label).toBe("Hidden from the site");
     expect(carVisibility("reserved", null, NOW)).toEqual({
       onSite: false,
       label: "Hidden from the site: Reserved",

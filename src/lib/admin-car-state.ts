@@ -4,14 +4,15 @@ import type { BadgeTone } from "./admin-list";
  * Whether a car can be seen on the site, in words, for the admin.
  *
  * Mirrors the read rule in src/collections/Vehicles.ts: the public sees live cars, and sold cars
- * for 90 days after they were marked sold. Every other status hides the car. This only describes
- * that rule for a person; the rule itself is enforced there, not here.
+ * for 90 days after they were marked sold. Every other status hides the car. The rule is enforced
+ * there for every API read; the public car page reads through the Local API, which skips access
+ * rules, so it asks this function too (see src/app/(marketplace)/vehicles/[make]/[model]/[slug]).
  */
 
 export const SOLD_SHOWN_DAYS = 90;
 
+// A draft needs no reason: "Hidden from the site: Draft" said the same thing twice.
 const HIDDEN_REASON: Record<string, string> = {
-  draft: "Draft",
   pending_review: "Waiting for Rynet to check",
   reserved: "Reserved",
   expired: "Expired",

@@ -315,3 +315,62 @@ test.describe("a car's edit screen", () => {
     await expectNoViolations(page, [".rn-admin-listing-state", ".rn-admin-side-note"]);
   });
 });
+
+test.describe("a car taken off the site", () => {
+  test("is gone from its own address, not only from search", async ({
+    context,
+    request,
+    baseURL,
+  }) => {
+    await signIn(context, baseURL ?? "http://localhost:3100", "light");
+    const auth = { headers: { Authorization: `JWT ${sharedToken}` } };
+    const found = await request.get(
+      "/api/vehicles?where[status][equals]=live&limit=1&depth=0&sort=id",
+      auth,
+    );
+    const template = ((await found.json()) as { docs: Record<string, unknown>[] }).docs[0];
+    test.skip(!template, "no live car to copy");
+
+    // A copy of a live car, saved as a draft. Row ids are dropped so the rows are new rows.
+    const withoutRowIds = (value: unknown): unknown =>
+      Array.isArray(value)
+        ? value.map((row) =>
+            row && typeof row === "object" && "id" in row
+              ? Object.fromEntries(Object.entries(row).filter(([key]) => key !== "id"))
+              : row,
+          )
+        : value;
+    const data = Object.fromEntries(
+      Object.entries(template ?? {})
+        .filter(([key]) => !["id", "createdAt", "updatedAt", "publicRef", "_status"].includes(key))
+        .map(([key, value]) => [key, withoutRowIds(value)]),
+    );
+    const created = await request.post("/api/vehicles", {
+      ...auth,
+      data: { ...data, stockNumber: `HIDDEN-${Date.now()}`, status: "draft" },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+
+    try {
+      const car = (await (await request.get(`/api/vehicles/${id}?depth=1`, auth)).json()) as {
+        modelYear: number;
+        publicRef: string;
+        make: { slug: string };
+        model: { slug: string };
+        variant?: { name?: string } | null;
+      };
+      const variant = car.variant?.name
+        ? `-${car.variant.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "")}`
+        : "";
+      const address = `/vehicles/${car.make.slug}/${car.model.slug}/${car.modelYear}${variant}-${car.publicRef.toLowerCase()}`;
+      const page = await request.get(address, { maxRedirects: 0 });
+      expect(page.status(), `${address} should not show a draft car`).toBe(404);
+    } finally {
+      await request.delete(`/api/vehicles/${id}`, auth);
+    }
+  });
+});
