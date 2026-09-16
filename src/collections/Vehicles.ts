@@ -11,6 +11,7 @@ import {
 import { ADMIN_GROUP } from "@/lib/admin-nav";
 import { dropTag } from "@/lib/revalidate";
 import { generatePublicRef } from "@/lib/slug";
+import { vehicleTitle } from "@/lib/vehicle-title";
 
 /**
  * Vehicle listings.
@@ -190,10 +191,55 @@ export const Vehicles: CollectionConfig = {
         description: "Built from the year, make, model and variant. Not edited by hand.",
       },
       hooks: {
+        /*
+         * The document stores make, model and variant as relationship ids, so the names are read
+         * from the three lists. This used to read `makeName`, `modelName` and `variantName`, which
+         * are not fields on a car, so every stored title was the year alone. The migration
+         * 20260916_120000_vehicle_titles recomputed the titles already stored.
+         *
+         * Taxonomies are readable by everyone, so looking the names up widens nothing.
+         * Renaming a make, model or variant does not refresh the titles of cars already using it.
+         */
         beforeChange: [
-          ({ data }) => {
-            const parts = [data?.modelYear, data?.makeName, data?.modelName, data?.variantName];
-            return parts.filter(Boolean).join(" ") || "Untitled vehicle";
+          async ({ data, originalDoc, req }) => {
+            const current = (key: string): unknown =>
+              data?.[key] !== undefined ? data[key] : originalDoc?.[key];
+
+            const nameOf = async (
+              collection: "makes" | "models" | "variants",
+              raw: unknown,
+            ): Promise<string | null> => {
+              let id = raw;
+              if (id && typeof id === "object") {
+                const name = (id as { name?: unknown }).name;
+                if (typeof name === "string") return name;
+                id = (id as { id?: unknown }).id;
+              }
+              if (typeof id !== "number" && typeof id !== "string") return null;
+              if (id === "") return null;
+              const doc = await req.payload.findByID({
+                collection,
+                id,
+                depth: 0,
+                select: { name: true },
+                disableErrors: true,
+                overrideAccess: true,
+                req,
+              });
+              return typeof doc?.name === "string" ? doc.name : null;
+            };
+
+            const [make, model, variant] = await Promise.all([
+              nameOf("makes", current("make")),
+              nameOf("models", current("model")),
+              nameOf("variants", current("variant")),
+            ]);
+            return vehicleTitle({
+              modelYear: current("modelYear") as number | string | null | undefined,
+              make,
+              model,
+              variant,
+            });
           },
         ],
       },

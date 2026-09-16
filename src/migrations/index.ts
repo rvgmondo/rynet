@@ -5,6 +5,7 @@ import * as migration_20260909_062425_trade_in_distribution from './20260909_062
 import * as migration_20260914_081942_media_demonstration_flag from './20260914_081942_media_demonstration_flag';
 import * as migration_20260914_081943_demo_photographs from './20260914_081943_demo_photographs';
 import * as migration_20260914_110000_demo_photo_card_sizes from './20260914_110000_demo_photo_card_sizes';
+import * as migration_20260916_120000_vehicle_titles from './20260916_120000_vehicle_titles';
 
 export const migrations = [
   {
@@ -41,5 +42,10 @@ export const migrations = [
     up: migration_20260914_110000_demo_photo_card_sizes.up,
     down: migration_20260914_110000_demo_photo_card_sizes.down,
     name: '20260914_110000_demo_photo_card_sizes',
+  },
+  {
+    up: migration_20260916_120000_vehicle_titles.up,
+    down: migration_20260916_120000_vehicle_titles.down,
+    name: '20260916_120000_vehicle_titles',
   },
 ];
