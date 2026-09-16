@@ -7,7 +7,7 @@ import { HeaderSearch } from "@/components/layout/header-search";
 import { MenuPopular } from "@/components/layout/menu-popular";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { NavLink } from "@/components/layout/nav-link";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ThemeMenu } from "@/components/layout/theme-menu";
 import { buttonClasses } from "@/components/ui/button-classes";
 
 /*
@@ -37,11 +37,13 @@ const FOR_DEALERS = { href: "/digital", label: "For dealers" } as const;
  * state; on the right a compact search (from 1280px, and never on a page that is already a
  * search), then "Sell your car" and "For dealers" as quiet links. There is no red button here:
  * this is a buying site, and red is spent on the one action of each page (Search, Enquire), not
- * on a seller link that shouted over both. The theme switch is in the footer and the menu.
+ * on a seller link that shouted over both. Last on the right, the colour theme menu: one icon
+ * button, the only theme control on the site.
  *
- * Below 1024px the bar is the lockup, a search button and the menu. The search button opens the
- * menu with its search field focused (with scripting off it is a link to /cars, which is the
- * search). The menu is a native <details> (works before hydration and without JavaScript) with a
+ * Below 1024px the bar is the lockup, a search button, the theme menu and the menu, three 44px
+ * icon buttons side by side with no gap (the icons still sit 24px apart). Below 360px the lockup
+ * steps down a size so the three fit beside it. The search button opens the menu with its search
+ * field focused (with scripting off it is a link to /cars, which is the search). The menu is a native <details> (works before hydration and without JavaScript) with a
  * small client island that closes it on navigation, on Escape and on a tap on the scrim. It holds
  * the destinations, quick routes by body type, make and price, and one outline "Sell your car".
  * HeaderScroll tucks the bar away while a phone reader scrolls down and brings it back on the way
@@ -60,7 +62,7 @@ export function SiteHeader() {
           aria-label="Rynet, home"
           className="-ml-1 flex shrink-0 items-center rounded-md p-1"
         >
-          <RynetLockup className="h-7 w-auto lg:h-8" />
+          <RynetLockup className="h-6 w-auto min-[22.5rem]:h-7 lg:h-8" />
         </Link>
 
         <nav aria-label="Main" className="ml-6 hidden lg:block">
@@ -75,7 +77,7 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1 lg:gap-2">
+        <div className="ml-auto flex items-center lg:gap-2">
           <HeaderSearch className="mr-2 hidden xl:block" />
 
           <NavLink href={SELL.href} className="rn-navlink hidden lg:inline-flex">
@@ -99,6 +101,14 @@ export function SiteHeader() {
           >
             <Search aria-hidden="true" className="size-5" />
           </a>
+
+          <ThemeMenu
+            buttonClassName={buttonClasses({
+              variant: "ghost",
+              size: "icon",
+              className: "aria-expanded:bg-subtle",
+            })}
+          />
 
           <MobileMenu className="lg:hidden">
             <summary
@@ -157,24 +167,15 @@ export function SiteHeader() {
 
               <MenuPopular />
 
-              <div className="mt-auto border-t border-line px-4 py-4">
-                {/* Not offered on the sell page itself, where it would only reload the form. */}
+              {/* Not offered on the sell page itself, where it would only reload the form. */}
+              <div className="rn-menu__sell mt-auto border-t border-line px-4 py-4">
                 <Link
                   href={SELL.href}
-                  className={buttonClasses({
-                    variant: "outline",
-                    size: "lg",
-                    block: true,
-                    className: "rn-menu__sell mb-4",
-                  })}
+                  className={buttonClasses({ variant: "outline", size: "lg", block: true })}
                 >
                   {SELL.label} to a dealership
                   <ArrowRight aria-hidden="true" />
                 </Link>
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm text-muted">Colour theme</span>
-                  <ThemeToggle name="theme-menu" />
-                </div>
               </div>
             </div>
           </MobileMenu>

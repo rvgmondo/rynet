@@ -1951,62 +1951,93 @@
     font-weight: 500;
   }
 
-  /* Theme switch: a segmented pill. */
-  .rn-theme {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.125rem;
-    width: fit-content;
-    padding: 0.1875rem;
-    margin: 0;
-    border: 1px solid var(--rn-line-control);
-    border-radius: var(--rn-radius-full);
+  /*
+   * Theme menu (theme-menu.tsx): an icon button in the header and a small card of three choices
+   * hanging from its right edge. The button's own look comes from the header it sits in.
+   */
+  .rn-thememenu {
+    position: relative;
+    flex: none;
   }
 
-  .rn-theme label {
-    display: grid;
-    place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: var(--rn-radius-full);
-    color: var(--rn-muted);
+  .rn-thememenu__menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    inset-inline-end: 0;
+    z-index: var(--z-popover);
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 10.5rem;
+    padding: 0.375rem;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background-color: var(--rn-card);
+    box-shadow: var(--rn-shadow-overlay);
+    transform-origin: top right;
+    animation: rn-pop-in var(--duration-micro) var(--rn-ease-out) both;
+  }
+
+  .rn-thememenu__menu:focus-visible {
+    outline: none;
+  }
+
+  .rn-thememenu__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    border: 0;
+    border-radius: var(--rn-radius-sm);
+    background-color: transparent;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--rn-body);
+    text-align: start;
     cursor: pointer;
     transition:
       background-color var(--duration-micro) var(--rn-ease-out),
       color var(--duration-micro) var(--rn-ease-out);
   }
 
-  .rn-theme label:hover {
-    color: var(--rn-heading);
+  .rn-thememenu__item svg {
+    flex: none;
+    color: var(--rn-muted);
+  }
+
+  .rn-thememenu__item:hover,
+  .rn-thememenu__item:focus-visible {
     background-color: var(--rn-subtle);
+    color: var(--rn-heading);
   }
 
-  .rn-theme input:checked + label {
-    background-color: var(--rn-heading);
-    color: var(--rn-card);
+  .rn-thememenu__item[aria-checked="true"] {
+    font-weight: 600;
+    color: var(--rn-heading);
   }
 
-  .rn-theme input:focus-visible + label {
-    outline: 2px solid var(--rn-focus-ring);
-    outline-offset: 2px;
+  .rn-thememenu__item[aria-checked="true"] svg {
+    color: var(--rn-heading);
   }
 
-  .on-navy .rn-theme {
-    border-color: var(--rn-on-navy-muted);
+  /* The tick is the selected state, so it never rests on colour or weight alone. */
+  .rn-thememenu__check {
+    margin-inline-start: auto;
+    visibility: hidden;
   }
 
-  .on-navy .rn-theme label {
-    color: var(--rn-on-navy-muted);
+  .rn-thememenu__item[aria-checked="true"] .rn-thememenu__check {
+    visibility: visible;
   }
 
-  .on-navy .rn-theme label:hover {
-    color: var(--rn-on-navy);
-    background-color: var(--rn-navy-raised);
-  }
-
-  .on-navy .rn-theme input:checked + label {
-    background-color: var(--rn-on-navy);
-    color: var(--rn-navy);
+  @keyframes rn-pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-0.25rem) scale(0.98);
+    }
   }
 
   /* Footer links */

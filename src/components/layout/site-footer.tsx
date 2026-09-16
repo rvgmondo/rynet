@@ -2,7 +2,6 @@ import { Mail, MapPin } from "lucide-react";
 import Link from "next/link";
 
 import { RynetLockup } from "@/components/brand/rynet-mark";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { COMPANY, companyIdentityLine } from "@/content/company";
 
 /*
@@ -77,7 +76,7 @@ const QUICK_SEARCHES = [
  * demonstration; that line waits in docs/CONTENT-NEEDED.md for real stock.
  *
  * The company identity line renders only when every part of it is real (src/content/company.ts).
- * The theme switch lives here, out of the header's prime slot.
+ * The colour theme menu is in the header, not here.
  */
 export function SiteFooter() {
   const identity = companyIdentityLine();
@@ -153,19 +152,13 @@ export function SiteFooter() {
           </ul>
         </nav>
 
-        <div className="mt-10 flex flex-col gap-6 border-t border-line-on-navy pt-6 text-xs leading-relaxed text-on-navy-muted md:mt-8 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <p>&copy; {new Date().getFullYear()} Rynet. All rights reserved.</p>
-            {identity ? <p>{identity}</p> : null}
-            <p className="max-w-xl">
-              Vehicle prices and specifications are supplied by the selling dealership. Finance
-              figures shown anywhere on this site are estimates, not quotations.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm">Theme</span>
-            <ThemeToggle name="theme-footer" />
-          </div>
+        <div className="mt-10 space-y-1 border-t border-line-on-navy pt-6 text-xs leading-relaxed text-on-navy-muted md:mt-8">
+          <p>&copy; {new Date().getFullYear()} Rynet. All rights reserved.</p>
+          {identity ? <p>{identity}</p> : null}
+          <p className="max-w-xl">
+            Vehicle prices and specifications are supplied by the selling dealership. Finance
+            figures shown anywhere on this site are estimates, not quotations.
+          </p>
         </div>
       </div>
     </footer>

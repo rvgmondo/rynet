@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { AGENCY_EMAIL, AGENCY_NAV, REVIEW_CTA } from "@/components/agency/agency-content";
 import { AgencyWordmark } from "@/components/agency/agency-wordmark";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { SERVICES } from "@/content/agency/services";
 import { COMPANY, companyIdentityLine } from "@/content/company";
 
@@ -44,7 +43,7 @@ const COLUMNS = [
  * The descriptor is its own line, not the home page headline again. Contact details are only
  * what is real: the town from src/content/company.ts, the agency mailbox, and a phone number
  * only once the company has one (it is null today and renders nothing). The company identity
- * line appears only when every part of it is real. The colour theme switch lives here.
+ * line appears only when every part of it is real. The colour theme menu is in the header.
  *
  * No top margin: every agency page ends in a section that carries its own bottom padding, and a
  * margin here stacked on top of it left a dead band above the footer.
@@ -119,19 +118,13 @@ export function AgencyFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-6 border-t border-line-on-navy pt-6 text-xs leading-relaxed md:mt-14 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-1">
-            <p>&copy; {new Date().getFullYear()} Rynet. All rights reserved.</p>
-            {identity ? <p>{identity}</p> : null}
-            <p className="max-w-xl">
-              Rynet Digital and the Rynet marketplace are one company. Being an agency client never
-              buys a dealership a better position on the marketplace.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm">Theme</span>
-            <ThemeToggle name="agency-theme-footer" />
-          </div>
+        <div className="mt-12 space-y-1 border-t border-line-on-navy pt-6 text-xs leading-relaxed md:mt-14">
+          <p>&copy; {new Date().getFullYear()} Rynet. All rights reserved.</p>
+          {identity ? <p>{identity}</p> : null}
+          <p className="max-w-xl">
+            Rynet Digital and the Rynet marketplace are one company. Being an agency client never
+            buys a dealership a better position on the marketplace.
+          </p>
         </div>
       </div>
     </footer>

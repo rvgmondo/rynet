@@ -12,21 +12,24 @@ import { RynetLockup } from "@/components/brand/rynet-mark";
  * finding it in the header, and a screen reader never hears it: the link around the wordmark
  * carries the name "Rynet Digital, home".
  *
- * Below 384px the lockup steps down a size so it still fits beside the review button and the menu,
- * and below 360px DIGITAL is dropped rather than RYNET: the brand word always shows, and the link
- * around it still says "Rynet Digital, home". (The mark used to stand in for RYNET there, which
- * left a 320px screen reading "R DIGITAL".)
+ * On a phone the bar also carries the review button, the theme menu and the menu, so the wordmark
+ * gives way in steps. Below 420px the lockup is a size smaller, and below 384px DIGITAL is dropped
+ * rather than RYNET: the brand word always shows, and the link around it still says "Rynet
+ * Digital, home". (The mark used to stand in for RYNET there, which left a 320px screen reading
+ * "R DIGITAL".)
  */
 export function AgencyWordmark({ size = "header" }: { size?: "header" | "footer" }) {
   const footer = size === "footer";
   return (
-    <span className="flex items-center gap-2 min-[24rem]:gap-2.5">
+    <span
+      className={`flex items-center ${footer ? "gap-2 min-[24rem]:gap-2.5" : "gap-1.5 min-[26.25rem]:gap-2.5"}`}
+    >
       <RynetLockup
         tone="on-navy"
-        className={footer ? "h-7 w-auto" : "h-4 w-auto min-[24rem]:h-5 sm:h-6"}
+        className={footer ? "h-7 w-auto" : "h-4 w-auto min-[26.25rem]:h-5 sm:h-6"}
       />
       <span
-        className={`font-semibold leading-none tracking-[0.18em] text-on-navy-muted ${footer ? "pt-0.5 text-base" : "pt-px text-[0.6875rem] max-[359px]:hidden min-[24rem]:text-[0.8125rem] sm:text-sm"}`}
+        className={`font-semibold leading-none tracking-[0.18em] text-on-navy-muted ${footer ? "pt-0.5 text-base" : "pt-px text-[0.6875rem] max-[24rem]:hidden min-[26.25rem]:text-[0.8125rem] sm:text-sm"}`}
       >
         DIGITAL
       </span>

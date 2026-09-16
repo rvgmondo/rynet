@@ -18,7 +18,7 @@ import { siteStylesheetUrl } from "@/lib/site-stylesheet";
  * It renders the marketplace chrome around the same body as `(marketplace)/not-found.tsx`, so a
  * mistyped address, which is often a visitor's first sight of the site, looks like the site.
  * `suppressHydrationWarning` and the ThemeProvider match the layouts: next-themes stamps
- * data-theme before React hydrates, and the theme switch in the footer needs the provider. Before
+ * data-theme before React hydrates, and the theme menu in the header needs the provider. Before
  * hydration tokens.css still follows the operating system.
  *
  * It LINKS the site stylesheet rather than importing it. An import here is carried in the React
