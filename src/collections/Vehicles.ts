@@ -70,10 +70,26 @@ export const Vehicles: CollectionConfig = {
           clientProps: { filters: CAR_QUICK_FILTERS },
         },
       ],
+      /*
+       * A car has two things called status: its Listing status, which is all the site reads, and
+       * Payload's own save state (draft or published), which only says whether the latest edits
+       * are saved. The edit screen shows the first and explains the second in plain words, and
+       * leaves out the buttons whose names promise the wrong thing. See the components.
+       */
+      edit: {
+        Status: "/components/admin/vehicles/listing-state#ListingState",
+        UnpublishButton: "/components/admin/vehicles/hidden-controls#NoUnpublishButton",
+        SaveDraftButton: "/components/admin/vehicles/hidden-controls#NoSaveDraftButton",
+      },
     },
   },
   versions: {
-    drafts: { autosave: { interval: 800 } },
+    /*
+     * `validate` checks a draft before autosave keeps it, and stops "Add new" creating an empty
+     * car the moment the screen opens (Payload only does that when drafts are not validated). It
+     * adds no column. Turning autosave or drafts off would change the tables, so they stay.
+     */
+    drafts: { autosave: { interval: 800 }, validate: true },
     maxPerDoc: 50,
   },
   access: {
@@ -831,6 +847,17 @@ export const Vehicles: CollectionConfig = {
       filterOptions: ({ data }) => withinParent("dealer", data?.dealer, data?.branch),
       // Which branch the vehicle physically sits at.
       admin: { position: "sidebar", description: "Where the car is parked." },
+    },
+    {
+      // A link to the car on the site and its enquiry count. A `ui` field stores nothing.
+      name: "vehicleLinks",
+      type: "ui",
+      label: "On the site",
+      admin: {
+        position: "sidebar",
+        disableListColumn: true,
+        components: { Field: "/components/admin/vehicles/vehicle-links#VehicleLinks" },
+      },
     },
     {
       name: "isDemonstration",

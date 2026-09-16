@@ -243,3 +243,75 @@ test.describe("the menu", () => {
     }
   });
 });
+
+test.describe("the everyday lists", () => {
+  for (const theme of ["light", "dark"] as const) {
+    test(`show cars the way people read them, in ${theme}`, async ({ page, context, baseURL }) => {
+      await openSignedIn(page, context, baseURL, theme, "/admin/collections/vehicles");
+
+      const list = page.locator(".collection-list--vehicles");
+      const firstRow = list.locator("tbody tr").first();
+      // Named by year, make, model and variant, not the year alone.
+      await expect(firstRow.locator("td.cell-title")).toHaveText(/^\d{4} \S+ \S+/);
+      await expect(firstRow.locator("td.cell-price")).toHaveText(/^R\u00a0\d{1,3}(\u00a0\d{3})*/);
+      await expect(firstRow.locator("td.cell-mileageKm")).toHaveText(/\d\skm$/);
+      await expect(firstRow.locator("td.cell-status .rn-admin-badge")).not.toBeEmpty();
+
+      // A quick filter sets the list's own filter and says it is on.
+      const live = list.getByRole("button", { name: "Live", exact: true });
+      await live.click();
+      await expect(live).toHaveAttribute("aria-pressed", "true");
+      await expect(page).toHaveURL(
+        /where%5Bor%5D%5B0%5D%5Band%5D%5B0%5D%5Bstatus%5D%5Bequals%5D=live/,
+      );
+      await expect(list.getByRole("button", { name: "All cars" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+
+      await expectNoViolations(page, [
+        ".rn-admin-quick-filters",
+        ".collection-list--vehicles td.cell-price",
+        ".collection-list--vehicles td.cell-status",
+        ".collection-list--vehicles td.cell-listPhoto",
+      ]);
+    });
+  }
+
+  test("list enquiries without an Add new button", async ({ page, context, baseURL }) => {
+    await openSignedIn(page, context, baseURL, "light", "/admin/collections/leads");
+    const list = page.locator(".collection-list--leads");
+    await expect(list.getByRole("heading", { level: 1, name: "Enquiries" })).toBeVisible();
+    await expect(list.getByRole("link", { name: /Create new Enquiry/ })).toBeHidden();
+    await expect(list.getByRole("button", { name: "Needs a reply" })).toBeVisible();
+  });
+});
+
+test.describe("a car's edit screen", () => {
+  test("says whether the car is on the site, in plain words", async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    await signIn(context, baseURL ?? "http://localhost:3100", "light");
+    const auth = { headers: { Authorization: `JWT ${sharedToken}` } };
+    const found = await context.request.get(
+      "/api/vehicles?where[status][equals]=live&limit=1&depth=0&sort=id",
+      auth,
+    );
+    const car = ((await found.json()) as { docs: { id: number }[] }).docs[0];
+    test.skip(!car, "no live car to open");
+
+    await openSignedIn(page, context, baseURL, "light", `/admin/collections/vehicles/${car?.id}`);
+
+    const state = page.locator(".rn-admin-listing-state");
+    await expect(state).toContainText("On the site:");
+    await expect(state.locator(".rn-admin-badge").first()).toHaveText(/Live on the site/);
+    // Payload's own words for its save state are not shown.
+    await expect(page.locator(".doc-controls")).not.toContainText("Status: Draft");
+    await expect(page.getByRole("link", { name: /History/ })).toBeVisible();
+    await expect(page.locator(".rn-admin-side-note")).toContainText("On the site");
+
+    await expectNoViolations(page, [".rn-admin-listing-state", ".rn-admin-side-note"]);
+  });
+});

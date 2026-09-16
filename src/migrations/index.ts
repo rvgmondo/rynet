@@ -6,6 +6,7 @@ import * as migration_20260914_081942_media_demonstration_flag from './20260914_
 import * as migration_20260914_081943_demo_photographs from './20260914_081943_demo_photographs';
 import * as migration_20260914_110000_demo_photo_card_sizes from './20260914_110000_demo_photo_card_sizes';
 import * as migration_20260916_120000_vehicle_titles from './20260916_120000_vehicle_titles';
+import * as migration_20260916_120100_vehicle_saved_state from './20260916_120100_vehicle_saved_state';
 
 export const migrations = [
   {
@@ -47,5 +48,10 @@ export const migrations = [
     up: migration_20260916_120000_vehicle_titles.up,
     down: migration_20260916_120000_vehicle_titles.down,
     name: '20260916_120000_vehicle_titles',
+  },
+  {
+    up: migration_20260916_120100_vehicle_saved_state.up,
+    down: migration_20260916_120100_vehicle_saved_state.down,
+    name: '20260916_120100_vehicle_saved_state',
   },
 ];

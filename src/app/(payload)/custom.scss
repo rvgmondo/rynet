@@ -1372,14 +1372,91 @@
   }
 
   a.rn-admin-side-note__link {
-    display: inline-flex;
-    align-items: center;
-    min-height: 32px;
-    margin-top: 4px;
+    display: inline-block;
+    padding-block: 4px;
+    margin-top: 2px;
     color: var(--rn-heading);
     font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+
+  /* ----------------------------------------------- a car's state on the site */
+
+  .doc-controls__status {
+    flex-shrink: 0;
+  }
+
+  /* A car's header carries its state on the site, so the creation date gives way to it. The date
+     is still in the car's History. */
+  .collection-edit--vehicles .doc-controls__meta > li.doc-controls__value-wrap:last-child {
+    display: none;
+  }
+
+  /* On a phone Payload lets this row scroll sideways under the sticky Save button. Everything
+     that matters is kept inside the width: the label is left to screen readers and the date to
+     the History tab. */
+  @media (max-width: 1024px) {
+    .collection-edit--vehicles .doc-controls__meta > li.doc-controls__value-wrap {
+      display: none;
+    }
+
+    .rn-admin-listing-state__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .rn-admin-listing-state {
+      gap: 6px;
+    }
+  }
+
+  .rn-admin-listing-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    color: var(--rn-body);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .rn-admin-listing-state__label {
+    color: var(--rn-muted);
+  }
+
+  .rn-admin-listing-state__loading {
+    color: var(--rn-muted);
+  }
+
+  .rn-admin-listing-state__pending {
+    display: inline-flex;
+  }
+
+  .rn-admin-listing-state__pending:empty {
+    display: none;
+  }
+
+  .rn-admin-listing-state .rn-admin-listing-state__discard {
+    min-height: 32px;
+    color: var(--rn-heading);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .rn-admin-side-note__hint {
+    color: var(--rn-muted);
+    font-weight: 400;
+  }
+
+  .rn-admin-side-note__text--spaced {
+    margin-top: 8px;
   }
 
   /* ---------------------------------------------- records nobody makes by hand */

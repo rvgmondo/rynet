@@ -26,8 +26,12 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { RandCell as RandCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { RandPreview as RandPreview_1839c642279d2d35c41fe313eefedb79 } from '../../../components/admin/fields/rand-preview'
 import { StatusBadgeCell as StatusBadgeCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
+import { VehicleLinks as VehicleLinks_e35901e3cd3add3a42cd3c63b6013db2 } from '../../../components/admin/vehicles/vehicle-links'
 import { YesNoCell as YesNoCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { QuickFilters as QuickFilters_af04d4889f070270ea6d912c50ad9633 } from '../../../components/admin/list/quick-filters'
+import { NoSaveDraftButton as NoSaveDraftButton_16ff442f03e05105b466f0f5a1d9b7b2 } from '../../../components/admin/vehicles/hidden-controls'
+import { ListingState as ListingState_2436ff289fc22fc86fbf21ac43dd6f55 } from '../../../components/admin/vehicles/listing-state'
+import { NoUnpublishButton as NoUnpublishButton_16ff442f03e05105b466f0f5a1d9b7b2 } from '../../../components/admin/vehicles/hidden-controls'
 import { DealerLiveCarsCell as DealerLiveCarsCell_86b5eba79c497cf18a9ae4ecad2de011 } from '../../../components/admin/cells/dealer-live-cars-cell'
 import { LiveCarsNote as LiveCarsNote_5a6f74906f9ccc25c6b83da4ab204792 } from '../../../components/admin/dealers/live-cars-note'
 import { LeadAboutCell as LeadAboutCell_2264a0f6cfcba6006c31b89f26ef0c40 } from '../../../components/admin/cells/lead-about-cell'
@@ -68,8 +72,12 @@ export const importMap = {
   "/components/admin/cells/value-cells#RandCell": RandCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/fields/rand-preview#RandPreview": RandPreview_1839c642279d2d35c41fe313eefedb79,
   "/components/admin/cells/value-cells#StatusBadgeCell": StatusBadgeCell_45cde6d7d4719519bed87e542f3a5031,
+  "/components/admin/vehicles/vehicle-links#VehicleLinks": VehicleLinks_e35901e3cd3add3a42cd3c63b6013db2,
   "/components/admin/cells/value-cells#YesNoCell": YesNoCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/list/quick-filters#QuickFilters": QuickFilters_af04d4889f070270ea6d912c50ad9633,
+  "/components/admin/vehicles/hidden-controls#NoSaveDraftButton": NoSaveDraftButton_16ff442f03e05105b466f0f5a1d9b7b2,
+  "/components/admin/vehicles/listing-state#ListingState": ListingState_2436ff289fc22fc86fbf21ac43dd6f55,
+  "/components/admin/vehicles/hidden-controls#NoUnpublishButton": NoUnpublishButton_16ff442f03e05105b466f0f5a1d9b7b2,
   "/components/admin/cells/dealer-live-cars-cell#DealerLiveCarsCell": DealerLiveCarsCell_86b5eba79c497cf18a9ae4ecad2de011,
   "/components/admin/dealers/live-cars-note#LiveCarsNote": LiveCarsNote_5a6f74906f9ccc25c6b83da4ab204792,
   "/components/admin/cells/lead-about-cell#LeadAboutCell": LeadAboutCell_2264a0f6cfcba6006c31b89f26ef0c40,

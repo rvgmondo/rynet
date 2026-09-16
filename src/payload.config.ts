@@ -158,6 +158,28 @@ export default buildConfig({
           selectValue: "Choose one",
         },
         authentication: { login: "Sign in", logOut: "Sign out" },
+        /*
+         * Payload's save-state words, used only by collections with drafts (cars). "Publish" and
+         * "Draft" read as whether a car is on the site, which is what its Listing status decides,
+         * so these say what they actually do: save, and keep unsaved changes in the history.
+         */
+        version: {
+          publish: "Save",
+          publishChanges: "Save changes",
+          publishing: "Saving",
+          versions: "History",
+          draft: "Unsaved draft",
+          published: "Saved",
+          changed: "Unsaved changes",
+          draftHasPublishedVersion: "Unsaved changes",
+          currentDraft: "Current unsaved draft",
+          currentlyPublished: "Saved now",
+          currentPublishedVersion: "Saved version",
+          previouslyPublished: "Previously saved",
+          lastSavedAgo: "Draft kept {{distance}} ago",
+          autosavedSuccessfully: "Draft kept.",
+          draftSavedSuccessfully: "Draft kept.",
+        },
       },
     } as unknown as NonNullable<Config["i18n"]>["translations"],
   },
