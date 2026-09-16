@@ -156,7 +156,14 @@ export default buildConfig({
           // An empty value in a list read "<No Dealership>".
           noLabel: "None",
           selectValue: "Choose one",
+          // "Search by Name, Stock number Or Listing reference", and title case elsewhere.
+          or: "or",
+          and: "and",
+          addFilter: "Add filter",
+          perPage: "Rows per page: {{limit}}",
         },
+        fields: { collapseAll: "Collapse all", showAll: "Show all" },
+        upload: { bulkUpload: "Upload several", fileName: "File name" },
         authentication: { login: "Sign in", logOut: "Sign out" },
         /*
          * Payload's save-state words, used only by collections with drafts (cars). "Publish" and

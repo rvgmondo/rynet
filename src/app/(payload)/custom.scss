@@ -348,6 +348,33 @@
     color: var(--rn-body);
   }
 
+  /* On a phone a long record name ("Dealerships / Highveld Motor Group") pushed the header, and
+     with it the whole page, wider than the screen. The breadcrumb now gives way and the record
+     name ends in an ellipsis, as Payload intends. */
+  .app-header__controls-wrapper,
+  .app-header__step-nav-wrapper,
+  .step-nav {
+    min-width: 0;
+  }
+
+  .app-header__step-nav-wrapper {
+    overflow: hidden;
+  }
+
+  /* That wrapper clips, so the breadcrumb's focus ring is drawn inside each link. */
+  .step-nav a:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .step-nav .step-nav__last {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .collection-list--media .table td {
+    vertical-align: middle;
+  }
+
   .step-nav .step-nav__home {
     width: 28px;
     height: 24px;
@@ -1223,6 +1250,11 @@
   .table td.cell-createdAt,
   .table td.cell-updatedAt {
     white-space: nowrap;
+  }
+
+  /* A two-word heading may take two lines rather than push the last column out of view. */
+  .table th .sort-column__label {
+    white-space: normal;
   }
 
   /* Table rows with a photo in them sit on the photo's middle, not its top edge. */
