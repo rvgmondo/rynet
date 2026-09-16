@@ -19,6 +19,9 @@ import { slugify } from "@/lib/slug";
  */
 const computedByThePlatform: FieldAccess = ({ req }) => isPlatformStaff(req.user);
 
+/** Columns and filters that mean nothing in a list: rich text, photos, rows of settings. */
+const notInList = { disableListColumn: true, disableListFilter: true } as const;
+
 /**
  * Dealerships. The only entity on the platform that may own stock.
  *
@@ -29,10 +32,14 @@ const computedByThePlatform: FieldAccess = ({ req }) => isPlatformStaff(req.user
 export const Dealers: CollectionConfig = {
   slug: "dealers",
   labels: { singular: "Dealership", plural: "Dealerships" },
+  defaultSort: "tradingName",
   admin: {
     useAsTitle: "tradingName",
-    defaultColumns: ["tradingName", "verificationStatus", "group", "plan", "listingCount"],
+    defaultColumns: ["tradingName", "verificationStatus", "plan", "isDemonstration", "updatedAt"],
     group: ADMIN_GROUP.daily,
+    listSearchableFields: ["tradingName", "legalName"],
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
   },
   access: {
     // The public directory only ever shows verified dealerships. An unverified or suspended
@@ -59,53 +66,113 @@ export const Dealers: CollectionConfig = {
     delete: ({ req }) => isPlatformAdmin(req.user),
   },
   fields: [
+    /*
+     * The sidebar. Only top-level fields can sit there, which is why these two live outside the
+     * tabs: inside a tab, `position: "sidebar"` does nothing. The tabs below have no `name`, so
+     * moving a field in or out of one changes no column.
+     */
+    {
+      name: "verificationStatus",
+      type: "select",
+      required: true,
+      defaultValue: "pending",
+      index: true,
+      label: "Verification",
+      options: [
+        { value: "pending", label: "Waiting for checks" },
+        { value: "verified", label: "Verified" },
+        { value: "suspended", label: "Suspended" },
+        { value: "archived", label: "Archived" },
+      ],
+      // Only platform staff decide this. A dealer editing their own profile must
+      // never be able to approve themselves, which is why this field carries its
+      // own access rule rather than relying on the collection's.
+      access: {
+        create: ({ req }) => isPlatformStaff(req.user),
+        update: ({ req }) => isPlatformStaff(req.user),
+      },
+      admin: {
+        position: "sidebar",
+        /*
+         * Was: "Nothing publishes unless this reads Verified." A car cannot be SET live unless its
+         * dealership is verified (Vehicles beforeChange), but suspending a dealership does not take
+         * its live cars off the site, because search filters on each car's own status. The hint
+         * promises only what is enforced.
+         */
+        description: "Only verified dealerships can put cars live.",
+      },
+    },
+    {
+      name: "isDemonstration",
+      type: "checkbox",
+      defaultValue: false,
+      label: "Example dealership",
+      access: { update: ({ req }) => isPlatformStaff(req.user) },
+      admin: {
+        position: "sidebar",
+        readOnly: true,
+        // Seeded example dealership, not a real business. Labelled as such everywhere it appears
+        // on the public site.
+        description: "Not a real business. Labelled as an example on the site.",
+      },
+    },
     {
       type: "tabs",
       tabs: [
         {
-          label: "Identity",
+          label: "Profile",
           fields: [
-            { name: "tradingName", type: "text", required: true, index: true },
+            {
+              name: "tradingName",
+              type: "text",
+              required: true,
+              index: true,
+              label: "Dealership name",
+            },
             {
               name: "legalName",
               type: "text",
               required: true,
-              admin: { description: "As registered with CIPC. May differ from the trading name." },
+              label: "Registered company name",
+              // As registered with CIPC. May differ from the trading name.
+              admin: { description: "As registered with CIPC." },
             },
             {
-              name: "slug",
-              type: "text",
-              required: true,
-              unique: true,
-              index: true,
-              admin: { description: "Their address at /dealers/[slug]." },
-              hooks: {
-                beforeValidate: [
-                  ({ value, data }) =>
-                    slugify(
-                      typeof value === "string" && value.trim()
-                        ? value
-                        : ((data?.tradingName as string) ?? ""),
-                    ),
-                ],
-              },
+              name: "logo",
+              type: "upload",
+              relationTo: "media",
+              label: "Logo",
+              admin: notInList,
             },
-            { name: "logo", type: "upload", relationTo: "media" },
-            { name: "heroImages", type: "upload", relationTo: "media", hasMany: true },
-            { name: "aboutRichText", type: "richText" },
-            { name: "foundedYear", type: "number" },
-            { name: "group", type: "relationship", relationTo: "dealer-groups" },
             {
-              name: "franchises",
-              type: "relationship",
-              relationTo: "franchises",
-              hasMany: true,
+              name: "aboutRichText",
+              type: "richText",
+              label: "About the dealership",
+              admin: notInList,
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "foundedYear",
+                  type: "number",
+                  label: "Year founded",
+                  admin: { disableListFilter: true },
+                },
+                {
+                  name: "group",
+                  type: "relationship",
+                  relationTo: "dealer-groups",
+                  label: "Dealer group",
+                },
+              ],
             },
             {
               name: "accreditations",
               type: "relationship",
               relationTo: "accreditations",
               hasMany: true,
+              label: "Industry memberships",
               /**
                * Platform staff only, and not because of a policy in a description field.
                *
@@ -120,59 +187,73 @@ export const Dealers: CollectionConfig = {
                 update: ({ req }) => isPlatformStaff(req.user),
               },
               admin: {
-                description:
-                  "Added by Rynet once the certificate has been seen. A dealership cannot set this.",
+                disableListColumn: true,
+                // Added by Rynet once the certificate has been seen. A dealership cannot set this.
+                description: "Add only after you have seen the certificate.",
               },
+            },
+            {
+              type: "collapsible",
+              label: "Advanced",
+              admin: { initCollapsed: true },
+              fields: [
+                {
+                  name: "slug",
+                  type: "text",
+                  required: true,
+                  unique: true,
+                  index: true,
+                  label: "Web address name",
+                  // Their address at /dealers/[slug]. Filled in from the trading name when empty.
+                  admin: { description: "Their page is /dealers/ followed by this." },
+                  hooks: {
+                    beforeValidate: [
+                      ({ value, data }) =>
+                        slugify(
+                          typeof value === "string" && value.trim()
+                            ? value
+                            : ((data?.tradingName as string) ?? ""),
+                        ),
+                    ],
+                  },
+                },
+              ],
             },
           ],
         },
         {
-          label: "Verification",
+          label: "Checks",
           fields: [
             {
-              name: "verificationStatus",
-              type: "select",
-              required: true,
-              defaultValue: "pending",
-              index: true,
-              options: [
-                { value: "pending", label: "Pending review" },
-                { value: "verified", label: "Verified" },
-                { value: "suspended", label: "Suspended" },
-                { value: "archived", label: "Archived" },
+              type: "row",
+              fields: [
+                {
+                  name: "registrationNumber",
+                  type: "text",
+                  // CIPC company registration number.
+                  label: "CIPC registration number",
+                },
+                { name: "vatNumber", type: "text", label: "VAT number" },
               ],
-              // Only platform staff decide this. A dealer editing their own profile must
-              // never be able to approve themselves, which is why this field carries its
-              // own access rule rather than relying on the collection's.
-              access: {
-                create: ({ req }) => isPlatformStaff(req.user),
-                update: ({ req }) => isPlatformStaff(req.user),
-              },
-              admin: {
-                description: "Nothing publishes unless this reads Verified.",
-                position: "sidebar",
-              },
             },
-            {
-              name: "registrationNumber",
-              type: "text",
-              admin: { description: "CIPC company registration number." },
-            },
-            { name: "vatNumber", type: "text" },
             {
               name: "motorTradeNumber",
               type: "text",
-              admin: { description: "Motor trade number, where the dealership holds one." },
+              label: "Motor trade number",
+              // Motor trade number, where the dealership holds one.
+              admin: { description: "If they have one." },
             },
             {
               name: "verificationNotes",
               type: "textarea",
+              label: "Private notes",
               access: {
                 read: ({ req }) => isPlatformStaff(req.user),
                 create: ({ req }) => isPlatformStaff(req.user),
                 update: ({ req }) => isPlatformStaff(req.user),
               },
-              admin: { description: "Internal. Never shown to the dealership or the public." },
+              // Internal. Never shown to the dealership or the public.
+              admin: { ...notInList, description: "Only Rynet staff see this." },
             },
           ],
         },
@@ -189,15 +270,18 @@ export const Dealers: CollectionConfig = {
          * nobody should receive personal information because a checkbox happened to start on.
          */
         {
-          label: "Trade-ins",
+          label: "Buying cars",
           fields: [
             {
               name: "acceptsTradeIns",
               type: "checkbox",
               defaultValue: false,
+              label: "Wants sellers' details",
               admin: {
+                // Receive private sellers who want to sell a car, from /sell-to-a-dealer. Their
+                // name and number are sent to the dealership, so this stays off until it asks.
                 description:
-                  "Receive private sellers who want to sell a car, from /sell-to-a-dealer. Their name and number are sent to you, so this stays off until the dealership asks for it.",
+                  "Sends them people selling a car on the site. Leave off unless they asked.",
               },
             },
             {
@@ -205,10 +289,12 @@ export const Dealers: CollectionConfig = {
               type: "relationship",
               relationTo: "makes",
               hasMany: true,
+              label: "Only these makes",
               admin: {
                 condition: (data) => Boolean(data?.acceptsTradeIns),
-                description:
-                  "Leave empty to be offered anything. Naming makes here means you are only sent those, which is fewer leads but less of your time wasted.",
+                // Naming makes here means they are only sent those, which is fewer leads but less
+                // of their time wasted.
+                description: "Leave empty to receive any make.",
               },
             },
           ],
@@ -220,71 +306,201 @@ export const Dealers: CollectionConfig = {
               name: "principal",
               type: "group",
               label: "Dealer principal",
-              fields: [
-                { name: "name", type: "text" },
-                { name: "email", type: "email" },
-                { name: "phone", type: "text" },
-              ],
-            },
-            { name: "whatsappNumber", type: "text" },
-            {
-              name: "emailRouting",
-              type: "array",
-              labels: { singular: "Routing rule", plural: "Routing rules" },
-              admin: {
-                description:
-                  "Where each kind of lead goes. Without a rule, leads fall back to the dealer principal.",
-              },
+              admin: notInList,
               fields: [
                 {
-                  name: "leadType",
-                  type: "select",
-                  required: true,
-                  options: [
-                    { value: "enquiry", label: "General enquiry" },
-                    { value: "test_drive", label: "Test drive" },
-                    { value: "finance", label: "Finance" },
-                    { value: "trade_in", label: "Trade-in" },
-                    { value: "callback", label: "Callback" },
+                  type: "row",
+                  fields: [
+                    { name: "name", type: "text", label: "Name" },
+                    { name: "email", type: "email", label: "Email" },
+                    { name: "phone", type: "text", label: "Phone" },
                   ],
                 },
-                { name: "toAddress", type: "email", required: true },
-                { name: "branch", type: "relationship", relationTo: "branches" },
               ],
+            },
+            { name: "whatsappNumber", type: "text", label: "WhatsApp number" },
+          ],
+        },
+        {
+          label: "Plan",
+          fields: [
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "plan",
+                  type: "relationship",
+                  relationTo: "plans",
+                  label: "Plan",
+                  access: {
+                    update: ({ req }) => isPlatformStaff(req.user),
+                  },
+                },
+                {
+                  name: "listingLimit",
+                  type: "number",
+                  defaultValue: 25,
+                  label: "Cars allowed",
+                  access: { update: ({ req }) => isPlatformStaff(req.user) },
+                  admin: {
+                    disableListFilter: true,
+                    // Was: "Set from the plan. Overridable per dealership by staff."
+                    // NOT IMPLEMENTED: nothing counts a dealership's cars against this number.
+                    description: "Not enforced yet.",
+                  },
+                },
+              ],
+            },
+            /**
+             * The three computed figures, closed at the API rather than only in the interface.
+             *
+             * `admin.readOnly` greys a field out on the screen and does nothing whatsoever to
+             * a PATCH. All three were writable by a dealer principal, so a dealership could
+             * award itself five stars from four hundred reviews it had never received, which
+             * is the exact thing the brief forbids and the worst available lie on a platform
+             * that sells trust.
+             *
+             * Hidden in the admin (UI only) because nothing writes them yet: listingCount read 0
+             * for every dealership, whatever its stock.
+             */
+            {
+              name: "listingCount",
+              type: "number",
+              defaultValue: 0,
+              access: { update: computedByThePlatform },
+              admin: {
+                ...notInList,
+                readOnly: true,
+                hidden: true,
+                // Was: "Live listings. Maintained by a job, never written on a page view."
+                // NOT IMPLEMENTED: there is no such job.
+              },
+            },
+            {
+              name: "reviewScore",
+              type: "number",
+              access: { update: computedByThePlatform },
+              admin: {
+                ...notInList,
+                readOnly: true,
+                hidden: true,
+                // Computed. Stays empty until the dealership has five verified reviews, and no
+                // aggregateRating is emitted before then. NOT IMPLEMENTED: there are no reviews.
+              },
+            },
+            {
+              name: "reviewCount",
+              type: "number",
+              defaultValue: 0,
+              access: { update: computedByThePlatform },
+              admin: { ...notInList, readOnly: true, hidden: true },
+            },
+          ],
+        },
+        /*
+         * Settings the site does not read yet. Kept, because they are columns that may hold data,
+         * but out of the way so nobody fills them in expecting something to happen.
+         */
+        {
+          label: "Not in use yet",
+          description: "The site does not use these settings yet.",
+          fields: [
+            {
+              name: "heroImages",
+              type: "upload",
+              relationTo: "media",
+              hasMany: true,
+              label: "Showroom photos",
+              admin: notInList,
+            },
+            {
+              name: "franchises",
+              type: "relationship",
+              relationTo: "franchises",
+              hasMany: true,
+              label: "Brand franchises",
+              admin: notInList,
             },
             {
               name: "socialProfiles",
               type: "array",
+              label: "Social media",
+              labels: { singular: "Profile", plural: "Profiles" },
+              admin: notInList,
               fields: [
                 {
-                  name: "platform",
-                  type: "select",
-                  options: ["facebook", "instagram", "youtube", "tiktok", "linkedin", "x"].map(
-                    (v) => ({ value: v, label: v[0]?.toUpperCase() + v.slice(1) }),
-                  ),
+                  type: "row",
+                  fields: [
+                    {
+                      name: "platform",
+                      type: "select",
+                      label: "Site",
+                      options: ["facebook", "instagram", "youtube", "tiktok", "linkedin", "x"].map(
+                        (v) => ({ value: v, label: v[0]?.toUpperCase() + v.slice(1) }),
+                      ),
+                    },
+                    { name: "url", type: "text", label: "Link" },
+                  ],
                 },
-                { name: "url", type: "text" },
               ],
             },
-          ],
-        },
-        {
-          label: "Microsite",
-          fields: [
+            {
+              name: "emailRouting",
+              type: "array",
+              label: "Where enquiries should go",
+              labels: { singular: "Rule", plural: "Rules" },
+              admin: {
+                ...notInList,
+                // Was: "Where each kind of lead goes. Without a rule, leads fall back to the
+                // dealer principal." NOT IMPLEMENTED: no enquiry email is sent anywhere yet.
+                description: "No enquiry emails are sent yet.",
+              },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "leadType",
+                      type: "select",
+                      required: true,
+                      label: "Kind of enquiry",
+                      options: [
+                        { value: "enquiry", label: "Question about a car" },
+                        { value: "test_drive", label: "Test drive request" },
+                        { value: "finance", label: "Finance enquiry" },
+                        { value: "trade_in", label: "Wants to sell a car" },
+                        { value: "callback", label: "Asked for a call back" },
+                      ],
+                    },
+                    { name: "toAddress", type: "email", required: true, label: "Send to" },
+                    {
+                      name: "branch",
+                      type: "relationship",
+                      relationTo: "branches",
+                      label: "Branch",
+                    },
+                  ],
+                },
+              ],
+            },
+            /*
+             * Was described as: "Available on higher plans. Colours are contrast-checked on save
+             * and rejected if they fail." NOT IMPLEMENTED: the dealership page does not read these.
+             */
             {
               name: "theme",
               type: "group",
-              admin: {
-                description:
-                  "Available on higher plans. Colours are contrast-checked on save and rejected if they fail.",
-              },
+              label: "Page design",
+              admin: notInList,
               fields: [
                 {
                   name: "accent",
                   type: "text",
+                  label: "Accent colour",
                   admin: {
-                    description:
-                      "Hex value, for example #E32432. Must reach 4.5:1 against white or the microsite becomes unreadable for some visitors.",
+                    // Hex value. Must reach 4.5:1 against white or the page becomes unreadable
+                    // for some visitors.
+                    description: "A hex colour like #C81E2B, dark enough to read on white.",
                   },
                   /**
                    * A dealer picking their own brand colour is a real feature and a real
@@ -309,6 +525,7 @@ export const Dealers: CollectionConfig = {
                   name: "heroLayout",
                   type: "select",
                   defaultValue: "standard",
+                  label: "Top of page layout",
                   options: [
                     { value: "standard", label: "Photo with stock below" },
                     { value: "split", label: "Split, photo beside the introduction" },
@@ -316,75 +533,6 @@ export const Dealers: CollectionConfig = {
                   ],
                 },
               ],
-            },
-          ],
-        },
-        {
-          label: "Commercial",
-          fields: [
-            {
-              name: "plan",
-              type: "relationship",
-              relationTo: "plans",
-              access: {
-                update: ({ req }) => isPlatformStaff(req.user),
-              },
-            },
-            {
-              name: "listingLimit",
-              type: "number",
-              defaultValue: 25,
-              access: { update: ({ req }) => isPlatformStaff(req.user) },
-              admin: { description: "Set from the plan. Overridable per dealership by staff." },
-            },
-            /**
-             * The three computed figures, closed at the API rather than only in the interface.
-             *
-             * `admin.readOnly` greys a field out on the screen and does nothing whatsoever to
-             * a PATCH. All three were writable by a dealer principal, so a dealership could
-             * award itself five stars from four hundred reviews it had never received, which
-             * is the exact thing the brief forbids and the worst available lie on a platform
-             * that sells trust.
-             */
-            {
-              name: "listingCount",
-              type: "number",
-              defaultValue: 0,
-              access: { update: computedByThePlatform },
-              admin: {
-                readOnly: true,
-                position: "sidebar",
-                description: "Live listings. Maintained by a job, never written on a page view.",
-              },
-            },
-            {
-              name: "reviewScore",
-              type: "number",
-              access: { update: computedByThePlatform },
-              admin: {
-                readOnly: true,
-                position: "sidebar",
-                description:
-                  "Computed. Stays empty until the dealership has five verified reviews, and no aggregateRating is emitted before then.",
-              },
-            },
-            {
-              name: "reviewCount",
-              type: "number",
-              defaultValue: 0,
-              access: { update: computedByThePlatform },
-              admin: { readOnly: true, position: "sidebar" },
-            },
-            {
-              name: "isDemonstration",
-              type: "checkbox",
-              defaultValue: false,
-              access: { update: ({ req }) => isPlatformStaff(req.user) },
-              admin: {
-                position: "sidebar",
-                description:
-                  "Seeded example dealership, not a real business. Labelled as such everywhere it appears on the public site.",
-              },
             },
           ],
         },

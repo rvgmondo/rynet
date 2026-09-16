@@ -10,11 +10,30 @@ import {
   isPlatformAdmin,
   isPlatformStaff,
   isStaffUser,
-  ROLE_LABELS,
   ROLES,
+  type Role,
 } from "@/access/roles";
 import { enforceSecondFactor } from "@/access/two-factor";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+
+/**
+ * Role names as the admin shows them. Labels only: the option VALUES are what access control
+ * reads, and they stay exactly as they are. Kept here rather than in ROLE_LABELS in
+ * src/access/roles.ts, which is left alone, because these are written for the person handing a
+ * role out in the admin.
+ *
+ * The analyst role is named for what it can do today: it is not platform staff and holds no
+ * dealership, so it cannot open the admin or read anything yet.
+ */
+const ROLE_ADMIN_LABELS: Record<Role, string> = {
+  platform_admin: "Rynet admin (everything)",
+  platform_editor: "Rynet editor",
+  agency_account_manager: "Rynet Digital account manager",
+  dealer_owner: "Dealer principal",
+  dealer_manager: "Dealership manager",
+  dealer_sales: "Salesperson",
+  analyst: "Analyst (cannot open the admin yet)",
+};
 
 /**
  * Staff and dealer staff.
@@ -41,10 +60,14 @@ export const Users: CollectionConfig = {
       secure: process.env.NODE_ENV === "production",
     },
   },
+  defaultSort: "name",
   admin: {
     useAsTitle: "name",
     defaultColumns: ["name", "email", "role", "dealer", "status"],
     group: ADMIN_GROUP.people,
+    description: "People who can sign in: Rynet staff and dealership staff.",
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
   },
   access: {
     // Platform staff see everyone. Dealer staff see only their own dealership's team.
@@ -137,13 +160,14 @@ export const Users: CollectionConfig = {
     ],
   },
   fields: [
-    { name: "name", type: "text", required: true },
+    { name: "name", type: "text", required: true, label: "Full name" },
     {
       name: "role",
       type: "select",
       required: true,
       defaultValue: "dealer_sales",
-      options: ROLES.map((value) => ({ value, label: ROLE_LABELS[value] })),
+      label: "Role",
+      options: ROLES.map((value) => ({ value, label: ROLE_ADMIN_LABELS[value] })),
       // Only a platform admin can hand out or change a role. Dealer staff get the
       // beforeValidate clamp above as a second line.
       access: {
@@ -152,13 +176,16 @@ export const Users: CollectionConfig = {
         // field at all, so a sales agent's request never reaches the clamp in the first place.
         update: ({ req }) => isPlatformAdmin(req.user) || canManageDealer(req.user),
       },
+      admin: { description: "Decides what this person can see and change." },
     },
     {
       name: "dealer",
       type: "relationship",
       relationTo: "dealers",
+      label: "Dealership",
       admin: {
-        description: "Required for every dealer role. Set automatically for dealer users.",
+        // Required for every dealer role. Set automatically for dealer users (beforeValidate).
+        description: "Needed for dealership roles.",
         condition: (data) => typeof data?.role === "string" && data.role.startsWith("dealer_"),
       },
       validate: (value: unknown, { data }: { data?: Record<string, unknown> }) => {
@@ -172,16 +199,23 @@ export const Users: CollectionConfig = {
     {
       name: "phone",
       type: "text",
-      admin: { description: "South African format, for example 012 345 6789 or +27 12 345 6789." },
+      label: "Mobile number",
+      // South African format, for example 012 345 6789 or +27 12 345 6789.
+      admin: { description: "For example 082 123 4567." },
     },
     {
       name: "status",
       type: "select",
       required: true,
       defaultValue: "invited",
+      label: "Account status",
+      /*
+       * No hint here on purpose: Suspended does not block sign-in today (nothing in beforeLogin
+       * or access reads this field), so the admin makes no promise that it does.
+       */
       options: [
         { value: "active", label: "Active" },
-        { value: "invited", label: "Invited, not yet signed in" },
+        { value: "invited", label: "Invited, not signed in yet" },
         { value: "suspended", label: "Suspended" },
       ],
     },
@@ -202,9 +236,10 @@ export const Users: CollectionConfig = {
         create: () => false,
         update: () => false,
       },
+      label: "Two-factor sign-in",
       admin: {
-        description:
-          "Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.",
+        // Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.
+        description: "Each person turns this on at /account/two-factor.",
         readOnly: true,
         position: "sidebar",
       },
@@ -237,12 +272,20 @@ export const Users: CollectionConfig = {
         create: () => false,
         update: () => false,
       },
+      label: "Two-factor set up on",
       admin: { readOnly: true, position: "sidebar" },
     },
     {
+      // NOT IMPLEMENTED: nothing writes this yet, so it is hidden in the admin (UI only).
       name: "lastLoginAt",
       type: "date",
-      admin: { readOnly: true, position: "sidebar" },
+      admin: {
+        readOnly: true,
+        hidden: true,
+        position: "sidebar",
+        disableListColumn: true,
+        disableListFilter: true,
+      },
     },
   ],
 };

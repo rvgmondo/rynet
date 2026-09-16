@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 
 import { isPlatformAdmin, isPlatformStaff } from "@/access/roles";
+import { withinParent } from "@/lib/admin-filter-options";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
@@ -31,11 +32,16 @@ export const Buyers: CollectionConfig = {
       secure: process.env.NODE_ENV === "production",
     },
   },
+  defaultSort: "-createdAt",
   admin: {
     useAsTitle: "email",
     defaultColumns: ["email", "name", "city", "status", "createdAt"],
     group: ADMIN_GROUP.people,
-    description: "Consumer accounts. These can save and enquire. They can never list a vehicle.",
+    // Was: "Consumer accounts. These can save and enquire. They can never list a vehicle."
+    description:
+      "People who signed up on the site to save cars and enquire. They can never list a car.",
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
   },
   access: {
     // A buyer reads and edits their own record. Platform staff can read for support.
@@ -56,15 +62,30 @@ export const Buyers: CollectionConfig = {
     admin: ({ req }) => isPlatformStaff(req.user),
   },
   fields: [
-    { name: "name", type: "text", required: true },
-    { name: "phone", type: "text" },
-    { name: "province", type: "relationship", relationTo: "provinces" },
-    { name: "city", type: "relationship", relationTo: "cities" },
+    { name: "name", type: "text", required: true, label: "Full name" },
+    { name: "phone", type: "text", label: "Phone" },
+    {
+      type: "row",
+      fields: [
+        { name: "province", type: "relationship", relationTo: "provinces", label: "Province" },
+        {
+          name: "city",
+          type: "relationship",
+          relationTo: "cities",
+          label: "Town or city",
+          // Only the chosen province's towns. The value already saved always stays pickable.
+          filterOptions: ({ data }) => withinParent("province", data?.province, data?.city),
+        },
+      ],
+    },
     {
       name: "alertFrequency",
       type: "select",
       required: true,
       defaultValue: "daily",
+      label: "Saved search emails",
+      // NOT IMPLEMENTED: no alert email is sent yet, whatever this says.
+      admin: { description: "Not sent yet." },
       options: [
         { value: "instant", label: "As soon as a match appears" },
         { value: "daily", label: "Once a day" },
@@ -76,9 +97,15 @@ export const Buyers: CollectionConfig = {
       name: "marketingConsent",
       type: "checkbox",
       defaultValue: false,
+      label: "Agreed to Rynet marketing",
       admin: {
-        description:
-          "Opt in only, never pre-ticked. The evidence lives in consent-records with a timestamp and the policy version.",
+        /*
+         * Opt in only, never pre-ticked. The evidence lives in consent-records with a timestamp and
+         * the policy version. Read only in the admin (UI only; access is unchanged), because the
+         * person gives or withdraws this themselves.
+         */
+        description: "Proof is kept in Consent records.",
+        readOnly: true,
       },
     },
     {
@@ -86,20 +113,22 @@ export const Buyers: CollectionConfig = {
       type: "select",
       required: true,
       defaultValue: "active",
+      label: "Account status",
+      // No hint: Suspended does not block sign-in today, so the admin does not say it does.
       options: [
         { value: "active", label: "Active" },
         { value: "suspended", label: "Suspended" },
-        { value: "deletion_requested", label: "Deletion requested" },
+        { value: "deletion_requested", label: "Asked to be deleted" },
       ],
     },
     {
       name: "deletionRequestedAt",
       type: "date",
+      label: "Asked to be deleted on",
+      // POPIA section 24. The purge job acts on this, and the deletion actually removes the data.
       admin: {
         readOnly: true,
         position: "sidebar",
-        description:
-          "POPIA section 24. The purge job acts on this, and the deletion actually removes the data.",
       },
     },
   ],

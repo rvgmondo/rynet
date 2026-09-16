@@ -22,10 +22,15 @@ import { ADMIN_GROUP } from "@/lib/admin-nav";
 export const Media: CollectionConfig = {
   slug: "media",
   labels: { singular: "Photo or file", plural: "Photos and files" },
+  defaultSort: "-createdAt",
   admin: {
     group: ADMIN_GROUP.details,
-    defaultColumns: ["filename", "alt", "isDecorative", "updatedAt"],
-    description: "Every image needs alt text, or an explicit decorative flag. This is enforced.",
+    defaultColumns: ["filename", "alt", "folder", "isDemonstration", "createdAt"],
+    // Was: "Every image needs alt text, or an explicit decorative flag. This is enforced."
+    description:
+      "Every photo needs a short description, so people using screen readers know what it shows.",
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
   },
   access: {
     read: () => true,
@@ -54,9 +59,13 @@ export const Media: CollectionConfig = {
     {
       name: "alt",
       type: "text",
+      label: "Describe the photo",
       admin: {
-        description:
-          'What the image shows, for someone who cannot see it. Describe the subject, not the file, so "2023 Toyota Hilux Raider, front three-quarter" rather than "vehicle photo".',
+        /*
+         * What the image shows, for someone who cannot see it. Describe the subject, not the file,
+         * so "2023 Toyota Hilux Raider, front three-quarter" rather than "vehicle photo".
+         */
+        description: "Say what it shows, for example 2023 Toyota Hilux Raider, front view.",
       },
       validate: (value: unknown, { data }: { data?: Record<string, unknown> }) => {
         if (data?.isDecorative) return true;
@@ -68,15 +77,19 @@ export const Media: CollectionConfig = {
       name: "isDecorative",
       type: "checkbox",
       defaultValue: false,
+      label: "Decorative only",
       admin: {
-        description:
-          "Tick only for images that carry no information, such as a background texture. These are hidden from screen readers.",
+        // Tick only for images that carry no information, such as a background texture. These
+        // are hidden from screen readers.
+        description: "Tick only for backgrounds and patterns.",
       },
     },
     {
       name: "credit",
       type: "text",
-      admin: { description: "Photographer or source, where one is owed." },
+      label: "Photo credit",
+      // Photographer or source, where one is owed.
+      admin: { disableListFilter: true },
     },
     {
       /*
@@ -90,21 +103,27 @@ export const Media: CollectionConfig = {
        * This flag is what lets all of it be found and deleted in one command the day real
        * dealer photography arrives, and what keeps it out of anything that speaks to a
        * machine. Same rule as the listings themselves: see structured-data.ts.
+       *
+       * Was described as: "Seeded illustration rather than a real photograph of a real car.
+       * Deleted when real stock arrives." Read only in the admin (UI only; access is unchanged).
        */
       name: "isDemonstration",
       type: "checkbox",
       defaultValue: false,
+      label: "Example photo",
       admin: {
-        description:
-          "Seeded illustration rather than a real photograph of a real car. Deleted when real stock arrives.",
+        description: "A photo of the model, not of a real car for sale.",
         position: "sidebar",
+        readOnly: true,
       },
     },
     {
       name: "folder",
       type: "text",
       index: true,
-      admin: { description: "Groups the library. For example: stock, dealers, editorial, agency." },
+      label: "Folder",
+      // Groups the library. For example: stock, dealers, editorial, agency.
+      admin: { description: "For example stock, dealers or agency." },
     },
   ],
 };
