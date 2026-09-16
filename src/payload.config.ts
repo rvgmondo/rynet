@@ -146,7 +146,17 @@ export default buildConfig({
   i18n: {
     translations: {
       en: {
-        general: { dashboard: "Home", createNew: "Add new" },
+        general: {
+          dashboard: "Home",
+          createNew: "Add new",
+          // List column headings and the line under every record's title.
+          createdAt: "Created",
+          updatedAt: "Last changed",
+          lastModified: "Last changed",
+          // An empty value in a list read "<No Dealership>".
+          noLabel: "None",
+          selectValue: "Choose one",
+        },
         authentication: { login: "Sign in", logOut: "Sign out" },
       },
     } as unknown as NonNullable<Config["i18n"]>["translations"],

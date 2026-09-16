@@ -121,6 +121,7 @@ export function taxonomyCollection(options: TaxonomyOptions): CollectionConfig {
         label: "Show in filters",
         admin: {
           position: "sidebar",
+          components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
           // Inactive values stay on existing listings but stop appearing in filters.
           description: "Untick to hide it. Cars that use it keep it.",
         },

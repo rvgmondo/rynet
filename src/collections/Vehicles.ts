@@ -10,6 +10,11 @@ import {
 } from "@/access/roles";
 import { withinParent } from "@/lib/admin-filter-options";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import {
+  CAR_QUICK_FILTERS,
+  CAR_STATUS_LIST_LABELS,
+  CAR_STATUS_TONES,
+} from "@/lib/admin-quick-filters";
 import { dropTag } from "@/lib/revalidate";
 import { generatePublicRef } from "@/lib/slug";
 import { vehicleTitle } from "@/lib/vehicle-title";
@@ -37,17 +42,35 @@ import { vehicleTitle } from "@/lib/vehicle-title";
 
 const SOLD_VISIBLE_DAYS = 90;
 
+/** Admin list cells (display only). Paths are relative to src; see the import map. */
+const CELL = {
+  rand: "/components/admin/cells/value-cells#RandCell",
+  km: "/components/admin/cells/value-cells#KmCell",
+  yesNo: "/components/admin/cells/value-cells#YesNoCell",
+  badge: "/components/admin/cells/value-cells#StatusBadgeCell",
+} as const;
+
 export const Vehicles: CollectionConfig = {
   slug: "vehicles",
   labels: { singular: "Car", plural: "Cars" },
   defaultSort: "-updatedAt",
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "price", "mileageKm", "status", "dealer", "updatedAt"],
+    // The name stays the first column: Payload links it to the car and lets a picker choose from
+    // it, and a custom cell there would replace both.
+    defaultColumns: ["title", "listPhoto", "price", "mileageKm", "status", "dealer", "updatedAt"],
     group: ADMIN_GROUP.daily,
     listSearchableFields: ["title", "stockNumber", "publicRef"],
     pagination: { defaultLimit: 25 },
     hideAPIURL: true,
+    components: {
+      beforeListTable: [
+        {
+          path: "/components/admin/list/quick-filters#QuickFilters",
+          clientProps: { filters: CAR_QUICK_FILTERS },
+        },
+      ],
+    },
   },
   versions: {
     drafts: { autosave: { interval: 800 } },
@@ -253,6 +276,17 @@ export const Vehicles: CollectionConfig = {
       },
     },
 
+    {
+      // The first photo, small, as a list column. A `ui` field stores nothing and draws nothing
+      // in the form; it exists only to give the list a Photo column.
+      name: "listPhoto",
+      type: "ui",
+      label: "Photo",
+      admin: {
+        components: { Cell: "/components/admin/cells/vehicle-photo-cell#VehiclePhotoCell" },
+      },
+    },
+
     /*
      * The main column: four tabs in the order a person fills a listing in. The tabs have no
      * `name`, and rows and collapsibles never do, so none of this changes a column or an API
@@ -339,6 +373,7 @@ export const Vehicles: CollectionConfig = {
                   required: true,
                   index: true,
                   label: "Mileage (km)",
+                  admin: { components: { Cell: CELL.km } },
                 },
               ],
             },
@@ -359,6 +394,11 @@ export const Vehicles: CollectionConfig = {
                   index: true,
                   label: "Fuel",
                 },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
                 {
                   name: "transmission",
                   type: "relationship",
@@ -483,7 +523,13 @@ export const Vehicles: CollectionConfig = {
                   required: true,
                   index: true,
                   label: "Price (R)",
-                  admin: { description: "Whole rands, for example 249900." },
+                  admin: {
+                    description: "Whole rands, for example 249900.",
+                    components: {
+                      Cell: CELL.rand,
+                      afterInput: ["/components/admin/fields/rand-preview#RandPreview"],
+                    },
+                  },
                 },
                 {
                   name: "priceType",
@@ -516,6 +562,10 @@ export const Vehicles: CollectionConfig = {
               label: "Previous price (R)",
               admin: {
                 readOnly: true,
+                components: {
+                  Cell: CELL.rand,
+                  afterInput: ["/components/admin/fields/rand-preview#RandPreview"],
+                },
                 condition: (data) => typeof data?.previousPrice === "number",
                 // Set automatically when the price changes. Drives the price-drop badge.
                 description:
@@ -634,7 +684,9 @@ export const Vehicles: CollectionConfig = {
                   type: "text",
                   index: true,
                   label: "Stock number",
-                  admin: { description: "The dealership's own reference." },
+                  admin: {
+                    description: "The dealership's own reference.",
+                  },
                 },
                 {
                   name: "vin",
@@ -746,6 +798,12 @@ export const Vehicles: CollectionConfig = {
       admin: {
         position: "sidebar",
         description: "Only Live cars, and Sold cars for 90 days, can be seen on the site.",
+        components: {
+          Cell: {
+            path: CELL.badge,
+            clientProps: { tones: CAR_STATUS_TONES, labels: CAR_STATUS_LIST_LABELS },
+          },
+        },
       },
     },
     {
@@ -784,6 +842,7 @@ export const Vehicles: CollectionConfig = {
         position: "sidebar",
         readOnly: true,
         disableBulkEdit: true,
+        components: { Cell: CELL.yesNo },
         // Seeded example stock. Labelled as such wherever it appears publicly.
         description:
           "Made-up stock for showing the site. Labelled as an example wherever it appears.",

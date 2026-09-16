@@ -79,6 +79,7 @@ export const Media: CollectionConfig = {
       defaultValue: false,
       label: "Decorative only",
       admin: {
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
         // Tick only for images that carry no information, such as a background texture. These
         // are hidden from screen readers.
         description: "Tick only for backgrounds and patterns.",
@@ -115,6 +116,7 @@ export const Media: CollectionConfig = {
         description: "A photo of the model, not of a real car for sale.",
         position: "sidebar",
         readOnly: true,
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
       },
     },
     {

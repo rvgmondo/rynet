@@ -85,7 +85,11 @@ export const Branches: CollectionConfig = {
       type: "checkbox",
       defaultValue: false,
       label: "Main branch",
-      admin: { position: "sidebar", description: "Head office or main showroom." },
+      admin: {
+        position: "sidebar",
+        description: "Head office or main showroom.",
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
+      },
     },
 
     {

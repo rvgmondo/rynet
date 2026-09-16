@@ -35,6 +35,10 @@ export const Plans: CollectionConfig = {
       required: true,
       label: "Price per month (R, excluding VAT)",
       admin: {
+        components: {
+          Cell: "/components/admin/cells/value-cells#RandCell",
+          afterInput: ["/components/admin/fields/rand-preview#RandPreview"],
+        },
         // Rand per month, excluding VAT. PLACEHOLDER until real pricing is supplied. See
         // docs/CONTENT-NEEDED.md.
         description: "Placeholder until real pricing is agreed.",
@@ -106,6 +110,7 @@ export const Plans: CollectionConfig = {
       defaultValue: false,
       label: "Show on a pricing page",
       admin: {
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
         position: "sidebar",
         /*
          * Was: "Shown on the public pricing page. Leave off while the price is a placeholder."

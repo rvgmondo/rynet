@@ -1,6 +1,7 @@
 import type { PayloadRequest, SanitizedPermissions, Where } from "payload";
 
 import { readLabel } from "@/components/admin/nav/nav-groups";
+import { LEAD_CLICK_TYPES } from "@/lib/admin-quick-filters";
 
 /**
  * Everything the admin home screen shows, read through the Local API as the signed-in person.
@@ -10,8 +11,8 @@ import { readLabel } from "@/components/admin/nav/nav-groups";
  * be read is left out rather than shown as a guess. Nothing here writes.
  */
 
-/** Taps that leave no name or message. Counted, but not as enquiries. */
-export const CLICK_TYPES = ["whatsapp_click", "phone_reveal"] as const;
+/** Taps that leave no name or message. Counted, but not as enquiries. Shared with the list. */
+export const CLICK_TYPES = LEAD_CLICK_TYPES;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

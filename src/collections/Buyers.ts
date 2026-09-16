@@ -3,6 +3,7 @@ import type { CollectionConfig } from "payload";
 import { isPlatformAdmin, isPlatformStaff } from "@/access/roles";
 import { withinParent } from "@/lib/admin-filter-options";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import { ACCOUNT_STATUS_TONES } from "@/lib/admin-quick-filters";
 
 /**
  * Consumer accounts. Buyer only, permanently.
@@ -99,6 +100,7 @@ export const Buyers: CollectionConfig = {
       defaultValue: false,
       label: "Agreed to Rynet marketing",
       admin: {
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
         /*
          * Opt in only, never pre-ticked. The evidence lives in consent-records with a timestamp and
          * the policy version. Read only in the admin (UI only; access is unchanged), because the
@@ -114,6 +116,14 @@ export const Buyers: CollectionConfig = {
       required: true,
       defaultValue: "active",
       label: "Account status",
+      admin: {
+        components: {
+          Cell: {
+            path: "/components/admin/cells/value-cells#StatusBadgeCell",
+            clientProps: { tones: ACCOUNT_STATUS_TONES },
+          },
+        },
+      },
       // No hint: Suspended does not block sign-in today, so the admin does not say it does.
       options: [
         { value: "active", label: "Active" },

@@ -15,6 +15,7 @@ import {
 } from "@/access/roles";
 import { enforceSecondFactor } from "@/access/two-factor";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import { ACCOUNT_STATUS_TONES } from "@/lib/admin-quick-filters";
 
 /**
  * Role names as the admin shows them. Labels only: the option VALUES are what access control
@@ -209,6 +210,14 @@ export const Users: CollectionConfig = {
       required: true,
       defaultValue: "invited",
       label: "Account status",
+      admin: {
+        components: {
+          Cell: {
+            path: "/components/admin/cells/value-cells#StatusBadgeCell",
+            clientProps: { tones: ACCOUNT_STATUS_TONES },
+          },
+        },
+      },
       /*
        * No hint here on purpose: Suspended does not block sign-in today (nothing in beforeLogin
        * or access reads this field), so the admin makes no promise that it does.

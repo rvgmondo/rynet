@@ -8,6 +8,7 @@ import {
   platformStaffOnly,
 } from "@/access/roles";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import { DEALER_QUICK_FILTERS, DEALER_STATUS_TONES } from "@/lib/admin-quick-filters";
 import { contrastRatio } from "@/lib/contrast";
 import { slugify } from "@/lib/slug";
 
@@ -35,11 +36,26 @@ export const Dealers: CollectionConfig = {
   defaultSort: "tradingName",
   admin: {
     useAsTitle: "tradingName",
-    defaultColumns: ["tradingName", "verificationStatus", "plan", "isDemonstration", "updatedAt"],
+    defaultColumns: [
+      "tradingName",
+      "verificationStatus",
+      "liveCars",
+      "plan",
+      "isDemonstration",
+      "updatedAt",
+    ],
     group: ADMIN_GROUP.daily,
     listSearchableFields: ["tradingName", "legalName"],
     pagination: { defaultLimit: 25 },
     hideAPIURL: true,
+    components: {
+      beforeListTable: [
+        {
+          path: "/components/admin/list/quick-filters#QuickFilters",
+          clientProps: { filters: DEALER_QUICK_FILTERS },
+        },
+      ],
+    },
   },
   access: {
     // The public directory only ever shows verified dealerships. An unverified or suspended
@@ -93,6 +109,12 @@ export const Dealers: CollectionConfig = {
       },
       admin: {
         position: "sidebar",
+        components: {
+          Cell: {
+            path: "/components/admin/cells/value-cells#StatusBadgeCell",
+            clientProps: { tones: DEALER_STATUS_TONES },
+          },
+        },
         /*
          * Was: "Nothing publishes unless this reads Verified." A car cannot be SET live unless its
          * dealership is verified (Vehicles beforeChange), but suspending a dealership does not take
@@ -111,9 +133,27 @@ export const Dealers: CollectionConfig = {
       admin: {
         position: "sidebar",
         readOnly: true,
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
         // Seeded example dealership, not a real business. Labelled as such everywhere it appears
         // on the public site.
         description: "Not a real business. Labelled as an example on the site.",
+      },
+    },
+    {
+      /*
+       * Live cars, counted fresh, as a list column, and a warning in the sidebar when a dealership
+       * that is not verified still has cars on the site. A `ui` field stores nothing. This replaces
+       * the stored listing count, which nothing ever wrote.
+       */
+      name: "liveCars",
+      type: "ui",
+      label: "Live cars",
+      admin: {
+        position: "sidebar",
+        components: {
+          Cell: "/components/admin/cells/dealer-live-cars-cell#DealerLiveCarsCell",
+          Field: "/components/admin/dealers/live-cars-note#LiveCarsNote",
+        },
       },
     },
     {

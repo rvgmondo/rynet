@@ -3,6 +3,12 @@ import type { CollectionConfig, Where } from "payload";
 import { dealerIdOf, isDealerStaff, isPlatformAdmin, isPlatformStaff } from "@/access/roles";
 import { withinParent } from "@/lib/admin-filter-options";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import {
+  LEAD_QUICK_FILTERS,
+  LEAD_STATUS_TONES,
+  LEAD_TYPE_LIST_LABELS,
+  LEAD_TYPE_TONES,
+} from "@/lib/admin-quick-filters";
 
 /**
  * Leads.
@@ -17,17 +23,29 @@ import { ADMIN_GROUP } from "@/lib/admin-nav";
  * through the retention purge, which is a deliberate scheduled job with an audit trail, not
  * a delete button next to a row someone finds inconvenient.
  */
+/** Admin list cells (display only). Paths are relative to src; see the import map. */
+const BADGE_CELL = "/components/admin/cells/value-cells#StatusBadgeCell";
+
 export const Leads: CollectionConfig = {
   slug: "leads",
   labels: { singular: "Enquiry", plural: "Enquiries" },
   defaultSort: "-createdAt",
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["createdAt", "name", "type", "dealer", "status", "phone"],
+    // The name first: Payload links the first column to the enquiry, and a picker selects from it.
+    defaultColumns: ["name", "createdAt", "type", "about", "dealer", "status", "phone"],
     group: ADMIN_GROUP.daily,
     listSearchableFields: ["name", "email", "phone"],
     pagination: { defaultLimit: 25 },
     hideAPIURL: true,
+    components: {
+      beforeListTable: [
+        {
+          path: "/components/admin/list/quick-filters#QuickFilters",
+          clientProps: { filters: LEAD_QUICK_FILTERS },
+        },
+      ],
+    },
   },
   access: {
     /**
@@ -109,6 +127,14 @@ export const Leads: CollectionConfig = {
           required: true,
           index: true,
           label: "Kind of enquiry",
+          admin: {
+            components: {
+              Cell: {
+                path: BADGE_CELL,
+                clientProps: { tones: LEAD_TYPE_TONES, labels: LEAD_TYPE_LIST_LABELS },
+              },
+            },
+          },
           options: [
             { value: "enquiry", label: "Question about a car" },
             { value: "test_drive", label: "Test drive request" },
@@ -129,6 +155,14 @@ export const Leads: CollectionConfig = {
           label: "Car",
         },
       ],
+    },
+    {
+      // What the enquiry is about, as a list column: the car, the car being sold, or Rynet Digital.
+      // A `ui` field stores nothing and draws nothing in the form.
+      name: "about",
+      type: "ui",
+      label: "About",
+      admin: { components: { Cell: "/components/admin/cells/lead-about-cell#LeadAboutCell" } },
     },
     {
       type: "row",
@@ -422,7 +456,10 @@ export const Leads: CollectionConfig = {
         { value: "sold", label: "Sale made" },
         { value: "lost", label: "Lost" },
       ],
-      admin: { position: "sidebar" },
+      admin: {
+        position: "sidebar",
+        components: { Cell: { path: BADGE_CELL, clientProps: { tones: LEAD_STATUS_TONES } } },
+      },
     },
     {
       name: "lostReason",
@@ -460,7 +497,12 @@ export const Leads: CollectionConfig = {
       defaultValue: false,
       label: "Example enquiry",
       access: { update: ({ req }) => isPlatformAdmin(req.user) },
-      admin: { position: "sidebar", readOnly: true, disableBulkEdit: true },
+      admin: {
+        position: "sidebar",
+        readOnly: true,
+        disableBulkEdit: true,
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
+      },
     },
   ],
   timestamps: true,
