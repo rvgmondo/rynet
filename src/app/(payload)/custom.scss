@@ -457,7 +457,9 @@
   .condition-value-text,
   .condition-value-number,
   .file-field__filename,
-  .edit-upload__input input {
+  .edit-upload__input input,
+  .checkbox-input__input,
+  .radio-input__styled-radio {
     border-color: var(--rn-line-control);
     border-radius: var(--rn-radius-sm);
     box-shadow: var(--rn-shadow-xs);
@@ -488,6 +490,38 @@
     border-color: var(--rn-focus-ring);
     box-shadow: 0 0 0 1px var(--rn-focus-ring);
     outline: none;
+  }
+
+  .checkbox-input:not(.checkbox-input--read-only):hover .checkbox-input__input {
+    border-color: var(--rn-heading);
+  }
+
+  /* A field with an error keeps its red outline. Written after the rules above, because in this
+     layer they would otherwise win; Payload's error message beside the field still says what is
+     wrong, so the colour is never the only sign. */
+  .field-type.text.error input,
+  .field-type.text.error input:hover,
+  .field-type.email.error input,
+  .field-type.email.error input:hover,
+  .field-type.number.error input,
+  .field-type.number.error input:hover,
+  .field-type.password.error input,
+  .field-type.password.error input:hover,
+  .field-type.confirm-password.error input,
+  .field-type.confirm-password.error input:hover,
+  .field-type.textarea.error textarea,
+  .field-type.textarea.error textarea:hover,
+  .field-type.select.error .rs__control,
+  .field-type.select.error .rs__control:hover,
+  .relationship.error > .relationship__wrap .rs__control,
+  .relationship.error > .relationship__wrap .rs__control:hover,
+  .point.error input,
+  .checkbox.error .checkbox-input__input,
+  .radio-group.error .radio-input__styled-radio,
+  .code-field.error .code-editor,
+  .json-field.error .code-editor {
+    border-color: var(--rn-danger);
+    background-color: var(--rn-danger-subtle);
   }
 
   .field-type.text.read-only input,
@@ -679,6 +713,11 @@
 
   .template-minimal .btn--style-primary {
     width: 100%;
+  }
+
+  /* Payload spaces the form button for a page, not a card; the card's own padding ends it. */
+  .template-minimal .form-submit .btn {
+    margin-block: 24px 0;
   }
 
   @media (max-width: 560px) {

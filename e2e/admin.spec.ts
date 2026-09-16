@@ -9,27 +9,39 @@ import { type BrowserContext, expect, type Page, test } from "@playwright/test";
  * home screen. They run in both themes, because the admin maps Payload's greys onto the SHOWROOM
  * tokens and a pair that passes in light can still fail in dark.
  *
- * Signs in once per test through the API and hands the browser the session cookie, the same way
- * the two-factor suite does, so no test can lock the shared admin account with a failed attempt.
+ * Signs in through the API and hands the browser the session cookie, the same way the two-factor
+ * suite does, so no test can lock the shared admin account with a failed attempt. One token is
+ * shared by every test in a run, and the tests run one after another, because every sign-in to
+ * that account rewrites its session list (see openSignedIn).
  */
 
 // A dropped session is signed in again (see openSignedIn), which can take a few page loads.
-test.describe.configure({ timeout: 90_000 });
+test.describe.configure({ mode: "serial", timeout: 90_000 });
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@rynet.co.za";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "ChangeMe123!";
 const WCAG = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
-async function signIn(context: BrowserContext, baseURL: string, theme: "light" | "dark") {
-  const res = await context.request.post("/api/users/login", {
-    data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-  });
-  if (!res.ok()) {
-    throw new Error(
-      `Could not sign in as ${ADMIN_EMAIL} (HTTP ${res.status()}). Run: npm run seed:admin && npm run seed`,
-    );
+let sharedToken: string | null = null;
+
+async function signIn(
+  context: BrowserContext,
+  baseURL: string,
+  theme: "light" | "dark",
+  fresh = false,
+) {
+  if (fresh || !sharedToken) {
+    const res = await context.request.post("/api/users/login", {
+      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
+    });
+    if (!res.ok()) {
+      throw new Error(
+        `Could not sign in as ${ADMIN_EMAIL} (HTTP ${res.status()}). Run: npm run seed:admin && npm run seed`,
+      );
+    }
+    sharedToken = ((await res.json()) as { token: string }).token;
   }
-  const { token } = (await res.json()) as { token: string };
+  const token = sharedToken;
   const { hostname } = new URL(baseURL);
   await context.addCookies([
     { name: "payload-token", value: token, domain: hostname, path: "/", httpOnly: true },
@@ -53,8 +65,12 @@ async function openSignedIn(
   theme: "light" | "dark",
   path: string,
 ) {
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    await signIn(context, baseURL ?? "http://localhost:3100", theme);
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    if (attempt > 0) {
+      // Step out of whatever burst of sign-ins dropped the last one.
+      await page.waitForTimeout(500 + Math.floor(Math.random() * 1500));
+    }
+    await signIn(context, baseURL ?? "http://localhost:3100", theme, attempt > 0);
     await page.goto(path);
     // The admin checks the session again once the page has loaded, and sends a dropped one to
     // the sign-in screen, so wait for the signed-in menu rather than trusting the first URL.
@@ -64,7 +80,7 @@ async function openSignedIn(
     await page.waitForLoadState("networkidle");
     if ((await signedOut.count()) === 0) return;
   }
-  throw new Error("The admin session was dropped four times in a row.");
+  throw new Error("The admin session was dropped five times in a row.");
 }
 
 async function expectNoViolations(page: Page, include: string[]) {
@@ -122,7 +138,7 @@ test.describe("the home screen", () => {
       );
       for (const name of [
         "On the site today",
-        "Get started",
+        "Quick actions",
         "Latest enquiries",
         "Recently changed cars",
         "Everything else",
@@ -177,28 +193,53 @@ test.describe("the menu", () => {
     });
   }
 
-  test("opens a folded group and remembers nothing it should not", async ({
+  test("opens a folded group and remembers the choice", async ({
     page,
     context,
     baseURL,
     isMobile,
   }) => {
-    // Opening a group is saved to the shared admin account, so only one project does it.
+    // The choice is saved to the shared admin account, so only one project makes it, and the
+    // saved record is put back exactly as it was found.
     test.skip(isMobile, "the desktop run covers the toggle");
     await openSignedIn(page, context, baseURL, "light", "/admin/collections/vehicles");
 
-    const menu = page.getByRole("navigation", { name: "Admin menu" });
-    const lists = menu.getByRole("button", { name: "Lists and records" });
-    const wasOpen = (await lists.getAttribute("aria-expanded")) === "true";
-    const makes = menu.getByRole("link", { name: "Makes" });
+    // Signed by header: the request context does not send the browser's session cookie here.
+    // Payload answers a missing preference with 200 and a null value.
+    const auth = { headers: { Authorization: `JWT ${sharedToken}` } };
+    const saved = await context.request.get("/api/payload-preferences/nav", auth);
+    const before = saved.ok() ? ((await saved.json()) as { value?: unknown }).value : null;
 
-    await lists.click();
-    await expect(lists).toHaveAttribute("aria-expanded", wasOpen ? "false" : "true");
-    if (wasOpen) await expect(makes).toBeHidden();
-    else await expect(makes).toBeVisible();
+    try {
+      const menu = page.getByRole("navigation", { name: "Admin menu" });
+      const lists = menu.getByRole("button", { name: "Lists and records" });
+      const wasOpen = (await lists.getAttribute("aria-expanded")) === "true";
+      const makes = menu.getByRole("link", { name: "Makes" });
 
-    // Put it back the way it was.
-    await lists.click();
-    await expect(lists).toHaveAttribute("aria-expanded", wasOpen ? "true" : "false");
+      const written = page.waitForResponse(
+        (r) => r.url().includes("/api/payload-preferences/nav") && r.request().method() === "POST",
+      );
+      await lists.click();
+      await expect(lists).toHaveAttribute("aria-expanded", wasOpen ? "false" : "true");
+      if (wasOpen) await expect(makes).toBeHidden();
+      else await expect(makes).toBeVisible();
+      await written;
+
+      // Still the same after a full page load.
+      await page.reload();
+      await expect(menu.getByRole("button", { name: "Lists and records" })).toHaveAttribute(
+        "aria-expanded",
+        wasOpen ? "false" : "true",
+      );
+    } finally {
+      if (before === null || before === undefined) {
+        await context.request.delete("/api/payload-preferences/nav", auth);
+      } else {
+        await context.request.post("/api/payload-preferences/nav", {
+          ...auth,
+          data: { value: before },
+        });
+      }
+    }
   });
 });

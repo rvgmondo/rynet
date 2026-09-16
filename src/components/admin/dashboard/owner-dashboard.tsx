@@ -366,7 +366,7 @@ export async function OwnerDashboard(props: DashboardViewServerProps) {
 
       <section className="rn-admin-home__section" aria-labelledby="rn-admin-home-actions">
         <h2 id="rn-admin-home-actions" className="rn-admin-home__h2">
-          Get started
+          Quick actions
         </h2>
         <ul className="rn-admin-actions">
           {can("vehicles", "create") ? (
