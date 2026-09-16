@@ -15,6 +15,7 @@ import {
   CAR_STATUS_LIST_LABELS,
   CAR_STATUS_TONES,
 } from "@/lib/admin-quick-filters";
+import { priceFieldsFromSaved } from "@/lib/price-history";
 import { dropTag } from "@/lib/revalidate";
 import { generatePublicRef } from "@/lib/slug";
 import { vehicleTitle } from "@/lib/vehicle-title";
@@ -209,6 +210,47 @@ export const Vehicles: CollectionConfig = {
           ];
         }
 
+        return data;
+      },
+
+      /*
+       * The price history, measured against the car the SITE shows.
+       *
+       * The hook above compares the new price with `originalDoc`, which for a car with drafts is the
+       * latest draft kept by autosave, not the saved car. So a price typed as 2850000, left long
+       * enough to autosave, then corrected to 285000 was recorded as a change from R 2 850 000, and
+       * the site showed a price drop that never happened; half-typed prices also piled up in the
+       * history. The hook above is left exactly as it is (it also holds the verification check),
+       * and this one runs after it and sets both fields again from the saved car:
+       *
+       * - price differs from the saved car: the previous price is the saved car's price, and one
+       *   entry is added to the saved car's history;
+       * - price is the same: both fields stay as the saved car has them.
+       *
+       * Drafts get the same treatment, so a draft never carries a history the saved car does not
+       * have, and saving recomputes from the saved car again. Append only, as before: entries the
+       * saved car already has are never changed or removed.
+       */
+      async ({ data, req, originalDoc, operation }) => {
+        if (!data || operation !== "update" || !originalDoc?.id) return data;
+
+        // Access is overridden for this read only: it is the server reading three price fields of
+        // the car already being written, and nothing read here is returned to the request.
+        const saved = await req.payload.findByID({
+          collection: "vehicles",
+          id: originalDoc.id,
+          depth: 0,
+          draft: false,
+          disableErrors: true,
+          overrideAccess: true,
+          select: { price: true, previousPrice: true, priceHistory: true },
+          req,
+        });
+        if (!saved) return data;
+
+        const { previousPrice, priceHistory } = priceFieldsFromSaved(saved, data.price);
+        data.previousPrice = previousPrice;
+        data.priceHistory = priceHistory;
         return data;
       },
     ],

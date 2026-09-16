@@ -27,15 +27,16 @@ export default defineConfig({
     // Most South African traffic to a car marketplace is mobile. Testing only desktop
     // would be testing the minority case.
     //
-    // Two suites are excluded. The isolation suite never opens a page: it is HTTP against
+    // Three suites are excluded. The isolation suite never opens a page: it is HTTP against
     // the REST API, so a second run at a phone viewport proves nothing and doubles the
     // sign-ins against accounts that lock after eight attempts. The two-factor suite enrols
     // and unenrols a shared account, so a second concurrent run would be signing in against
-    // a second factor it did not know had just been switched on.
+    // a second factor it did not know had just been switched on. The price history suite is
+    // HTTP only as well, and edits one car of its own in order.
     {
       name: "mobile",
       use: { ...devices["Pixel 7"] },
-      testIgnore: /(isolation|two-factor)\.spec\.ts/,
+      testIgnore: /(isolation|two-factor|price-history)\.spec\.ts/,
     },
   ],
 
