@@ -7,6 +7,7 @@ import {
   isPlatformStaff,
   platformStaffOnly,
 } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 import { contrastRatio } from "@/lib/contrast";
 import { slugify } from "@/lib/slug";
 
@@ -31,7 +32,7 @@ export const Dealers: CollectionConfig = {
   admin: {
     useAsTitle: "tradingName",
     defaultColumns: ["tradingName", "verificationStatus", "group", "plan", "listingCount"],
-    group: "Dealers",
+    group: ADMIN_GROUP.daily,
   },
   access: {
     // The public directory only ever shows verified dealerships. An unverified or suspended

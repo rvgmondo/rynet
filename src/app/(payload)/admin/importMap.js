@@ -21,6 +21,11 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { AdminNav as AdminNav_441d918e62891b354d8caf4912c50884 } from '../../../components/admin/nav/admin-nav'
+import { AdminIcon as AdminIcon_14514f24fd016baf79757a752cc80e21 } from '../../../components/admin/brand/admin-icon'
+import { AdminLogo as AdminLogo_78c6b9411a3b5197e36221642877758f } from '../../../components/admin/brand/admin-logo'
+import { LoginIntro as LoginIntro_a31bcf80ce36156b72fe7ae9204a8e7a } from '../../../components/admin/login/login-intro'
+import { OwnerDashboard as OwnerDashboard_dc55bcb79d6cd54f5cfa545ca8470757 } from '../../../components/admin/dashboard/owner-dashboard'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -48,5 +53,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "/components/admin/nav/admin-nav#AdminNav": AdminNav_441d918e62891b354d8caf4912c50884,
+  "/components/admin/brand/admin-icon#AdminIcon": AdminIcon_14514f24fd016baf79757a752cc80e21,
+  "/components/admin/brand/admin-logo#AdminLogo": AdminLogo_78c6b9411a3b5197e36221642877758f,
+  "/components/admin/login/login-intro#LoginIntro": LoginIntro_a31bcf80ce36156b72fe7ae9204a8e7a,
+  "/components/admin/dashboard/owner-dashboard#OwnerDashboard": OwnerDashboard_dc55bcb79d6cd54f5cfa545ca8470757,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

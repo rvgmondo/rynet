@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 
 import { isPlatformStaff } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * POPIA consent records.
@@ -19,7 +20,7 @@ export const ConsentRecords: CollectionConfig = {
   admin: {
     useAsTitle: "purpose",
     defaultColumns: ["purpose", "subjectEmail", "grantedAt", "withdrawnAt", "policyVersion"],
-    group: "Compliance",
+    group: ADMIN_GROUP.lists,
     description: "Append only. Nothing here can be edited or deleted, which is the point.",
   },
   access: {

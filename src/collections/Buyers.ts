@@ -1,6 +1,7 @@
 import type { CollectionConfig } from "payload";
 
 import { isPlatformAdmin, isPlatformStaff } from "@/access/roles";
+import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * Consumer accounts. Buyer only, permanently.
@@ -19,7 +20,7 @@ import { isPlatformAdmin, isPlatformStaff } from "@/access/roles";
  */
 export const Buyers: CollectionConfig = {
   slug: "buyers",
-  labels: { singular: "Buyer", plural: "Buyers" },
+  labels: { singular: "Buyer account", plural: "Buyer accounts" },
   auth: {
     tokenExpiration: 60 * 60 * 24 * 30,
     maxLoginAttempts: 10,
@@ -33,7 +34,7 @@ export const Buyers: CollectionConfig = {
   admin: {
     useAsTitle: "email",
     defaultColumns: ["email", "name", "city", "status", "createdAt"],
-    group: "People",
+    group: ADMIN_GROUP.people,
     description: "Consumer accounts. These can save and enquire. They can never list a vehicle.",
   },
   access: {

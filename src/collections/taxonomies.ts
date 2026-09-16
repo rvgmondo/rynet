@@ -13,15 +13,13 @@ export const Provinces: CollectionConfig = taxonomyCollection({
   slug: "provinces",
   singular: "Province",
   plural: "Provinces",
-  group: "Places",
   description: "The nine provinces. Used by the location facet and the dealer directory.",
 });
 
 export const Cities: CollectionConfig = taxonomyCollection({
   slug: "cities",
-  singular: "City or town",
-  plural: "Cities and towns",
-  group: "Places",
+  singular: "Town or city",
+  plural: "Towns and cities",
   fields: [
     {
       name: "province",
@@ -88,8 +86,8 @@ export const Variants: CollectionConfig = taxonomyCollection({
 
 export const BodyTypes: CollectionConfig = taxonomyCollection({
   slug: "body-types",
-  singular: "Body type",
-  plural: "Body types",
+  singular: "Body shape",
+  plural: "Body shapes",
 });
 
 export const FuelTypes: CollectionConfig = taxonomyCollection({
@@ -100,14 +98,14 @@ export const FuelTypes: CollectionConfig = taxonomyCollection({
 
 export const Transmissions: CollectionConfig = taxonomyCollection({
   slug: "transmissions",
-  singular: "Transmission",
-  plural: "Transmissions",
+  singular: "Gearbox",
+  plural: "Gearboxes",
 });
 
 export const Drivetrains: CollectionConfig = taxonomyCollection({
   slug: "drivetrains",
-  singular: "Drivetrain",
-  plural: "Drivetrains",
+  singular: "Drive type",
+  plural: "Drive types",
 });
 
 export const Colours: CollectionConfig = taxonomyCollection({
@@ -151,8 +149,8 @@ export const Colours: CollectionConfig = taxonomyCollection({
 
 export const FeatureCategories: CollectionConfig = taxonomyCollection({
   slug: "feature-categories",
-  singular: "Feature category",
-  plural: "Feature categories",
+  singular: "Feature group",
+  plural: "Feature groups",
 });
 
 export const Features: CollectionConfig = taxonomyCollection({
@@ -182,7 +180,6 @@ export const Franchises: CollectionConfig = taxonomyCollection({
   slug: "franchises",
   singular: "Franchise",
   plural: "Franchises",
-  group: "Dealers",
   description: "Manufacturer franchise affiliations a dealership holds.",
   fields: [{ name: "make", type: "relationship", relationTo: "makes", index: true }],
 });
@@ -191,15 +188,13 @@ export const DealerGroups: CollectionConfig = taxonomyCollection({
   slug: "dealer-groups",
   singular: "Dealer group",
   plural: "Dealer groups",
-  group: "Dealers",
   fields: [{ name: "logo", type: "upload", relationTo: "media" }],
 });
 
 export const Accreditations: CollectionConfig = taxonomyCollection({
   slug: "accreditations",
-  singular: "Accreditation",
-  plural: "Accreditations",
-  group: "Dealers",
+  singular: "Industry body",
+  plural: "Industry bodies",
   description:
     "Industry bodies such as the RMI, NADA and MIWA. Shown on a dealer profile only once verified.",
   fields: [{ name: "badge", type: "upload", relationTo: "media" }],

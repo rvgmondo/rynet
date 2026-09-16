@@ -61,6 +61,9 @@ border tokens rather than one.
 | Inverse muted text on inverse ground | `#aeb9c9` | `#001123` | 9.58 | 4.5 | pass |
 | Inverse accent words on inverse ground | `#ff7079` | `#001123` | 7.10 | 4.5 | pass |
 | Inverse focus ring on inverse ground | `#8db4ff` | `#001123` | 9.15 | 3.0 | pass |
+| Admin: body text on a line-coloured pill | `#26324a` | `#e3e8ef` | 10.42 | 4.5 | pass |
+| Admin: current page number (card ink on heading fill) | `#ffffff` | `#001123` | 19.01 | 4.5 | pass |
+| Admin: card ink on a body-ink fill (dark pills, tooltips) | `#ffffff` | `#26324a` | 12.82 | 4.5 | pass |
 | Divider on card | `#e3e8ef` | `#ffffff` | 1.23 | n/a | pass |
 | Strong divider on page | `#cdd5df` | `#f5f7fa` | 1.38 | n/a | pass |
 | Divider on navy band | `#1d3350` | `#001123` | 1.49 | n/a | pass |
@@ -124,6 +127,9 @@ border tokens rather than one.
 | Inverse muted text on inverse ground | `#4a5669` | `#f3f6fa` | 6.85 | 4.5 | pass |
 | Inverse accent words on inverse ground | `#b81b29` | `#f3f6fa` | 6.00 | 4.5 | pass |
 | Inverse focus ring on inverse ground | `#1d5bd6` | `#f3f6fa` | 5.50 | 3.0 | pass |
+| Admin: body text on a line-coloured pill | `#d3dbe6` | `#1f3657` | 8.73 | 4.5 | pass |
+| Admin: current page number (card ink on heading fill) | `#112642` | `#f3f6fa` | 14.04 | 4.5 | pass |
+| Admin: card ink on a body-ink fill (dark pills, tooltips) | `#112642` | `#d3dbe6` | 10.90 | 4.5 | pass |
 | Divider on card | `#1f3657` | `#112642` | 1.25 | n/a | pass |
 | Strong divider on page | `#2d4668` | `#0a1a30` | 1.82 | n/a | pass |
 | Divider on navy band | `#1c3150` | `#030b17` | 1.51 | n/a | pass |
@@ -141,6 +147,7 @@ border tokens rather than one.
 - **White on primary button.** Brand red #E32432 carries white at only 4.60:1, so every solid red button is #C81E2B.
 - **Control border on card.** SC 1.4.11. Inputs, selects, checkboxes and outline buttons are drawn with this, and it is the boundary that IS the control.
 - **Checked checkbox or radio fill on card.** The checked state is carried by the fill, so the fill is held to the non-text minimum.
+- **Admin: body text on a line-coloured pill.** Payload's default pill (list filters, version counts, relationship chips) fills with its elevation-150 step, which the admin maps to the line token.
 - **Divider on card.** Decorative only. Never the sole indicator of a control, so no minimum applies.
 - **Brand red as a graphic mark.** Registered decorative on purpose. Brand red carries no text and no text sits on it. If it is ever needed as text it must be re-registered with its size class, rather than the token being weakened to suit.
 - **Plate ink on the worst of all 360 hues (H 163).** A generated sweep, not a sample. Every chromatic paint any dealership ever enters lands on this one lightness, so passing here means no listing can produce an unreadable plate.
