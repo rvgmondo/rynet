@@ -139,8 +139,8 @@ function RegistrationRecord({ dealer }: { dealer: Dealer }) {
  * one calm notice under its name. It shows no registration record (the seeded legal names and
  * memberships were never checked, and printing them as checked facts would be fabrication), and
  * its contact panel offers no call, WhatsApp or directions. The link to /sell-to-a-dealer says
- * "a dealership", not "this dealership", because that form goes to every matching dealership in
- * the seller's province and cannot be pointed at one.
+ * "a dealership", not "this dealership", because that form goes to a shortlist of matching
+ * dealerships in the seller's province and cannot be pointed at one.
  *
  * `LocalBusiness` structured data per branch: address, geo and opening hours. No
  * `aggregateRating`, because no reviews have been collected. Marking up a rating that does not

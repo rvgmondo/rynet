@@ -84,7 +84,7 @@ export const sellToDealerSchema = z.object({
    * An empty number input submits "", which coerces to 0, and 0 satisfied `min(0)`. So leaving
    * Mileage untouched passed validation and moved the seller to step two, while Make, Model and
    * Year all reported their own errors: the one field that looked satisfied was the one nobody
-   * had filled in. The lead then reached up to five dealerships reading 0 km, which on a 2019
+   * had filled in. The lead then reached a shortlist of dealerships reading 0 km, which on a 2019
    * Hilux is not a typo a dealer forgives.
    *
    * `emptyToUndefined` is what makes a blank field report "required" rather than coercing to a
@@ -167,11 +167,30 @@ export const FIELD_STEP: Record<string, number> = {
 };
 
 /**
- * The most dealerships one submission is ever sent to.
- *
- * A number rather than "some dealerships", because POPIA consent has to be specific enough to
- * be meaningful, and because a seller who agreed to "some" and then took nine phone calls was
- * not told the truth. It appears in the consent wording, on the page, and is enforced when the
- * lead is distributed.
+ * The most dealerships one submission is ever sent to. Not shown to sellers since policy
+ * version 2026-09-privacy-v3: the consent promises a shortlist, and this ceiling is what makes
+ * that word true. Every consent recorded under 2026-08-privacy-v1 and 2026-09-privacy-v2 says
+ * no more than 5, so do not raise this until the distribution job applies 5 to those leads.
  */
 export const MAX_DEALERSHIPS = 5;
+
+/**
+ * The exact wording a seller agrees to.
+ *
+ * One constant, in this module rather than the action, because a `"use server"` module may
+ * export nothing but async functions. The form renders it as the checkbox label and the action
+ * stores it verbatim on the consent record, so the evidence and the screen cannot drift apart.
+ * Evidence that does not match what was on screen is worse than no evidence at all.
+ *
+ * It names a shortlist rather than a count. The ceiling above is what keeps that word honest,
+ * and the seller can ask at any time which dealerships actually received their details.
+ *
+ * REQUIRES LEGAL REVIEW. Drafted against POPIA section 18, not reviewed by an attorney.
+ */
+export const SELL_CONSENT_WORDING =
+  "I agree that Rynet may pass my name, my contact details and the details of my car to a " +
+  "shortlist of verified dealerships in my province that buy this kind of vehicle, so that " +
+  "they can contact me with an offer. Rynet chooses the shortlist, and will tell me which " +
+  "dealerships received my details if I ask. Each dealership decides for itself what it does " +
+  "with my details once it has them. I can withdraw this at any time by emailing " +
+  "privacy@rynet.co.za.";

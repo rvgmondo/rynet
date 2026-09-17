@@ -60,8 +60,8 @@ sensitive field readable, from inside the tenant. Run through this before mergin
 - [ ] **Can a lower rank inside a dealership reach it?** Sales agent, manager, principal. Check the
       ladder in `roles.ts`.
 - [ ] **Does anything grant access other than owning the row?** `leads.disclosedTo` does: a
-      trade-in has no dealer and up to five dealerships can read it. A second route into a table
-      needs its own tests rather than being assumed to fall out of the first one's.
+      trade-in has no dealer and a shortlist of dealerships can read it. A second route into a
+      table needs its own tests rather than being assumed to fall out of the first one's.
 - [ ] **Add the case to `e2e/isolation.spec.ts`.** The suite only covers what someone added to it.
 - [ ] **Would a refused write be verified twice?** Assert the status, then read the row back as a
       platform admin. A refusal that did not actually refuse looks identical from the response.

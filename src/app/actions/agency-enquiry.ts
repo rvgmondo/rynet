@@ -32,7 +32,7 @@ import { rateLimit, visitorKey } from "@/lib/rate-limit";
 /** The exact wording agreed to, shared with the form. Stored verbatim, because this page will change. */
 const CONSENT_WORDING = AGENCY_CONSENT_WORDING;
 // The privacy notice this consent was given under. Bumped when /privacy changes.
-const POLICY_VERSION = "2026-09-privacy-v2";
+const POLICY_VERSION = "2026-09-privacy-v3";
 
 const MINIMUM_FILL_MS = 4000;
 /*

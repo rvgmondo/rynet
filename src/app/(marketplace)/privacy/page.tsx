@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { LegalDocument } from "@/components/conversion/legal-document";
 import { LEGAL_REVIEWED_AT } from "@/content/legal-review";
-import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 
 export const metadata: Metadata = {
   title: "Privacy notice and POPIA",
@@ -30,7 +29,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy and POPIA"
       title="Privacy notice"
       intro="What we collect, why, who sees it, and how to get it back. Written under the Protection of Personal Information Act."
-      updated="14 September 2026"
+      updated="17 September 2026"
       path="/privacy"
       reviewedAt={LEGAL_REVIEWED_AT.privacy}
     >
@@ -62,9 +61,8 @@ export default function PrivacyPage() {
       <h3>When you offer your car to dealerships</h3>
       <p>
         Your name, email address and phone number, and the details of your car and where it is. We
-        collect it for one purpose: to pass it to no more than {MAX_DEALERSHIPS} verified
-        dealerships in your province that buy that kind of car, so they can contact you with an
-        offer.
+        collect it for one purpose: to pass it to a shortlist of verified dealerships in your
+        province that buy that kind of car, so they can contact you with an offer.
       </p>
       <p>
         <strong>Our lawful basis is your consent</strong>, recorded word for word with the date, the
@@ -99,10 +97,9 @@ export default function PrivacyPage() {
           dealership.
         </li>
         <li>
-          <strong>
-            If you offer your car to dealerships, no more than {MAX_DEALERSHIPS} dealerships
-          </strong>{" "}
-          in your province that buy that kind of car, as the consent you gave says.
+          <strong>If you offer your car to dealerships, a shortlist of verified dealerships</strong>{" "}
+          in your province that buy that kind of car, as the consent you gave says. We keep a record
+          of every dealership that received your details and will tell you which ones if you ask.
         </li>
         <li>
           <strong>Our hosting and email providers</strong>, as operators processing on our
@@ -195,8 +192,8 @@ export default function PrivacyPage() {
 
       <h2>The Information Regulator</h2>
       <p>
-        Information Regulator (South Africa), JD House, 27 Stiemens Street, Braamfontein,
-        Johannesburg.{" "}
+        Information Regulator (South Africa), Woodmead North Office Park, 54 Maxwell Drive,
+        Woodmead, Johannesburg, 2191.{" "}
         <a href="mailto:enquiries@inforegulator.org.za">enquiries@inforegulator.org.za</a>
       </p>
     </LegalDocument>

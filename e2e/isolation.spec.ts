@@ -273,8 +273,8 @@ test.describe("dealer A against dealer B's leads", () => {
 test.describe("a trade-in disclosed to dealer A", () => {
   /**
    * These leads break the rule every other lead follows. A trade-in has no `dealer`, because it
-   * belongs to Rynet while it is offered around, and up to five dealerships can see it. That is
-   * a second way into the most sensitive table on the platform, so it gets its own tests
+   * belongs to Rynet while it is offered around, and a shortlist of dealerships can see it. That
+   * is a second way into the most sensitive table on the platform, so it gets its own tests
    * rather than being assumed to fall out of the existing ones.
    */
   test("is readable by the dealership it was disclosed to", async ({ request }) => {
@@ -309,8 +309,8 @@ test.describe("a trade-in disclosed to dealer A", () => {
   });
 
   test("cannot be edited by a dealership that only had it disclosed", async ({ request }) => {
-    // Five dealerships can see one of these. If any of them could mark it sold or rewrite the
-    // seller's number, they would be editing each other's view of the same record.
+    // Several dealerships can see one of these. If any of them could mark it sold or rewrite
+    // the seller's number, they would be editing each other's view of the same record.
     const res = await request.patch(`/api/leads/${tradeInLeadId}`, {
       ...as(ownerA),
       data: { status: "lost", name: "Owned by dealer A" },

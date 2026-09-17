@@ -97,11 +97,11 @@ Every item below renders the one quiet "Requires legal review" marker until its 
 | Item | Status |
 |---|---|
 | Finance calculator disclaimer | Drafted in `src/globals/FinanceDefaults.ts`. The stored text still opens with REQUIRES LEGAL REVIEW; the listing page strips that prefix for display and shows the standard marker instead. A migration removing the prefix from the stored value is still to do |
-| Privacy notice (`/privacy`) | Drafted, dated 14 September 2026. Now describes the sell-to-a-dealer flow and sharing with up to five dealerships. A sentence claiming deletion is automatic was removed, because no purge job exists |
+| Privacy notice (`/privacy`) | Drafted, dated 17 September 2026. Now describes the sell-to-a-dealer flow and sharing with a shortlist of verified dealerships, with no count shown to a seller. A sentence claiming deletion is automatic was removed, because no purge job exists |
 | Terms of use (`/terms`) | Drafted, unreviewed |
 | Cookie notice (`/cookies`) | Drafted, dated 14 September 2026. Now discloses the form drafts kept in the browser |
 | POPIA section 18 notice on `/sell-to-a-dealer` | Drafted, unreviewed, always fully visible |
-| Consent wording: sell form, listing enquiry, Rynet Digital form | Drafted, unreviewed, stored verbatim on every consent record. The consent policy version is now `2026-09-privacy-v2` |
+| Consent wording: sell form, listing enquiry, Rynet Digital form | Drafted, unreviewed, stored verbatim on every consent record. The consent policy version is now `2026-09-privacy-v3`, bumped when the sell wording changed from a count of dealerships to a shortlist |
 | Dealer agreement | Not written |
 | Responsible disclosure policy | Not written |
 

@@ -9,6 +9,7 @@ import {
   LEAD_TYPE_LIST_LABELS,
   LEAD_TYPE_TONES,
 } from "@/lib/admin-quick-filters";
+import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 
 /**
  * Leads.
@@ -52,9 +53,10 @@ export const Leads: CollectionConfig = {
      * A dealership sees the leads it owns, plus the trade-ins that were disclosed to it.
      *
      * A trade-in lead has no `dealer`: it belongs to Rynet while it is offered around, and the
-     * seller was told it goes to up to five dealerships. `disclosedTo` is the list of those
-     * five, so it is both the access rule and, with the `disclosures` array beside it, the
-     * answer to "who has my details" that POPIA section 23 entitles the seller to ask for.
+     * seller was told it goes to a shortlist of verified dealerships, capped in code at
+     * MAX_DEALERSHIPS. `disclosedTo` is that shortlist, so it is both the access rule and, with
+     * the `disclosures` array beside it, the answer to "who has my details" that POPIA section 23
+     * entitles the seller to ask for.
      */
     read: ({ req }) => {
       if (isPlatformStaff(req.user)) return true;
@@ -72,9 +74,9 @@ export const Leads: CollectionConfig = {
     // sit in front of the route handler rather than here.
     create: () => true,
     /**
-     * Deliberately NOT widened to disclosed trade-ins. Five dealerships can see one of those,
-     * and letting any of them mark it "sold" or rewrite the seller's number would be five
-     * businesses editing each other's view of the same record.
+     * Deliberately NOT widened to disclosed trade-ins. A shortlist of dealerships can see one of
+     * those, and letting any of them mark it "sold" or rewrite the seller's number would be
+     * several businesses editing each other's view of the same record.
      */
     update: ({ req }) => {
       if (isPlatformStaff(req.user)) return true;
@@ -342,9 +344,9 @@ export const Leads: CollectionConfig = {
          * Who this lead has been passed to, and when.
          *
          * Only ever populated on a trade-in, where the seller consented to their details going to
-         * up to five dealerships. POPIA section 23(1)(b) gives a data subject the right to know
-         * the identity of everyone who has had access to their information, and a boolean or a
-         * count cannot answer that. This can.
+         * a shortlist of verified dealerships. POPIA section 23(1)(b) gives a data subject the
+         * right to know the identity of everyone who has had access to their information, and a
+         * boolean or a count cannot answer that. This can.
          *
          * Append only in practice: the distribution job adds rows and nothing removes them, because
          * a disclosure that happened does not stop having happened when the relationship ends.
@@ -356,6 +358,12 @@ export const Leads: CollectionConfig = {
           type: "array",
           label: "Sent to dealerships",
           labels: { singular: "dealership", plural: "dealerships" },
+          /*
+           * The ceiling, enforced by the database layer as well as by the distribution job.
+           * "A shortlist" is only an honest word while a ceiling exists, and a rule that lives
+           * in one function is one careless call away from not existing.
+           */
+          maxRows: MAX_DEALERSHIPS,
           access: {
             create: ({ req }) => isPlatformStaff(req.user),
             update: ({ req }) => isPlatformStaff(req.user),

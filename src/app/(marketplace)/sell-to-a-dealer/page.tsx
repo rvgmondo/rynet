@@ -13,7 +13,6 @@ import { Notice } from "@/components/ui";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { COMPANY } from "@/content/company";
 import { LEGAL_REVIEWED_AT } from "@/content/legal-review";
-import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 import { faqJsonLd } from "@/lib/structured-data";
 
 /**
@@ -71,8 +70,9 @@ const FAQS = [
       "No. Only registered dealerships list on Rynet, so buyers always know who they are dealing with. Selling to a dealership is the route open to you.",
   },
   {
-    question: "How many dealerships get my details?",
-    answer: `No more than ${MAX_DEALERSHIPS}, all in your province, and only ones that buy the kind of car you are selling. Your details are not sold on, not added to a marketing list and not handed to a lead broker. You can stop it at any time by emailing privacy@rynet.co.za.`,
+    question: "Which dealerships get my details?",
+    answer:
+      "A shortlist of verified dealerships in your province that buy the kind of car you are selling, and nobody else. We keep a record of every dealership that received your details and will tell you which ones if you ask. Your details are not sold on, not added to a marketing list and not handed to a lead broker. To find out who has them, or to stop it at any time, email privacy@rynet.co.za.",
   },
   {
     question: "What if I still owe money on the car?",
@@ -97,8 +97,8 @@ const HOW_IT_WORKS = [
     body: "Make, model, year, mileage and condition, then where it is. The first step asks nothing personal.",
   },
   {
-    title: `Up to ${MAX_DEALERSHIPS} dealerships see it`,
-    body: "Only checked dealerships in your province that buy that kind of car, and nobody else.",
+    title: "Matched dealerships see it",
+    body: "A shortlist of verified dealerships in your province that buy that kind of car, and nobody else.",
   },
   {
     title: "They contact you directly",
@@ -500,7 +500,8 @@ export default async function SellToADealerPage() {
               },
               {
                 term: "Why",
-                detail: `To send it to no more than ${MAX_DEALERSHIPS} verified dealerships so they can offer to buy your car. That is the only purpose, and it is the purpose we collect it for rather than something we decide later.`,
+                detail:
+                  "To send it to a shortlist of verified dealerships in your province so they can offer to buy your car. That is the only purpose, and it is the purpose we collect it for rather than something we decide later.",
               },
               {
                 term: "Do you have to give it",
@@ -510,7 +511,7 @@ export default async function SellToADealerPage() {
               {
                 term: "Who receives it",
                 detail:
-                  "Verified, registered dealerships in your province that trade in your kind of vehicle. Once a dealership has your details it decides for itself what it does with them, so it answers for its own use of them and we cannot delete what it holds.",
+                  "Verified, registered dealerships in your province that trade in your kind of vehicle. We choose a shortlist of them for your car and keep a record of each dealership that received your details, which you can ask for at privacy@rynet.co.za. Once a dealership has your details it decides for itself what it does with them, so it answers for its own use of them and we cannot delete what it holds.",
               },
               {
                 term: "Where it is kept",
@@ -524,7 +525,7 @@ export default async function SellToADealerPage() {
               {
                 term: "If we get it wrong",
                 detail:
-                  "You can complain to the Information Regulator (South Africa), JD House, 27 Stiemens Street, Braamfontein, Johannesburg, or enquiries@inforegulator.org.za. You do not have to come to us first.",
+                  "You can complain to the Information Regulator (South Africa), Woodmead North Office Park, 54 Maxwell Drive, Woodmead, Johannesburg, 2191, or enquiries@inforegulator.org.za. You do not have to come to us first.",
               },
             ].map((item) => (
               <div key={item.term} className="min-w-0 border-t border-line pt-4">

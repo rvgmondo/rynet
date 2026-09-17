@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { buttonClasses } from "@/components/ui/button-classes";
 import { relName } from "@/lib/relations";
-import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 import type { Dealer } from "@/payload-types";
 
 import { joinNames } from "./names";
@@ -12,9 +11,9 @@ import { joinNames } from "./names";
  * The closing band on a dealership page, for the reader who came to sell rather than buy.
  *
  * WORDING. The link says "Sell your car to a dealership", not "to this dealership". The form at
- * /sell-to-a-dealer sends one description to up to MAX_DEALERSHIPS dealerships in the seller's
+ * /sell-to-a-dealer sends one description to a shortlist of verified dealerships in the seller's
  * province that buy that kind of car; it cannot be pointed at one dealership, so promising that
- * this one will see it would be untrue.
+ * this one will see it would be untrue. No count of dealerships is shown to a seller anywhere.
  *
  * HONESTY. Only a real dealership that accepts trade-ins is named as a buyer, with the makes it
  * has told Rynet it wants. A demonstration dealership gets the general sentence and nothing that
@@ -43,9 +42,9 @@ export function SellToDealerBand({ dealer }: { dealer: Dealer }) {
               {namesThisDealer
                 ? `${dealer.tradingName} buys cars through Rynet${buysMakes.length > 0 ? `, and is looking for ${joinNames(buysMakes)}` : ""}. `
                 : null}
-              Describe your car once, and up to {MAX_DEALERSHIPS} dealerships in your province that
-              buy that kind of car can make you an offer. There is nothing to sign and no
-              obligation.
+              Describe your car once, and Rynet sends it to a shortlist of verified dealerships in
+              your province that buy that kind of car, so they can make you an offer. There is
+              nothing to sign and no obligation.
             </p>
           </div>
         </div>

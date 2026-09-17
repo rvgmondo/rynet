@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { type APIRequestContext, expect, type Page, test } from "@playwright/test";
+import { MAX_DEALERSHIPS } from "../src/lib/sell-to-dealer-schema";
 import { renderEverything } from "./axe-context";
 
 /**
@@ -95,6 +96,52 @@ test.describe("the hard rule survives this page", () => {
     await expect(notice).toContainText(/Pretoria/i);
     await expect(notice).toContainText(/enquiries@inforegulator.org.za/i);
     await expect(notice).toContainText(/voluntary/i);
+  });
+
+  /**
+   * The owner's rule, tested on every page a seller reads.
+   *
+   * The pages used to say "up to 5 dealerships". It made Rynet sound like a platform with five
+   * dealerships on it, and it put a number in front of a seller that nothing except our own
+   * code holds us to. A seller now reads "a shortlist of verified dealerships" everywhere, and
+   * the ceiling stays in the code as MAX_DEALERSHIPS.
+   *
+   * Read from the served HTML rather than the screen, because the bands below the fold skip
+   * layout until they are scrolled to and the FAQ answers are also published as FAQPage
+   * structured data, which is a seller-facing surface that no screen test would ever see.
+   */
+  test("no dealership count is shown to a seller", async ({ request }) => {
+    const COUNT =
+      /\b(up to|no more than|at most|maximum of)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(verified\s+)?dealerships?\b/i;
+
+    const dealers = await (await request.get("/api/dealers?limit=1&depth=0")).json();
+    const slug = dealers.docs[0]?.slug;
+    expect(slug, "no verified dealership to check the sell band on").toBeTruthy();
+
+    for (const path of [PATH, "/privacy", "/", `/dealers/${slug}`]) {
+      const res = await request.get(path);
+      expect(res.status(), `${path} did not load`).toBe(200);
+
+      const html = await res.text();
+      const text = html
+        .replace(/<!--.*?-->/gs, "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&#x27;|&#39;/g, "'")
+        .replace(/\s+/g, " ");
+
+      expect(text, `${path} tells a seller how many dealerships get their details`).not.toMatch(
+        COUNT,
+      );
+
+      // The same words again as structured data, which is read by machines and quoted back to
+      // people in search results.
+      const jsonLd = [...html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)]
+        .map((match) => match[1])
+        .join(" ");
+      expect(jsonLd, `${path} publishes a dealership count in its structured data`).not.toMatch(
+        COUNT,
+      );
+    }
   });
 
   test("no forbidden private-listing route reaches the navigation", async ({ page }) => {
@@ -209,6 +256,57 @@ test.describe("the form", () => {
       consent.evidence.replace(/\s+/g, " ").trim(),
       "the stored consent does not match what the person actually read",
     ).toBe(onScreen);
+  });
+
+  /**
+   * The ceiling, from the outside.
+   *
+   * A seller is told their details go to "a shortlist of verified dealerships", and the only
+   * thing that keeps the word "shortlist" honest is MAX_DEALERSHIPS. The distribution job
+   * applies it, and so does the collection, so a lead cannot be walked past the ceiling by hand
+   * in the admin or by any other write that reaches the API.
+   */
+  test("a lead cannot be sent to more dealerships than the seller agreed to", async ({
+    request,
+  }) => {
+    const token = await login(request);
+    const auth = { headers: { Authorization: `JWT ${token}` } };
+
+    const dealers = await (await request.get("/api/dealers?limit=1&depth=0")).json();
+    const dealerId = dealers.docs[0]?.id;
+    expect(dealerId, "no verified dealership to record a disclosure against").toBeTruthy();
+
+    const created = await request.post("/api/leads", {
+      data: {
+        type: "trade_in",
+        name: `Ceiling check ${Date.now()}`,
+        email: "ceiling@rynet.test",
+        phone: "082 555 0199",
+        status: "new",
+      },
+    });
+    expect(created.status(), await created.text()).toBe(201);
+    const leadId = (await created.json()).doc.id;
+
+    const disclosure = () => ({ dealer: dealerId, disclosedAt: new Date().toISOString() });
+    const rows = (count: number) => Array.from({ length: count }, disclosure);
+
+    const tooMany = await request.patch(`/api/leads/${leadId}`, {
+      ...auth,
+      data: { disclosures: rows(MAX_DEALERSHIPS + 1) },
+    });
+    expect(tooMany.status(), "one more dealership than the consent allows was accepted").toBe(400);
+
+    // The status code is not the test. This is.
+    const after = await (await request.get(`/api/leads/${leadId}?depth=0`, auth)).json();
+    expect((after.disclosures ?? []).length).toBe(0);
+
+    // And the ceiling itself is what refused it, not the shape of the rows.
+    const atTheCeiling = await request.patch(`/api/leads/${leadId}`, {
+      ...auth,
+      data: { disclosures: rows(MAX_DEALERSHIPS) },
+    });
+    expect(atTheCeiling.status(), await atTheCeiling.text()).toBe(200);
   });
 
   test("a half-finished form survives a browser close", async ({ page, context }) => {

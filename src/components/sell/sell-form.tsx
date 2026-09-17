@@ -25,7 +25,7 @@ import {
   CONDITIONS,
   FIELD_STEP,
   FINANCE_STATES,
-  MAX_DEALERSHIPS,
+  SELL_CONSENT_WORDING,
   SERVICE_HISTORIES,
   type SellToDealerState,
   sellToDealerSchema,
@@ -441,17 +441,22 @@ export function SellForm({
 /**
  * The consent, with the short version of the section 18 notice directly above it.
  *
- * The label's text is the sentence the server action stores verbatim on the consent record,
- * and e2e/sell.spec.ts compares the two. If you change one, change both: the record is evidence
- * of what was on screen, and evidence that does not match the screen is worse than none. That is
- * also why the review marker and the summary sit outside the label.
+ * The label's text is SELL_CONSENT_WORDING, the same constant the server action stores verbatim
+ * on the consent record, and e2e/sell.spec.ts compares the two. One constant rather than two
+ * copies of a sentence: the record is evidence of what was on screen, and evidence that does not
+ * match the screen is worse than none. That is also why the review marker and the summary sit
+ * outside the label.
+ *
+ * No number of dealerships appears here or anywhere else a seller reads. The ceiling is still in
+ * the code; see MAX_DEALERSHIPS.
  */
 function ConsentBlock({ error }: { error?: string }) {
   return (
     <div className="rounded-md border border-line bg-subtle p-4 sm:p-5">
       <p className="text-sm text-body">
-        Your details go only to dealerships in your province that buy this kind of car, so they can
-        contact you with an offer. Giving them is voluntary, and you can withdraw at any time.{" "}
+        Your details go only to a shortlist of verified dealerships in your province that buy this
+        kind of car, so they can contact you with an offer. Giving them is voluntary, you can ask us
+        which dealerships received them, and you can withdraw at any time.{" "}
         <a href="#popia-heading" className="rn-link">
           Read the full notice
         </a>
@@ -465,13 +470,7 @@ function ConsentBlock({ error }: { error?: string }) {
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "consent-error" : undefined}
         />
-        <span className="text-heading">
-          I agree that Rynet may pass my name, my contact details and the details of my car to
-          verified dealerships in my province that buy this kind of vehicle, so that they can
-          contact me with an offer. Rynet will send it to no more than {MAX_DEALERSHIPS}{" "}
-          dealerships. Each dealership decides for itself what it does with my details once it has
-          them. I can withdraw this at any time by emailing privacy@rynet.co.za.
-        </span>
+        <span className="text-heading">{SELL_CONSENT_WORDING}</span>
       </label>
 
       {error ? (
