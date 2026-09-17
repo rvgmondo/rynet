@@ -3,6 +3,14 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-sqlite'
 /**
  * Gives every photo an owner, so one dealership cannot change or delete another's pictures.
  *
+ * WRITTEN ON 17 SEPTEMBER AND NUMBERED BEFORE 20260914_081943_demo_photographs ON PURPOSE.
+ * Migrations run in filename order, and that one plants the demonstration photographs through
+ * Payload's own API, which builds its INSERT from the collections as they are today. On any
+ * database that has not run it yet, including the live one, it would insert a `dealer_id` that
+ * the table does not have and the whole boot-time migration would stop there. The rule this is
+ * an instance of: a column has to be added before any data migration that writes through the
+ * Local API to the same collection, whatever order the two were written in.
+ *
  * Media update and delete used to allow any dealer account. Adding `dealer_id` is what lets the
  * access rule be a query rather than a role check, and the index is what keeps that query cheap
  * on a library that will end up holding every car on the platform.
