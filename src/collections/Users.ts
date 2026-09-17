@@ -177,7 +177,7 @@ export const Users: CollectionConfig = {
         // field at all, so a sales agent's request never reaches the clamp in the first place.
         update: ({ req }) => isPlatformAdmin(req.user) || canManageDealer(req.user),
       },
-      admin: { description: "Decides what this person can see and change." },
+      admin: { isClearable: false, description: "Decides what this person can see and change." },
     },
     {
       name: "dealer",
@@ -211,6 +211,7 @@ export const Users: CollectionConfig = {
       defaultValue: "invited",
       label: "Account status",
       admin: {
+        isClearable: false,
         components: {
           Cell: {
             path: "/components/admin/cells/value-cells#StatusBadgeCell",
@@ -248,9 +249,13 @@ export const Users: CollectionConfig = {
       label: "Two-factor sign-in",
       admin: {
         // Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.
-        description: "Each person turns this on at /account/two-factor.",
+        description: "Each person turns this on for their own account.",
         readOnly: true,
         position: "sidebar",
+        // The same sentence, and on your own account a link to the page that sets it up.
+        components: {
+          Description: "/components/admin/fields/two-factor-link#TwoFactorDescription",
+        },
       },
     },
     {
@@ -282,7 +287,14 @@ export const Users: CollectionConfig = {
         update: () => false,
       },
       label: "Two-factor set up on",
-      admin: { readOnly: true, position: "sidebar" },
+      admin: {
+        readOnly: true,
+        position: "sidebar",
+        // An empty, greyed-out date box beside "Two-factor sign-in" read as something to fill in.
+        // Shown once there is a date. UI only: the field keeps its value and its access rules.
+        condition: (data) => Boolean(data?.twoFactorConfirmedAt),
+        date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+      },
     },
     {
       // NOT IMPLEMENTED: nothing writes this yet, so it is hidden in the admin (UI only).

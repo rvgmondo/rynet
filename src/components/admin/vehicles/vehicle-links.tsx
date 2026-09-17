@@ -122,8 +122,8 @@ export function VehicleLinks() {
         </a>
       ) : (
         <p className="rn-admin-side-note__text">
-          Buyers cannot see this car. To put it on the site, set the listing status to Live on the
-          site and save.
+          Buyers cannot see this car. To show it, choose Live on the site as the listing status,
+          then save.
         </p>
       )}
       {loaded && enquiries !== null ? (

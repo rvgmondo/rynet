@@ -128,6 +128,7 @@ export const Leads: CollectionConfig = {
           index: true,
           label: "Kind of enquiry",
           admin: {
+            isClearable: false,
             components: {
               Cell: {
                 path: BADGE_CELL,
@@ -228,7 +229,14 @@ export const Leads: CollectionConfig = {
         {
           type: "row",
           fields: [
-            { name: "mileageKm", type: "number", label: "Mileage (km)" },
+            {
+              name: "mileageKm",
+              type: "number",
+              label: "Mileage (km)",
+              admin: {
+                components: { afterInput: ["/components/admin/fields/rand-preview#KmPreview"] },
+              },
+            },
             {
               name: "transmission",
               type: "select",
@@ -296,15 +304,31 @@ export const Leads: CollectionConfig = {
       name: "notes",
       type: "array",
       label: "Notes",
-      labels: { singular: "Note", plural: "Notes" },
-      admin: { disableListColumn: true, disableListFilter: true },
+      labels: { singular: "note", plural: "notes" },
+      admin: {
+        disableListColumn: true,
+        disableListFilter: true,
+        components: {
+          RowLabel: {
+            path: "/components/admin/fields/row-label#RowLabel",
+            clientProps: { noun: "Note", field: "body" },
+          },
+        },
+      },
       fields: [
         { name: "body", type: "textarea", required: true, label: "Note" },
         {
           type: "row",
           fields: [
             { name: "author", type: "relationship", relationTo: "users", label: "Written by" },
-            { name: "createdAt", type: "date", label: "Date" },
+            {
+              name: "createdAt",
+              type: "date",
+              label: "Date",
+              admin: {
+                date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+              },
+            },
           ],
         },
       ],
@@ -331,7 +355,7 @@ export const Leads: CollectionConfig = {
           name: "disclosures",
           type: "array",
           label: "Sent to dealerships",
-          labels: { singular: "Dealership", plural: "Dealerships" },
+          labels: { singular: "dealership", plural: "dealerships" },
           access: {
             create: ({ req }) => isPlatformStaff(req.user),
             update: ({ req }) => isPlatformStaff(req.user),
@@ -344,6 +368,12 @@ export const Leads: CollectionConfig = {
             disableListFilter: true,
             // Every dealership this seller's details were sent to, and when.
             description: "Every dealership that received this seller's details.",
+            components: {
+              RowLabel: {
+                path: "/components/admin/fields/row-label#RowLabel",
+                clientProps: { noun: "Dealership" },
+              },
+            },
           },
           fields: [
             {
@@ -356,11 +386,22 @@ export const Leads: CollectionConfig = {
                   required: true,
                   label: "Dealership",
                 },
-                { name: "disclosedAt", type: "date", required: true, label: "Sent on" },
+                {
+                  name: "disclosedAt",
+                  type: "date",
+                  required: true,
+                  label: "Sent on",
+                  admin: {
+                    date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+                  },
+                },
                 {
                   name: "withdrawnAt",
                   type: "date",
                   label: "Seller withdrew on",
+                  admin: {
+                    date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+                  },
                   // Set when the seller withdraws consent. The row stays: it is the record that
                   // the disclosure happened.
                 },
@@ -458,6 +499,7 @@ export const Leads: CollectionConfig = {
       ],
       admin: {
         position: "sidebar",
+        isClearable: false,
         components: { Cell: { path: BADGE_CELL, clientProps: { tones: LEAD_STATUS_TONES } } },
       },
     },

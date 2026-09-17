@@ -25,9 +25,9 @@ import { isReservedSlug, slugify } from "@/lib/slug";
  *     a redirect yet. Only /sell-to-a-dealer skips merged entries, so the admin hint says only
  *     that.
  *
- * The admin form: the name and this list's own fields first, the aliases, then an "Advanced"
- * section for the web address name and the duplicate link. The containers have no `name`, so
- * the layout changes no column.
+ * The admin form: the name and this list's own fields first, the aliases, then a folded
+ * "Web address and duplicates" section for the web address name and the duplicate link. The
+ * containers have no `name`, so the layout changes no column.
  */
 
 export type TaxonomyOptions = {
@@ -140,7 +140,7 @@ export function taxonomyCollection(options: TaxonomyOptions): CollectionConfig {
       },
       {
         type: "collapsible",
-        label: "Advanced",
+        label: "Web address and duplicates",
         admin: { initCollapsed: true },
         fields: [
           {
@@ -171,10 +171,10 @@ export function taxonomyCollection(options: TaxonomyOptions): CollectionConfig {
             },
             validate: (value: unknown) => {
               if (typeof value !== "string" || value.length === 0) {
-                return "That name contains no characters usable in a URL. Use letters, numbers and hyphens.";
+                return "That name has no letters or numbers to make a web address from. Use letters, numbers and hyphens.";
               }
               if (guardReservedSlugs && isReservedSlug(value)) {
-                return `"${value}" is reserved by a route on the site and would shadow it. Choose another name or set the address by hand.`;
+                return `"${value}" is already the web address of another page on the site. Choose another name, or type a different web address name.`;
               }
               return true;
             },

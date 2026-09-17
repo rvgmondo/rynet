@@ -1,5 +1,6 @@
 import { VehiclePhotoCell as VehiclePhotoCell_b7e9cb1a81c297beb118008e96caec7a } from '../../../components/admin/cells/vehicle-photo-cell'
 import { KmCell as KmCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
+import { KmPreview as KmPreview_1839c642279d2d35c41fe313eefedb79 } from '../../../components/admin/fields/rand-preview'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -25,16 +26,19 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { RandCell as RandCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { RandPreview as RandPreview_1839c642279d2d35c41fe313eefedb79 } from '../../../components/admin/fields/rand-preview'
+import { RowLabel as RowLabel_cd7ff53460e955d5264462e4f142fe21 } from '../../../components/admin/fields/row-label'
 import { StatusBadgeCell as StatusBadgeCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { VehicleLinks as VehicleLinks_e35901e3cd3add3a42cd3c63b6013db2 } from '../../../components/admin/vehicles/vehicle-links'
 import { YesNoCell as YesNoCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { QuickFilters as QuickFilters_af04d4889f070270ea6d912c50ad9633 } from '../../../components/admin/list/quick-filters'
+import { NewRecordTitle as NewRecordTitle_43a4991c5ff722fd0fb2623cc9fe3184 } from '../../../components/admin/brand/new-record-title'
 import { NoSaveDraftButton as NoSaveDraftButton_16ff442f03e05105b466f0f5a1d9b7b2 } from '../../../components/admin/vehicles/hidden-controls'
 import { ListingState as ListingState_2436ff289fc22fc86fbf21ac43dd6f55 } from '../../../components/admin/vehicles/listing-state'
 import { NoUnpublishButton as NoUnpublishButton_16ff442f03e05105b466f0f5a1d9b7b2 } from '../../../components/admin/vehicles/hidden-controls'
 import { DealerLiveCarsCell as DealerLiveCarsCell_86b5eba79c497cf18a9ae4ecad2de011 } from '../../../components/admin/cells/dealer-live-cars-cell'
 import { LiveCarsNote as LiveCarsNote_5a6f74906f9ccc25c6b83da4ab204792 } from '../../../components/admin/dealers/live-cars-note'
 import { LeadAboutCell as LeadAboutCell_2264a0f6cfcba6006c31b89f26ef0c40 } from '../../../components/admin/cells/lead-about-cell'
+import { TwoFactorDescription as TwoFactorDescription_16031d10cff14edb2b51dffc99417cba } from '../../../components/admin/fields/two-factor-link'
 import { AdminNav as AdminNav_441d918e62891b354d8caf4912c50884 } from '../../../components/admin/nav/admin-nav'
 import { AdminIcon as AdminIcon_14514f24fd016baf79757a752cc80e21 } from '../../../components/admin/brand/admin-icon'
 import { AdminLogo as AdminLogo_78c6b9411a3b5197e36221642877758f } from '../../../components/admin/brand/admin-logo'
@@ -46,6 +50,7 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 export const importMap = {
   "/components/admin/cells/vehicle-photo-cell#VehiclePhotoCell": VehiclePhotoCell_b7e9cb1a81c297beb118008e96caec7a,
   "/components/admin/cells/value-cells#KmCell": KmCell_45cde6d7d4719519bed87e542f3a5031,
+  "/components/admin/fields/rand-preview#KmPreview": KmPreview_1839c642279d2d35c41fe313eefedb79,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -71,16 +76,19 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/cells/value-cells#RandCell": RandCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/fields/rand-preview#RandPreview": RandPreview_1839c642279d2d35c41fe313eefedb79,
+  "/components/admin/fields/row-label#RowLabel": RowLabel_cd7ff53460e955d5264462e4f142fe21,
   "/components/admin/cells/value-cells#StatusBadgeCell": StatusBadgeCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/vehicles/vehicle-links#VehicleLinks": VehicleLinks_e35901e3cd3add3a42cd3c63b6013db2,
   "/components/admin/cells/value-cells#YesNoCell": YesNoCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/list/quick-filters#QuickFilters": QuickFilters_af04d4889f070270ea6d912c50ad9633,
+  "/components/admin/brand/new-record-title#NewRecordTitle": NewRecordTitle_43a4991c5ff722fd0fb2623cc9fe3184,
   "/components/admin/vehicles/hidden-controls#NoSaveDraftButton": NoSaveDraftButton_16ff442f03e05105b466f0f5a1d9b7b2,
   "/components/admin/vehicles/listing-state#ListingState": ListingState_2436ff289fc22fc86fbf21ac43dd6f55,
   "/components/admin/vehicles/hidden-controls#NoUnpublishButton": NoUnpublishButton_16ff442f03e05105b466f0f5a1d9b7b2,
   "/components/admin/cells/dealer-live-cars-cell#DealerLiveCarsCell": DealerLiveCarsCell_86b5eba79c497cf18a9ae4ecad2de011,
   "/components/admin/dealers/live-cars-note#LiveCarsNote": LiveCarsNote_5a6f74906f9ccc25c6b83da4ab204792,
   "/components/admin/cells/lead-about-cell#LeadAboutCell": LeadAboutCell_2264a0f6cfcba6006c31b89f26ef0c40,
+  "/components/admin/fields/two-factor-link#TwoFactorDescription": TwoFactorDescription_16031d10cff14edb2b51dffc99417cba,
   "/components/admin/nav/admin-nav#AdminNav": AdminNav_441d918e62891b354d8caf4912c50884,
   "/components/admin/brand/admin-icon#AdminIcon": AdminIcon_14514f24fd016baf79757a752cc80e21,
   "/components/admin/brand/admin-logo#AdminLogo": AdminLogo_78c6b9411a3b5197e36221642877758f,

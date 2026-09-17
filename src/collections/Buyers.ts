@@ -117,6 +117,7 @@ export const Buyers: CollectionConfig = {
       defaultValue: "active",
       label: "Account status",
       admin: {
+        isClearable: false,
         components: {
           Cell: {
             path: "/components/admin/cells/value-cells#StatusBadgeCell",
@@ -139,6 +140,7 @@ export const Buyers: CollectionConfig = {
       admin: {
         readOnly: true,
         position: "sidebar",
+        date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
       },
     },
   ],

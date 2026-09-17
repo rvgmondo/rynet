@@ -23,6 +23,26 @@ const computedByThePlatform: FieldAccess = ({ req }) => isPlatformStaff(req.user
 /** Columns and filters that mean nothing in a list: rich text, photos, rows of settings. */
 const notInList = { disableListColumn: true, disableListFilter: true } as const;
 
+/** Social sites a dealership can link to, with their names written the way the sites write them. */
+const SOCIAL_NAMES: Record<string, string> = {
+  facebook: "Facebook",
+  instagram: "Instagram",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  linkedin: "LinkedIn",
+  x: "X",
+};
+const SOCIAL_OPTIONS = Object.entries(SOCIAL_NAMES).map(([value, label]) => ({ value, label }));
+
+/** Kinds of enquiry, shared by the routing rules and their row headings. */
+const LEAD_TYPE_OPTIONS = [
+  { value: "enquiry", label: "Question about a car" },
+  { value: "test_drive", label: "Test drive request" },
+  { value: "finance", label: "Finance enquiry" },
+  { value: "trade_in", label: "Wants to sell a car" },
+  { value: "callback", label: "Asked for a call back" },
+];
+
 /**
  * Dealerships. The only entity on the platform that may own stock.
  *
@@ -109,6 +129,7 @@ export const Dealers: CollectionConfig = {
       },
       admin: {
         position: "sidebar",
+        isClearable: false,
         components: {
           Cell: {
             path: "/components/admin/cells/value-cells#StatusBadgeCell",
@@ -234,7 +255,7 @@ export const Dealers: CollectionConfig = {
             },
             {
               type: "collapsible",
-              label: "Advanced",
+              label: "Web address",
               admin: { initCollapsed: true },
               fields: [
                 {
@@ -245,7 +266,10 @@ export const Dealers: CollectionConfig = {
                   index: true,
                   label: "Web address name",
                   // Their address at /dealers/[slug]. Filled in from the trading name when empty.
-                  admin: { description: "Their page is /dealers/ followed by this." },
+                  admin: {
+                    description:
+                      "The end of their page's web address, for example smith-motors. Made from the dealership name when left empty.",
+                  },
                   hooks: {
                     beforeValidate: [
                       ({ value, data }) =>
@@ -358,7 +382,14 @@ export const Dealers: CollectionConfig = {
                 },
               ],
             },
-            { name: "whatsappNumber", type: "text", label: "WhatsApp number" },
+            {
+              name: "whatsappNumber",
+              type: "text",
+              label: "WhatsApp number",
+              // Used for the WhatsApp button on their cars and their page (a branch's own number
+              // wins on the dealership page).
+              admin: { description: "Buyers message this number from the site." },
+            },
           ],
         },
         {
@@ -465,8 +496,16 @@ export const Dealers: CollectionConfig = {
               name: "socialProfiles",
               type: "array",
               label: "Social media",
-              labels: { singular: "Profile", plural: "Profiles" },
-              admin: notInList,
+              labels: { singular: "profile", plural: "profiles" },
+              admin: {
+                ...notInList,
+                components: {
+                  RowLabel: {
+                    path: "/components/admin/fields/row-label#RowLabel",
+                    clientProps: { noun: "Profile", field: "platform", options: SOCIAL_OPTIONS },
+                  },
+                },
+              },
               fields: [
                 {
                   type: "row",
@@ -475,9 +514,7 @@ export const Dealers: CollectionConfig = {
                       name: "platform",
                       type: "select",
                       label: "Site",
-                      options: ["facebook", "instagram", "youtube", "tiktok", "linkedin", "x"].map(
-                        (v) => ({ value: v, label: v[0]?.toUpperCase() + v.slice(1) }),
-                      ),
+                      options: SOCIAL_OPTIONS,
                     },
                     { name: "url", type: "text", label: "Link" },
                   ],
@@ -488,9 +525,21 @@ export const Dealers: CollectionConfig = {
               name: "emailRouting",
               type: "array",
               label: "Where enquiries should go",
-              labels: { singular: "Rule", plural: "Rules" },
+              labels: { singular: "rule", plural: "rules" },
               admin: {
                 ...notInList,
+                components: {
+                  RowLabel: {
+                    path: "/components/admin/fields/row-label#RowLabel",
+                    clientProps: {
+                      noun: "Rule",
+                      field: "leadType",
+                      options: LEAD_TYPE_OPTIONS,
+                      also: "toAddress",
+                      joiner: " to ",
+                    },
+                  },
+                },
                 // Was: "Where each kind of lead goes. Without a rule, leads fall back to the
                 // dealer principal." NOT IMPLEMENTED: no enquiry email is sent anywhere yet.
                 description: "No enquiry emails are sent yet.",
@@ -504,13 +553,7 @@ export const Dealers: CollectionConfig = {
                       type: "select",
                       required: true,
                       label: "Kind of enquiry",
-                      options: [
-                        { value: "enquiry", label: "Question about a car" },
-                        { value: "test_drive", label: "Test drive request" },
-                        { value: "finance", label: "Finance enquiry" },
-                        { value: "trade_in", label: "Wants to sell a car" },
-                        { value: "callback", label: "Asked for a call back" },
-                      ],
+                      options: LEAD_TYPE_OPTIONS,
                     },
                     { name: "toAddress", type: "email", required: true, label: "Send to" },
                     {
@@ -540,7 +583,7 @@ export const Dealers: CollectionConfig = {
                   admin: {
                     // Hex value. Must reach 4.5:1 against white or the page becomes unreadable
                     // for some visitors.
-                    description: "A hex colour like #C81E2B, dark enough to read on white.",
+                    description: "A colour code like #C81E2B, dark enough to read on white.",
                   },
                   /**
                    * A dealer picking their own brand colour is a real feature and a real

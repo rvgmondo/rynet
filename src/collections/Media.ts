@@ -59,18 +59,21 @@ export const Media: CollectionConfig = {
     {
       name: "alt",
       type: "text",
-      label: "Describe the photo",
+      // "Photo description" rather than "Describe the photo", which read as an instruction when it
+      // headed a column in the list.
+      label: "Photo description",
       admin: {
         /*
          * What the image shows, for someone who cannot see it. Describe the subject, not the file,
          * so "2023 Toyota Hilux Raider, front three-quarter" rather than "vehicle photo".
          */
-        description: "Say what it shows, for example 2023 Toyota Hilux Raider, front view.",
+        description:
+          "Needed unless Decorative only is ticked. Say what it shows, for example 2023 Toyota Hilux Raider, front view.",
       },
       validate: (value: unknown, { data }: { data?: Record<string, unknown> }) => {
         if (data?.isDecorative) return true;
         if (typeof value === "string" && value.trim().length > 0) return true;
-        return "Add alt text, or tick 'Decorative' if this image carries no information. It cannot be published without one or the other.";
+        return "Describe the photo, or tick Decorative only if it shows nothing a person needs to know.";
       },
     },
     {

@@ -72,7 +72,7 @@ export const Makes: CollectionConfig = taxonomyCollection({
   // Was: "Manufacturers. The slug appears directly under /cars/, so reserved route words are
   // rejected."
   description:
-    "Car brands. The web address name is used in /cars/ links, so a few words are not allowed.",
+    "Car brands. Each make gets its own page on the site, so a few names that clash with other pages cannot be used.",
   fields: [
     {
       name: "logo",

@@ -371,6 +371,12 @@
     flex-shrink: 1;
   }
 
+  /* Payload cuts every breadcrumb at 160px, so a car read "2022 Toyota Fortuner 2...." with room
+     to spare. The last crumb takes the room there is and is cut only when there is none. */
+  .step-nav span {
+    max-width: 32rem;
+  }
+
   .collection-list--media .table td {
     vertical-align: middle;
   }
@@ -686,6 +692,28 @@
   .doc-controls,
   .doc-tabs {
     font-family: var(--rn-font-sans);
+  }
+
+  /* A record's name is how the owner knows which car they are changing, so it wraps instead of
+     ending in an ellipsis. On a phone "2023 Toyota Corolla Cross 1.8 Xi" was cut to "Cross 1". */
+  .doc-header__title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+
+  /* Records with no History (a dealership, an enquiry, the finance figures) showed one tab,
+     "Edit", on the screen that is already for editing. A single tab goes; cars keep Edit and
+     History. */
+  .doc-tabs:has(.doc-tabs__tabs > :only-child) {
+    display: none;
+  }
+
+  /* Payload fades the end of the tabs to hint that they scroll. Cars have two tabs, which never
+     scroll, so the fade only drew a pale box after History on a phone. */
+  .doc-tabs::after {
+    display: none;
   }
 
   .collapsible {
@@ -1403,6 +1431,15 @@
     color: var(--rn-heading);
   }
 
+  a.rn-admin-field-link {
+    display: inline-block;
+    padding-block: 4px;
+    color: var(--rn-heading);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
   a.rn-admin-side-note__link {
     display: inline-block;
     padding-block: 4px;
@@ -1489,6 +1526,124 @@
 
   .rn-admin-side-note__text--spaced {
     margin-top: 8px;
+  }
+
+  /* ------------------------------------------------------------ form layout */
+
+  /* Payload spaces a record's tabs 40px below the bar with the Save button, on top of the page's
+     own padding, which left a band of nothing above the first thing to fill in. */
+  /* First of type, not first child: hidden inputs for hidden fields come before it. */
+  .document-fields__edit > .render-fields > div.tabs-field:first-of-type {
+    margin-top: 0;
+  }
+
+  /* A row heading holds what the row says (a note, a routing rule), so a long one is cut to the
+     width of the row rather than pushing the row's buttons off the edge. */
+  .array-field__row-header {
+    min-width: 0;
+  }
+
+  .rn-admin-row-label {
+    overflow: hidden;
+    min-width: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* An account's email and password buttons sit in a panel Payload tints with its palest grey.
+     That grey is the page colour here, so the panel vanished and only its indent was left,
+     pushing Email out of line with every field below it. It is drawn as a card instead. */
+  .auth-fields {
+    padding: 20px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: var(--rn-card);
+  }
+
+  /* Rich text (a car's description, a dealership's About). Payload draws it with a serif face and
+     no outline, so it did not look like a box to type in. */
+  .rich-text-lexical .editor-container,
+  .rich-text-lexical .editor,
+  .rich-text-lexical .ContentEditable__root,
+  .rich-text-lexical .LexicalEditorTheme__placeholder {
+    font-family: var(--rn-font-sans);
+  }
+
+  .rich-text-lexical .editor {
+    min-height: 112px;
+    border: 1px solid var(--rn-line-control);
+    border-radius: var(--rn-radius-sm);
+    background: var(--rn-card);
+    box-shadow: var(--rn-shadow-xs);
+  }
+
+  .rich-text-lexical .editor:hover {
+    border-color: var(--rn-heading);
+  }
+
+  .rich-text-lexical .editor:focus-within {
+    border-color: var(--rn-focus-ring);
+    box-shadow: 0 0 0 1px var(--rn-focus-ring);
+  }
+
+  .rich-text-lexical .ContentEditable__root {
+    min-height: 110px;
+    padding: 10px 14px;
+    color: var(--rn-heading);
+    font-size: 15px;
+    line-height: 1.55;
+    outline: none;
+  }
+
+  .rich-text-lexical .LexicalEditorTheme__placeholder {
+    inset-block-start: 10px;
+    inset-inline-start: 14px;
+    color: var(--rn-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  /* A photo in a car's row read its size, pixel width and file type, joined with long dashes:
+     details nobody filling in a car needs. The file name stays. */
+  .upload-relationship-details__meta {
+    display: none;
+  }
+
+  /* A photo's own screen read "179KB - 1280x815 - image/webp" under its name. */
+  .file-meta__size-type {
+    display: none;
+  }
+
+  /* While a car has unsaved changes the bar holds four things, and the last, the date it was last
+     saved, was cut off mid-date. The date is still in its History. */
+  .collection-edit--vehicles
+    .doc-controls__meta:has(.rn-admin-badge--warning)
+    > li.doc-controls__value-wrap {
+    display: none;
+  }
+
+  /* "Changes kept 2 minutes ago" belongs beside "Unsaved changes". Once a car is saved there are
+     no kept changes to speak of, so the line goes with the badge. */
+  .doc-controls__meta:not(:has(.rn-admin-badge--warning)) > li:has(> .autosave) {
+    display: none;
+  }
+
+  /* On a phone the list of photos gave the file name a sliver of the width, one syllable a line. */
+  .collection-list--media .table td.cell-filename {
+    min-width: 200px;
+  }
+
+  /* On a phone Payload takes its visible menu button out of the tab order and leaves the one in
+     it with no size, so a keyboard user tabbed onto nothing they could see. That button is drawn,
+     over the visible one, while it has keyboard focus. */
+  @media (max-width: 768px) {
+    .template-default__nav-toggler-container {
+      padding-inline-start: 16px;
+    }
+
+    .template-default__nav-toggler:focus-visible .hamburger {
+      display: flex;
+    }
   }
 
   /* ---------------------------------------------- records nobody makes by hand */

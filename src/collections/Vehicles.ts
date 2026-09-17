@@ -369,6 +369,8 @@ export const Vehicles: CollectionConfig = {
                 { value: "demo", label: "Demo" },
                 { value: "pre_owned", label: "Used" },
               ],
+              // Required, so no clear button that empties it.
+              admin: { isClearable: false },
             },
             {
               type: "row",
@@ -431,7 +433,12 @@ export const Vehicles: CollectionConfig = {
                   required: true,
                   index: true,
                   label: "Mileage (km)",
-                  admin: { components: { Cell: CELL.km } },
+                  admin: {
+                    components: {
+                      Cell: CELL.km,
+                      afterInput: ["/components/admin/fields/rand-preview#KmPreview"],
+                    },
+                  },
                 },
               ],
             },
@@ -499,6 +506,8 @@ export const Vehicles: CollectionConfig = {
               hasMany: true,
               label: "Features",
               admin: {
+                // Several can be chosen, so not the "Choose one" every other list says.
+                placeholder: "Choose any",
                 // Structured, never free text. A free-text feature cannot be filtered, compared
                 // or counted.
                 description: "Pick from the list so buyers can filter by them.",
@@ -595,6 +604,7 @@ export const Vehicles: CollectionConfig = {
                   required: true,
                   defaultValue: "retail",
                   label: "Price type",
+                  admin: { isClearable: false },
                   options: [
                     { value: "retail", label: "Normal price" },
                     { value: "on_the_road", label: "On the road price" },
@@ -672,10 +682,17 @@ export const Vehicles: CollectionConfig = {
               type: "array",
               minRows: 0,
               label: "Photos",
-              labels: { singular: "Photo", plural: "Photos" },
+              // Lower case, because Payload writes it into "Add photo" and "No photos found".
+              labels: { singular: "photo", plural: "photos" },
               admin: {
                 disableListColumn: true,
                 disableListFilter: true,
+                components: {
+                  RowLabel: {
+                    path: "/components/admin/fields/row-label#RowLabel",
+                    clientProps: { noun: "Photo", firstNote: "the main photo" },
+                  },
+                },
                 // Drag to reorder, or use the move buttons. Both work, because a drag-only
                 // reorder fails WCAG 2.2 SC 2.5.7.
                 description:
@@ -694,9 +711,10 @@ export const Vehicles: CollectionConfig = {
                   type: "text",
                   label: "Photo description",
                   admin: {
-                    // Left empty, this is generated from the vehicle's own details. Override it
-                    // when the photo shows something specific.
-                    description: "Leave empty to describe it automatically.",
+                    // Left empty, the photo's own description is used, then the car's name
+                    // (src/components/vehicles/vehicle-gallery.tsx). Override it when the photo
+                    // shows something specific to this car.
+                    description: "Leave empty to use the photo's own description.",
                   },
                 },
               ],
@@ -855,6 +873,7 @@ export const Vehicles: CollectionConfig = {
       ],
       admin: {
         position: "sidebar",
+        isClearable: false,
         description: "Only Live cars, and Sold cars for 90 days, can be seen on the site.",
         components: {
           Cell: {
@@ -940,14 +959,20 @@ export const Vehicles: CollectionConfig = {
           type: "date",
           index: true,
           label: "First went live",
-          admin: { readOnly: true },
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+          },
         },
         {
           name: "soldAt",
           type: "date",
           index: true,
           label: "Marked sold on",
-          admin: { readOnly: true },
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+          },
         },
       ],
     },

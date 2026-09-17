@@ -59,4 +59,18 @@ describe("firstName", () => {
     expect(firstName("")).toBeNull();
     expect(firstName(undefined)).toBeNull();
   });
+
+  it("returns nothing when the name is a role or a team, not a person", () => {
+    expect(firstName("Platform admin")).toBeNull();
+    expect(firstName("Sales team")).toBeNull();
+    expect(firstName("Rynet support")).toBeNull();
+    expect(firstName("admin@rynet.co.za")).toBeNull();
+    expect(firstName("agent2")).toBeNull();
+  });
+
+  it("keeps names that only look unusual", () => {
+    expect(firstName("Thandiwe Nkosi")).toBe("Thandiwe");
+    expect(firstName("Zoë du Plessis")).toBe("Zoë");
+    expect(firstName("Jean-Pierre Botha")).toBe("Jean-Pierre");
+  });
 });

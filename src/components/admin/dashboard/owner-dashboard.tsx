@@ -161,7 +161,7 @@ function Numbers({ data, adminRoute }: { data: DashboardData; adminRoute: string
         label={`${plural(data.enquiriesThisWeek, "Enquiry", "Enquiries")} in the last 7 days`}
         hint={
           clicks > 0
-            ? `Not counting ${count(clicks)} WhatsApp ${plural(clicks, "tap", "taps")} and phone number views.`
+            ? `Not counting ${count(clicks)} ${plural(clicks, "tap", "taps")} on WhatsApp or a phone number.`
             : "People who left their details."
         }
       />,

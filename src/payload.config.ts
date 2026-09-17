@@ -6,7 +6,7 @@ import { sqliteAdapter } from "@payloadcms/db-sqlite";
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { s3Storage } from "@payloadcms/storage-s3";
-import { buildConfig, type Config } from "payload";
+import { buildConfig, type CollectionConfig, type Config } from "payload";
 import sharp from "sharp";
 
 import { Branches } from "./collections/Branches";
@@ -20,7 +20,33 @@ import { TAXONOMY_COLLECTIONS } from "./collections/taxonomies";
 import { Users } from "./collections/Users";
 import { Vehicles } from "./collections/Vehicles";
 import { FinanceDefaults } from "./globals/FinanceDefaults";
+import { withPlainPickers } from "./lib/admin-pickers";
 import { migrateOnBoot } from "./lib/migrate-on-boot";
+
+/**
+ * Heads every new record "New car", "New dealership" and so on instead of Payload's "[Untitled]".
+ * Presentation only; see src/components/admin/brand/new-record-title.tsx.
+ */
+function withNewRecordTitle(collections: CollectionConfig[]): CollectionConfig[] {
+  const component = "/components/admin/brand/new-record-title#NewRecordTitle";
+  return collections.map((collection) => {
+    const components = collection.admin?.components ?? {};
+    const edit = components.edit ?? {};
+    return {
+      ...collection,
+      admin: {
+        ...collection.admin,
+        components: {
+          ...components,
+          edit: {
+            ...edit,
+            beforeDocumentControls: [...(edit.beforeDocumentControls ?? []), component],
+          },
+        },
+      },
+    };
+  });
+}
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -96,9 +122,10 @@ export default buildConfig({
   onInit: migrateOnBoot,
 
   admin: {
-    // The Payload admin is for platform staff. Dealers use /portal, which is a normal
-    // Next route group talking to Payload through the Local API. Bending this admin into
-    // a lead pipeline and a feed mapper would mean fighting it on every screen.
+    // The Payload admin is for platform staff. The plan is a separate dealer portal, a normal
+    // Next route group talking to Payload through the Local API, because bending this admin into
+    // a lead pipeline and a feed mapper would mean fighting it on every screen. No portal route
+    // exists yet, so dealership staff have nowhere to manage stock but here.
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
@@ -148,6 +175,7 @@ export default buildConfig({
       en: {
         general: {
           dashboard: "Home",
+          backToDashboard: "Back to home",
           createNew: "Add new",
           // List column headings and the line under every record's title.
           createdAt: "Created",
@@ -161,31 +189,128 @@ export default buildConfig({
           and: "and",
           addFilter: "Add filter",
           perPage: "Rows per page: {{limit}}",
+          /*
+           * The line under a new record's heading read "Creating new Car", and the toasts after a
+           * save read "Car successfully created." and "Updated successfully.". The labels are
+           * capitalised for headings, so these either start with the label or leave it out.
+           */
+          creatingNewLabel: "Not saved yet",
+          successfullyCreated: "{{label}} added.",
+          updatedSuccessfully: "Saved.",
+          successfullyDuplicated: "{{label}} copied.",
+          deletedSuccessfully: "Deleted.",
+          titleDeleted: "Deleted: {{title}}",
+          confirmDeletion: "Delete for good?",
+          aboutToDelete: "<1>{{title}}</1> will be deleted. This cannot be undone.",
+          confirmDuplication: "Make a copy?",
+          duplicate: "Make a copy",
+          saving: "Saving",
+          deleting: "Deleting",
+          submitting: "Sending",
+          saveChanges: "Save changes",
+          moveUp: "Move up",
+          moveDown: "Move down",
+          addBelow: "Add below",
+          copyRow: "Copy row",
+          pasteRow: "Paste row",
+          copyField: "Copy field",
+          pasteField: "Paste field",
+          clearAll: "Clear all",
+          applyChanges: "Apply changes",
+          emailAddress: "Email address",
+          newPassword: "New password",
+          noResults: "Nothing to show. There are none yet, or none match the filters above.",
+          noResultsFound: "Nothing found.",
+          sorryNotFound: "Sorry, there is nothing here.",
+          // The account screen: Payload's name for it, and title case.
+          payloadSettings: "Screen settings",
+          adminTheme: "Colour theme",
+          automatic: "Same as this device",
+          resetPreferences: "Reset screen settings",
+          resetPreferencesDescription:
+            "Puts columns, rows per page and folded sections back the way they started.",
+          resettingPreferences: "Resetting screen settings.",
         },
-        fields: { collapseAll: "Collapse all", showAll: "Show all" },
-        upload: { bulkUpload: "Upload several", fileName: "File name" },
-        authentication: { login: "Sign in", logOut: "Sign out" },
+        fields: {
+          // Spoken by a screen reader on the button that folds a section or a row away.
+          toggleBlock: "Open or close",
+          collapseAll: "Collapse all",
+          showAll: "Show all",
+          chooseFromExisting: "Choose from the library",
+          addLink: "Add link",
+          editLink: "Edit link",
+        },
+        upload: {
+          bulkUpload: "Upload several",
+          fileName: "File name",
+          fileSize: "File size",
+          selectFile: "Choose a file",
+          pasteURL: "Paste a web link",
+          editImage: "Crop or adjust",
+          previewSizes: "See sizes",
+          focalPoint: "Focus point",
+          filesToUpload: "Files to upload",
+          fileToUpload: "File to upload",
+          addFile: "Add a file",
+          addFiles: "Add files",
+        },
+        authentication: {
+          login: "Sign in",
+          logOut: "Sign out",
+          logout: "Sign out",
+          loggingOut: "Signing out",
+          loggedOutSuccessfully: "You are signed out.",
+          loggedOutInactivity: "You were signed out because nothing happened for a while.",
+          logBackIn: "Sign in again",
+          stayLoggedIn: "Stay signed in",
+          youAreInactive:
+            "Nothing has happened here for a while, so you will be signed out soon to keep the account safe. Stay signed in?",
+          changePassword: "Change password",
+          confirmPassword: "Confirm password",
+          newPassword: "New password",
+          forgotPassword: "Forgot password",
+          resetPassword: "Reset password",
+          resetYourPassword: "Reset your password",
+          // Unlocks an account locked by too many wrong passwords.
+          forceUnlock: "Unlock account",
+          successfullyUnlocked: "Account unlocked.",
+          failedToUnlock: "The account could not be unlocked.",
+        },
+        error: {
+          // Shown with the names of the fields after it.
+          followingFieldsInvalid_one: "Fill in or fix this field first:",
+          followingFieldsInvalid_other: "Fill in or fix these fields first:",
+          correctInvalidFields: "Some fields need fixing before this can be saved.",
+          autosaving: "Your latest changes could not be kept. Check the connection and save.",
+          documentNotFound:
+            "This record could not be found. It may have been deleted, or you may not have access to it.",
+        },
         /*
          * Payload's save-state words, used only by collections with drafts (cars). "Publish" and
          * "Draft" read as whether a car is on the site, which is what its Listing status decides,
          * so these say what they actually do: save, and keep unsaved changes in the history.
+         * "Draft" is avoided altogether, because a car's Listing status has a Draft too.
          */
         version: {
           publish: "Save",
           publishChanges: "Save changes",
           publishing: "Saving",
           versions: "History",
-          draft: "Unsaved draft",
+          draft: "Unsaved changes",
           published: "Saved",
           changed: "Unsaved changes",
           draftHasPublishedVersion: "Unsaved changes",
-          currentDraft: "Current unsaved draft",
+          currentDraft: "Current unsaved changes",
           currentlyPublished: "Saved now",
           currentPublishedVersion: "Saved version",
           previouslyPublished: "Previously saved",
-          lastSavedAgo: "Draft kept {{distance}} ago",
-          autosavedSuccessfully: "Draft kept.",
-          draftSavedSuccessfully: "Draft kept.",
+          previouslyDraft: "Previously unsaved changes",
+          lastSavedAgo: "Changes kept {{distance}} ago",
+          autosavedSuccessfully: "Changes kept.",
+          draftSavedSuccessfully: "Changes kept.",
+          autosavedVersion: "Changes kept automatically",
+          restoreThisVersion: "Go back to this version",
+          compareVersions: "Compare versions",
         },
       },
     } as unknown as NonNullable<Config["i18n"]>["translations"],
@@ -197,29 +322,36 @@ export default buildConfig({
    * enquiries first, because they are the day's work; the lookup lists and records last.
    * Reordering changes no table, column or API.
    */
-  collections: [
-    // Every day
-    Vehicles,
-    Dealers,
-    Leads,
-    // Details
-    Branches,
-    Media,
-    // People. Two separate auth collections on purpose: a buyer has no role field and no
-    // dealer field, so a private individual has no path to listing a vehicle.
-    Users,
-    Buyers,
-    // Website settings (the finance calculator global joins this group)
-    Plans,
-    // Lists and records. The taxonomies are all built from one factory in
-    // collections/taxonomy.ts.
-    ...TAXONOMY_COLLECTIONS,
-    ConsentRecords,
-  ],
+  collections: withPlainPickers(
+    withNewRecordTitle([
+      // Every day
+      Vehicles,
+      Dealers,
+      Leads,
+      // Details
+      Branches,
+      Media,
+      // People. Two separate auth collections on purpose: a buyer has no role field and no
+      // dealer field, so a private individual has no path to listing a vehicle.
+      Users,
+      Buyers,
+      // Website settings (the finance calculator global joins this group)
+      Plans,
+      // Lists and records. The taxonomies are all built from one factory in
+      // collections/taxonomy.ts.
+      ...TAXONOMY_COLLECTIONS,
+      ConsentRecords,
+    ]),
+  ),
 
   globals: [FinanceDefaults],
 
-  editor: lexicalEditor(),
+  /*
+   * Rich text (a car's description, a dealership's "About"). No gutter, which was a faint line and
+   * a wide indent that made the box look empty, and a placeholder without Payload's "press '/' for
+   * commands", which means nothing to the people typing here.
+   */
+  editor: lexicalEditor({ admin: { hideGutter: true, placeholder: "Type here" } }),
   secret: process.env.PAYLOAD_SECRET || "",
   serverURL,
   cors: trustedOrigins,

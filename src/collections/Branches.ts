@@ -21,6 +21,8 @@ const DAYS = [
   "sunday",
 ] as const;
 
+const DAY_OPTIONS = DAYS.map((d) => ({ value: d, label: d[0]?.toUpperCase() + d.slice(1) }));
+
 /** Columns and filters that mean nothing in a list: long text, rows of hours, photos. */
 const notInList = { disableListColumn: true, disableListFilter: true } as const;
 
@@ -179,9 +181,17 @@ export const Branches: CollectionConfig = {
       name: "tradingHours",
       type: "array",
       label: "Opening hours",
-      labels: { singular: "Day", plural: "Opening hours" },
+      labels: { singular: "day", plural: "days" },
       // Shown on the branch page and marked up as openingHoursSpecification.
-      admin: notInList,
+      admin: {
+        ...notInList,
+        components: {
+          RowLabel: {
+            path: "/components/admin/fields/row-label#RowLabel",
+            clientProps: { noun: "Day", field: "day", options: DAY_OPTIONS },
+          },
+        },
+      },
       fields: [
         {
           type: "row",
@@ -191,7 +201,8 @@ export const Branches: CollectionConfig = {
               type: "select",
               required: true,
               label: "Day",
-              options: DAYS.map((d) => ({ value: d, label: d[0]?.toUpperCase() + d.slice(1) })),
+              admin: { isClearable: false },
+              options: DAY_OPTIONS,
             },
             { name: "opensAt", type: "text", label: "Opens", admin: { placeholder: "08:00" } },
             { name: "closesAt", type: "text", label: "Closes", admin: { placeholder: "17:00" } },
@@ -204,9 +215,15 @@ export const Branches: CollectionConfig = {
       name: "holidayOverrides",
       type: "array",
       label: "Public holiday hours",
-      labels: { singular: "Holiday", plural: "Public holiday hours" },
+      labels: { singular: "holiday", plural: "holidays" },
       admin: {
         ...notInList,
+        components: {
+          RowLabel: {
+            path: "/components/admin/fields/row-label#RowLabel",
+            clientProps: { noun: "Holiday", field: "label" },
+          },
+        },
         /*
          * South Africa has twelve public holidays and dealerships keep different hours on them.
          * Without these the site tells buyers a branch is open when it is shut.
@@ -246,7 +263,7 @@ export const Branches: CollectionConfig = {
       admin: notInList,
     },
     {
-      label: "Advanced",
+      label: "Web address",
       type: "collapsible",
       admin: { initCollapsed: true },
       fields: [

@@ -63,11 +63,18 @@ export const ConsentRecords: CollectionConfig = {
     {
       type: "row",
       fields: [
-        { name: "grantedAt", type: "date", required: true, label: "Agreed on" },
+        {
+          name: "grantedAt",
+          type: "date",
+          required: true,
+          label: "Agreed on",
+          admin: { date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" } },
+        },
         {
           name: "withdrawnAt",
           type: "date",
           label: "Withdrawn on",
+          admin: { date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" } },
           // Set by writing a new withdrawal record, not by editing this one. Shown here for
           // readability.
         },

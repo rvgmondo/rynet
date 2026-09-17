@@ -16,7 +16,8 @@ export const Plans: CollectionConfig = {
   defaultSort: "sortOrder",
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["name", "monthlyPrice", "listingLimit", "isPublic", "sortOrder"],
+    // Position is left out: its numbers (1500, 3500) only order the plans, and read like prices.
+    defaultColumns: ["name", "monthlyPrice", "listingLimit", "isPublic"],
     group: ADMIN_GROUP.settings,
     pagination: { defaultLimit: 25 },
     hideAPIURL: true,
@@ -100,8 +101,17 @@ export const Plans: CollectionConfig = {
       name: "includedFeatures",
       type: "array",
       label: "What is included",
-      labels: { singular: "Item", plural: "Items" },
-      admin: { disableListColumn: true, disableListFilter: true },
+      labels: { singular: "item", plural: "items" },
+      admin: {
+        disableListColumn: true,
+        disableListFilter: true,
+        components: {
+          RowLabel: {
+            path: "/components/admin/fields/row-label#RowLabel",
+            clientProps: { noun: "Item", field: "label" },
+          },
+        },
+      },
       fields: [{ name: "label", type: "text", required: true, label: "Item" }],
     },
     {

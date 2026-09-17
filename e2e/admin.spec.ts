@@ -136,6 +136,8 @@ test.describe("the home screen", () => {
       await expect(home.getByRole("heading", { level: 1 })).toHaveText(
         /^Good (morning|afternoon|evening)/,
       );
+      // The seeded account is called "Platform admin", which is a role, not a first name.
+      await expect(home.getByRole("heading", { level: 1 })).not.toContainText("Platform");
       for (const name of [
         "On the site today",
         "Quick actions",
@@ -311,6 +313,12 @@ test.describe("a car's edit screen", () => {
     await expect(page.locator(".doc-controls")).not.toContainText("Status: Draft");
     await expect(page.getByRole("link", { name: /History/ })).toBeVisible();
     await expect(page.locator(".rn-admin-side-note")).toContainText("On the site");
+    // No pencil inside a chosen make or dealership that edits that record for the whole site, and
+    // no "+" that makes a new dealership from inside a car.
+    await expect(page.locator(".relationship--single-value__drawer-toggler")).toHaveCount(0);
+    await expect(page.locator("#field-dealer .relationship-add-new__add-button")).toHaveCount(0);
+    // A make can still be added from here, which is the point of a lookup list.
+    await expect(page.locator("#field-make .relationship-add-new__add-button")).toHaveCount(1);
 
     await expectNoViolations(page, [".rn-admin-listing-state", ".rn-admin-side-note"]);
   });
