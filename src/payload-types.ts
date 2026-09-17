@@ -261,7 +261,7 @@ export interface Vehicle {
     | {
         image: number | Media;
         /**
-         * Leave empty to describe it automatically.
+         * Leave empty to use the photo's own description.
          */
         alt?: string | null;
         id?: string | null;
@@ -319,7 +319,7 @@ export interface Vehicle {
   _status?: ('draft' | 'published') | null;
 }
 /**
- * Car brands. The web address name is used in /cars/ links, so a few words are not allowed.
+ * Car brands. Each make gets its own page on the site, so a few names that clash with other pages cannot be used.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "makes".
@@ -364,7 +364,7 @@ export interface Make {
 export interface Media {
   id: number;
   /**
-   * Say what it shows, for example 2023 Toyota Hilux Raider, front view.
+   * Needed unless Decorative only is ticked. Say what it shows, for example 2023 Toyota Hilux Raider, front view.
    */
   alt?: string | null;
   /**
@@ -376,6 +376,10 @@ export interface Media {
    * A photo of the model, not of a real car for sale.
    */
   isDemonstration?: boolean | null;
+  /**
+   * Whose photo this is. Empty means it is Rynet's own.
+   */
+  dealer?: (number | null) | Dealer;
   /**
    * For example stock, dealers or agency.
    */
@@ -425,6 +429,384 @@ export interface Media {
       filename?: string | null;
     };
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dealers".
+ */
+export interface Dealer {
+  id: number;
+  /**
+   * Only verified dealerships can put cars live.
+   */
+  verificationStatus: 'pending' | 'verified' | 'suspended' | 'archived';
+  /**
+   * Not a real business. Labelled as an example on the site.
+   */
+  isDemonstration?: boolean | null;
+  tradingName: string;
+  /**
+   * As registered with CIPC.
+   */
+  legalName: string;
+  logo?: (number | null) | Media;
+  aboutRichText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  foundedYear?: number | null;
+  group?: (number | null) | DealerGroup;
+  /**
+   * Add only after you have seen the certificate.
+   */
+  accreditations?: (number | Accreditation)[] | null;
+  /**
+   * The end of their page's web address, for example smith-motors. Made from the dealership name when left empty.
+   */
+  slug: string;
+  registrationNumber?: string | null;
+  vatNumber?: string | null;
+  /**
+   * If they have one.
+   */
+  motorTradeNumber?: string | null;
+  /**
+   * Only Rynet staff see this.
+   */
+  verificationNotes?: string | null;
+  /**
+   * Sends them people selling a car on the site. Leave off unless they asked.
+   */
+  acceptsTradeIns?: boolean | null;
+  /**
+   * Leave empty to receive any make.
+   */
+  buysMakes?: (number | Make)[] | null;
+  principal?: {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  };
+  /**
+   * Buyers message this number from the site.
+   */
+  whatsappNumber?: string | null;
+  plan?: (number | null) | Plan;
+  /**
+   * Not enforced yet.
+   */
+  listingLimit?: number | null;
+  listingCount?: number | null;
+  reviewScore?: number | null;
+  reviewCount?: number | null;
+  heroImages?: (number | Media)[] | null;
+  franchises?: (number | Franchise)[] | null;
+  socialProfiles?:
+    | {
+        platform?: ('facebook' | 'instagram' | 'youtube' | 'tiktok' | 'linkedin' | 'x') | null;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * No enquiry emails are sent yet.
+   */
+  emailRouting?:
+    | {
+        leadType: 'enquiry' | 'test_drive' | 'finance' | 'trade_in' | 'callback';
+        toAddress: string;
+        branch?: (number | null) | Branch;
+        id?: string | null;
+      }[]
+    | null;
+  theme?: {
+    /**
+     * A colour code like #C81E2B, dark enough to read on white.
+     */
+    accent?: string | null;
+    heroLayout?: ('standard' | 'split' | 'minimal') | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Companies that own several dealerships.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dealer-groups".
+ */
+export interface DealerGroup {
+  id: number;
+  name: string;
+  logo?: (number | null) | Media;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | DealerGroup;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Industry bodies such as the RMI, NADA and MIWA.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "accreditations".
+ */
+export interface Accreditation {
+  id: number;
+  name: string;
+  badge?: (number | null) | Media;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | Accreditation;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "plans".
+ */
+export interface Plan {
+  id: number;
+  name: string;
+  /**
+   * Placeholder until real pricing is agreed.
+   */
+  monthlyPrice: number;
+  /**
+   * Not enforced yet.
+   */
+  listingLimit: number;
+  branchLimit: number;
+  userLimit: number;
+  allowsMicrositeTheming?: boolean | null;
+  allowsFeedImport?: boolean | null;
+  summary?: string | null;
+  includedFeatures?:
+    | {
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * There is no public pricing page yet.
+   */
+  isPublic?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Lower case, no spaces, for example growth.
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The brands a dealership can be an official dealer for.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "franchises".
+ */
+export interface Franchise {
+  id: number;
+  name: string;
+  make?: (number | null) | Make;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | Franchise;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "branches".
+ */
+export interface Branch {
+  id: number;
+  name: string;
+  dealer: number | Dealer;
+  /**
+   * Head office or main showroom.
+   */
+  isPrimary?: boolean | null;
+  addressLine1: string;
+  addressLine2?: string | null;
+  suburb?: string | null;
+  city: number | City;
+  province: number | Province;
+  postalCode?: string | null;
+  /**
+   * For example: opposite the Engen on the N1 side.
+   */
+  directionsNote?: string | null;
+  /**
+   * Only change this if the map pin is in the wrong place.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  tradingHours?:
+    | {
+        day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+        opensAt?: string | null;
+        closesAt?: string | null;
+        closed?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Add the days this branch keeps different hours.
+   */
+  holidayOverrides?:
+    | {
+        date: string;
+        label?: string | null;
+        opensAt?: string | null;
+        closesAt?: string | null;
+        closed?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  photos?: (number | Media)[] | null;
+  /**
+   * Filled in from the branch name.
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cities".
+ */
+export interface City {
+  id: number;
+  name: string;
+  province: number | Province;
+  /**
+   * The middle of the town, for the distance filter.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | City;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The nine provinces, used by the location filter and the dealership list.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "provinces".
+ */
+export interface Province {
+  id: number;
+  name: string;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | Province;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -735,381 +1117,6 @@ export interface FeatureCategory {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "dealers".
- */
-export interface Dealer {
-  id: number;
-  /**
-   * Only verified dealerships can put cars live.
-   */
-  verificationStatus: 'pending' | 'verified' | 'suspended' | 'archived';
-  /**
-   * Not a real business. Labelled as an example on the site.
-   */
-  isDemonstration?: boolean | null;
-  tradingName: string;
-  /**
-   * As registered with CIPC.
-   */
-  legalName: string;
-  logo?: (number | null) | Media;
-  aboutRichText?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  foundedYear?: number | null;
-  group?: (number | null) | DealerGroup;
-  /**
-   * Add only after you have seen the certificate.
-   */
-  accreditations?: (number | Accreditation)[] | null;
-  /**
-   * Their page is /dealers/ followed by this.
-   */
-  slug: string;
-  registrationNumber?: string | null;
-  vatNumber?: string | null;
-  /**
-   * If they have one.
-   */
-  motorTradeNumber?: string | null;
-  /**
-   * Only Rynet staff see this.
-   */
-  verificationNotes?: string | null;
-  /**
-   * Sends them people selling a car on the site. Leave off unless they asked.
-   */
-  acceptsTradeIns?: boolean | null;
-  /**
-   * Leave empty to receive any make.
-   */
-  buysMakes?: (number | Make)[] | null;
-  principal?: {
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-  };
-  whatsappNumber?: string | null;
-  plan?: (number | null) | Plan;
-  /**
-   * Not enforced yet.
-   */
-  listingLimit?: number | null;
-  listingCount?: number | null;
-  reviewScore?: number | null;
-  reviewCount?: number | null;
-  heroImages?: (number | Media)[] | null;
-  franchises?: (number | Franchise)[] | null;
-  socialProfiles?:
-    | {
-        platform?: ('facebook' | 'instagram' | 'youtube' | 'tiktok' | 'linkedin' | 'x') | null;
-        url?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * No enquiry emails are sent yet.
-   */
-  emailRouting?:
-    | {
-        leadType: 'enquiry' | 'test_drive' | 'finance' | 'trade_in' | 'callback';
-        toAddress: string;
-        branch?: (number | null) | Branch;
-        id?: string | null;
-      }[]
-    | null;
-  theme?: {
-    /**
-     * A hex colour like #C81E2B, dark enough to read on white.
-     */
-    accent?: string | null;
-    heroLayout?: ('standard' | 'split' | 'minimal') | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Companies that own several dealerships.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "dealer-groups".
- */
-export interface DealerGroup {
-  id: number;
-  name: string;
-  logo?: (number | null) | Media;
-  /**
-   * For example bakkie for pickup. Helps search and the sell form.
-   */
-  aliases?: string[] | null;
-  /**
-   * Untick to hide it. Cars that use it keep it.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower numbers come first.
-   */
-  sortOrder?: number | null;
-  /**
-   * Filled in from the name.
-   */
-  slug: string;
-  /**
-   * Hides this from the sell form. Cars that use it are not moved.
-   */
-  mergedInto?: (number | null) | DealerGroup;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Industry bodies such as the RMI, NADA and MIWA.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "accreditations".
- */
-export interface Accreditation {
-  id: number;
-  name: string;
-  badge?: (number | null) | Media;
-  /**
-   * For example bakkie for pickup. Helps search and the sell form.
-   */
-  aliases?: string[] | null;
-  /**
-   * Untick to hide it. Cars that use it keep it.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower numbers come first.
-   */
-  sortOrder?: number | null;
-  /**
-   * Filled in from the name.
-   */
-  slug: string;
-  /**
-   * Hides this from the sell form. Cars that use it are not moved.
-   */
-  mergedInto?: (number | null) | Accreditation;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "plans".
- */
-export interface Plan {
-  id: number;
-  name: string;
-  /**
-   * Placeholder until real pricing is agreed.
-   */
-  monthlyPrice: number;
-  /**
-   * Not enforced yet.
-   */
-  listingLimit: number;
-  branchLimit: number;
-  userLimit: number;
-  allowsMicrositeTheming?: boolean | null;
-  allowsFeedImport?: boolean | null;
-  summary?: string | null;
-  includedFeatures?:
-    | {
-        label: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * There is no public pricing page yet.
-   */
-  isPublic?: boolean | null;
-  /**
-   * Lower numbers come first.
-   */
-  sortOrder?: number | null;
-  /**
-   * Lower case, no spaces, for example growth.
-   */
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * The brands a dealership can be an official dealer for.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "franchises".
- */
-export interface Franchise {
-  id: number;
-  name: string;
-  make?: (number | null) | Make;
-  /**
-   * For example bakkie for pickup. Helps search and the sell form.
-   */
-  aliases?: string[] | null;
-  /**
-   * Untick to hide it. Cars that use it keep it.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower numbers come first.
-   */
-  sortOrder?: number | null;
-  /**
-   * Filled in from the name.
-   */
-  slug: string;
-  /**
-   * Hides this from the sell form. Cars that use it are not moved.
-   */
-  mergedInto?: (number | null) | Franchise;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "branches".
- */
-export interface Branch {
-  id: number;
-  name: string;
-  dealer: number | Dealer;
-  /**
-   * Head office or main showroom.
-   */
-  isPrimary?: boolean | null;
-  addressLine1: string;
-  addressLine2?: string | null;
-  suburb?: string | null;
-  city: number | City;
-  province: number | Province;
-  postalCode?: string | null;
-  /**
-   * For example: opposite the Engen on the N1 side.
-   */
-  directionsNote?: string | null;
-  /**
-   * Only change this if the map pin is in the wrong place.
-   */
-  latitude?: number | null;
-  longitude?: number | null;
-  phone?: string | null;
-  whatsapp?: string | null;
-  email?: string | null;
-  tradingHours?:
-    | {
-        day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-        opensAt?: string | null;
-        closesAt?: string | null;
-        closed?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Add the days this branch keeps different hours.
-   */
-  holidayOverrides?:
-    | {
-        date: string;
-        label?: string | null;
-        opensAt?: string | null;
-        closesAt?: string | null;
-        closed?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  photos?: (number | Media)[] | null;
-  /**
-   * Filled in from the branch name.
-   */
-  slug: string;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cities".
- */
-export interface City {
-  id: number;
-  name: string;
-  province: number | Province;
-  /**
-   * The middle of the town, for the distance filter.
-   */
-  latitude?: number | null;
-  longitude?: number | null;
-  /**
-   * For example bakkie for pickup. Helps search and the sell form.
-   */
-  aliases?: string[] | null;
-  /**
-   * Untick to hide it. Cars that use it keep it.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower numbers come first.
-   */
-  sortOrder?: number | null;
-  /**
-   * Filled in from the name.
-   */
-  slug: string;
-  /**
-   * Hides this from the sell form. Cars that use it are not moved.
-   */
-  mergedInto?: (number | null) | City;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * The nine provinces, used by the location filter and the dealership list.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "provinces".
- */
-export interface Province {
-  id: number;
-  name: string;
-  /**
-   * For example bakkie for pickup. Helps search and the sell form.
-   */
-  aliases?: string[] | null;
-  /**
-   * Untick to hide it. Cars that use it keep it.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower numbers come first.
-   */
-  sortOrder?: number | null;
-  /**
-   * Filled in from the name.
-   */
-  slug: string;
-  /**
-   * Hides this from the sell form. Cars that use it are not moved.
-   */
-  mergedInto?: (number | null) | Province;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "leads".
  */
 export interface Lead {
@@ -1218,9 +1225,12 @@ export interface User {
    * For example 082 123 4567.
    */
   phone?: string | null;
+  /**
+   * Suspended stops this person signing in, and signs them out now.
+   */
   status: 'active' | 'invited' | 'suspended';
   /**
-   * Each person turns this on at /account/two-factor.
+   * Each person turns this on for their own account.
    */
   twoFactorEnabled?: boolean | null;
   twoFactorSecret?: string | null;
@@ -1293,6 +1303,9 @@ export interface Buyer {
    * Proof is kept in Consent records.
    */
   marketingConsent?: boolean | null;
+  /**
+   * Suspended stops this person signing in, and signs them out now.
+   */
   status: 'active' | 'suspended' | 'deletion_requested';
   deletionRequestedAt?: string | null;
   updatedAt: string;
@@ -1741,6 +1754,7 @@ export interface MediaSelect<T extends boolean = true> {
   isDecorative?: T;
   credit?: T;
   isDemonstration?: T;
+  dealer?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;

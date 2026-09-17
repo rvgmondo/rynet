@@ -1,12 +1,20 @@
 import type { CollectionConfig } from "payload";
 
-import { isDealerStaff, isPlatformStaff } from "@/access/roles";
+import { dealerIdOf, isDealerStaff, isPlatformStaff, scopedToOwnDealer } from "@/access/roles";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
 
 /**
  * The media library.
  *
- * Two rules here are enforced rather than encouraged.
+ * Three rules here are enforced rather than encouraged.
+ *
+ * A photo belongs to the dealership that uploaded it, and only that dealership can change or
+ * delete it. Update and delete used to allow any dealer account, which meant one dealership
+ * could rewrite the description on a competitor's photograph or delete the pictures off its
+ * stock. Ownership is written by the hook below rather than taken from the request, the same
+ * line the vehicles collection draws, and e2e/isolation.spec.ts attacks it as dealer A.
+ * A photo with no dealership is Rynet's own: every photo that existed before this rule is
+ * platform owned, which is what the seeded demonstration library actually is.
  *
  * Alt text is required unless the image is explicitly flagged decorative. Not "recommended",
  * not a warning in the sidebar: the save fails. An alt field that can be skipped is an alt
@@ -35,8 +43,31 @@ export const Media: CollectionConfig = {
   access: {
     read: () => true,
     create: ({ req }) => isPlatformStaff(req.user) || isDealerStaff(req.user),
-    update: ({ req }) => isPlatformStaff(req.user) || isDealerStaff(req.user),
-    delete: ({ req }) => isPlatformStaff(req.user) || isDealerStaff(req.user),
+    /*
+     * Scoped to the owning dealership, as a Where clause rather than a boolean, so the
+     * constraint is folded into the query instead of being checked after the row is already
+     * in hand. Platform staff keep everything. A dealership with no photo of its own matches
+     * nothing, and Rynet's own library (no dealership) matches nothing for any dealer.
+     */
+    update: scopedToOwnDealer("dealer"),
+    delete: scopedToOwnDealer("dealer"),
+  },
+  hooks: {
+    beforeValidate: [
+      ({ data, req, operation }) => {
+        if (!data) return data;
+
+        // THE line, the same one Vehicles draws: the owner is replaced with the uploader's own
+        // dealership rather than read from the request, so a crafted body cannot file a photo
+        // under a competitor. Platform staff choose the owner, and leaving it empty means the
+        // photo is Rynet's own.
+        if (operation === "create" && isDealerStaff(req.user)) {
+          data.dealer = dealerIdOf(req.user);
+        }
+
+        return data;
+      },
+    ],
   },
   upload: {
     // Derivatives are generated once on upload. The public site never asks the origin to
@@ -120,6 +151,23 @@ export const Media: CollectionConfig = {
         position: "sidebar",
         readOnly: true,
         components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
+      },
+    },
+    {
+      name: "dealer",
+      type: "relationship",
+      relationTo: "dealers",
+      index: true,
+      label: "Dealership",
+      access: {
+        // Only platform staff may move a photo between owners. A dealer user's value is
+        // written server side on upload regardless, so this closes the admin path too.
+        update: ({ req }) => isPlatformStaff(req.user),
+      },
+      admin: {
+        position: "sidebar",
+        // Set from the signed-in account when a dealership uploads (beforeValidate above).
+        description: "Whose photo this is. Empty means it is Rynet's own.",
       },
     },
     {

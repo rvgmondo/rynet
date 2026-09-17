@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 
+import { endSessionsWhenSuspended, refuseSuspendedAccount } from "@/access/account-status";
 import { isPlatformAdmin, isPlatformStaff } from "@/access/roles";
 import { withinParent } from "@/lib/admin-filter-options";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
@@ -61,6 +62,12 @@ export const Buyers: CollectionConfig = {
     delete: ({ req }) => isPlatformAdmin(req.user),
     // Buyers never reach the Payload admin. Their account lives at /account.
     admin: ({ req }) => isPlatformStaff(req.user),
+  },
+  hooks: {
+    // A suspended buyer is refused a new session, and loses the one they are holding. Same
+    // rule and same code as a staff account: see src/access/account-status.ts.
+    beforeLogin: [refuseSuspendedAccount],
+    afterChange: [endSessionsWhenSuspended],
   },
   fields: [
     { name: "name", type: "text", required: true, label: "Full name" },
@@ -124,8 +131,10 @@ export const Buyers: CollectionConfig = {
             clientProps: { tones: ACCOUNT_STATUS_TONES },
           },
         },
+        // It says this because it now does it. "Asked to be deleted" is the purge job's flag
+        // and does not close the account by itself.
+        description: "Suspended stops this person signing in, and signs them out now.",
       },
-      // No hint: Suspended does not block sign-in today, so the admin does not say it does.
       options: [
         { value: "active", label: "Active" },
         { value: "suspended", label: "Suspended" },

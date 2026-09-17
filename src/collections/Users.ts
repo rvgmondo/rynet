@@ -1,4 +1,5 @@
 import type { CollectionConfig, Where } from "payload";
+import { endSessionsWhenSuspended, refuseSuspendedAccount } from "@/access/account-status";
 import {
   canGrantDealerRole,
   canManageDealer,
@@ -47,6 +48,10 @@ const ROLE_ADMIN_LABELS: Record<Role, string> = {
  * and before it signs a token, so a refusal there means no session was ever issued. See
  * src/access/two-factor.ts, including why the rollout is in two stages: forcing it before
  * anyone has enrolled locks the founder out of his own live site.
+ *
+ * A suspended account is refused in the same place, and before the second factor, because an
+ * account that is switched off is not asked for a code. Suspending somebody who is already
+ * signed in ends their open sessions on the spot. See src/access/account-status.ts.
  */
 export const Users: CollectionConfig = {
   slug: "users",
@@ -122,9 +127,13 @@ export const Users: CollectionConfig = {
   hooks: {
     /**
      * Runs after the password has been verified and before the token is signed, so a throw
-     * here refuses the session rather than revoking one that was already handed out.
+     * here refuses the session rather than revoking one that was already handed out. Status
+     * first: a suspended account is not asked for a second factor it would gain nothing by
+     * giving.
      */
-    beforeLogin: [enforceSecondFactor],
+    beforeLogin: [refuseSuspendedAccount, enforceSecondFactor],
+    // Suspending an account that is already signed in puts it out now, not in eight hours.
+    afterChange: [endSessionsWhenSuspended],
     beforeValidate: [
       ({ data, req, operation, originalDoc }) => {
         if (!data) return data;
@@ -218,11 +227,10 @@ export const Users: CollectionConfig = {
             clientProps: { tones: ACCOUNT_STATUS_TONES },
           },
         },
+        // It says this because it now does it: the sign-in is refused and any session the
+        // person already had is ended the moment this is saved.
+        description: "Suspended stops this person signing in, and signs them out now.",
       },
-      /*
-       * No hint here on purpose: Suspended does not block sign-in today (nothing in beforeLogin
-       * or access reads this field), so the admin makes no promise that it does.
-       */
       options: [
         { value: "active", label: "Active" },
         { value: "invited", label: "Invited, not signed in yet" },

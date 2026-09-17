@@ -807,3 +807,280 @@ test.describe("anonymous requests", () => {
     expect(body.docs.map((d: { slug: string }) => d.slug)).toContain(DEALER_B_SLUG);
   });
 });
+
+// ---------------------------------------------------------------------------------------
+// Photographs belong to the dealership that took them.
+// ---------------------------------------------------------------------------------------
+
+/**
+ * Found by reading the media collection rather than by a test failing.
+ *
+ * Update and delete on `media` allowed any dealer account at all, so one dealership could
+ * rewrite the description on a competitor's photograph, or delete the pictures off its stock and
+ * leave its listings blank. Nothing here crossed a lead or a vehicle, which is why every test
+ * above passed while it was true.
+ *
+ * A photo now belongs to the dealership that uploaded it, and Rynet owns the ones with no
+ * dealership: the seeded library and the site's own artwork.
+ */
+test.describe("dealer A against dealer B's photographs", () => {
+  /** A 1x1 PNG. The subject does not matter; who may change it does. */
+  const PIXEL =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+  const ALT_PREFIX = "ISO photo";
+
+  let photoA: number;
+  let photoB: number;
+  let photoPlatform: number;
+
+  test.beforeAll(async ({ playwright, baseURL }) => {
+    const request = await playwright.request.newContext({ baseURL });
+
+    // Anything a failed run left behind. A stale photo is not dangerous, but a library filling
+    // up with them makes the admin screen useless to whoever has to look at it.
+    const stale = await (
+      await request.get(
+        `/api/media?where[alt][like]=${encodeURIComponent(ALT_PREFIX)}&limit=100&depth=0`,
+        as(admin),
+      )
+    ).json();
+    for (const doc of stale.docs ?? []) await request.delete(`/api/media/${doc.id}`, as(admin));
+
+    const upload = async (session: Session, alt: string, fields: Record<string, unknown> = {}) => {
+      const res = await request.post("/api/media", {
+        ...as(session),
+        multipart: {
+          file: {
+            name: `iso-${Date.now()}-${Math.round(Math.random() * 1e6)}.png`,
+            mimeType: "image/png",
+            buffer: Buffer.from(PIXEL, "base64"),
+          },
+          _payload: JSON.stringify({ alt, ...fields }),
+        },
+      });
+      expect(res.status(), await res.text()).toBe(201);
+      return (await res.json()).doc.id as number;
+    };
+
+    // Dealer A sends dealer B's id with the upload on purpose: the owner must come from the
+    // account that is signed in, never from the request body.
+    photoA = await upload(ownerA, `${ALT_PREFIX} belonging to dealer A`, { dealer: dealerBId });
+    photoB = await upload(ownerB, `${ALT_PREFIX} belonging to dealer B`);
+    photoPlatform = await upload(admin, `${ALT_PREFIX} belonging to Rynet`);
+
+    await request.dispose();
+  });
+
+  test.afterAll(async ({ playwright, baseURL }) => {
+    const request = await playwright.request.newContext({ baseURL });
+    for (const id of [photoA, photoB, photoPlatform]) {
+      if (id) await request.delete(`/api/media/${id}`, as(admin));
+    }
+    await request.dispose();
+  });
+
+  test("a photo is born owned by the dealership that uploaded it", async ({ request }) => {
+    const a = await (await request.get(`/api/media/${photoA}?depth=0`, as(admin))).json();
+    expect(idOf(a.dealer), "a photo was filed under the dealership named in the request").toBe(
+      dealerAId,
+    );
+
+    const platform = await (
+      await request.get(`/api/media/${photoPlatform}?depth=0`, as(admin))
+    ).json();
+    expect(platform.dealer, "a photo Rynet uploaded must belong to nobody else").toBeFalsy();
+  });
+
+  test("dealer A cannot rewrite the description on dealer B's photo", async ({ request }) => {
+    const res = await request.patch(`/api/media/${photoB}`, {
+      ...as(ownerA),
+      data: { alt: "Owned by dealer A" },
+    });
+    expect([403, 404], `expected a refusal, got ${res.status()}`).toContain(res.status());
+
+    const after = await (await request.get(`/api/media/${photoB}?depth=0`, as(admin))).json();
+    expect(after.alt).toBe(`${ALT_PREFIX} belonging to dealer B`);
+    expect(idOf(after.dealer)).toBe(dealerBId);
+  });
+
+  test("dealer A cannot delete dealer B's photo", async ({ request }) => {
+    const res = await request.delete(`/api/media/${photoB}`, as(ownerA));
+    expect([403, 404], `expected a refusal, got ${res.status()}`).toContain(res.status());
+
+    const after = await request.get(`/api/media/${photoB}?depth=0`, as(admin));
+    expect(after.status(), "a competitor deleted a dealership's photograph").toBe(200);
+  });
+
+  test("a sales agent cannot delete another dealership's photo either", async ({ request }) => {
+    // The rank ladder inside a dealership is a separate question. This is the boundary between
+    // dealerships, checked from the most junior account that exists.
+    const res = await request.delete(`/api/media/${photoB}`, as(salesA));
+    expect([403, 404], `expected a refusal, got ${res.status()}`).toContain(res.status());
+
+    const after = await request.get(`/api/media/${photoB}?depth=0`, as(admin));
+    expect(after.status()).toBe(200);
+  });
+
+  test("dealer A cannot touch Rynet's own photographs", async ({ request }) => {
+    // The library every listing on the site is illustrated from, and every page's artwork.
+    const patched = await request.patch(`/api/media/${photoPlatform}`, {
+      ...as(ownerA),
+      data: { alt: "Owned by dealer A" },
+    });
+    expect([403, 404], `expected a refusal, got ${patched.status()}`).toContain(patched.status());
+
+    const deleted = await request.delete(`/api/media/${photoPlatform}`, as(ownerA));
+    expect([403, 404], `expected a refusal, got ${deleted.status()}`).toContain(deleted.status());
+
+    const after = await (
+      await request.get(`/api/media/${photoPlatform}?depth=0`, as(admin))
+    ).json();
+    expect(after.alt).toBe(`${ALT_PREFIX} belonging to Rynet`);
+  });
+
+  test("dealer A can still manage its own photo", async ({ request }) => {
+    // The other half. A rule that stops everybody editing everything is not access control.
+    const res = await request.patch(`/api/media/${photoA}`, {
+      ...as(ownerA),
+      data: { alt: `${ALT_PREFIX} belonging to dealer A, described again` },
+    });
+    expect(res.status(), await res.text()).toBe(200);
+
+    const after = await (await request.get(`/api/media/${photoA}?depth=0`, as(admin))).json();
+    expect(after.alt).toBe(`${ALT_PREFIX} belonging to dealer A, described again`);
+    expect(idOf(after.dealer), "the owner moved on an ordinary edit").toBe(dealerAId);
+  });
+
+  test("a photo cannot be walked into another dealership", async ({ request }) => {
+    const res = await request.patch(`/api/media/${photoA}`, {
+      ...as(ownerA),
+      data: { dealer: dealerBId },
+    });
+    expect([200, 400, 403]).toContain(res.status());
+
+    const after = await (await request.get(`/api/media/${photoA}?depth=0`, as(admin))).json();
+    expect(idOf(after.dealer), "a photo walked into another dealership").toBe(dealerAId);
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+// Suspended means suspended.
+// ---------------------------------------------------------------------------------------
+
+/**
+ * "Suspended" was a label on a badge. Nothing read it, so a suspended account signed in exactly
+ * as before and kept every lead and every car its dealership had. This is the test that says the
+ * word now means what the person setting it believes it means, for a staff account and for a
+ * buyer, and that it takes effect on the session already open rather than in eight hours.
+ */
+test.describe("a suspended account is switched off", () => {
+  const staffEmail = `suspended-staff-${Date.now()}@rynet.test`;
+  const buyerEmail = `suspended-buyer-${Date.now()}@rynet.test`;
+
+  let staffId: number;
+  let buyerId: number;
+  let heldToken = "";
+
+  const signIn = (request: APIRequestContext, collection: string, email: string) =>
+    request.post(`/api/${collection}/login`, { data: { email, password: FIXTURE_PASSWORD } });
+
+  const setStatus = (request: APIRequestContext, collection: string, id: number, status: string) =>
+    request.patch(`/api/${collection}/${id}`, { ...as(admin), data: { status } });
+
+  test.beforeAll(async ({ playwright, baseURL }) => {
+    const request = await playwright.request.newContext({ baseURL });
+
+    const staff = await request.post("/api/users", {
+      ...as(admin),
+      data: {
+        email: staffEmail,
+        password: FIXTURE_PASSWORD,
+        name: "Suspension Fixture",
+        role: "dealer_sales",
+        dealer: dealerAId,
+        status: "active",
+      },
+    });
+    expect(staff.status(), await staff.text()).toBe(201);
+    staffId = (await staff.json()).doc.id;
+
+    const buyer = await request.post("/api/buyers", {
+      data: {
+        email: buyerEmail,
+        password: FIXTURE_PASSWORD,
+        name: "Suspension Fixture",
+        status: "active",
+      },
+    });
+    expect(buyer.status(), await buyer.text()).toBe(201);
+    buyerId = (await buyer.json()).doc.id;
+
+    await request.dispose();
+  });
+
+  test.afterAll(async ({ playwright, baseURL }) => {
+    const request = await playwright.request.newContext({ baseURL });
+    if (staffId) await request.delete(`/api/users/${staffId}`, as(admin));
+    if (buyerId) await request.delete(`/api/buyers/${buyerId}`, as(admin));
+    await request.dispose();
+  });
+
+  test("signs in while it is active", async ({ request }) => {
+    // The control. Without it, every refusal below could be a broken fixture.
+    const res = await signIn(request, "users", staffEmail);
+    expect(res.status(), await res.text()).toBe(200);
+    heldToken = (await res.json()).token;
+    expect(heldToken).toBeTruthy();
+  });
+
+  test("loses the session it is already holding", async ({ request }) => {
+    const held = { headers: { Authorization: `JWT ${heldToken}` } };
+    const before = await (await request.get("/api/users/me", held)).json();
+    expect(before.user?.id, "the fixture session was not working to begin with").toBe(staffId);
+
+    const suspended = await setStatus(request, "users", staffId, "suspended");
+    expect(suspended.status(), await suspended.text()).toBe(200);
+
+    // Not in eight hours when the token expires, and not after one more refresh: now.
+    const after = await (await request.get("/api/users/me", held)).json();
+    expect(
+      after.user,
+      "a suspended account carried on with the session it already had",
+    ).toBeFalsy();
+
+    const refreshed = await request.post("/api/users/refresh-token", held);
+    const renewed = refreshed.ok() ? (await refreshed.json()).refreshedToken : null;
+    expect(renewed, "a suspended account renewed its own session").toBeFalsy();
+  });
+
+  test("is refused a new session, and told why", async ({ request }) => {
+    const res = await signIn(request, "users", staffEmail);
+    expect(res.status(), "a suspended account was let back in").toBe(403);
+
+    const body = await res.text();
+    expect(body, "the refusal does not say what happened").toMatch(/suspended/i);
+    expect(body, "a refused sign-in must not hand out a token").not.toContain('"token"');
+  });
+
+  test("signs in again once it is put back", async ({ request }) => {
+    // Suspension is a switch, not a deletion. Somebody has to be able to undo it.
+    const restored = await setStatus(request, "users", staffId, "active");
+    expect(restored.status(), await restored.text()).toBe(200);
+
+    const res = await signIn(request, "users", staffEmail);
+    expect(res.status(), await res.text()).toBe(200);
+  });
+
+  test("the same rule covers a buyer account", async ({ request }) => {
+    const first = await signIn(request, "buyers", buyerEmail);
+    expect(first.status(), await first.text()).toBe(200);
+
+    const suspended = await setStatus(request, "buyers", buyerId, "suspended");
+    expect(suspended.status(), await suspended.text()).toBe(200);
+
+    const res = await signIn(request, "buyers", buyerEmail);
+    expect(res.status(), "a suspended buyer was let back in").toBe(403);
+    expect(await res.text()).toMatch(/suspended/i);
+  });
+});
