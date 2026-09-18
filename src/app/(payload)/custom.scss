@@ -348,6 +348,39 @@
     color: var(--rn-body);
   }
 
+  /* On a phone a long record name ("Dealerships / Highveld Motor Group") pushed the header, and
+     with it the whole page, wider than the screen. The breadcrumb now gives way and the record
+     name ends in an ellipsis, as Payload intends. */
+  .app-header__controls-wrapper,
+  .app-header__step-nav-wrapper,
+  .step-nav {
+    min-width: 0;
+  }
+
+  .app-header__step-nav-wrapper {
+    overflow: hidden;
+  }
+
+  /* That wrapper clips, so the breadcrumb's focus ring is drawn inside each link. */
+  .step-nav a:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .step-nav .step-nav__last {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  /* Payload cuts every breadcrumb at 160px, so a car read "2022 Toyota Fortuner 2...." with room
+     to spare. The last crumb takes the room there is and is cut only when there is none. */
+  .step-nav span {
+    max-width: 32rem;
+  }
+
+  .collection-list--media .table td {
+    vertical-align: middle;
+  }
+
   .step-nav .step-nav__home {
     width: 28px;
     height: 24px;
@@ -659,6 +692,28 @@
   .doc-controls,
   .doc-tabs {
     font-family: var(--rn-font-sans);
+  }
+
+  /* A record's name is how the owner knows which car they are changing, so it wraps instead of
+     ending in an ellipsis. On a phone "2023 Toyota Corolla Cross 1.8 Xi" was cut to "Cross 1". */
+  .doc-header__title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+
+  /* Records with no History (a dealership, an enquiry, the finance figures) showed one tab,
+     "Edit", on the screen that is already for editing. A single tab goes; cars keep Edit and
+     History. */
+  .doc-tabs:has(.doc-tabs__tabs > :only-child) {
+    display: none;
+  }
+
+  /* Payload fades the end of the tabs to hint that they scroll. Cars have two tabs, which never
+     scroll, so the fade only drew a pale box after History on a phone. */
+  .doc-tabs::after {
+    display: none;
   }
 
   .collapsible {
@@ -1149,6 +1204,458 @@
 
   .rn-admin-home a.rn-admin-index__link:hover {
     text-decoration-color: var(--rn-accent);
+  }
+
+  /* ------------------------------------------------------- list cells (lists) */
+
+  .rn-admin-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .rn-admin-badge--danger {
+    background: var(--rn-danger-subtle);
+    color: var(--rn-danger);
+  }
+
+  .rn-admin-cell {
+    color: var(--rn-body);
+  }
+
+  .rn-admin-cell--empty {
+    color: var(--rn-muted);
+  }
+
+  .rn-admin-cell--figure {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .rn-admin-cell__note {
+    display: block;
+    color: var(--rn-muted);
+    font-size: 12px;
+  }
+
+  .table td a.rn-admin-cell--figure {
+    color: var(--rn-heading);
+  }
+
+  /* Payload gives every column at least 150px, so seven columns scroll sideways on a laptop.
+     Short values (badges, prices, yes or no) need less; names need more so they do not wrap to
+     three lines. */
+  .table:not(.table--appearance-condensed) th,
+  .table:not(.table--appearance-condensed) td {
+    min-width: 104px;
+  }
+
+  .table:not(.table--appearance-condensed) td.cell-_select,
+  .table:not(.table--appearance-condensed) th#heading-_select {
+    min-width: 0;
+  }
+
+  .collection-list--vehicles .table td.cell-title {
+    min-width: 200px;
+  }
+
+  .collection-list--leads .table td.cell-name {
+    min-width: 140px;
+  }
+
+  .table td.cell-listPhoto,
+  .table th#heading-listPhoto {
+    width: 88px;
+    min-width: 88px;
+  }
+
+  .table td.cell-createdAt,
+  .table td.cell-updatedAt {
+    white-space: nowrap;
+  }
+
+  /* A two-word heading may take two lines rather than push the last column out of view. */
+  .table th .sort-column__label {
+    white-space: normal;
+  }
+
+  /* Table rows with a photo in them sit on the photo's middle, not its top edge. */
+  .collection-list--vehicles .table td {
+    vertical-align: middle;
+  }
+
+  .rn-admin-thumb {
+    display: block;
+    width: 64px;
+    height: 48px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: var(--rn-subtle);
+  }
+
+  .rn-admin-thumb__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .rn-admin-thumb--empty {
+    display: grid;
+    place-items: center;
+    border: 1px dashed var(--rn-line-strong);
+    background: transparent;
+  }
+
+  .rn-admin-thumb__text {
+    color: var(--rn-muted);
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  /* ------------------------------------------------------------ quick filters */
+
+  .rn-admin-quick-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 0 0 16px;
+  }
+
+  .rn-admin-quick-filters__label {
+    color: var(--rn-muted);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .rn-admin-quick-filters__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rn-admin-quick-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 6px 14px;
+    border: 1px solid var(--rn-line-control);
+    border-radius: var(--rn-radius-full);
+    background: var(--rn-card);
+    color: var(--rn-heading);
+    font-family: var(--rn-font-sans);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  .rn-admin-quick-filter:hover {
+    border-color: var(--rn-heading);
+    background: var(--rn-subtle);
+  }
+
+  .rn-admin-quick-filter:focus-visible {
+    outline: 2px solid var(--rn-focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* On: filled, heavier, and a drawn tick, so it never rests on colour alone. */
+  .rn-admin-quick-filter[aria-pressed="true"] {
+    border-color: var(--rn-heading);
+    background: var(--rn-heading);
+    color: var(--rn-card);
+    font-weight: 650;
+  }
+
+  .rn-admin-quick-filter[aria-pressed="true"]::before {
+    content: "";
+    width: 5px;
+    height: 9px;
+    margin: -2px 2px 0 0;
+    border: solid currentColor;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  /* ------------------------------------------------------- field read-outs */
+
+  .rn-admin-field-preview {
+    margin: 6px 0 0;
+    color: var(--rn-heading);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------------------------------------------------- sidebar notes (forms) */
+
+  .rn-admin-side-note {
+    margin-bottom: var(--spacing-field, 20px);
+    padding: 12px 14px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: var(--rn-card);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .rn-admin-side-note--warning {
+    border-color: var(--rn-warning);
+    background: var(--rn-warning-subtle);
+  }
+
+  .rn-admin-side-note__title {
+    margin: 0 0 4px;
+    color: var(--rn-heading);
+    font-weight: 600;
+  }
+
+  .rn-admin-side-note__text {
+    margin: 0;
+    color: var(--rn-body);
+  }
+
+  .rn-admin-side-note__text strong {
+    color: var(--rn-heading);
+  }
+
+  a.rn-admin-field-link {
+    display: inline-block;
+    padding-block: 4px;
+    color: var(--rn-heading);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  a.rn-admin-side-note__link {
+    display: inline-block;
+    padding-block: 4px;
+    margin-top: 2px;
+    color: var(--rn-heading);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* ----------------------------------------------- a car's state on the site */
+
+  .doc-controls__status {
+    flex-shrink: 0;
+  }
+
+  /* A car's header carries its state on the site, so the creation date gives way to it. The date
+     is still in the car's History. */
+  .collection-edit--vehicles .doc-controls__meta > li.doc-controls__value-wrap:last-child {
+    display: none;
+  }
+
+  /* On a phone Payload lets this row scroll sideways under the sticky Save button. Everything
+     that matters is kept inside the width: the label is left to screen readers and the date to
+     the History tab. */
+  @media (max-width: 1024px) {
+    .collection-edit--vehicles .doc-controls__meta > li.doc-controls__value-wrap {
+      display: none;
+    }
+
+    .rn-admin-listing-state__label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .rn-admin-listing-state {
+      gap: 6px;
+    }
+  }
+
+  .rn-admin-listing-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    color: var(--rn-body);
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .rn-admin-listing-state__label {
+    color: var(--rn-muted);
+  }
+
+  .rn-admin-listing-state__loading {
+    color: var(--rn-muted);
+  }
+
+  .rn-admin-listing-state__pending {
+    display: inline-flex;
+  }
+
+  .rn-admin-listing-state__pending:empty {
+    display: none;
+  }
+
+  .rn-admin-listing-state .rn-admin-listing-state__discard {
+    min-height: 32px;
+    color: var(--rn-heading);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .rn-admin-side-note__hint {
+    color: var(--rn-muted);
+    font-weight: 400;
+  }
+
+  .rn-admin-side-note__text--spaced {
+    margin-top: 8px;
+  }
+
+  /* ------------------------------------------------------------ form layout */
+
+  /* Payload spaces a record's tabs 40px below the bar with the Save button, on top of the page's
+     own padding, which left a band of nothing above the first thing to fill in. */
+  /* First of type, not first child: hidden inputs for hidden fields come before it. */
+  .document-fields__edit > .render-fields > div.tabs-field:first-of-type {
+    margin-top: 0;
+  }
+
+  /* A row heading holds what the row says (a note, a routing rule), so a long one is cut to the
+     width of the row rather than pushing the row's buttons off the edge. */
+  .array-field__row-header {
+    min-width: 0;
+  }
+
+  .rn-admin-row-label {
+    overflow: hidden;
+    min-width: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* An account's email and password buttons sit in a panel Payload tints with its palest grey.
+     That grey is the page colour here, so the panel vanished and only its indent was left,
+     pushing Email out of line with every field below it. It is drawn as a card instead. */
+  .auth-fields {
+    padding: 20px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: var(--rn-card);
+  }
+
+  /* Rich text (a car's description, a dealership's About). Payload draws it with a serif face and
+     no outline, so it did not look like a box to type in. */
+  .rich-text-lexical .editor-container,
+  .rich-text-lexical .editor,
+  .rich-text-lexical .ContentEditable__root,
+  .rich-text-lexical .LexicalEditorTheme__placeholder {
+    font-family: var(--rn-font-sans);
+  }
+
+  .rich-text-lexical .editor {
+    min-height: 112px;
+    border: 1px solid var(--rn-line-control);
+    border-radius: var(--rn-radius-sm);
+    background: var(--rn-card);
+    box-shadow: var(--rn-shadow-xs);
+  }
+
+  .rich-text-lexical .editor:hover {
+    border-color: var(--rn-heading);
+  }
+
+  .rich-text-lexical .editor:focus-within {
+    border-color: var(--rn-focus-ring);
+    box-shadow: 0 0 0 1px var(--rn-focus-ring);
+  }
+
+  .rich-text-lexical .ContentEditable__root {
+    min-height: 110px;
+    padding: 10px 14px;
+    color: var(--rn-heading);
+    font-size: 15px;
+    line-height: 1.55;
+    outline: none;
+  }
+
+  .rich-text-lexical .LexicalEditorTheme__placeholder {
+    inset-block-start: 10px;
+    inset-inline-start: 14px;
+    color: var(--rn-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  /* A photo in a car's row read its size, pixel width and file type, joined with long dashes:
+     details nobody filling in a car needs. The file name stays. */
+  .upload-relationship-details__meta {
+    display: none;
+  }
+
+  /* A photo's own screen read "179KB - 1280x815 - image/webp" under its name. */
+  .file-meta__size-type {
+    display: none;
+  }
+
+  /* While a car has unsaved changes the bar holds four things, and the last, the date it was last
+     saved, was cut off mid-date. The date is still in its History. */
+  .collection-edit--vehicles
+    .doc-controls__meta:has(.rn-admin-badge--warning)
+    > li.doc-controls__value-wrap {
+    display: none;
+  }
+
+  /* "Changes kept 2 minutes ago" belongs beside "Unsaved changes". Once a car is saved there are
+     no kept changes to speak of, so the line goes with the badge. */
+  .doc-controls__meta:not(:has(.rn-admin-badge--warning)) > li:has(> .autosave) {
+    display: none;
+  }
+
+  /* On a phone the list of photos gave the file name a sliver of the width, one syllable a line. */
+  .collection-list--media .table td.cell-filename {
+    min-width: 200px;
+  }
+
+  /* On a phone Payload takes its visible menu button out of the tab order and leaves the one in
+     it with no size, so a keyboard user tabbed onto nothing they could see. That button is drawn,
+     over the visible one, while it has keyboard focus. */
+  @media (max-width: 768px) {
+    .template-default__nav-toggler-container {
+      padding-inline-start: 16px;
+    }
+
+    .template-default__nav-toggler:focus-visible .hamburger {
+      display: flex;
+    }
+  }
+
+  /* ---------------------------------------------- records nobody makes by hand */
+
+  /* Enquiries arrive from the site and consent records are evidence, so the admin offers no
+     Add new button for either. Presentation only: access rules are unchanged, and the create
+     address still answers for anyone those rules allow. */
+  .collection-list--leads .list-create-new-doc__create-new-button,
+  .collection-list--consent-records .list-create-new-doc__create-new-button,
+  .collection-edit--leads #action-create,
+  .collection-edit--consent-records #action-create {
+    display: none;
   }
 
   @media (prefers-reduced-motion: reduce) {

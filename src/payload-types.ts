@@ -190,29 +190,13 @@ export interface BuyerAuthOperations {
  */
 export interface Vehicle {
   id: number;
-  /**
-   * Built from the year, make, model and variant. Not edited by hand.
-   */
   title?: string | null;
-  /**
-   * The stable id in the URL. Not the database id, which would leak stock volume, and not the stock number, which dealers change.
-   */
-  publicRef?: string | null;
-  /**
-   * Set automatically from the signed-in user.
-   */
-  dealer: number | Dealer;
-  /**
-   * Which branch the vehicle physically sits at.
-   */
-  branch?: (number | null) | Branch;
-  status: 'draft' | 'pending_review' | 'live' | 'reserved' | 'sold' | 'expired' | 'archived';
   condition: 'new' | 'demo' | 'pre_owned';
   make: number | Make;
   model: number | Model;
   variant?: (number | null) | Variant;
   /**
-   * Anything the variant list does not cover, for example a trim pack.
+   * Only if the variant does not cover it, for example a trim pack.
    */
   derivative?: string | null;
   modelYear: number;
@@ -222,18 +206,15 @@ export interface Vehicle {
   fuelType?: (number | null) | FuelType;
   transmission?: (number | null) | Transmission;
   drivetrain?: (number | null) | Drivetrain;
-  engineCapacityCc?: number | null;
-  cylinders?: number | null;
-  powerKw?: number | null;
-  torqueNm?: number | null;
   exteriorColour?: (number | null) | Colour;
   interiorColour?: (number | null) | Colour;
-  doors?: number | null;
-  seats?: number | null;
   /**
-   * Structured, never free text. A free-text feature cannot be filtered, compared or counted.
+   * Pick from the list so buyers can filter by them.
    */
   features?: (number | Feature)[] | null;
+  /**
+   * Shown on the listing page.
+   */
   description?: {
     root: {
       type: string;
@@ -249,16 +230,22 @@ export interface Vehicle {
     };
     [k: string]: unknown;
   } | null;
+  engineCapacityCc?: number | null;
+  cylinders?: number | null;
+  powerKw?: number | null;
+  torqueNm?: number | null;
+  doors?: number | null;
+  seats?: number | null;
+  /**
+   * Whole rands, for example 249900.
+   */
   price: number;
   priceType: 'retail' | 'on_the_road' | 'poa';
   vatStatus?: ('vat_inclusive' | 'vat_exclusive' | 'non_vat') | null;
   /**
-   * Set automatically when the price changes. Drives the price-drop badge.
+   * Set automatically when you change the price. Shows a price-drop badge when higher.
    */
   previousPrice?: number | null;
-  /**
-   * Append only.
-   */
   priceHistory?:
     | {
         price?: number | null;
@@ -266,176 +253,110 @@ export interface Vehicle {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Derived from the finance defaults, not entered. Recalculated for all stock when the prime rate changes.
-   */
   monthlyEstimate?: number | null;
   /**
-   * Not encrypted at rest. Protected by access control: never returned to a public query, never to another dealership, and never published in structured data.
-   */
-  vin?: string | null;
-  stockNumber?: string | null;
-  serviceHistory?: ('full_franchise' | 'full_independent' | 'partial' | 'none' | 'unknown') | null;
-  warrantyRemaining?: {
-    months?: number | null;
-    km?: number | null;
-    provider?: string | null;
-  };
-  roadworthy?: ('current' | 'expired' | 'not_required' | 'unknown') | null;
-  licenceExpiry?: string | null;
-  /**
-   * Drag to reorder, or use the move buttons. Both work, because a drag-only reorder fails WCAG 2.2 SC 2.5.7.
+   * The first photo is the main one. Drag, or use Move up and Move down in the row menu.
    */
   gallery?:
     | {
         image: number | Media;
         /**
-         * Left empty, this is generated from the vehicle's own details. Override it when the photo shows something specific.
+         * Leave empty to use the photo's own description.
          */
         alt?: string | null;
         id?: string | null;
       }[]
     | null;
   video?: {
+    /**
+     * A YouTube or Vimeo link.
+     */
     url?: string | null;
     provider?: ('youtube' | 'vimeo') | null;
   };
-  publishedAt?: string | null;
-  soldAt?: string | null;
   /**
-   * Buffered in memory and flushed by cron. Never written on a page view: on SQLite that would be a write lock on the busiest page on the site.
+   * The dealership's own reference.
    */
-  viewCount?: number | null;
-  leadCount?: number | null;
+  stockNumber?: string | null;
   /**
-   * Seeded example stock. Labelled as such wherever it appears publicly.
+   * Never shown on the site or to other dealerships.
+   */
+  vin?: string | null;
+  serviceHistory?: ('full_franchise' | 'full_independent' | 'partial' | 'none' | 'unknown') | null;
+  roadworthy?: ('current' | 'expired' | 'not_required' | 'unknown') | null;
+  licenceExpiry?: string | null;
+  warrantyRemaining?: {
+    months?: number | null;
+    km?: number | null;
+    provider?: string | null;
+  };
+  /**
+   * Only Live cars, and Sold cars for 90 days, can be seen on the site.
+   */
+  status: 'draft' | 'pending_review' | 'live' | 'reserved' | 'sold' | 'expired' | 'archived';
+  /**
+   * The dealership selling this car.
+   */
+  dealer: number | Dealer;
+  /**
+   * Where the car is parked.
+   */
+  branch?: (number | null) | Branch;
+  /**
+   * Made-up stock for showing the site. Labelled as an example wherever it appears.
    */
   isDemonstration?: boolean | null;
+  /**
+   * Part of the web address. Set automatically.
+   */
+  publicRef?: string | null;
+  publishedAt?: string | null;
+  soldAt?: string | null;
+  viewCount?: number | null;
+  leadCount?: number | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Car brands. Each make gets its own page on the site, so a few names that clash with other pages cannot be used.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "dealers".
+ * via the `definition` "makes".
  */
-export interface Dealer {
+export interface Make {
   id: number;
-  tradingName: string;
+  name: string;
+  logo?: (number | null) | Media;
   /**
-   * As registered with CIPC. May differ from the trading name.
+   * Not used on the site yet.
    */
-  legalName: string;
+  isPopular?: boolean | null;
   /**
-   * Their address at /dealers/[slug].
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
    */
   slug: string;
-  logo?: (number | null) | Media;
-  heroImages?: (number | Media)[] | null;
-  aboutRichText?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  foundedYear?: number | null;
-  group?: (number | null) | DealerGroup;
-  franchises?: (number | Franchise)[] | null;
   /**
-   * Added by Rynet once the certificate has been seen. A dealership cannot set this.
+   * Hides this from the sell form. Cars that use it are not moved.
    */
-  accreditations?: (number | Accreditation)[] | null;
-  /**
-   * Nothing publishes unless this reads Verified.
-   */
-  verificationStatus: 'pending' | 'verified' | 'suspended' | 'archived';
-  /**
-   * CIPC company registration number.
-   */
-  registrationNumber?: string | null;
-  vatNumber?: string | null;
-  /**
-   * Motor trade number, where the dealership holds one.
-   */
-  motorTradeNumber?: string | null;
-  /**
-   * Internal. Never shown to the dealership or the public.
-   */
-  verificationNotes?: string | null;
-  /**
-   * Receive private sellers who want to sell a car, from /sell-to-a-dealer. Their name and number are sent to you, so this stays off until the dealership asks for it.
-   */
-  acceptsTradeIns?: boolean | null;
-  /**
-   * Leave empty to be offered anything. Naming makes here means you are only sent those, which is fewer leads but less of your time wasted.
-   */
-  buysMakes?: (number | Make)[] | null;
-  principal?: {
-    name?: string | null;
-    email?: string | null;
-    phone?: string | null;
-  };
-  whatsappNumber?: string | null;
-  /**
-   * Where each kind of lead goes. Without a rule, leads fall back to the dealer principal.
-   */
-  emailRouting?:
-    | {
-        leadType: 'enquiry' | 'test_drive' | 'finance' | 'trade_in' | 'callback';
-        toAddress: string;
-        branch?: (number | null) | Branch;
-        id?: string | null;
-      }[]
-    | null;
-  socialProfiles?:
-    | {
-        platform?: ('facebook' | 'instagram' | 'youtube' | 'tiktok' | 'linkedin' | 'x') | null;
-        url?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Available on higher plans. Colours are contrast-checked on save and rejected if they fail.
-   */
-  theme?: {
-    /**
-     * Hex value, for example #E32432. Must reach 4.5:1 against white or the microsite becomes unreadable for some visitors.
-     */
-    accent?: string | null;
-    heroLayout?: ('standard' | 'split' | 'minimal') | null;
-  };
-  plan?: (number | null) | Plan;
-  /**
-   * Set from the plan. Overridable per dealership by staff.
-   */
-  listingLimit?: number | null;
-  /**
-   * Live listings. Maintained by a job, never written on a page view.
-   */
-  listingCount?: number | null;
-  /**
-   * Computed. Stays empty until the dealership has five verified reviews, and no aggregateRating is emitted before then.
-   */
-  reviewScore?: number | null;
-  reviewCount?: number | null;
-  /**
-   * Seeded example dealership, not a real business. Labelled as such everywhere it appears on the public site.
-   */
-  isDemonstration?: boolean | null;
+  mergedInto?: (number | null) | Make;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Every image needs alt text, or an explicit decorative flag. This is enforced.
+ * Every photo needs a short description, so people using screen readers know what it shows.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
@@ -443,23 +364,24 @@ export interface Dealer {
 export interface Media {
   id: number;
   /**
-   * What the image shows, for someone who cannot see it. Describe the subject, not the file, so "2023 Toyota Hilux Raider, front three-quarter" rather than "vehicle photo".
+   * Needed unless Decorative only is ticked. Say what it shows, for example 2023 Toyota Hilux Raider, front view.
    */
   alt?: string | null;
   /**
-   * Tick only for images that carry no information, such as a background texture. These are hidden from screen readers.
+   * Tick only for backgrounds and patterns.
    */
   isDecorative?: boolean | null;
-  /**
-   * Photographer or source, where one is owed.
-   */
   credit?: string | null;
   /**
-   * Seeded illustration rather than a real photograph of a real car. Deleted when real stock arrives.
+   * A photo of the model, not of a real car for sale.
    */
   isDemonstration?: boolean | null;
   /**
-   * Groups the library. For example: stock, dealers, editorial, agency.
+   * Whose photo this is. Empty means it is Rynet's own.
+   */
+  dealer?: (number | null) | Dealer;
+  /**
+   * For example stock, dealers or agency.
    */
   folder?: string | null;
   updatedAt: string;
@@ -510,107 +432,149 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dealers".
+ */
+export interface Dealer {
+  id: number;
+  /**
+   * Only verified dealerships can put cars live.
+   */
+  verificationStatus: 'pending' | 'verified' | 'suspended' | 'archived';
+  /**
+   * Not a real business. Labelled as an example on the site.
+   */
+  isDemonstration?: boolean | null;
+  tradingName: string;
+  /**
+   * As registered with CIPC.
+   */
+  legalName: string;
+  logo?: (number | null) | Media;
+  aboutRichText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  foundedYear?: number | null;
+  group?: (number | null) | DealerGroup;
+  /**
+   * Add only after you have seen the certificate.
+   */
+  accreditations?: (number | Accreditation)[] | null;
+  /**
+   * The end of their page's web address, for example smith-motors. Made from the dealership name when left empty.
+   */
+  slug: string;
+  registrationNumber?: string | null;
+  vatNumber?: string | null;
+  /**
+   * If they have one.
+   */
+  motorTradeNumber?: string | null;
+  /**
+   * Only Rynet staff see this.
+   */
+  verificationNotes?: string | null;
+  /**
+   * Sends them people selling a car on the site. Leave off unless they asked.
+   */
+  acceptsTradeIns?: boolean | null;
+  /**
+   * Leave empty to receive any make.
+   */
+  buysMakes?: (number | Make)[] | null;
+  principal?: {
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+  };
+  /**
+   * Buyers message this number from the site.
+   */
+  whatsappNumber?: string | null;
+  plan?: (number | null) | Plan;
+  /**
+   * Not enforced yet.
+   */
+  listingLimit?: number | null;
+  listingCount?: number | null;
+  reviewScore?: number | null;
+  reviewCount?: number | null;
+  heroImages?: (number | Media)[] | null;
+  franchises?: (number | Franchise)[] | null;
+  socialProfiles?:
+    | {
+        platform?: ('facebook' | 'instagram' | 'youtube' | 'tiktok' | 'linkedin' | 'x') | null;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * No enquiry emails are sent yet.
+   */
+  emailRouting?:
+    | {
+        leadType: 'enquiry' | 'test_drive' | 'finance' | 'trade_in' | 'callback';
+        toAddress: string;
+        branch?: (number | null) | Branch;
+        id?: string | null;
+      }[]
+    | null;
+  theme?: {
+    /**
+     * A colour code like #C81E2B, dark enough to read on white.
+     */
+    accent?: string | null;
+    heroLayout?: ('standard' | 'split' | 'minimal') | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Companies that own several dealerships.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "dealer-groups".
  */
 export interface DealerGroup {
   id: number;
   name: string;
+  logo?: (number | null) | Media;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | DealerGroup;
-  logo?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Manufacturer franchise affiliations a dealership holds.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "franchises".
- */
-export interface Franchise {
-  id: number;
-  name: string;
-  /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
-   */
-  aliases?: string[] | null;
-  /**
-   * Inactive values stay on existing listings but stop appearing in filters.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower sorts first. Equal values fall back to alphabetical.
-   */
-  sortOrder?: number | null;
-  /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
-   */
-  mergedInto?: (number | null) | Franchise;
-  make?: (number | null) | Make;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Manufacturers. The slug appears directly under /cars/, so reserved route words are rejected.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "makes".
- */
-export interface Make {
-  id: number;
-  name: string;
-  /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
-   */
-  aliases?: string[] | null;
-  /**
-   * Inactive values stay on existing listings but stop appearing in filters.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower sorts first. Equal values fall back to alphabetical.
-   */
-  sortOrder?: number | null;
-  /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
-   */
-  mergedInto?: (number | null) | Make;
-  logo?: (number | null) | Media;
-  /**
-   * Shown in the shortlist above the full A to Z list on the search page.
-   */
-  isPopular?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Industry bodies such as the RMI, NADA and MIWA. Shown on a dealer profile only once verified.
+ * Industry bodies such as the RMI, NADA and MIWA.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "accreditations".
@@ -618,155 +582,27 @@ export interface Make {
 export interface Accreditation {
   id: number;
   name: string;
+  badge?: (number | null) | Media;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | Accreditation;
-  badge?: (number | null) | Media;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "branches".
- */
-export interface Branch {
-  id: number;
-  name: string;
-  slug: string;
-  dealer: number | Dealer;
-  /**
-   * The head office or main showroom.
-   */
-  isPrimary?: boolean | null;
-  addressLine1: string;
-  addressLine2?: string | null;
-  suburb?: string | null;
-  city: number | City;
-  province: number | Province;
-  postalCode?: string | null;
-  /**
-   * Geocoded on save. Override only when the pin lands wrong.
-   */
-  latitude?: number | null;
-  longitude?: number | null;
-  /**
-   * Plain directions, for example "opposite the Engen on the N1 side".
-   */
-  directionsNote?: string | null;
-  phone?: string | null;
-  whatsapp?: string | null;
-  email?: string | null;
-  /**
-   * Shown on the branch page and marked up as openingHoursSpecification.
-   */
-  tradingHours?:
-    | {
-        day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
-        closed?: boolean | null;
-        opensAt?: string | null;
-        closesAt?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * South Africa has twelve public holidays and dealerships keep different hours on them. Without these the site tells buyers a branch is open when it is shut.
-   */
-  holidayOverrides?:
-    | {
-        date: string;
-        label?: string | null;
-        closed?: boolean | null;
-        opensAt?: string | null;
-        closesAt?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  photos?: (number | Media)[] | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "cities".
- */
-export interface City {
-  id: number;
-  name: string;
-  /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
-   */
-  aliases?: string[] | null;
-  /**
-   * Inactive values stay on existing listings but stop appearing in filters.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower sorts first. Equal values fall back to alphabetical.
-   */
-  sortOrder?: number | null;
-  /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
-   */
-  mergedInto?: (number | null) | City;
-  province: number | Province;
-  /**
-   * Centre point, used to seed the radius filter when a buyer picks a city.
-   */
-  latitude?: number | null;
-  longitude?: number | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * The nine provinces. Used by the location facet and the dealer directory.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "provinces".
- */
-export interface Province {
-  id: number;
-  name: string;
-  /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
-   */
-  aliases?: string[] | null;
-  /**
-   * Inactive values stay on existing listings but stop appearing in filters.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower sorts first. Equal values fall back to alphabetical.
-   */
-  sortOrder?: number | null;
-  /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
-   */
-  mergedInto?: (number | null) | Province;
   updatedAt: string;
   createdAt: string;
 }
@@ -777,21 +613,17 @@ export interface Province {
 export interface Plan {
   id: number;
   name: string;
-  slug: string;
   /**
-   * Rand per month, excluding VAT. PLACEHOLDER until real pricing is supplied. See docs/CONTENT-NEEDED.md.
+   * Placeholder until real pricing is agreed.
    */
   monthlyPrice: number;
+  /**
+   * Not enforced yet.
+   */
   listingLimit: number;
   branchLimit: number;
   userLimit: number;
-  /**
-   * Lets the dealership set their own accent colour and hero layout.
-   */
   allowsMicrositeTheming?: boolean | null;
-  /**
-   * Scheduled stock feed syndication rather than manual capture only.
-   */
   allowsFeedImport?: boolean | null;
   summary?: string | null;
   includedFeatures?:
@@ -801,10 +633,178 @@ export interface Plan {
       }[]
     | null;
   /**
-   * Shown on the public pricing page. Leave off while the price is a placeholder.
+   * There is no public pricing page yet.
    */
   isPublic?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
   sortOrder?: number | null;
+  /**
+   * Lower case, no spaces, for example growth.
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The brands a dealership can be an official dealer for.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "franchises".
+ */
+export interface Franchise {
+  id: number;
+  name: string;
+  make?: (number | null) | Make;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | Franchise;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "branches".
+ */
+export interface Branch {
+  id: number;
+  name: string;
+  dealer: number | Dealer;
+  /**
+   * Head office or main showroom.
+   */
+  isPrimary?: boolean | null;
+  addressLine1: string;
+  addressLine2?: string | null;
+  suburb?: string | null;
+  city: number | City;
+  province: number | Province;
+  postalCode?: string | null;
+  /**
+   * For example: opposite the Engen on the N1 side.
+   */
+  directionsNote?: string | null;
+  /**
+   * Only change this if the map pin is in the wrong place.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  tradingHours?:
+    | {
+        day: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+        opensAt?: string | null;
+        closesAt?: string | null;
+        closed?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Add the days this branch keeps different hours.
+   */
+  holidayOverrides?:
+    | {
+        date: string;
+        label?: string | null;
+        opensAt?: string | null;
+        closesAt?: string | null;
+        closed?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  photos?: (number | Media)[] | null;
+  /**
+   * Filled in from the branch name.
+   */
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cities".
+ */
+export interface City {
+  id: number;
+  name: string;
+  province: number | Province;
+  /**
+   * The middle of the town, for the distance filter.
+   */
+  latitude?: number | null;
+  longitude?: number | null;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | City;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * The nine provinces, used by the location filter and the dealership list.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "provinces".
+ */
+export interface Province {
+  id: number;
+  name: string;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | Province;
   updatedAt: string;
   createdAt: string;
 }
@@ -815,31 +815,28 @@ export interface Plan {
 export interface Model {
   id: number;
   name: string;
+  make: number | Make;
+  bodyType?: (number | null) | BodyType;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | Model;
-  make: number | Make;
-  /**
-   * The usual body for this model. A listing can still override it.
-   */
-  bodyType?: (number | null) | BodyType;
   updatedAt: string;
   createdAt: string;
 }
@@ -851,23 +848,23 @@ export interface BodyType {
   id: number;
   name: string;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | BodyType;
   updatedAt: string;
@@ -881,26 +878,29 @@ export interface Variant {
   id: number;
   name: string;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
+   * Web address names are shared by all models, so the same variant name cannot exist twice.
    */
-  slug: string;
+  model: number | Model;
   /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | Variant;
-  model: number | Model;
   updatedAt: string;
   createdAt: string;
 }
@@ -912,23 +912,23 @@ export interface FuelType {
   id: number;
   name: string;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | FuelType;
   updatedAt: string;
@@ -942,23 +942,23 @@ export interface Transmission {
   id: number;
   name: string;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | Transmission;
   updatedAt: string;
@@ -972,30 +972,30 @@ export interface Drivetrain {
   id: number;
   name: string;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | Drivetrain;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Manufacturer colour names, grouped into families so "Deep Sea Blue" and "Aegean Blue" both filter under Blue.
+ * The makers' colour names, grouped so Deep Sea Blue and Aegean Blue both filter under Blue.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "colours".
@@ -1004,25 +1004,8 @@ export interface Colour {
   id: number;
   name: string;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
+   * Buyers filter by the group, for example Blue.
    */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
-   */
-  aliases?: string[] | null;
-  /**
-   * Inactive values stay on existing listings but stop appearing in filters.
-   */
-  isActive?: boolean | null;
-  /**
-   * Lower sorts first. Equal values fall back to alphabetical.
-   */
-  sortOrder?: number | null;
-  /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
-   */
-  mergedInto?: (number | null) | Colour;
   family:
     | 'white'
     | 'silver'
@@ -1039,14 +1022,34 @@ export interface Colour {
     | 'purple'
     | 'other';
   /**
-   * Hex value for the filter swatch. Decorative only, never the sole indicator.
+   * A hex colour like #1F4E8C.
    */
   swatch?: string | null;
+  /**
+   * For example bakkie for pickup. Helps search and the sell form.
+   */
+  aliases?: string[] | null;
+  /**
+   * Untick to hide it. Cars that use it keep it.
+   */
+  isActive?: boolean | null;
+  /**
+   * Lower numbers come first.
+   */
+  sortOrder?: number | null;
+  /**
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
+   */
+  mergedInto?: (number | null) | Colour;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * A structured list, never free text. Free-text features cannot be filtered, compared or counted.
+ * The features a car can have. Buyers filter by these, so pick from here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "features".
@@ -1054,31 +1057,31 @@ export interface Colour {
 export interface Feature {
   id: number;
   name: string;
+  category: number | FeatureCategory;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
+   * Not used on the site yet.
    */
-  slug: string;
+  isHighlight?: boolean | null;
   /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | Feature;
-  category: number | FeatureCategory;
-  /**
-   * Shown as a chip on the listing card, not just in the full spec.
-   */
-  isHighlight?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1090,23 +1093,23 @@ export interface FeatureCategory {
   id: number;
   name: string;
   /**
-   * Appears in the URL. Changing it writes a redirect automatically.
-   */
-  slug: string;
-  /**
-   * Other names buyers and dealer feeds use for this. Feeds the search box and the stock importer. For example a bakkie is a pickup, a combi is an MPV.
+   * For example bakkie for pickup. Helps search and the sell form.
    */
   aliases?: string[] | null;
   /**
-   * Inactive values stay on existing listings but stop appearing in filters.
+   * Untick to hide it. Cars that use it keep it.
    */
   isActive?: boolean | null;
   /**
-   * Lower sorts first. Equal values fall back to alphabetical.
+   * Lower numbers come first.
    */
   sortOrder?: number | null;
   /**
-   * Set when this is a duplicate. References are rewritten to the target and a redirect is written. Merge rather than delete, or every listing pointing here loses its value.
+   * Filled in from the name.
+   */
+  slug: string;
+  /**
+   * Hides this from the sell form. Cars that use it are not moved.
    */
   mergedInto?: (number | null) | FeatureCategory;
   updatedAt: string;
@@ -1118,6 +1121,10 @@ export interface FeatureCategory {
  */
 export interface Lead {
   id: number;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  message?: string | null;
   type:
     | 'enquiry'
     | 'test_drive'
@@ -1129,15 +1136,11 @@ export interface Lead {
     | 'dealer_contact'
     | 'agency_enquiry';
   vehicle?: (number | null) | Vehicle;
+  /**
+   * Empty for Rynet Digital enquiries and for sellers, who go to several dealerships.
+   */
   dealer?: (number | null) | Dealer;
   branch?: (number | null) | Branch;
-  name: string;
-  email?: string | null;
-  phone?: string | null;
-  message?: string | null;
-  /**
-   * The seller's vehicle. Only present on a trade-in lead.
-   */
   tradeIn?: {
     make?: string | null;
     model?: string | null;
@@ -1147,35 +1150,13 @@ export interface Lead {
     condition?: ('excellent' | 'good' | 'fair' | 'poor') | null;
     serviceHistory?: ('full' | 'partial' | 'none') | null;
     /**
-     * Outstanding finance. A seller cannot pass title while a bank holds it, so this changes what happens next rather than only the price.
+     * If a bank still owns the car, it cannot be sold until the loan is settled.
      */
     finance?: ('none' | 'outstanding' | 'unsure') | null;
     province?: (number | null) | Province;
     city?: string | null;
     notes?: string | null;
   };
-  status: 'new' | 'contacted' | 'qualified' | 'appointment_set' | 'sold' | 'lost';
-  lostReason?: string | null;
-  assignedTo?: (number | null) | User;
-  /**
-   * Stamped on the first outbound action. Drives the response SLA timer.
-   */
-  firstResponseAt?: string | null;
-  /**
-   * Captured at submission. Read only afterwards.
-   */
-  source?: {
-    utmSource?: string | null;
-    utmMedium?: string | null;
-    utmCampaign?: string | null;
-    referrer?: string | null;
-    landingPage?: string | null;
-    deviceType?: string | null;
-  };
-  /**
-   * POPIA lawful basis. A lead without a consent record is a lead we cannot lawfully act on.
-   */
-  consent?: (number | null) | ConsentRecord;
   notes?:
     | {
         body: string;
@@ -1185,34 +1166,49 @@ export interface Lead {
       }[]
     | null;
   /**
-   * Every dealership this seller's details were sent to, and when.
+   * Every dealership that received this seller's details.
    */
   disclosures?:
     | {
         dealer: number | Dealer;
         disclosedAt: string;
-        /**
-         * Set when the seller withdraws consent. The row stays: it is the record that the disclosure happened.
-         */
         withdrawnAt?: string | null;
         id?: string | null;
       }[]
     | null;
-  /**
-   * Derived from the disclosures above.
-   */
   disclosedTo?: (number | Dealer)[] | null;
+  /**
+   * The POPIA consent they gave.
+   */
+  consent?: (number | null) | ConsentRecord;
+  source?: {
+    utmSource?: string | null;
+    utmMedium?: string | null;
+    utmCampaign?: string | null;
+    referrer?: string | null;
+    landingPage?: string | null;
+    deviceType?: string | null;
+  };
+  status: 'new' | 'contacted' | 'qualified' | 'appointment_set' | 'sold' | 'lost';
+  lostReason?: string | null;
+  assignedTo?: (number | null) | User;
+  firstResponseAt?: string | null;
   isDemonstration?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * People who can sign in: Rynet staff and dealership staff.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
   name: string;
+  /**
+   * Decides what this person can see and change.
+   */
   role:
     | 'platform_admin'
     | 'platform_editor'
@@ -1222,16 +1218,19 @@ export interface User {
     | 'dealer_sales'
     | 'analyst';
   /**
-   * Required for every dealer role. Set automatically for dealer users.
+   * Needed for dealership roles.
    */
   dealer?: (number | null) | Dealer;
   /**
-   * South African format, for example 012 345 6789 or +27 12 345 6789.
+   * For example 082 123 4567.
    */
   phone?: string | null;
+  /**
+   * Suspended stops this person signing in, and signs them out now.
+   */
   status: 'active' | 'invited' | 'suspended';
   /**
-   * Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.
+   * Each person turns this on for their own account.
    */
   twoFactorEnabled?: boolean | null;
   twoFactorSecret?: string | null;
@@ -1263,7 +1262,7 @@ export interface User {
   collection: 'users';
 }
 /**
- * Append only. Nothing here can be edited or deleted, which is the point.
+ * A permanent record of what people agreed to. Nothing here can be changed or deleted.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "consent-records".
@@ -1273,28 +1272,19 @@ export interface ConsentRecord {
   purpose: 'enquiry' | 'marketing' | 'dealer_marketing' | 'alerts' | 'finance' | 'trade_in';
   subjectEmail?: string | null;
   subjectPhone?: string | null;
-  /**
-   * Which version of the privacy notice was on screen when this was given.
-   */
-  policyVersion: string;
   grantedAt: string;
-  /**
-   * Set by writing a new withdrawal record, not by editing this one. Shown here for readability.
-   */
   withdrawnAt?: string | null;
-  /**
-   * The exact wording the person agreed to, stored verbatim. Not a reference to it, the text itself, because the wording on the page will change.
-   */
+  policyVersion: string;
   evidence?: string | null;
   /**
-   * Hashed, never the raw address. Enough to demonstrate a distinct submission, not enough to be personal information in its own right.
+   * A scrambled code, not their internet address.
    */
   ipHash?: string | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Consumer accounts. These can save and enquire. They can never list a vehicle.
+ * People who signed up on the site to save cars and enquire. They can never list a car.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "buyers".
@@ -1305,15 +1295,18 @@ export interface Buyer {
   phone?: string | null;
   province?: (number | null) | Province;
   city?: (number | null) | City;
+  /**
+   * Not sent yet.
+   */
   alertFrequency: 'instant' | 'daily' | 'weekly' | 'off';
   /**
-   * Opt in only, never pre-ticked. The evidence lives in consent-records with a timestamp and the policy version.
+   * Proof is kept in Consent records.
    */
   marketingConsent?: boolean | null;
-  status: 'active' | 'suspended' | 'deletion_requested';
   /**
-   * POPIA section 24. The purge job acts on this, and the deletion actually removes the data.
+   * Suspended stops this person signing in, and signs them out now.
    */
+  status: 'active' | 'suspended' | 'deletion_requested';
   deletionRequestedAt?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1512,10 +1505,6 @@ export interface PayloadMigration {
  */
 export interface VehiclesSelect<T extends boolean = true> {
   title?: T;
-  publicRef?: T;
-  dealer?: T;
-  branch?: T;
-  status?: T;
   condition?: T;
   make?: T;
   model?: T;
@@ -1528,16 +1517,16 @@ export interface VehiclesSelect<T extends boolean = true> {
   fuelType?: T;
   transmission?: T;
   drivetrain?: T;
+  exteriorColour?: T;
+  interiorColour?: T;
+  features?: T;
+  description?: T;
   engineCapacityCc?: T;
   cylinders?: T;
   powerKw?: T;
   torqueNm?: T;
-  exteriorColour?: T;
-  interiorColour?: T;
   doors?: T;
   seats?: T;
-  features?: T;
-  description?: T;
   price?: T;
   priceType?: T;
   vatStatus?: T;
@@ -1550,18 +1539,6 @@ export interface VehiclesSelect<T extends boolean = true> {
         id?: T;
       };
   monthlyEstimate?: T;
-  vin?: T;
-  stockNumber?: T;
-  serviceHistory?: T;
-  warrantyRemaining?:
-    | T
-    | {
-        months?: T;
-        km?: T;
-        provider?: T;
-      };
-  roadworthy?: T;
-  licenceExpiry?: T;
   gallery?:
     | T
     | {
@@ -1575,11 +1552,27 @@ export interface VehiclesSelect<T extends boolean = true> {
         url?: T;
         provider?: T;
       };
+  stockNumber?: T;
+  vin?: T;
+  serviceHistory?: T;
+  roadworthy?: T;
+  licenceExpiry?: T;
+  warrantyRemaining?:
+    | T
+    | {
+        months?: T;
+        km?: T;
+        provider?: T;
+      };
+  status?: T;
+  dealer?: T;
+  branch?: T;
+  isDemonstration?: T;
+  publicRef?: T;
   publishedAt?: T;
   soldAt?: T;
   viewCount?: T;
   leadCount?: T;
-  isDemonstration?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1589,17 +1582,16 @@ export interface VehiclesSelect<T extends boolean = true> {
  * via the `definition` "dealers_select".
  */
 export interface DealersSelect<T extends boolean = true> {
+  verificationStatus?: T;
+  isDemonstration?: T;
   tradingName?: T;
   legalName?: T;
-  slug?: T;
   logo?: T;
-  heroImages?: T;
   aboutRichText?: T;
   foundedYear?: T;
   group?: T;
-  franchises?: T;
   accreditations?: T;
-  verificationStatus?: T;
+  slug?: T;
   registrationNumber?: T;
   vatNumber?: T;
   motorTradeNumber?: T;
@@ -1614,6 +1606,20 @@ export interface DealersSelect<T extends boolean = true> {
         phone?: T;
       };
   whatsappNumber?: T;
+  plan?: T;
+  listingLimit?: T;
+  listingCount?: T;
+  reviewScore?: T;
+  reviewCount?: T;
+  heroImages?: T;
+  franchises?: T;
+  socialProfiles?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
   emailRouting?:
     | T
     | {
@@ -1622,25 +1628,12 @@ export interface DealersSelect<T extends boolean = true> {
         branch?: T;
         id?: T;
       };
-  socialProfiles?:
-    | T
-    | {
-        platform?: T;
-        url?: T;
-        id?: T;
-      };
   theme?:
     | T
     | {
         accent?: T;
         heroLayout?: T;
       };
-  plan?: T;
-  listingLimit?: T;
-  listingCount?: T;
-  reviewScore?: T;
-  reviewCount?: T;
-  isDemonstration?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1649,14 +1642,14 @@ export interface DealersSelect<T extends boolean = true> {
  * via the `definition` "leads_select".
  */
 export interface LeadsSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  email?: T;
+  message?: T;
   type?: T;
   vehicle?: T;
   dealer?: T;
   branch?: T;
-  name?: T;
-  email?: T;
-  phone?: T;
-  message?: T;
   tradeIn?:
     | T
     | {
@@ -1672,21 +1665,6 @@ export interface LeadsSelect<T extends boolean = true> {
         city?: T;
         notes?: T;
       };
-  status?: T;
-  lostReason?: T;
-  assignedTo?: T;
-  firstResponseAt?: T;
-  source?:
-    | T
-    | {
-        utmSource?: T;
-        utmMedium?: T;
-        utmCampaign?: T;
-        referrer?: T;
-        landingPage?: T;
-        deviceType?: T;
-      };
-  consent?: T;
   notes?:
     | T
     | {
@@ -1704,6 +1682,21 @@ export interface LeadsSelect<T extends boolean = true> {
         id?: T;
       };
   disclosedTo?: T;
+  consent?: T;
+  source?:
+    | T
+    | {
+        utmSource?: T;
+        utmMedium?: T;
+        utmCampaign?: T;
+        referrer?: T;
+        landingPage?: T;
+        deviceType?: T;
+      };
+  status?: T;
+  lostReason?: T;
+  assignedTo?: T;
+  firstResponseAt?: T;
   isDemonstration?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1714,7 +1707,6 @@ export interface LeadsSelect<T extends boolean = true> {
  */
 export interface BranchesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   dealer?: T;
   isPrimary?: T;
   addressLine1?: T;
@@ -1723,9 +1715,9 @@ export interface BranchesSelect<T extends boolean = true> {
   city?: T;
   province?: T;
   postalCode?: T;
+  directionsNote?: T;
   latitude?: T;
   longitude?: T;
-  directionsNote?: T;
   phone?: T;
   whatsapp?: T;
   email?: T;
@@ -1733,9 +1725,9 @@ export interface BranchesSelect<T extends boolean = true> {
     | T
     | {
         day?: T;
-        closed?: T;
         opensAt?: T;
         closesAt?: T;
+        closed?: T;
         id?: T;
       };
   holidayOverrides?:
@@ -1743,12 +1735,13 @@ export interface BranchesSelect<T extends boolean = true> {
     | {
         date?: T;
         label?: T;
-        closed?: T;
         opensAt?: T;
         closesAt?: T;
+        closed?: T;
         id?: T;
       };
   photos?: T;
+  slug?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1761,6 +1754,7 @@ export interface MediaSelect<T extends boolean = true> {
   isDecorative?: T;
   credit?: T;
   isDemonstration?: T;
+  dealer?: T;
   folder?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1891,7 +1885,6 @@ export interface BuyersSelect<T extends boolean = true> {
  */
 export interface PlansSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   monthlyPrice?: T;
   listingLimit?: T;
   branchLimit?: T;
@@ -1907,6 +1900,7 @@ export interface PlansSelect<T extends boolean = true> {
       };
   isPublic?: T;
   sortOrder?: T;
+  slug?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1916,13 +1910,13 @@ export interface PlansSelect<T extends boolean = true> {
  */
 export interface MakesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  logo?: T;
+  isPopular?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  logo?: T;
-  isPopular?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1932,13 +1926,13 @@ export interface MakesSelect<T extends boolean = true> {
  */
 export interface ModelsSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  make?: T;
+  bodyType?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  make?: T;
-  bodyType?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1948,12 +1942,12 @@ export interface ModelsSelect<T extends boolean = true> {
  */
 export interface VariantsSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  model?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  model?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1963,10 +1957,10 @@ export interface VariantsSelect<T extends boolean = true> {
  */
 export interface BodyTypesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1977,10 +1971,10 @@ export interface BodyTypesSelect<T extends boolean = true> {
  */
 export interface FuelTypesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1991,10 +1985,10 @@ export interface FuelTypesSelect<T extends boolean = true> {
  */
 export interface TransmissionsSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2005,10 +1999,10 @@ export interface TransmissionsSelect<T extends boolean = true> {
  */
 export interface DrivetrainsSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2019,13 +2013,13 @@ export interface DrivetrainsSelect<T extends boolean = true> {
  */
 export interface ColoursSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  family?: T;
+  swatch?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  family?: T;
-  swatch?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2035,10 +2029,10 @@ export interface ColoursSelect<T extends boolean = true> {
  */
 export interface FeatureCategoriesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2049,13 +2043,13 @@ export interface FeatureCategoriesSelect<T extends boolean = true> {
  */
 export interface FeaturesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  category?: T;
+  isHighlight?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  category?: T;
-  isHighlight?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2065,10 +2059,10 @@ export interface FeaturesSelect<T extends boolean = true> {
  */
 export interface ProvincesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2079,14 +2073,14 @@ export interface ProvincesSelect<T extends boolean = true> {
  */
 export interface CitiesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
-  aliases?: T;
-  isActive?: T;
-  sortOrder?: T;
-  mergedInto?: T;
   province?: T;
   latitude?: T;
   longitude?: T;
+  aliases?: T;
+  isActive?: T;
+  sortOrder?: T;
+  slug?: T;
+  mergedInto?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2096,12 +2090,12 @@ export interface CitiesSelect<T extends boolean = true> {
  */
 export interface FranchisesSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  make?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  make?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2111,12 +2105,12 @@ export interface FranchisesSelect<T extends boolean = true> {
  */
 export interface DealerGroupsSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  logo?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  logo?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2126,12 +2120,12 @@ export interface DealerGroupsSelect<T extends boolean = true> {
  */
 export interface AccreditationsSelect<T extends boolean = true> {
   name?: T;
-  slug?: T;
+  badge?: T;
   aliases?: T;
   isActive?: T;
   sortOrder?: T;
+  slug?: T;
   mergedInto?: T;
-  badge?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2143,9 +2137,9 @@ export interface ConsentRecordsSelect<T extends boolean = true> {
   purpose?: T;
   subjectEmail?: T;
   subjectPhone?: T;
-  policyVersion?: T;
   grantedAt?: T;
   withdrawnAt?: T;
+  policyVersion?: T;
   evidence?: T;
   ipHash?: T;
   updatedAt?: T;
@@ -2192,7 +2186,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
- * Drives every instalment estimate on the site. Changing the prime rate recalculates all stock.
+ * The figures behind every monthly instalment shown on the site.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "finance-defaults".
@@ -2200,31 +2194,28 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface FinanceDefault {
   id: number;
   /**
-   * SARB prime. 10.5 as at 28 May 2026, on a 7.00 repo. Update this the day it moves.
+   * The Reserve Bank prime rate. Change it on the day it moves.
    */
   primeRatePercent: number;
   /**
-   * Added to prime for the default estimate, since few buyers get prime.
+   * Most buyers pay more than prime.
    */
   defaultRateOffsetPercent: number;
   defaultTermMonths: number;
   defaultDepositPercent: number;
   defaultBalloonPercent: number;
   /**
-   * Rand, VAT inclusive. Capped by the NCA.
+   * Including VAT.
    */
   initiationFee: number;
   /**
-   * Rand per month, VAT inclusive.
+   * Including VAT.
    */
   monthlyServiceFee: number;
   /**
-   * Shown with every instalment figure on the site. Cannot be emptied. Keep the review marker until a South African attorney has signed this off.
+   * Required by law. Keep the review note until an attorney signs it off.
    */
   disclaimer: string;
-  /**
-   * When the disclaimer wording was last checked by someone qualified.
-   */
   lastReviewedAt?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;

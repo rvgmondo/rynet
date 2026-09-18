@@ -12,11 +12,14 @@ import {
 /**
  * The consent record stored against every sell-to-a-dealer submission says, word for word:
  *
- *   "verified dealerships in my province that buy this kind of vehicle ... no more than five"
+ *   "a shortlist of verified dealerships in my province that buy this kind of vehicle"
  *
  * Each clause of that sentence gets its own test here. A promise in a consent record that the
  * code does not keep is worse than making no promise at all, because the record is evidence of
  * exactly what you undertook to do.
+ *
+ * The seller is never shown a number. `MAX_DEALERSHIPS` is the ceiling that makes "a shortlist"
+ * a true word, so it is tested here rather than read anywhere a seller can see it.
  */
 
 const dealer = (over: Partial<MatchableDealer> = {}): MatchableDealer => ({
@@ -117,16 +120,24 @@ describe('"that buy this kind of vehicle"', () => {
   });
 });
 
-describe('"no more than five"', () => {
+describe('"a shortlist"', () => {
   const many = Array.from({ length: 20 }, (_, i) => dealer({ id: i + 1 }));
+
+  it("keeps the ceiling every recorded consent was given under", () => {
+    // Consents recorded under 2026-08-privacy-v1 and 2026-09-privacy-v2 say "no more than 5"
+    // in so many words. Raising this would send those sellers' details to a dealership they
+    // never agreed to, so the ceiling cannot move until the distribution job keeps those
+    // leads at five on its own.
+    expect(MAX_DEALERSHIPS).toBeLessThanOrEqual(5);
+  });
 
   it("never returns more than the cap, whatever is eligible", () => {
     expect(selectDealerships(many, hilux)).toHaveLength(MAX_DEALERSHIPS);
   });
 
   it("the cap cannot be raised by passing a bigger limit", () => {
-    // The number is in the consent wording, so it is a commitment to the seller rather than a
-    // tuning knob a caller gets to override.
+    // The ceiling is what makes "a shortlist" true, so it is a commitment to the seller rather
+    // than a tuning knob a caller gets to override.
     expect(selectDealerships(many, hilux, 50)).toHaveLength(MAX_DEALERSHIPS);
   });
 

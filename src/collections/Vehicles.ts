@@ -8,9 +8,17 @@ import {
   isPlatformAdmin,
   isPlatformStaff,
 } from "@/access/roles";
+import { withinParent } from "@/lib/admin-filter-options";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import {
+  CAR_QUICK_FILTERS,
+  CAR_STATUS_LIST_LABELS,
+  CAR_STATUS_TONES,
+} from "@/lib/admin-quick-filters";
+import { priceFieldsFromSaved } from "@/lib/price-history";
 import { dropTag } from "@/lib/revalidate";
 import { generatePublicRef } from "@/lib/slug";
+import { vehicleTitle } from "@/lib/vehicle-title";
 
 /**
  * Vehicle listings.
@@ -35,17 +43,54 @@ import { generatePublicRef } from "@/lib/slug";
 
 const SOLD_VISIBLE_DAYS = 90;
 
+/** Admin list cells (display only). Paths are relative to src; see the import map. */
+const CELL = {
+  rand: "/components/admin/cells/value-cells#RandCell",
+  km: "/components/admin/cells/value-cells#KmCell",
+  yesNo: "/components/admin/cells/value-cells#YesNoCell",
+  badge: "/components/admin/cells/value-cells#StatusBadgeCell",
+} as const;
+
 export const Vehicles: CollectionConfig = {
   slug: "vehicles",
   labels: { singular: "Car", plural: "Cars" },
+  defaultSort: "-updatedAt",
   admin: {
     useAsTitle: "title",
-    defaultColumns: ["title", "dealer", "price", "status", "mileageKm", "publishedAt"],
+    // The name stays the first column: Payload links it to the car and lets a picker choose from
+    // it, and a custom cell there would replace both.
+    defaultColumns: ["title", "listPhoto", "price", "mileageKm", "status", "dealer", "updatedAt"],
     group: ADMIN_GROUP.daily,
     listSearchableFields: ["title", "stockNumber", "publicRef"],
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
+    components: {
+      beforeListTable: [
+        {
+          path: "/components/admin/list/quick-filters#QuickFilters",
+          clientProps: { filters: CAR_QUICK_FILTERS },
+        },
+      ],
+      /*
+       * A car has two things called status: its Listing status, which is all the site reads, and
+       * Payload's own save state (draft or published), which only says whether the latest edits
+       * are saved. The edit screen shows the first and explains the second in plain words, and
+       * leaves out the buttons whose names promise the wrong thing. See the components.
+       */
+      edit: {
+        Status: "/components/admin/vehicles/listing-state#ListingState",
+        UnpublishButton: "/components/admin/vehicles/hidden-controls#NoUnpublishButton",
+        SaveDraftButton: "/components/admin/vehicles/hidden-controls#NoSaveDraftButton",
+      },
+    },
   },
   versions: {
-    drafts: { autosave: { interval: 800 } },
+    /*
+     * `validate` checks a draft before autosave keeps it, and stops "Add new" creating an empty
+     * car the moment the screen opens (Payload only does that when drafts are not validated). It
+     * adds no column. Turning autosave or drafts off would change the tables, so they stay.
+     */
+    drafts: { autosave: { interval: 800 }, validate: true },
     maxPerDoc: 50,
   },
   access: {
@@ -167,6 +212,47 @@ export const Vehicles: CollectionConfig = {
 
         return data;
       },
+
+      /*
+       * The price history, measured against the car the SITE shows.
+       *
+       * The hook above compares the new price with `originalDoc`, which for a car with drafts is the
+       * latest draft kept by autosave, not the saved car. So a price typed as 2850000, left long
+       * enough to autosave, then corrected to 285000 was recorded as a change from R 2 850 000, and
+       * the site showed a price drop that never happened; half-typed prices also piled up in the
+       * history. The hook above is left exactly as it is (it also holds the verification check),
+       * and this one runs after it and sets both fields again from the saved car:
+       *
+       * - price differs from the saved car: the previous price is the saved car's price, and one
+       *   entry is added to the saved car's history;
+       * - price is the same: both fields stay as the saved car has them.
+       *
+       * Drafts get the same treatment, so a draft never carries a history the saved car does not
+       * have, and saving recomputes from the saved car again. Append only, as before: entries the
+       * saved car already has are never changed or removed.
+       */
+      async ({ data, req, originalDoc, operation }) => {
+        if (!data || operation !== "update" || !originalDoc?.id) return data;
+
+        // Access is overridden for this read only: it is the server reading three price fields of
+        // the car already being written, and nothing read here is returned to the request.
+        const saved = await req.payload.findByID({
+          collection: "vehicles",
+          id: originalDoc.id,
+          depth: 0,
+          draft: false,
+          disableErrors: true,
+          overrideAccess: true,
+          select: { price: true, previousPrice: true, priceHistory: true },
+          req,
+        });
+        if (!saved) return data;
+
+        const { previousPrice, priceHistory } = priceFieldsFromSaved(saved, data.price);
+        data.previousPrice = previousPrice;
+        data.priceHistory = priceHistory;
+        return data;
+      },
     ],
 
     /*
@@ -185,74 +271,91 @@ export const Vehicles: CollectionConfig = {
     {
       name: "title",
       type: "text",
+      label: "Name",
+      // Built from the year, make, model and variant. Not edited by hand. Hidden in the form,
+      // because the header already shows it; it stays the list's first column and its search.
       admin: {
         readOnly: true,
-        description: "Built from the year, make, model and variant. Not edited by hand.",
+        hidden: true,
+        disableListFilter: true,
       },
       hooks: {
+        /*
+         * The document stores make, model and variant as relationship ids, so the names are read
+         * from the three lists. This used to read `makeName`, `modelName` and `variantName`, which
+         * are not fields on a car, so every stored title was the year alone. The migration
+         * 20260916_120000_vehicle_titles recomputed the titles already stored.
+         *
+         * Taxonomies are readable by everyone, so looking the names up widens nothing.
+         * Renaming a make, model or variant does not refresh the titles of cars already using it.
+         */
         beforeChange: [
-          ({ data }) => {
-            const parts = [data?.modelYear, data?.makeName, data?.modelName, data?.variantName];
-            return parts.filter(Boolean).join(" ") || "Untitled vehicle";
+          async ({ data, originalDoc, req }) => {
+            const current = (key: string): unknown =>
+              data?.[key] !== undefined ? data[key] : originalDoc?.[key];
+
+            const nameOf = async (
+              collection: "makes" | "models" | "variants",
+              raw: unknown,
+            ): Promise<string | null> => {
+              let id = raw;
+              if (id && typeof id === "object") {
+                const name = (id as { name?: unknown }).name;
+                if (typeof name === "string") return name;
+                id = (id as { id?: unknown }).id;
+              }
+              if (typeof id !== "number" && typeof id !== "string") return null;
+              if (id === "") return null;
+              const doc = await req.payload.findByID({
+                collection,
+                id,
+                depth: 0,
+                select: { name: true },
+                disableErrors: true,
+                overrideAccess: true,
+                req,
+              });
+              return typeof doc?.name === "string" ? doc.name : null;
+            };
+
+            const [make, model, variant] = await Promise.all([
+              nameOf("makes", current("make")),
+              nameOf("models", current("model")),
+              nameOf("variants", current("variant")),
+            ]);
+            return vehicleTitle({
+              modelYear: current("modelYear") as number | string | null | undefined,
+              make,
+              model,
+              variant,
+            });
           },
         ],
       },
     },
+
     {
-      name: "publicRef",
-      type: "text",
-      unique: true,
-      index: true,
+      // The first photo, small, as a list column. A `ui` field stores nothing and draws nothing
+      // in the form; it exists only to give the list a Photo column.
+      name: "listPhoto",
+      type: "ui",
+      label: "Photo",
       admin: {
-        readOnly: true,
-        position: "sidebar",
-        description:
-          "The stable id in the URL. Not the database id, which would leak stock volume, and not the stock number, which dealers change.",
+        components: { Cell: "/components/admin/cells/vehicle-photo-cell#VehiclePhotoCell" },
       },
-    },
-    {
-      name: "dealer",
-      type: "relationship",
-      relationTo: "dealers",
-      required: true,
-      index: true,
-      access: {
-        // Only platform staff may retarget a listing. For a dealer user the value is
-        // overwritten server side regardless, so this closes the admin UI path too.
-        update: ({ req }) => isPlatformStaff(req.user),
-      },
-      admin: { position: "sidebar", description: "Set automatically from the signed-in user." },
-    },
-    {
-      name: "branch",
-      type: "relationship",
-      relationTo: "branches",
-      index: true,
-      admin: { position: "sidebar", description: "Which branch the vehicle physically sits at." },
-    },
-    {
-      name: "status",
-      type: "select",
-      required: true,
-      defaultValue: "draft",
-      index: true,
-      options: [
-        { value: "draft", label: "Draft" },
-        { value: "pending_review", label: "Awaiting review" },
-        { value: "live", label: "Live" },
-        { value: "reserved", label: "Reserved" },
-        { value: "sold", label: "Sold" },
-        { value: "expired", label: "Expired" },
-        { value: "archived", label: "Archived" },
-      ],
-      admin: { position: "sidebar" },
     },
 
+    /*
+     * The main column: four tabs in the order a person fills a listing in. The tabs have no
+     * `name`, and rows and collapsibles never do, so none of this changes a column or an API
+     * field. Only top-level fields can sit in the sidebar, which is why the sidebar fields
+     * follow the tabs rather than living inside them.
+     */
     {
       type: "tabs",
       tabs: [
         {
-          label: "Vehicle",
+          label: "The car",
           fields: [
             {
               name: "condition",
@@ -260,11 +363,14 @@ export const Vehicles: CollectionConfig = {
               required: true,
               defaultValue: "pre_owned",
               index: true,
+              label: "New or used",
               options: [
                 { value: "new", label: "New" },
                 { value: "demo", label: "Demo" },
-                { value: "pre_owned", label: "Pre-owned" },
+                { value: "pre_owned", label: "Used" },
               ],
+              // Required, so no clear button that empties it.
+              admin: { isClearable: false },
             },
             {
               type: "row",
@@ -275,6 +381,7 @@ export const Vehicles: CollectionConfig = {
                   relationTo: "makes",
                   required: true,
                   index: true,
+                  label: "Make",
                 },
                 {
                   name: "model",
@@ -282,51 +389,95 @@ export const Vehicles: CollectionConfig = {
                   relationTo: "models",
                   required: true,
                   index: true,
+                  label: "Model",
+                  filterOptions: ({ data }) => withinParent("make", data?.make, data?.model),
                 },
-                { name: "variant", type: "relationship", relationTo: "variants", index: true },
+                {
+                  name: "variant",
+                  type: "relationship",
+                  relationTo: "variants",
+                  index: true,
+                  label: "Variant",
+                  // Five seeded cars point at a variant of another model, because variant web
+                  // address names are unique across all models. The current value stays pickable
+                  // so those cars still save.
+                  filterOptions: ({ data }) => withinParent("model", data?.model, data?.variant),
+                },
               ],
             },
             {
               name: "derivative",
               type: "text",
+              label: "Extra trim details",
               admin: {
-                description: "Anything the variant list does not cover, for example a trim pack.",
+                disableListColumn: true,
+                disableListFilter: true,
+                // Anything the variant list does not cover, for example a trim pack.
+                description: "Only if the variant does not cover it, for example a trim pack.",
               },
             },
             {
               type: "row",
               fields: [
-                { name: "modelYear", type: "number", required: true, index: true },
-                { name: "registrationYear", type: "number" },
-                { name: "mileageKm", type: "number", required: true, index: true },
+                {
+                  name: "modelYear",
+                  type: "number",
+                  required: true,
+                  index: true,
+                  label: "Model year",
+                },
+                { name: "registrationYear", type: "number", label: "First registered (year)" },
+                {
+                  name: "mileageKm",
+                  type: "number",
+                  required: true,
+                  index: true,
+                  label: "Mileage (km)",
+                  admin: {
+                    components: {
+                      Cell: CELL.km,
+                      afterInput: ["/components/admin/fields/rand-preview#KmPreview"],
+                    },
+                  },
+                },
               ],
             },
             {
               type: "row",
               fields: [
-                { name: "bodyType", type: "relationship", relationTo: "body-types", index: true },
-                { name: "fuelType", type: "relationship", relationTo: "fuel-types", index: true },
+                {
+                  name: "bodyType",
+                  type: "relationship",
+                  relationTo: "body-types",
+                  index: true,
+                  label: "Body shape",
+                },
+                {
+                  name: "fuelType",
+                  type: "relationship",
+                  relationTo: "fuel-types",
+                  index: true,
+                  label: "Fuel",
+                },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
                 {
                   name: "transmission",
                   type: "relationship",
                   relationTo: "transmissions",
                   index: true,
+                  label: "Gearbox",
                 },
                 {
                   name: "drivetrain",
                   type: "relationship",
                   relationTo: "drivetrains",
                   index: true,
+                  label: "Drive",
                 },
-              ],
-            },
-            {
-              type: "row",
-              fields: [
-                { name: "engineCapacityCc", type: "number" },
-                { name: "cylinders", type: "number" },
-                { name: "powerKw", type: "number" },
-                { name: "torqueNm", type: "number" },
               ],
             },
             {
@@ -337,10 +488,15 @@ export const Vehicles: CollectionConfig = {
                   type: "relationship",
                   relationTo: "colours",
                   index: true,
+                  label: "Colour",
                 },
-                { name: "interiorColour", type: "relationship", relationTo: "colours" },
-                { name: "doors", type: "number" },
-                { name: "seats", type: "number" },
+                {
+                  name: "interiorColour",
+                  type: "relationship",
+                  relationTo: "colours",
+                  label: "Interior colour",
+                  admin: { disableListColumn: true, disableListFilter: true },
+                },
               ],
             },
             {
@@ -348,12 +504,78 @@ export const Vehicles: CollectionConfig = {
               type: "relationship",
               relationTo: "features",
               hasMany: true,
+              label: "Features",
               admin: {
-                description:
-                  "Structured, never free text. A free-text feature cannot be filtered, compared or counted.",
+                // Several can be chosen, so not the "Choose one" every other list says.
+                placeholder: "Choose any",
+                // Structured, never free text. A free-text feature cannot be filtered, compared
+                // or counted.
+                description: "Pick from the list so buyers can filter by them.",
               },
             },
-            { name: "description", type: "richText" },
+            {
+              name: "description",
+              type: "richText",
+              label: "Description",
+              admin: {
+                disableListColumn: true,
+                disableListFilter: true,
+                description: "Shown on the listing page.",
+              },
+            },
+            {
+              type: "collapsible",
+              label: "Technical details",
+              admin: { initCollapsed: true },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "engineCapacityCc",
+                      type: "number",
+                      label: "Engine size (cc)",
+                      admin: { disableListColumn: true, disableListFilter: true },
+                    },
+                    {
+                      name: "cylinders",
+                      type: "number",
+                      label: "Cylinders",
+                      admin: { disableListColumn: true, disableListFilter: true },
+                    },
+                    {
+                      name: "powerKw",
+                      type: "number",
+                      label: "Power (kW)",
+                      admin: { disableListColumn: true, disableListFilter: true },
+                    },
+                  ],
+                },
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "torqueNm",
+                      type: "number",
+                      label: "Torque (Nm)",
+                      admin: { disableListColumn: true, disableListFilter: true },
+                    },
+                    {
+                      name: "doors",
+                      type: "number",
+                      label: "Doors",
+                      admin: { disableListColumn: true, disableListFilter: true },
+                    },
+                    {
+                      name: "seats",
+                      type: "number",
+                      label: "Seats",
+                      admin: { disableListColumn: true, disableListFilter: true },
+                    },
+                  ],
+                },
+              ],
+            },
           ],
         },
         {
@@ -362,26 +584,42 @@ export const Vehicles: CollectionConfig = {
             {
               type: "row",
               fields: [
-                { name: "price", type: "number", required: true, index: true },
+                {
+                  name: "price",
+                  type: "number",
+                  required: true,
+                  index: true,
+                  label: "Price (R)",
+                  admin: {
+                    description: "Whole rands, for example 249900.",
+                    components: {
+                      Cell: CELL.rand,
+                      afterInput: ["/components/admin/fields/rand-preview#RandPreview"],
+                    },
+                  },
+                },
                 {
                   name: "priceType",
                   type: "select",
                   required: true,
                   defaultValue: "retail",
+                  label: "Price type",
+                  admin: { isClearable: false },
                   options: [
-                    { value: "retail", label: "Retail" },
-                    { value: "on_the_road", label: "On the road" },
-                    { value: "poa", label: "Price on application" },
+                    { value: "retail", label: "Normal price" },
+                    { value: "on_the_road", label: "On the road price" },
+                    { value: "poa", label: "Price on request" },
                   ],
                 },
                 {
                   name: "vatStatus",
                   type: "select",
                   defaultValue: "vat_inclusive",
+                  label: "VAT",
                   options: [
-                    { value: "vat_inclusive", label: "VAT inclusive" },
-                    { value: "vat_exclusive", label: "VAT exclusive" },
-                    { value: "non_vat", label: "Non-VAT" },
+                    { value: "vat_inclusive", label: "Includes VAT" },
+                    { value: "vat_exclusive", label: "Excludes VAT" },
+                    { value: "non_vat", label: "No VAT" },
                   ],
                 },
               ],
@@ -389,110 +627,94 @@ export const Vehicles: CollectionConfig = {
             {
               name: "previousPrice",
               type: "number",
+              label: "Previous price (R)",
               admin: {
                 readOnly: true,
+                components: {
+                  Cell: CELL.rand,
+                  afterInput: ["/components/admin/fields/rand-preview#RandPreview"],
+                },
+                condition: (data) => typeof data?.previousPrice === "number",
+                // Set automatically when the price changes. Drives the price-drop badge.
                 description:
-                  "Set automatically when the price changes. Drives the price-drop badge.",
+                  "Set automatically when you change the price. Shows a price-drop badge when higher.",
               },
             },
             {
+              // Append only. Written by the beforeChange hook above, never by hand, so it is
+              // hidden in the admin (UI only; the hook and the API are unchanged).
               name: "priceHistory",
               type: "array",
-              admin: { readOnly: true, description: "Append only." },
+              admin: {
+                readOnly: true,
+                hidden: true,
+                disableListColumn: true,
+                disableListFilter: true,
+              },
               fields: [
                 { name: "price", type: "number" },
                 { name: "changedAt", type: "date" },
               ],
             },
             {
+              /*
+               * Was: "Derived from the finance defaults, not entered. Recalculated for all stock
+               * when the prime rate changes." NOT IMPLEMENTED: nothing writes this. The site
+               * works each instalment out live from the Finance calculator settings
+               * (src/components/listing/finance-estimate.ts), so it is hidden in the admin.
+               */
               name: "monthlyEstimate",
               type: "number",
               admin: {
                 readOnly: true,
-                description:
-                  "Derived from the finance defaults, not entered. Recalculated for all stock when the prime rate changes.",
+                hidden: true,
+                disableListColumn: true,
+                disableListFilter: true,
               },
             },
           ],
         },
         {
-          label: "History and papers",
-          fields: [
-            {
-              name: "vin",
-              type: "text",
-              access: {
-                /**
-                 * Platform staff and the OWNING dealership. Not any dealership.
-                 *
-                 * This previously read `isDealerStaff`, which is true for every dealer
-                 * account on the platform, and every dealership can read every live
-                 * listing. So any dealership could ask for a competitor's stock and get the
-                 * VINs with it, which is what you need to clone a car or put a finance
-                 * application on one. The public path was closed the whole time, which is
-                 * why the anonymous VIN test passed while this was open.
-                 */
-                read: fieldReadableByOwningDealer("dealer"),
-              },
-              admin: {
-                description:
-                  "Not encrypted at rest. Protected by access control: never returned to a public query, never to another dealership, and never published in structured data.",
-              },
-            },
-            { name: "stockNumber", type: "text", index: true },
-            {
-              name: "serviceHistory",
-              type: "select",
-              options: [
-                { value: "full_franchise", label: "Full franchise service history" },
-                { value: "full_independent", label: "Full independent service history" },
-                { value: "partial", label: "Partial service history" },
-                { value: "none", label: "No service history" },
-                { value: "unknown", label: "Not known" },
-              ],
-            },
-            {
-              name: "warrantyRemaining",
-              type: "group",
-              fields: [
-                { name: "months", type: "number" },
-                { name: "km", type: "number" },
-                { name: "provider", type: "text" },
-              ],
-            },
-            {
-              name: "roadworthy",
-              type: "select",
-              options: [
-                { value: "current", label: "Current roadworthy" },
-                { value: "expired", label: "Expired" },
-                { value: "not_required", label: "Not required" },
-                { value: "unknown", label: "Not known" },
-              ],
-            },
-            { name: "licenceExpiry", type: "date" },
-          ],
-        },
-        {
-          label: "Media",
+          label: "Photos and video",
           fields: [
             {
               name: "gallery",
               type: "array",
               minRows: 0,
-              labels: { singular: "Photo", plural: "Photos" },
+              label: "Photos",
+              // Lower case, because Payload writes it into "Add photo" and "No photos found".
+              labels: { singular: "photo", plural: "photos" },
               admin: {
+                disableListColumn: true,
+                disableListFilter: true,
+                components: {
+                  RowLabel: {
+                    path: "/components/admin/fields/row-label#RowLabel",
+                    clientProps: { noun: "Photo", firstNote: "the main photo" },
+                  },
+                },
+                // Drag to reorder, or use the move buttons. Both work, because a drag-only
+                // reorder fails WCAG 2.2 SC 2.5.7.
                 description:
-                  "Drag to reorder, or use the move buttons. Both work, because a drag-only reorder fails WCAG 2.2 SC 2.5.7.",
+                  "The first photo is the main one. Drag, or use Move up and Move down in the row menu.",
               },
               fields: [
-                { name: "image", type: "upload", relationTo: "media", required: true },
+                {
+                  name: "image",
+                  type: "upload",
+                  relationTo: "media",
+                  required: true,
+                  label: "Photo",
+                },
                 {
                   name: "alt",
                   type: "text",
+                  label: "Photo description",
                   admin: {
-                    description:
-                      "Left empty, this is generated from the vehicle's own details. Override it when the photo shows something specific.",
+                    // Left empty, the photo's own description is used, then the car's name
+                    // (src/components/vehicles/vehicle-gallery.tsx). Override it when the photo
+                    // shows something specific to this car.
+                    description: "Leave empty to use the photo's own description.",
                   },
                 },
               ],
@@ -500,14 +722,124 @@ export const Vehicles: CollectionConfig = {
             {
               name: "video",
               type: "group",
+              label: "Video",
+              admin: { disableListColumn: true, disableListFilter: true },
               fields: [
-                { name: "url", type: "text" },
                 {
-                  name: "provider",
+                  type: "row",
+                  fields: [
+                    {
+                      name: "url",
+                      type: "text",
+                      label: "Video link",
+                      admin: { description: "A YouTube or Vimeo link." },
+                    },
+                    {
+                      name: "provider",
+                      type: "select",
+                      label: "Video site",
+                      options: [
+                        { value: "youtube", label: "YouTube" },
+                        { value: "vimeo", label: "Vimeo" },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Paperwork",
+          fields: [
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "stockNumber",
+                  type: "text",
+                  index: true,
+                  label: "Stock number",
+                  admin: {
+                    description: "The dealership's own reference.",
+                  },
+                },
+                {
+                  name: "vin",
+                  type: "text",
+                  label: "VIN",
+                  access: {
+                    /**
+                     * Platform staff and the OWNING dealership. Not any dealership.
+                     *
+                     * This previously read `isDealerStaff`, which is true for every dealer
+                     * account on the platform, and every dealership can read every live
+                     * listing. So any dealership could ask for a competitor's stock and get the
+                     * VINs with it, which is what you need to clone a car or put a finance
+                     * application on one. The public path was closed the whole time, which is
+                     * why the anonymous VIN test passed while this was open.
+                     */
+                    read: fieldReadableByOwningDealer("dealer"),
+                  },
+                  admin: {
+                    disableListColumn: true,
+                    disableListFilter: true,
+                    // Not encrypted at rest. Protected by access control: never returned to a
+                    // public query, never to another dealership, and never published in
+                    // structured data.
+                    description: "Never shown on the site or to other dealerships.",
+                  },
+                },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "serviceHistory",
                   type: "select",
+                  label: "Service history",
                   options: [
-                    { value: "youtube", label: "YouTube" },
-                    { value: "vimeo", label: "Vimeo" },
+                    { value: "full_franchise", label: "Full franchise service history" },
+                    { value: "full_independent", label: "Full independent service history" },
+                    { value: "partial", label: "Partial service history" },
+                    { value: "none", label: "No service history" },
+                    { value: "unknown", label: "Not known" },
+                  ],
+                },
+                {
+                  name: "roadworthy",
+                  type: "select",
+                  label: "Roadworthy certificate",
+                  options: [
+                    { value: "current", label: "Valid roadworthy" },
+                    { value: "expired", label: "Expired" },
+                    { value: "not_required", label: "Not needed" },
+                    { value: "unknown", label: "Not known" },
+                  ],
+                },
+                {
+                  name: "licenceExpiry",
+                  type: "date",
+                  label: "Licence disc expires",
+                  admin: {
+                    date: { pickerAppearance: "dayOnly", displayFormat: "d MMM yyyy" },
+                  },
+                },
+              ],
+            },
+            {
+              name: "warrantyRemaining",
+              type: "group",
+              label: "Warranty left",
+              admin: { disableListColumn: true, disableListFilter: true },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    { name: "months", type: "number", label: "Months" },
+                    { name: "km", type: "number", label: "Kilometres" },
+                    { name: "provider", type: "text", label: "Warranty company" },
                   ],
                 },
               ],
@@ -517,38 +849,160 @@ export const Vehicles: CollectionConfig = {
       ],
     },
 
+    // The sidebar, in the order a person looks at it.
     {
-      name: "publishedAt",
-      type: "date",
+      name: "status",
+      type: "select",
+      required: true,
+      defaultValue: "draft",
       index: true,
-      admin: { readOnly: true, position: "sidebar" },
+      label: "Listing status",
+      /*
+       * The labels say what the public sees, because the read rule above decides it: only Live
+       * cars, and Sold cars for ninety days, are visible. Reserved does not show a reserved badge
+       * yet, it hides the car like the others.
+       */
+      options: [
+        { value: "draft", label: "Draft (hidden)" },
+        { value: "pending_review", label: "Waiting for Rynet to check (hidden)" },
+        { value: "live", label: "Live on the site" },
+        { value: "reserved", label: "Reserved (hidden)" },
+        { value: "sold", label: "Sold (shown as sold for 90 days)" },
+        { value: "expired", label: "Expired (hidden)" },
+        { value: "archived", label: "Archived (hidden)" },
+      ],
+      admin: {
+        position: "sidebar",
+        isClearable: false,
+        description: "Only Live cars, and Sold cars for 90 days, can be seen on the site.",
+        components: {
+          Cell: {
+            path: CELL.badge,
+            clientProps: { tones: CAR_STATUS_TONES, labels: CAR_STATUS_LIST_LABELS },
+          },
+        },
+      },
     },
-    { name: "soldAt", type: "date", index: true, admin: { readOnly: true, position: "sidebar" } },
     {
+      name: "dealer",
+      type: "relationship",
+      relationTo: "dealers",
+      required: true,
+      index: true,
+      label: "Dealership",
+      access: {
+        // Only platform staff may retarget a listing. For a dealer user the value is
+        // overwritten server side regardless, so this closes the admin UI path too.
+        update: ({ req }) => isPlatformStaff(req.user),
+      },
+      // Set automatically from the signed-in user when a dealership user saves (beforeValidate).
+      // Platform staff choose it.
+      admin: { position: "sidebar", description: "The dealership selling this car." },
+    },
+    {
+      name: "branch",
+      type: "relationship",
+      relationTo: "branches",
+      index: true,
+      label: "Branch",
+      filterOptions: ({ data }) => withinParent("dealer", data?.dealer, data?.branch),
+      // Which branch the vehicle physically sits at.
+      admin: { position: "sidebar", description: "Where the car is parked." },
+    },
+    {
+      // A link to the car on the site and its enquiry count. A `ui` field stores nothing.
+      name: "vehicleLinks",
+      type: "ui",
+      label: "On the site",
+      admin: {
+        position: "sidebar",
+        disableListColumn: true,
+        components: { Field: "/components/admin/vehicles/vehicle-links#VehicleLinks" },
+      },
+    },
+    {
+      name: "isDemonstration",
+      type: "checkbox",
+      defaultValue: false,
+      label: "Example listing",
+      access: { update: ({ req }) => isPlatformStaff(req.user) },
+      admin: {
+        position: "sidebar",
+        readOnly: true,
+        disableBulkEdit: true,
+        components: { Cell: CELL.yesNo },
+        // Seeded example stock. Labelled as such wherever it appears publicly.
+        description:
+          "Made-up stock for showing the site. Labelled as an example wherever it appears.",
+      },
+    },
+    {
+      type: "collapsible",
+      label: "Record details",
+      admin: { position: "sidebar", initCollapsed: true },
+      fields: [
+        {
+          name: "publicRef",
+          type: "text",
+          unique: true,
+          index: true,
+          label: "Listing reference",
+          admin: {
+            readOnly: true,
+            // The stable id in the URL. Not the database id, which would leak stock volume, and
+            // not the stock number, which dealers change.
+            description: "Part of the web address. Set automatically.",
+          },
+        },
+        {
+          name: "publishedAt",
+          type: "date",
+          index: true,
+          label: "First went live",
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+          },
+        },
+        {
+          name: "soldAt",
+          type: "date",
+          index: true,
+          label: "Marked sold on",
+          admin: {
+            readOnly: true,
+            date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+          },
+        },
+      ],
+    },
+    {
+      /*
+       * Was: "Buffered in memory and flushed by cron. Never written on a page view: on SQLite that
+       * would be a write lock on the busiest page on the site." NOT IMPLEMENTED: there is no cron
+       * and nothing writes this or leadCount yet, so both are hidden in the admin.
+       */
       name: "viewCount",
       type: "number",
       defaultValue: 0,
       admin: {
         readOnly: true,
+        hidden: true,
         position: "sidebar",
-        description:
-          "Buffered in memory and flushed by cron. Never written on a page view: on SQLite that would be a write lock on the busiest page on the site.",
+        disableListColumn: true,
+        disableListFilter: true,
       },
     },
     {
       name: "leadCount",
       type: "number",
       defaultValue: 0,
-      admin: { readOnly: true, position: "sidebar" },
-    },
-    {
-      name: "isDemonstration",
-      type: "checkbox",
-      defaultValue: false,
-      access: { update: ({ req }) => isPlatformStaff(req.user) },
       admin: {
+        readOnly: true,
+        hidden: true,
         position: "sidebar",
-        description: "Seeded example stock. Labelled as such wherever it appears publicly.",
+        disableListColumn: true,
+        disableListFilter: true,
       },
     },
   ],

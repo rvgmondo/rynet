@@ -38,7 +38,7 @@ import { rateLimit, visitorKey } from "@/lib/rate-limit";
 const CONSENT_WORDING =
   "I agree that Rynet may pass the details I have given to the selling dealership so they can respond to this enquiry, and may contact me about it.";
 // The privacy notice this consent was given under. Bumped when /privacy changes.
-const POLICY_VERSION = "2026-09-privacy-v2";
+const POLICY_VERSION = "2026-09-privacy-v3";
 
 const MINIMUM_FILL_MS = 2000;
 /*

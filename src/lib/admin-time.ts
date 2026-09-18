@@ -90,9 +90,49 @@ export function whenLabel(value: Date | string, now: Date): string {
   return `${p.day} ${MONTHS[p.month - 1]}, ${time}`;
 }
 
-/** The first name, for a greeting. Nothing at all when the account has no name. */
+/**
+ * Words that name a role, a team or the business rather than a person. The seeded account is
+ * called "Platform admin", and "Good afternoon, Platform" greets nobody.
+ */
+const NOT_A_PERSON = new Set([
+  "admin",
+  "administrator",
+  "platform",
+  "staff",
+  "team",
+  "sales",
+  "support",
+  "office",
+  "reception",
+  "account",
+  "accounts",
+  "user",
+  "test",
+  "demo",
+  "example",
+  "system",
+  "info",
+  "rynet",
+  "dealer",
+  "dealership",
+  "principal",
+  "manager",
+]);
+
+/**
+ * The first name, for a greeting, when the account's name looks like a person's: "Ruben" from
+ * "Ruben van der Merwe". Nothing at all when there is no name, or when the name is a role, a team,
+ * an email address or has digits in it ("Platform admin", "Sales team", "agent2").
+ */
 export function firstName(name: unknown): string | null {
   if (typeof name !== "string") return null;
-  const first = name.trim().split(/\s+/)[0];
-  return first ? first : null;
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const first = words[0];
+  if (!first) return null;
+  if (/[@\d]/.test(name)) return null;
+  if (!/^\p{L}/u.test(first)) return null;
+  const isRole = words.some((word) =>
+    NOT_A_PERSON.has(word.toLowerCase().replace(/[^\p{L}]/gu, "")),
+  );
+  return isRole ? null : first;
 }

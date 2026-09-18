@@ -7,9 +7,10 @@ import { type MatchableDealer, selectDealerships } from "@/lib/trade-in-matching
 /**
  * Sends trade-in leads to the dealerships that agreed to receive them.
  *
- * This is the code behind a sentence on a public page and in a stored consent record:
- * "verified dealerships in my province that buy this kind of vehicle ... no more than five".
- * Until this ran, that sentence was a promise with nothing behind it.
+ * This is the code behind a sentence on a public page and in a stored consent record: "a
+ * shortlist of verified dealerships in my province that buy this kind of vehicle". Until this
+ * ran, that sentence was a promise with nothing behind it. `MAX_DEALERSHIPS` is the ceiling that
+ * keeps "a shortlist" honest, and no seller is ever shown the number.
  *
  * Deliberately a job rather than something the submit action does inline:
  *

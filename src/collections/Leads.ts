@@ -1,7 +1,15 @@
 import type { CollectionConfig, Where } from "payload";
 
 import { dealerIdOf, isDealerStaff, isPlatformAdmin, isPlatformStaff } from "@/access/roles";
+import { withinParent } from "@/lib/admin-filter-options";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import {
+  LEAD_QUICK_FILTERS,
+  LEAD_STATUS_TONES,
+  LEAD_TYPE_LIST_LABELS,
+  LEAD_TYPE_TONES,
+} from "@/lib/admin-quick-filters";
+import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 
 /**
  * Leads.
@@ -16,22 +24,39 @@ import { ADMIN_GROUP } from "@/lib/admin-nav";
  * through the retention purge, which is a deliberate scheduled job with an audit trail, not
  * a delete button next to a row someone finds inconvenient.
  */
+/** Admin list cells (display only). Paths are relative to src; see the import map. */
+const BADGE_CELL = "/components/admin/cells/value-cells#StatusBadgeCell";
+
 export const Leads: CollectionConfig = {
   slug: "leads",
   labels: { singular: "Enquiry", plural: "Enquiries" },
+  defaultSort: "-createdAt",
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["name", "type", "dealer", "status", "createdAt"],
+    // The name first: Payload links the first column to the enquiry, and a picker selects from it.
+    defaultColumns: ["name", "createdAt", "type", "about", "dealer", "status", "phone"],
     group: ADMIN_GROUP.daily,
+    listSearchableFields: ["name", "email", "phone"],
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
+    components: {
+      beforeListTable: [
+        {
+          path: "/components/admin/list/quick-filters#QuickFilters",
+          clientProps: { filters: LEAD_QUICK_FILTERS },
+        },
+      ],
+    },
   },
   access: {
     /**
      * A dealership sees the leads it owns, plus the trade-ins that were disclosed to it.
      *
      * A trade-in lead has no `dealer`: it belongs to Rynet while it is offered around, and the
-     * seller was told it goes to up to five dealerships. `disclosedTo` is the list of those
-     * five, so it is both the access rule and, with the `disclosures` array beside it, the
-     * answer to "who has my details" that POPIA section 23 entitles the seller to ask for.
+     * seller was told it goes to a shortlist of verified dealerships, capped in code at
+     * MAX_DEALERSHIPS. `disclosedTo` is that shortlist, so it is both the access rule and, with
+     * the `disclosures` array beside it, the answer to "who has my details" that POPIA section 23
+     * entitles the seller to ask for.
      */
     read: ({ req }) => {
       if (isPlatformStaff(req.user)) return true;
@@ -49,9 +74,9 @@ export const Leads: CollectionConfig = {
     // sit in front of the route handler rather than here.
     create: () => true,
     /**
-     * Deliberately NOT widened to disclosed trade-ins. Five dealerships can see one of those,
-     * and letting any of them mark it "sold" or rewrite the seller's number would be five
-     * businesses editing each other's view of the same record.
+     * Deliberately NOT widened to disclosed trade-ins. A shortlist of dealerships can see one of
+     * those, and letting any of them mark it "sold" or rewrite the seller's number would be
+     * several businesses editing each other's view of the same record.
      */
     update: ({ req }) => {
       if (isPlatformStaff(req.user)) return true;
@@ -82,34 +107,91 @@ export const Leads: CollectionConfig = {
   },
   fields: [
     {
-      name: "type",
-      type: "select",
-      required: true,
-      index: true,
-      options: [
-        { value: "enquiry", label: "General enquiry" },
-        { value: "test_drive", label: "Test drive request" },
-        { value: "finance", label: "Finance application" },
-        { value: "trade_in", label: "Trade-in valuation" },
-        { value: "callback", label: "Callback request" },
-        { value: "whatsapp_click", label: "WhatsApp click" },
-        { value: "phone_reveal", label: "Phone number revealed" },
-        { value: "dealer_contact", label: "Dealer page contact" },
-        { value: "agency_enquiry", label: "Agency enquiry" },
+      type: "row",
+      fields: [
+        { name: "name", type: "text", required: true, label: "Name" },
+        { name: "phone", type: "text", label: "Phone" },
+        { name: "email", type: "email", label: "Email" },
       ],
     },
-    { name: "vehicle", type: "relationship", relationTo: "vehicles", index: true },
-    { name: "dealer", type: "relationship", relationTo: "dealers", index: true },
-    { name: "branch", type: "relationship", relationTo: "branches" },
+    {
+      name: "message",
+      type: "textarea",
+      label: "Message",
+      admin: { disableListColumn: true, disableListFilter: true },
+    },
     {
       type: "row",
       fields: [
-        { name: "name", type: "text", required: true },
-        { name: "email", type: "email" },
-        { name: "phone", type: "text" },
+        {
+          name: "type",
+          type: "select",
+          required: true,
+          index: true,
+          label: "Kind of enquiry",
+          admin: {
+            isClearable: false,
+            components: {
+              Cell: {
+                path: BADGE_CELL,
+                clientProps: { tones: LEAD_TYPE_TONES, labels: LEAD_TYPE_LIST_LABELS },
+              },
+            },
+          },
+          options: [
+            { value: "enquiry", label: "Question about a car" },
+            { value: "test_drive", label: "Test drive request" },
+            { value: "finance", label: "Finance enquiry" },
+            { value: "trade_in", label: "Wants to sell a car" },
+            { value: "callback", label: "Asked for a call back" },
+            { value: "whatsapp_click", label: "Tapped WhatsApp (no details left)" },
+            { value: "phone_reveal", label: "Viewed the phone number (no details left)" },
+            { value: "dealer_contact", label: "Contacted a dealership" },
+            { value: "agency_enquiry", label: "Rynet Digital enquiry" },
+          ],
+        },
+        {
+          name: "vehicle",
+          type: "relationship",
+          relationTo: "vehicles",
+          index: true,
+          label: "Car",
+        },
       ],
     },
-    { name: "message", type: "textarea" },
+    {
+      // What the enquiry is about, as a list column: the car, the car being sold, or Rynet Digital.
+      // A `ui` field stores nothing and draws nothing in the form.
+      name: "about",
+      type: "ui",
+      label: "About",
+      admin: { components: { Cell: "/components/admin/cells/lead-about-cell#LeadAboutCell" } },
+    },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "dealer",
+          type: "relationship",
+          relationTo: "dealers",
+          index: true,
+          label: "Dealership",
+          admin: {
+            description:
+              "Empty for Rynet Digital enquiries and for sellers, who go to several dealerships.",
+          },
+        },
+        {
+          name: "branch",
+          type: "relationship",
+          relationTo: "branches",
+          label: "Branch",
+          // Only the chosen dealership's branches. The current value always stays pickable, so an
+          // older enquiry saves as it is.
+          filterOptions: ({ data }) => withinParent("dealer", data?.dealer, data?.branch),
+        },
+      ],
+    },
 
     /**
      * The car a private individual wants to sell.
@@ -130,26 +212,37 @@ export const Leads: CollectionConfig = {
     {
       name: "tradeIn",
       type: "group",
+      label: "Their car",
       admin: {
+        disableListColumn: true,
+        disableListFilter: true,
         condition: (data) => data?.type === "trade_in",
-        description: "The seller's vehicle. Only present on a trade-in lead.",
+        // The seller's vehicle. Only present on a trade-in lead.
       },
       fields: [
         {
           type: "row",
           fields: [
-            { name: "make", type: "text" },
-            { name: "model", type: "text" },
-            { name: "modelYear", type: "number" },
+            { name: "make", type: "text", label: "Make" },
+            { name: "model", type: "text", label: "Model" },
+            { name: "modelYear", type: "number", label: "Year" },
           ],
         },
         {
           type: "row",
           fields: [
-            { name: "mileageKm", type: "number" },
+            {
+              name: "mileageKm",
+              type: "number",
+              label: "Mileage (km)",
+              admin: {
+                components: { afterInput: ["/components/admin/fields/rand-preview#KmPreview"] },
+              },
+            },
             {
               name: "transmission",
               type: "select",
+              label: "Gearbox",
               options: [
                 { value: "manual", label: "Manual" },
                 { value: "automatic", label: "Automatic" },
@@ -158,30 +251,40 @@ export const Leads: CollectionConfig = {
           ],
         },
         {
-          name: "condition",
-          type: "select",
-          options: [
-            { value: "excellent", label: "Excellent, nothing needs doing" },
-            { value: "good", label: "Good, a few marks" },
-            { value: "fair", label: "Fair, needs some work" },
-            { value: "poor", label: "Poor, or not running" },
-          ],
-        },
-        {
-          name: "serviceHistory",
-          type: "select",
-          options: [
-            { value: "full", label: "Full, with the book" },
-            { value: "partial", label: "Partial" },
-            { value: "none", label: "None" },
+          type: "row",
+          fields: [
+            {
+              name: "condition",
+              type: "select",
+              label: "Condition",
+              options: [
+                { value: "excellent", label: "Excellent, nothing needs doing" },
+                { value: "good", label: "Good, a few marks" },
+                { value: "fair", label: "Fair, needs some work" },
+                { value: "poor", label: "Poor, or not running" },
+              ],
+            },
+            {
+              name: "serviceHistory",
+              type: "select",
+              label: "Service history",
+              options: [
+                { value: "full", label: "Full, with the book" },
+                { value: "partial", label: "Partial" },
+                { value: "none", label: "None" },
+              ],
+            },
           ],
         },
         {
           name: "finance",
           type: "select",
+          label: "Still owes money on it?",
           admin: {
+            // Outstanding finance. A seller cannot pass title while a bank holds it, so this
+            // changes what happens next rather than only the price.
             description:
-              "Outstanding finance. A seller cannot pass title while a bank holds it, so this changes what happens next rather than only the price.",
+              "If a bank still owns the car, it cannot be sold until the loan is settled.",
           },
           options: [
             { value: "none", label: "Paid off" },
@@ -189,129 +292,267 @@ export const Leads: CollectionConfig = {
             { value: "unsure", label: "Not sure" },
           ],
         },
-        { name: "province", type: "relationship", relationTo: "provinces" },
-        { name: "city", type: "text" },
-        { name: "notes", type: "textarea" },
+        {
+          type: "row",
+          fields: [
+            { name: "province", type: "relationship", relationTo: "provinces", label: "Province" },
+            { name: "city", type: "text", label: "Town" },
+          ],
+        },
+        { name: "notes", type: "textarea", label: "Seller's notes" },
       ],
     },
+    {
+      name: "notes",
+      type: "array",
+      label: "Notes",
+      labels: { singular: "note", plural: "notes" },
+      admin: {
+        disableListColumn: true,
+        disableListFilter: true,
+        components: {
+          RowLabel: {
+            path: "/components/admin/fields/row-label#RowLabel",
+            clientProps: { noun: "Note", field: "body" },
+          },
+        },
+      },
+      fields: [
+        { name: "body", type: "textarea", required: true, label: "Note" },
+        {
+          type: "row",
+          fields: [
+            { name: "author", type: "relationship", relationTo: "users", label: "Written by" },
+            {
+              name: "createdAt",
+              type: "date",
+              label: "Date",
+              admin: {
+                date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: "collapsible",
+      label: "Record keeping",
+      admin: { initCollapsed: true },
+      fields: [
+        /**
+         * Who this lead has been passed to, and when.
+         *
+         * Only ever populated on a trade-in, where the seller consented to their details going to
+         * a shortlist of verified dealerships. POPIA section 23(1)(b) gives a data subject the
+         * right to know the identity of everyone who has had access to their information, and a
+         * boolean or a count cannot answer that. This can.
+         *
+         * Append only in practice: the distribution job adds rows and nothing removes them, because
+         * a disclosure that happened does not stop having happened when the relationship ends.
+         *
+         * Read only in the admin as well (UI only, the access rule below is what protects it).
+         */
+        {
+          name: "disclosures",
+          type: "array",
+          label: "Sent to dealerships",
+          labels: { singular: "dealership", plural: "dealerships" },
+          /*
+           * The ceiling, enforced by the database layer as well as by the distribution job.
+           * "A shortlist" is only an honest word while a ceiling exists, and a rule that lives
+           * in one function is one careless call away from not existing.
+           */
+          maxRows: MAX_DEALERSHIPS,
+          access: {
+            create: ({ req }) => isPlatformStaff(req.user),
+            update: ({ req }) => isPlatformStaff(req.user),
+          },
+          admin: {
+            condition: (data) => data?.type === "trade_in",
+            readOnly: true,
+            disableBulkEdit: true,
+            disableListColumn: true,
+            disableListFilter: true,
+            // Every dealership this seller's details were sent to, and when.
+            description: "Every dealership that received this seller's details.",
+            components: {
+              RowLabel: {
+                path: "/components/admin/fields/row-label#RowLabel",
+                clientProps: { noun: "Dealership" },
+              },
+            },
+          },
+          fields: [
+            {
+              type: "row",
+              fields: [
+                {
+                  name: "dealer",
+                  type: "relationship",
+                  relationTo: "dealers",
+                  required: true,
+                  label: "Dealership",
+                },
+                {
+                  name: "disclosedAt",
+                  type: "date",
+                  required: true,
+                  label: "Sent on",
+                  admin: {
+                    date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+                  },
+                },
+                {
+                  name: "withdrawnAt",
+                  type: "date",
+                  label: "Seller withdrew on",
+                  admin: {
+                    date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+                  },
+                  // Set when the seller withdraws consent. The row stays: it is the record that
+                  // the disclosure happened.
+                },
+              ],
+            },
+          ],
+        },
+        /**
+         * The same dealerships, flattened, so access control can query them.
+         *
+         * COMPUTED, never written by hand. A Payload `Where` cannot join into an array's
+         * relationship, and the read rule needs a plain `in` to work at all. Keeping this in a
+         * hook rather than asking callers to maintain both is what stops the access list and the
+         * disclosure record drifting apart, which is the kind of drift nobody notices until a
+         * dealership can see something it should not.
+         *
+         * Derived from the disclosures above, so hidden in the admin (UI only).
+         */
+        {
+          name: "disclosedTo",
+          type: "relationship",
+          relationTo: "dealers",
+          hasMany: true,
+          index: true,
+          access: {
+            create: ({ req }) => isPlatformStaff(req.user),
+            update: ({ req }) => isPlatformStaff(req.user),
+          },
+          admin: {
+            readOnly: true,
+            hidden: true,
+            disableBulkEdit: true,
+            disableListColumn: true,
+            disableListFilter: true,
+          },
+        },
+        {
+          name: "consent",
+          type: "relationship",
+          relationTo: "consent-records",
+          label: "Permission record",
+          admin: {
+            readOnly: true,
+            disableBulkEdit: true,
+            disableListColumn: true,
+            disableListFilter: true,
+            // POPIA lawful basis. A lead without a consent record is a lead we cannot lawfully
+            // act on.
+            description: "The POPIA consent they gave.",
+          },
+        },
+        {
+          name: "source",
+          type: "group",
+          label: "Where they came from",
+          // Captured at submission. Read only afterwards.
+          admin: { readOnly: true, disableListColumn: true, disableListFilter: true },
+          fields: [
+            {
+              type: "row",
+              fields: [
+                { name: "utmSource", type: "text", label: "Campaign source" },
+                { name: "utmMedium", type: "text", label: "Campaign medium" },
+                { name: "utmCampaign", type: "text", label: "Campaign name" },
+              ],
+            },
+            {
+              type: "row",
+              fields: [
+                { name: "referrer", type: "text", label: "Came from" },
+                { name: "landingPage", type: "text", label: "First page they saw" },
+                { name: "deviceType", type: "text", label: "Device" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+
+    // The sidebar.
     {
       name: "status",
       type: "select",
       required: true,
       defaultValue: "new",
       index: true,
+      label: "Progress",
       options: [
         { value: "new", label: "New" },
         { value: "contacted", label: "Contacted" },
-        { value: "qualified", label: "Qualified" },
-        { value: "appointment_set", label: "Appointment set" },
-        { value: "sold", label: "Sold" },
+        { value: "qualified", label: "Serious buyer" },
+        { value: "appointment_set", label: "Appointment booked" },
+        { value: "sold", label: "Sale made" },
         { value: "lost", label: "Lost" },
       ],
+      admin: {
+        position: "sidebar",
+        isClearable: false,
+        components: { Cell: { path: BADGE_CELL, clientProps: { tones: LEAD_STATUS_TONES } } },
+      },
     },
-    { name: "lostReason", type: "text", admin: { condition: (d) => d?.status === "lost" } },
-    { name: "assignedTo", type: "relationship", relationTo: "users" },
+    {
+      name: "lostReason",
+      type: "text",
+      label: "Why it was lost",
+      admin: {
+        position: "sidebar",
+        disableListFilter: true,
+        condition: (d) => d?.status === "lost",
+      },
+    },
+    {
+      name: "assignedTo",
+      type: "relationship",
+      relationTo: "users",
+      label: "Handled by",
+      admin: { position: "sidebar" },
+    },
     {
       name: "firstResponseAt",
       type: "date",
       admin: {
         readOnly: true,
-        description: "Stamped on the first outbound action. Drives the response SLA timer.",
+        hidden: true,
+        position: "sidebar",
+        disableListColumn: true,
+        disableListFilter: true,
+        // Was: "Stamped on the first outbound action. Drives the response SLA timer."
+        // NOT IMPLEMENTED: nothing writes it yet.
       },
-    },
-    {
-      name: "source",
-      type: "group",
-      admin: { description: "Captured at submission. Read only afterwards." },
-      fields: [
-        { name: "utmSource", type: "text" },
-        { name: "utmMedium", type: "text" },
-        { name: "utmCampaign", type: "text" },
-        { name: "referrer", type: "text" },
-        { name: "landingPage", type: "text" },
-        { name: "deviceType", type: "text" },
-      ],
-    },
-    {
-      name: "consent",
-      type: "relationship",
-      relationTo: "consent-records",
-      admin: {
-        description:
-          "POPIA lawful basis. A lead without a consent record is a lead we cannot lawfully act on.",
-      },
-    },
-    {
-      name: "notes",
-      type: "array",
-      fields: [
-        { name: "body", type: "textarea", required: true },
-        { name: "author", type: "relationship", relationTo: "users" },
-        { name: "createdAt", type: "date" },
-      ],
-    },
-    /**
-     * Who this lead has been passed to, and when.
-     *
-     * Only ever populated on a trade-in, where the seller consented to their details going to
-     * up to five dealerships. POPIA section 23(1)(b) gives a data subject the right to know
-     * the identity of everyone who has had access to their information, and a boolean or a
-     * count cannot answer that. This can.
-     *
-     * Append only in practice: the distribution job adds rows and nothing removes them, because
-     * a disclosure that happened does not stop having happened when the relationship ends.
-     */
-    {
-      name: "disclosures",
-      type: "array",
-      access: {
-        create: ({ req }) => isPlatformStaff(req.user),
-        update: ({ req }) => isPlatformStaff(req.user),
-      },
-      admin: {
-        condition: (data) => data?.type === "trade_in",
-        description: "Every dealership this seller's details were sent to, and when.",
-      },
-      fields: [
-        { name: "dealer", type: "relationship", relationTo: "dealers", required: true },
-        { name: "disclosedAt", type: "date", required: true },
-        {
-          name: "withdrawnAt",
-          type: "date",
-          admin: {
-            description:
-              "Set when the seller withdraws consent. The row stays: it is the record that the disclosure happened.",
-          },
-        },
-      ],
-    },
-    /**
-     * The same dealerships, flattened, so access control can query them.
-     *
-     * COMPUTED, never written by hand. A Payload `Where` cannot join into an array's
-     * relationship, and the read rule needs a plain `in` to work at all. Keeping this in a
-     * hook rather than asking callers to maintain both is what stops the access list and the
-     * disclosure record drifting apart, which is the kind of drift nobody notices until a
-     * dealership can see something it should not.
-     */
-    {
-      name: "disclosedTo",
-      type: "relationship",
-      relationTo: "dealers",
-      hasMany: true,
-      index: true,
-      access: {
-        create: ({ req }) => isPlatformStaff(req.user),
-        update: ({ req }) => isPlatformStaff(req.user),
-      },
-      admin: { readOnly: true, description: "Derived from the disclosures above." },
     },
     {
       name: "isDemonstration",
       type: "checkbox",
       defaultValue: false,
+      label: "Example enquiry",
       access: { update: ({ req }) => isPlatformAdmin(req.user) },
-      admin: { position: "sidebar" },
+      admin: {
+        position: "sidebar",
+        readOnly: true,
+        disableBulkEdit: true,
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
+      },
     },
   ],
   timestamps: true,

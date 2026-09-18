@@ -1,4 +1,5 @@
 import type { CollectionConfig, Where } from "payload";
+import { endSessionsWhenSuspended, refuseSuspendedAccount } from "@/access/account-status";
 import {
   canGrantDealerRole,
   canManageDealer,
@@ -10,11 +11,31 @@ import {
   isPlatformAdmin,
   isPlatformStaff,
   isStaffUser,
-  ROLE_LABELS,
   ROLES,
+  type Role,
 } from "@/access/roles";
 import { enforceSecondFactor } from "@/access/two-factor";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import { ACCOUNT_STATUS_TONES } from "@/lib/admin-quick-filters";
+
+/**
+ * Role names as the admin shows them. Labels only: the option VALUES are what access control
+ * reads, and they stay exactly as they are. Kept here rather than in ROLE_LABELS in
+ * src/access/roles.ts, which is left alone, because these are written for the person handing a
+ * role out in the admin.
+ *
+ * The analyst role is named for what it can do today: it is not platform staff and holds no
+ * dealership, so it cannot open the admin or read anything yet.
+ */
+const ROLE_ADMIN_LABELS: Record<Role, string> = {
+  platform_admin: "Rynet admin (everything)",
+  platform_editor: "Rynet editor",
+  agency_account_manager: "Rynet Digital account manager",
+  dealer_owner: "Dealer principal",
+  dealer_manager: "Dealership manager",
+  dealer_sales: "Salesperson",
+  analyst: "Analyst (cannot open the admin yet)",
+};
 
 /**
  * Staff and dealer staff.
@@ -27,6 +48,10 @@ import { ADMIN_GROUP } from "@/lib/admin-nav";
  * and before it signs a token, so a refusal there means no session was ever issued. See
  * src/access/two-factor.ts, including why the rollout is in two stages: forcing it before
  * anyone has enrolled locks the founder out of his own live site.
+ *
+ * A suspended account is refused in the same place, and before the second factor, because an
+ * account that is switched off is not asked for a code. Suspending somebody who is already
+ * signed in ends their open sessions on the spot. See src/access/account-status.ts.
  */
 export const Users: CollectionConfig = {
   slug: "users",
@@ -41,10 +66,14 @@ export const Users: CollectionConfig = {
       secure: process.env.NODE_ENV === "production",
     },
   },
+  defaultSort: "name",
   admin: {
     useAsTitle: "name",
     defaultColumns: ["name", "email", "role", "dealer", "status"],
     group: ADMIN_GROUP.people,
+    description: "People who can sign in: Rynet staff and dealership staff.",
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
   },
   access: {
     // Platform staff see everyone. Dealer staff see only their own dealership's team.
@@ -98,9 +127,13 @@ export const Users: CollectionConfig = {
   hooks: {
     /**
      * Runs after the password has been verified and before the token is signed, so a throw
-     * here refuses the session rather than revoking one that was already handed out.
+     * here refuses the session rather than revoking one that was already handed out. Status
+     * first: a suspended account is not asked for a second factor it would gain nothing by
+     * giving.
      */
-    beforeLogin: [enforceSecondFactor],
+    beforeLogin: [refuseSuspendedAccount, enforceSecondFactor],
+    // Suspending an account that is already signed in puts it out now, not in eight hours.
+    afterChange: [endSessionsWhenSuspended],
     beforeValidate: [
       ({ data, req, operation, originalDoc }) => {
         if (!data) return data;
@@ -137,13 +170,14 @@ export const Users: CollectionConfig = {
     ],
   },
   fields: [
-    { name: "name", type: "text", required: true },
+    { name: "name", type: "text", required: true, label: "Full name" },
     {
       name: "role",
       type: "select",
       required: true,
       defaultValue: "dealer_sales",
-      options: ROLES.map((value) => ({ value, label: ROLE_LABELS[value] })),
+      label: "Role",
+      options: ROLES.map((value) => ({ value, label: ROLE_ADMIN_LABELS[value] })),
       // Only a platform admin can hand out or change a role. Dealer staff get the
       // beforeValidate clamp above as a second line.
       access: {
@@ -152,13 +186,16 @@ export const Users: CollectionConfig = {
         // field at all, so a sales agent's request never reaches the clamp in the first place.
         update: ({ req }) => isPlatformAdmin(req.user) || canManageDealer(req.user),
       },
+      admin: { isClearable: false, description: "Decides what this person can see and change." },
     },
     {
       name: "dealer",
       type: "relationship",
       relationTo: "dealers",
+      label: "Dealership",
       admin: {
-        description: "Required for every dealer role. Set automatically for dealer users.",
+        // Required for every dealer role. Set automatically for dealer users (beforeValidate).
+        description: "Needed for dealership roles.",
         condition: (data) => typeof data?.role === "string" && data.role.startsWith("dealer_"),
       },
       validate: (value: unknown, { data }: { data?: Record<string, unknown> }) => {
@@ -172,16 +209,31 @@ export const Users: CollectionConfig = {
     {
       name: "phone",
       type: "text",
-      admin: { description: "South African format, for example 012 345 6789 or +27 12 345 6789." },
+      label: "Mobile number",
+      // South African format, for example 012 345 6789 or +27 12 345 6789.
+      admin: { description: "For example 082 123 4567." },
     },
     {
       name: "status",
       type: "select",
       required: true,
       defaultValue: "invited",
+      label: "Account status",
+      admin: {
+        isClearable: false,
+        components: {
+          Cell: {
+            path: "/components/admin/cells/value-cells#StatusBadgeCell",
+            clientProps: { tones: ACCOUNT_STATUS_TONES },
+          },
+        },
+        // It says this because it now does it: the sign-in is refused and any session the
+        // person already had is ended the moment this is saved.
+        description: "Suspended stops this person signing in, and signs them out now.",
+      },
       options: [
         { value: "active", label: "Active" },
-        { value: "invited", label: "Invited, not yet signed in" },
+        { value: "invited", label: "Invited, not signed in yet" },
         { value: "suspended", label: "Suspended" },
       ],
     },
@@ -202,11 +254,16 @@ export const Users: CollectionConfig = {
         create: () => false,
         update: () => false,
       },
+      label: "Two-factor sign-in",
       admin: {
-        description:
-          "Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.",
+        // Set by the enrolment flow at /account/two-factor, never by hand. Enforced at sign-in.
+        description: "Each person turns this on for their own account.",
         readOnly: true,
         position: "sidebar",
+        // The same sentence, and on your own account a link to the page that sets it up.
+        components: {
+          Description: "/components/admin/fields/two-factor-link#TwoFactorDescription",
+        },
       },
     },
     {
@@ -237,12 +294,27 @@ export const Users: CollectionConfig = {
         create: () => false,
         update: () => false,
       },
-      admin: { readOnly: true, position: "sidebar" },
+      label: "Two-factor set up on",
+      admin: {
+        readOnly: true,
+        position: "sidebar",
+        // An empty, greyed-out date box beside "Two-factor sign-in" read as something to fill in.
+        // Shown once there is a date. UI only: the field keeps its value and its access rules.
+        condition: (data) => Boolean(data?.twoFactorConfirmedAt),
+        date: { pickerAppearance: "dayAndTime", displayFormat: "d MMM yyyy, HH:mm" },
+      },
     },
     {
+      // NOT IMPLEMENTED: nothing writes this yet, so it is hidden in the admin (UI only).
       name: "lastLoginAt",
       type: "date",
-      admin: { readOnly: true, position: "sidebar" },
+      admin: {
+        readOnly: true,
+        hidden: true,
+        position: "sidebar",
+        disableListColumn: true,
+        disableListFilter: true,
+      },
     },
   ],
 };

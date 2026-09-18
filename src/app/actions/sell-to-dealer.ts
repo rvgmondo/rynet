@@ -6,7 +6,7 @@ import { getPayload } from "payload";
 
 import { rateLimit, visitorKey } from "@/lib/rate-limit";
 import {
-  MAX_DEALERSHIPS,
+  SELL_CONSENT_WORDING,
   type SellToDealerState,
   sellToDealerSchema,
 } from "@/lib/sell-to-dealer-schema";
@@ -29,29 +29,20 @@ import {
  * business.
  *
  * **Consent names the recipients.** POPIA consent for "we will pass this to one named
- * dealership" does not cover "we will pass this to five". The wording below says who receives
- * it, how many, where they are, what for, and how to withdraw, and it is stored verbatim
- * against the lead. A checkbox whose label said "we may share your details with partners"
- * would be worthless as evidence and arguably not consent at all.
+ * dealership" does not cover "we will pass this to a shortlist of them". The wording says who
+ * receives it, where they are, what for, that Rynet picks them, that the seller can ask who
+ * received their details, and how to withdraw, and it is stored verbatim against the lead. A
+ * checkbox whose label said "we may share your details with partners" would be worthless as
+ * evidence and arguably not consent at all.
+ *
+ * The wording itself is SELL_CONSENT_WORDING in the schema module, which is also what the form
+ * renders as the label, so the record and the screen cannot say different things.
  *
  * NOTE: this module may export NOTHING but async functions. See the schema module.
  */
 
-/**
- * The exact wording a person agrees to. Stored verbatim on the consent record, because this
- * page will change and the record has to say what was on screen at the time.
- *
- * REQUIRES LEGAL REVIEW. Drafted against POPIA section 18, not reviewed by an attorney.
- */
-const CONSENT_WORDING =
-  `I agree that Rynet may pass my name, my contact details and the details of my car to ` +
-  `verified dealerships in my province that buy this kind of vehicle, so that they can contact ` +
-  `me with an offer. Rynet will send it to no more than ${MAX_DEALERSHIPS} dealerships. Each ` +
-  `dealership decides for itself what it does with my details once it has them. I can withdraw ` +
-  `this at any time by emailing privacy@rynet.co.za.`;
-
 // The privacy notice this consent was given under. Bumped when /privacy changes.
-const POLICY_VERSION = "2026-09-privacy-v2";
+const POLICY_VERSION = "2026-09-privacy-v3";
 
 const MINIMUM_FILL_MS = 4000;
 /*
@@ -143,7 +134,7 @@ export async function submitSellToDealer(
         subjectPhone: data.phone,
         policyVersion: POLICY_VERSION,
         grantedAt: new Date().toISOString(),
-        evidence: CONSENT_WORDING,
+        evidence: SELL_CONSENT_WORDING,
         ipHash: key,
       },
     });

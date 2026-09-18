@@ -493,6 +493,9 @@ async function main() {
       await payload.create({
         collection: "vehicles",
         data: {
+          // Saved, not a draft: the admin's save state should match what the site shows. The
+          // site itself reads only `status` below.
+          _status: "published",
           dealer: dealerDoc.id,
           branch: pick(branchDocIds),
           status: "live",

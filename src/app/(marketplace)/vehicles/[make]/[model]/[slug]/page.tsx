@@ -2,7 +2,7 @@ import config from "@payload-config";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { getPayload } from "payload";
 import { Suspense } from "react";
 
@@ -15,10 +15,11 @@ import { ListingSummary, MobileActionBar } from "@/components/vehicles/price-rai
 import { SimilarVehicles } from "@/components/vehicles/similar-vehicles";
 import { SpecTable } from "@/components/vehicles/spec-table";
 import { VehicleGallery } from "@/components/vehicles/vehicle-gallery";
+import { carVisibility } from "@/lib/admin-car-state";
 import { formatKm, formatRand } from "@/lib/format";
 import { populated, relName, relSlug } from "@/lib/relations";
 import { vehicleJsonLd } from "@/lib/structured-data";
-import { vehicleUrl } from "@/lib/urls";
+import { facetUrl, vehicleUrl } from "@/lib/urls";
 
 type Params = Promise<{ make: string; model: string; slug: string }>;
 
@@ -50,10 +51,24 @@ async function loadVehicle(slug: string) {
   return found.docs[0] ?? null;
 }
 
+/**
+ * Whether the public may see this car, by the rule `access.read` in src/collections/Vehicles.ts
+ * applies to every other public read: live cars, and sold cars for ninety days.
+ *
+ * The page reads through the Local API, which does not apply access rules, so without this a car
+ * set back to Draft, Reserved or Archived in the admin stayed on the site at its own address. A
+ * sold car past its ninety days goes to its model's page, as that rule's comment describes; every
+ * other hidden car is not found.
+ */
+function publicState(vehicle: { status?: unknown; soldAt?: unknown }): "shown" | "gone" | "hidden" {
+  if (carVisibility(vehicle.status, vehicle.soldAt).onSite) return "shown";
+  return vehicle.status === "sold" ? "gone" : "hidden";
+}
+
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
   const vehicle = await loadVehicle(slug);
-  if (!vehicle) return { title: "Vehicle not found" };
+  if (!vehicle || publicState(vehicle) !== "shown") return { title: "Vehicle not found" };
 
   const title = [
     vehicle.modelYear,
@@ -144,6 +159,11 @@ export default async function VehiclePage({ params }: { params: Params }) {
 
   const makeSlug = relSlug(vehicle.make);
   const modelSlug = relSlug(vehicle.model);
+
+  const state = publicState(vehicle);
+  if (state === "gone") redirect(facetUrl.makeModel(makeSlug, modelSlug));
+  if (state === "hidden") notFound();
+
   const canonical = vehicleUrl({
     makeSlug,
     modelSlug,

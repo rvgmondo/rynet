@@ -62,10 +62,12 @@ export function VerificationSteps() {
  * cards: they are the page's closing routes, not its headline, and two 32px headings side by side
  * shouted as loud as the sections above them.
  *
- * Nothing here promises a price, a response time or a number of offers. The sell half says what
- * /sell-to-a-dealer says: no more than five dealerships, no public listing, no cut, and that there
- * may not be a dealership near the seller yet. The dealership half sends applications to the
- * dealer address on /contact, which asks for exactly the details named here.
+ * Nothing here promises a price, a response time or a number of offers, and it gives no count of
+ * dealerships: a seller reads "a shortlist" everywhere, and the ceiling stays in the code. The
+ * sell half says what /sell-to-a-dealer says: verified dealerships in the seller's province, no
+ * public listing, no cut, and that there may not be a dealership near the seller yet. The
+ * dealership half sends applications to the dealer address on /contact, which asks for exactly
+ * the details named here.
  */
 export function SellAndListBands() {
   return (
@@ -85,9 +87,9 @@ export function SellAndListBands() {
             Offer it to dealerships, not to the public
           </h2>
           <p className="mt-3 max-w-[34rem] text-body">
-            Tell us what you drive and we pass it to no more than five dealerships in your province
-            that buy that kind of car, so they can make you an offer. Your car is never listed on
-            the site, and Rynet takes no cut.
+            Tell us what you drive and we match it with verified dealerships in your province that
+            buy that kind of car, so they can make you an offer. Your car is never listed on the
+            site, and Rynet takes no cut.
           </p>
           <p className="mt-3 max-w-[34rem] text-sm text-muted">
             We are signing dealerships now, so there may not be one near you yet. If we cannot place

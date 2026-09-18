@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { sellToDealerSchema } from "./sell-to-dealer-schema";
+import { SELL_CONSENT_WORDING, sellToDealerSchema } from "./sell-to-dealer-schema";
 
 /**
  * The schema that decides what reaches a dealership.
@@ -115,8 +115,8 @@ describe("the bounds", () => {
 
 describe("consent", () => {
   /*
-   * POPIA section 18. The whole point of this form is that the seller's details are passed to
-   * up to five dealerships, so an unticked box is the one failure that must never be a warning.
+   * POPIA section 18. The whole point of this form is that the seller's details are passed to a
+   * shortlist of dealerships, so an unticked box is the one failure that must never be a warning.
    */
   it("is required", () => {
     expect(parse({ consent: false }).success).toBe(false);
@@ -137,5 +137,33 @@ describe("the fields a dealership has to be able to act on", () => {
   it("leaves notes optional, because it is the one field nobody owes us", () => {
     expect(parse({ notes: undefined }).success).toBe(true);
     expect(parse({ notes: "" }).success).toBe(true);
+  });
+});
+
+/**
+ * The sentence a seller agrees to.
+ *
+ * One constant renders the checkbox label and is stored verbatim on the consent record, so
+ * these assertions cover both at once. Two rules, and the second one is the owner's: the
+ * wording has to say enough to be specific and informed under POPIA section 18, and it may not
+ * give a seller a number of dealerships.
+ */
+describe("the consent wording", () => {
+  it.each([
+    "shortlist of verified dealerships",
+    "in my province",
+    "buy this kind of vehicle",
+    "which dealerships received my details",
+    "withdraw",
+  ])("says %s", (phrase) => {
+    expect(SELL_CONSENT_WORDING).toContain(phrase);
+  });
+
+  it("gives the seller no number of dealerships", () => {
+    // Digits, the words for them, and the two phrases that carried the old count. The ceiling
+    // stays in the code as MAX_DEALERSHIPS; it is simply not a seller's business.
+    expect(SELL_CONSENT_WORDING).not.toMatch(
+      /\d|\b(one|two|three|four|five|six|seven|eight|nine|ten)\b|up to|no more than/i,
+    );
   });
 });

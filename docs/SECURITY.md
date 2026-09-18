@@ -27,9 +27,9 @@ It is enforced in three places, in descending order of how much weight they carr
 constraint is compiled into the SQL. A row belonging to another dealership is never fetched, rather
 than fetched and then hidden. `src/access/roles.ts` holds the predicates everything else builds on.
 
-**2. The write path overwrites rather than validates.** `Vehicles.beforeValidate` assigns
-`data.dealer` from the requesting user, discarding whatever the request body said. Validation would
-be correct right up until a new code path forgot to call it.
+**2. The write path overwrites rather than validates.** `Vehicles.beforeValidate` and
+`Media.beforeValidate` assign `data.dealer` from the requesting user, discarding whatever the
+request body said. Validation would be correct right up until a new code path forgot to call it.
 
 **3. The schema.** Buyers are a separate auth collection with no role field and no dealer field, so
 a private individual cannot be escalated into a seller. There is nothing to escalate.
@@ -60,8 +60,8 @@ sensitive field readable, from inside the tenant. Run through this before mergin
 - [ ] **Can a lower rank inside a dealership reach it?** Sales agent, manager, principal. Check the
       ladder in `roles.ts`.
 - [ ] **Does anything grant access other than owning the row?** `leads.disclosedTo` does: a
-      trade-in has no dealer and up to five dealerships can read it. A second route into a table
-      needs its own tests rather than being assumed to fall out of the first one's.
+      trade-in has no dealer and a shortlist of dealerships can read it. A second route into a
+      table needs its own tests rather than being assumed to fall out of the first one's.
 - [ ] **Add the case to `e2e/isolation.spec.ts`.** The suite only covers what someone added to it.
 - [ ] **Would a refused write be verified twice?** Assert the status, then read the row back as a
       platform admin. A refusal that did not actually refuse looks identical from the response.
@@ -78,6 +78,7 @@ sensitive field readable, from inside the tenant. Run through this before mergin
 | Cookie | `SameSite=Lax`, `Secure` in production | same |
 | API keys | Off | Off |
 | Two-factor | TOTP, opt-in now, enforceable per role | Not offered |
+| Suspension | Refused at sign-in, open sessions ended | same |
 | Reaches the Payload admin | Platform staff only | Never |
 
 Hashing is Payload's default. 25 000 iterations is below current OWASP guidance for
@@ -87,6 +88,11 @@ accepted risk in the threat model rather than quietly ignored.
 **Two-factor is implemented**, as TOTP against an authenticator app, enforced in `beforeLogin`,
 which runs after the password check and before the token is signed. A refusal there means no
 session was issued.
+
+**Suspension is enforced in the same place**, and before the second factor: setting an account to
+Suspended refuses its next sign-in with a message saying so, and empties its session list, which
+stops the token it is holding and the token refresh that would otherwise renew it. It applies to
+staff accounts and buyer accounts alike (`src/access/account-status.ts`).
 
 The rollout is in two stages, because switching it on before anybody has enrolled locks the
 founder out of a live site:
@@ -177,6 +183,8 @@ Every item runs on every push and a failure blocks the deploy branch.
 | Claim | Evidence |
 |---|---|
 | A dealership cannot read or write another's leads, stock, staff or profile | 34 adversarial tests over HTTP |
+| A dealership cannot change or delete another dealership's photographs, or Rynet's own | 7 tests, including an upload that names a competitor as the owner |
+| A suspended account cannot sign in, and loses the session it is already holding | 5 tests, staff and buyer, asserting the token stops working the moment the status is saved |
 | A private individual cannot list a vehicle | Anonymous and authenticated buyer, asserting 403 specifically |
 | A sales agent cannot escalate inside their own dealership | 6 tests |
 | A dealership cannot verify, rate or accredit itself | 4 tests |
@@ -194,7 +202,9 @@ no dependency scanning beyond exact version pinning, no Lighthouse budget in CI.
 
 ## If something goes wrong
 
-1. **Contain.** Suspend the account if it is an account. Do not delete anything: it is evidence.
+1. **Contain.** Suspend the account if it is an account. That now takes effect immediately: the
+   sign-in is refused and any session it is holding is ended. Do not delete anything: it is
+   evidence.
 2. **Snapshot.** `scripts/backup.sh` before you change anything, and keep that snapshot separate
    from the rotation so it does not get pruned.
 3. **Establish scope.** Which rows, whose data, over what period.

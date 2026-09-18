@@ -185,7 +185,9 @@ page and the search results page compete for the same query.
 
 ## Operational
 
-`media` (alt required unless `isDecorative`, focal point, folder, `usedIn` computed so nobody deletes
+`media` (alt required unless `isDecorative`, focal point, folder, `dealer` set on upload so a
+dealership can only change or delete its own photographs and an empty one means Rynet's own,
+`usedIn` computed so nobody deletes
 a live image), `documents`, `forms` and `form-submissions`, `redirects`, `feature-flags`,
 `audit-log` (actor, action, collection, docId, before, after, ip hashed, userAgent, createdAt, no
 update or delete access), `import-jobs` and `import-job-rows`, `feed-configs`,

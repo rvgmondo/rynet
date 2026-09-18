@@ -13,10 +13,14 @@ import { ADMIN_GROUP } from "@/lib/admin-nav";
 export const Plans: CollectionConfig = {
   slug: "plans",
   labels: { singular: "Dealer plan", plural: "Dealer plans" },
+  defaultSort: "sortOrder",
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["name", "monthlyPrice", "listingLimit", "isPublic", "sortOrder"],
+    // Position is left out: its numbers (1500, 3500) only order the plans, and read like prices.
+    defaultColumns: ["name", "monthlyPrice", "listingLimit", "isPublic"],
     group: ADMIN_GROUP.settings,
+    pagination: { defaultLimit: 25 },
+    hideAPIURL: true,
   },
   access: {
     read: () => true,
@@ -25,49 +29,129 @@ export const Plans: CollectionConfig = {
     delete: platformStaffOnly,
   },
   fields: [
-    { name: "name", type: "text", required: true },
-    { name: "slug", type: "text", required: true, unique: true, index: true },
+    { name: "name", type: "text", required: true, label: "Plan name" },
     {
       name: "monthlyPrice",
       type: "number",
       required: true,
+      label: "Price per month (R, excluding VAT)",
       admin: {
-        description:
-          "Rand per month, excluding VAT. PLACEHOLDER until real pricing is supplied. See docs/CONTENT-NEEDED.md.",
+        components: {
+          Cell: "/components/admin/cells/value-cells#RandCell",
+          afterInput: ["/components/admin/fields/rand-preview#RandPreview"],
+        },
+        // Rand per month, excluding VAT. PLACEHOLDER until real pricing is supplied. See
+        // docs/CONTENT-NEEDED.md.
+        description: "Placeholder until real pricing is agreed.",
       },
     },
-    { name: "listingLimit", type: "number", required: true, defaultValue: 25 },
-    { name: "branchLimit", type: "number", required: true, defaultValue: 1 },
-    { name: "userLimit", type: "number", required: true, defaultValue: 3 },
+    {
+      type: "row",
+      fields: [
+        {
+          name: "listingLimit",
+          type: "number",
+          required: true,
+          defaultValue: 25,
+          label: "Cars allowed",
+          // NOT IMPLEMENTED: nothing counts a dealership's cars against this number yet.
+          admin: { description: "Not enforced yet." },
+        },
+        {
+          name: "branchLimit",
+          type: "number",
+          required: true,
+          defaultValue: 1,
+          label: "Branches allowed",
+        },
+        {
+          name: "userLimit",
+          type: "number",
+          required: true,
+          defaultValue: 3,
+          label: "Staff accounts allowed",
+        },
+      ],
+    },
     {
       name: "allowsMicrositeTheming",
       type: "checkbox",
       defaultValue: false,
-      admin: { description: "Lets the dealership set their own accent colour and hero layout." },
+      label: "Can change their page design",
+      // Lets the dealership set their own accent colour and hero layout. NOT IMPLEMENTED: the
+      // dealership page does not read those settings yet.
+      admin: { disableListFilter: true },
     },
     {
       name: "allowsFeedImport",
       type: "checkbox",
       defaultValue: false,
-      admin: { description: "Scheduled stock feed syndication rather than manual capture only." },
+      label: "Can import stock automatically",
+      // Scheduled stock feed syndication rather than manual capture only. NOT IMPLEMENTED: there
+      // is no feed importer yet.
+      admin: { disableListFilter: true },
     },
-    { name: "summary", type: "textarea" },
+    {
+      name: "summary",
+      type: "textarea",
+      label: "Short description",
+      admin: { disableListColumn: true, disableListFilter: true },
+    },
     {
       name: "includedFeatures",
       type: "array",
-      fields: [{ name: "label", type: "text", required: true }],
+      label: "What is included",
+      labels: { singular: "item", plural: "items" },
+      admin: {
+        disableListColumn: true,
+        disableListFilter: true,
+        components: {
+          RowLabel: {
+            path: "/components/admin/fields/row-label#RowLabel",
+            clientProps: { noun: "Item", field: "label" },
+          },
+        },
+      },
+      fields: [{ name: "label", type: "text", required: true, label: "Item" }],
     },
     {
       name: "isPublic",
       type: "checkbox",
       defaultValue: false,
+      label: "Show on a pricing page",
       admin: {
+        components: { Cell: "/components/admin/cells/value-cells#YesNoCell" },
         position: "sidebar",
-        description:
-          "Shown on the public pricing page. Leave off while the price is a placeholder.",
+        /*
+         * Was: "Shown on the public pricing page. Leave off while the price is a placeholder."
+         * NOT IMPLEMENTED: there is no public pricing page for dealer plans yet.
+         */
+        description: "There is no public pricing page yet.",
       },
     },
-    { name: "sortOrder", type: "number", defaultValue: 0, admin: { position: "sidebar" } },
+    {
+      name: "sortOrder",
+      type: "number",
+      defaultValue: 0,
+      label: "Position",
+      admin: { position: "sidebar", description: "Lower numbers come first." },
+    },
+    {
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true,
+      index: true,
+      label: "Short code",
+      admin: {
+        position: "sidebar",
+        disableListColumn: true,
+        disableListFilter: true,
+        // Required and unique, and not read anywhere outside the seed, so it sits in the sidebar
+        // where it is seen rather than folded away where a missing value would be missed.
+        description: "Lower case, no spaces, for example growth.",
+      },
+    },
   ],
   timestamps: true,
 };

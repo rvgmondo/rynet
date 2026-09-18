@@ -6,11 +6,12 @@ import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
  * This is the code behind a promise the public site makes in writing, on the page and in the
  * consent record stored against every submission:
  *
- *   "verified dealerships in my province that buy this kind of vehicle ... no more than five"
+ *   "a shortlist of verified dealerships in my province that buy this kind of vehicle"
  *
  * Every clause in that sentence is a rule below, and the tests assert each one separately.
  * A promise in a consent record that the code does not keep is worse than no promise: it is
- * evidence of the thing you failed to do.
+ * evidence of the thing you failed to do. The seller is told "a shortlist" rather than a count;
+ * `MAX_DEALERSHIPS` is the ceiling that makes the word true, and it is not shown to sellers.
  *
  * Kept as a pure function over plain data so it can be tested exhaustively without a database.
  * The job that reads the database and writes the disclosures is separate.
@@ -80,8 +81,9 @@ export function isEligible(dealer: MatchableDealer, vehicle: SellerVehicle): boo
  * lead in Gauteng forever, the rest would conclude the feature does nothing, and the seller
  * would get offers from a smaller pool than they were promised.
  *
- * Never returns more than `MAX_DEALERSHIPS`. That cap is in the consent wording, so it is a
- * commitment to the seller rather than a tuning knob.
+ * Never returns more than `MAX_DEALERSHIPS`. That ceiling is what makes "a shortlist" true, and
+ * every consent recorded under 2026-08-privacy-v1 and 2026-09-privacy-v2 promises no more than
+ * five, so it is a commitment to the seller rather than a tuning knob.
  */
 export function selectDealerships(
   dealers: readonly MatchableDealer[],
