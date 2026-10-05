@@ -21,8 +21,10 @@ import { TAXONOMY_COLLECTIONS } from "./collections/taxonomies";
 import { Users } from "./collections/Users";
 import { Vehicles } from "./collections/Vehicles";
 import { FinanceDefaults } from "./globals/FinanceDefaults";
+import { StockSync } from "./globals/StockSync";
 import { withPlainPickers } from "./lib/admin-pickers";
 import { migrateOnBoot } from "./lib/migrate-on-boot";
+import { startStockSync } from "./lib/stock-import/schedule";
 
 /**
  * Heads every new record "New car", "New dealership" and so on instead of Payload's "[Untitled]".
@@ -120,7 +122,11 @@ const storagePlugins = r2Configured
 
 export default buildConfig({
   // Pending migrations, applied by the live app to itself. See src/lib/migrate-on-boot.ts.
-  onInit: migrateOnBoot,
+  onInit: async (payload) => {
+    await migrateOnBoot(payload);
+    // After the migrations, because the first run needs the stock sync's own settings table.
+    startStockSync(payload);
+  },
 
   admin: {
     // The Payload admin is for platform staff. The plan is a separate dealer portal, a normal
@@ -345,7 +351,7 @@ export default buildConfig({
     ]),
   ),
 
-  globals: [FinanceDefaults],
+  globals: [FinanceDefaults, StockSync],
 
   /*
    * Rich text (a car's description, a dealership's "About"). No gutter, which was a faint line and

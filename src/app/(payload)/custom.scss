@@ -1034,6 +1034,92 @@
     font-size: 14px;
   }
 
+  /* The stock sync panel: what the site has been doing with a dealership's own website. */
+  .rn-admin-panel__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .rn-admin-panel__icon {
+    width: 18px;
+    height: 18px;
+    color: var(--rn-muted);
+  }
+
+  .rn-admin-panel__lead {
+    margin: 8px 0 12px;
+    font-size: 14px;
+  }
+
+  .rn-admin-panel__list {
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--rn-line);
+  }
+
+  .rn-admin-panel__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 12px;
+    padding: 8px 0;
+    color: var(--rn-muted);
+    font-size: 13px;
+  }
+
+  .rn-admin-panel__row + .rn-admin-panel__row {
+    border-top: 1px solid var(--rn-line);
+  }
+
+  .rn-admin-panel__row-main {
+    flex: 1 1 60%;
+  }
+
+  .rn-admin-panel__note {
+    margin: 0 0 14px;
+    color: var(--rn-muted);
+    font-size: 13px;
+  }
+
+  .rn-admin-sync {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rn-admin-sync__button {
+    min-height: 36px;
+    padding: 6px 14px;
+    border: 1px solid var(--rn-line-strong);
+    border-radius: var(--rn-radius-sm);
+    background: var(--rn-card);
+    color: var(--rn-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .rn-admin-sync__button:hover:not(:disabled) {
+    background: var(--rn-page);
+  }
+
+  .rn-admin-sync__button:disabled {
+    color: var(--rn-muted);
+    cursor: progress;
+  }
+
+  .rn-admin-sync__message {
+    color: var(--rn-muted);
+    font-size: 13px;
+  }
+
   .rn-admin-more {
     display: inline-flex;
     align-items: center;
