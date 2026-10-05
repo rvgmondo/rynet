@@ -108,6 +108,7 @@ gallery[] { image -> media, alt, order, isPrimary }
 video { url, provider }, spin360 { url }
 documents -> documents[]
 status: draft | pending_review | live | reserved | sold | expired | archived
+source, externalId, lastSeenInSourceAt, sourceManaged, sourceNote
 publishedAt, soldAt, expiresAt
 viewCount, leadCount, saveCount   (buffered in memory, flushed by cron, never written per request)
 _versions (Payload drafts and version history)
@@ -116,6 +117,19 @@ _versions (Payload drafts and version history)
 VIN is stored encrypted with a field-level key, is never selected by the public read path, and never
 appears in the `Vehicle` JSON-LD. Section 13 asks for `vehicleIdentificationNumber` to be omitted
 publicly and this is how.
+
+The five `source` fields hold where a car was read from when a dealership keeps its stock list
+somewhere else. `source` names the list ("amicomotors.co.za"), `externalId` is how that list names
+the car, `lastSeenInSourceAt` is the last run that still found it, `sourceManaged` says whether the
+import may still change it, and `sourceNote` says why a car is hidden. A unique index on
+(dealer, source, externalId) is what makes a second run update rather than duplicate. Written by
+`src/lib/stock-import/`, platform staff only at the API, and read by nothing on the public site.
+
+A car whose source page leaves out a value this collection requires (a mileage, a price) is still
+kept, as a hidden draft with the value empty, so the next run can put it live the moment the source
+gives it. Validation would refuse it, and filling the gap in would be inventing a number, so the
+importer writes that one kind of car straight to its row, with the status forced to a hidden one
+and the reason in `sourceNote`. Every complete car goes through Payload with all its hooks.
 
 `monthlyEstimate` is derived, not entered. It is recomputed for the whole index when an admin
 changes the prime rate in `finance-defaults`, which is a background job, not a request.

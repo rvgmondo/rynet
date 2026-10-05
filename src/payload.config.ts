@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { sqliteAdapter } from "@payloadcms/db-sqlite";
+import { uniqueIndex } from "@payloadcms/db-sqlite/drizzle/sqlite-core";
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import { s3Storage } from "@payloadcms/storage-s3";
@@ -389,6 +390,51 @@ export default buildConfig({
          * Local development keeps push, which is what makes iterating on a collection quick.
          */
         push: process.env.NODE_ENV !== "production" && process.env.CI !== "true",
+
+        /**
+         * One car per dealership per listing on the stock list it was read from.
+         *
+         * Payload can mark a single field unique and nothing more, and the key that matters here
+         * spans three columns. Declared on the drizzle table rather than typed into a migration by
+         * hand, because both routes into the schema then agree: `payload migrate:create` writes it
+         * into the migration, and the local `push` above keeps it instead of dropping an index it
+         * had never heard of.
+         *
+         * SQLite counts NULLs as different from each other in a unique index, so the 311
+         * demonstration cars, which came from no stock list at all, are untouched by it.
+         *
+         * ON AN OLDER LOCAL DATABASE, THE FIRST BOOT AFTER THIS FAILS. Drizzle's development push
+         * cannot add a unique index to a table that already exists: it rebuilds the table instead,
+         * and the rebuild trips over an index it has already created. A fresh database is fine, and
+         * so is a database that has had the migration applied, so the fix is either to reseed or to
+         * run the one statement by hand:
+         *
+         *   CREATE UNIQUE INDEX vehicles_source_listing_idx
+         *     ON vehicles (dealer_id, source, external_id);
+         *
+         * Production never sees this, because production applies migrations and never pushes.
+         *
+         * The Postgres branch above has no equivalent. It is the planned move rather than anything
+         * running, and the index has to be declared on that adapter as well when it happens, or the
+         * move quietly drops this rule.
+         */
+        afterSchemaInit: [
+          ({ extendTable, schema }) => {
+            const vehicles = schema.tables.vehicles;
+            if (!vehicles) return schema;
+            extendTable({
+              table: vehicles,
+              extraConfig: (table) => ({
+                sourceListing: uniqueIndex("vehicles_source_listing_idx").on(
+                  table.dealer,
+                  table.source,
+                  table.externalId,
+                ),
+              }),
+            });
+            return schema;
+          },
+        ],
       }),
 
   email: process.env.SMTP_HOST

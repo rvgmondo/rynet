@@ -4,6 +4,7 @@ import * as migration_20260908_121058_two_factor from './20260908_121058_two_fac
 import * as migration_20260909_062425_trade_in_distribution from './20260909_062425_trade_in_distribution';
 import * as migration_20260914_081942_media_demonstration_flag from './20260914_081942_media_demonstration_flag';
 import * as migration_20260914_081942_media_owner from './20260914_081942_media_owner';
+import * as migration_20260914_081942_vehicle_source_tracking from './20260914_081942_vehicle_source_tracking';
 import * as migration_20260914_081943_demo_photographs from './20260914_081943_demo_photographs';
 import * as migration_20260914_110000_demo_photo_card_sizes from './20260914_110000_demo_photo_card_sizes';
 import * as migration_20260916_120000_vehicle_titles from './20260916_120000_vehicle_titles';
@@ -39,6 +40,11 @@ export const migrations = [
     up: migration_20260914_081942_media_owner.up,
     down: migration_20260914_081942_media_owner.down,
     name: '20260914_081942_media_owner',
+  },
+  {
+    up: migration_20260914_081942_vehicle_source_tracking.up,
+    down: migration_20260914_081942_vehicle_source_tracking.down,
+    name: '20260914_081942_vehicle_source_tracking',
   },
   {
     up: migration_20260914_081943_demo_photographs.up,

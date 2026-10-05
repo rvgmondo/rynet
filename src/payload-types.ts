@@ -291,6 +291,26 @@ export interface Vehicle {
     provider?: string | null;
   };
   /**
+   * The stock list this car was read from, for example amicomotors.co.za.
+   */
+  source?: string | null;
+  /**
+   * How that stock list names this car. Used to match it again.
+   */
+  externalId?: string | null;
+  /**
+   * The last run that still found this car on that stock list.
+   */
+  lastSeenInSourceAt?: string | null;
+  /**
+   * Untick to stop the import changing this car. Your edits then stay as you left them.
+   */
+  sourceManaged?: boolean | null;
+  /**
+   * Why this car is hidden, when the import could not put it live.
+   */
+  sourceNote?: string | null;
+  /**
    * Only Live cars, and Sold cars for 90 days, can be seen on the site.
    */
   status: 'draft' | 'pending_review' | 'live' | 'reserved' | 'sold' | 'expired' | 'archived';
@@ -1564,6 +1584,11 @@ export interface VehiclesSelect<T extends boolean = true> {
         km?: T;
         provider?: T;
       };
+  source?: T;
+  externalId?: T;
+  lastSeenInSourceAt?: T;
+  sourceManaged?: T;
+  sourceNote?: T;
   status?: T;
   dealer?: T;
   branch?: T;
