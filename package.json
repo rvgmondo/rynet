@@ -12,7 +12,7 @@
     "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check .",
+    "lint": "biome check --max-diagnostics=200 .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",

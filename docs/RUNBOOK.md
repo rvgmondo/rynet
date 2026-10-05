@@ -203,6 +203,26 @@ machine's database: `npm run import:amico -- --dry-run` reads everything and wri
 
 ---
 
+## Working on Windows, a trap worth knowing
+
+Git stores this repository with Unix line endings and hands Windows a working copy with Windows
+ones, which is normally invisible. Biome is the exception: it reads every carriage return as a
+formatting error, so a local `npm run lint` can fill up with complaints that do not exist on the
+build server, while real findings sit underneath them unseen. That is how eight genuine lint
+errors once hid behind nineteen imaginary ones.
+
+Two defences are in place. The lint command now prints up to two hundred findings rather than the
+default twenty, so nothing real is pushed off the end. And if the carriage return noise is in the
+way, rewrite the working copy to Unix endings before linting:
+
+```
+git ls-files | grep -E '\.(ts|tsx|css|json|md)$' | xargs sed -i 's/\r$//'
+```
+
+Git will not see that as a change, because it stores Unix endings either way.
+
+---
+
 ## Routine jobs
 
 | When | What | Why |
