@@ -26,6 +26,7 @@
   "/(payload)/api/graphql/route": "app/(payload)/api/graphql/route.js",
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/stock-sync/run/route": "app/api/stock-sync/run/route.js",
   "/api/track/phone-reveal/route": "app/api/track/phone-reveal/route.js",
   "/apple-icon/route": "app/apple-icon/route.js",
   "/icon/route": "app/icon/route.js",

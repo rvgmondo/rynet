@@ -27,9 +27,9 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { RandCell as RandCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { RandPreview as RandPreview_1839c642279d2d35c41fe313eefedb79 } from '../../../components/admin/fields/rand-preview'
 import { RowLabel as RowLabel_cd7ff53460e955d5264462e4f142fe21 } from '../../../components/admin/fields/row-label'
+import { YesNoCell as YesNoCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { StatusBadgeCell as StatusBadgeCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { VehicleLinks as VehicleLinks_e35901e3cd3add3a42cd3c63b6013db2 } from '../../../components/admin/vehicles/vehicle-links'
-import { YesNoCell as YesNoCell_45cde6d7d4719519bed87e542f3a5031 } from '../../../components/admin/cells/value-cells'
 import { QuickFilters as QuickFilters_af04d4889f070270ea6d912c50ad9633 } from '../../../components/admin/list/quick-filters'
 import { NewRecordTitle as NewRecordTitle_43a4991c5ff722fd0fb2623cc9fe3184 } from '../../../components/admin/brand/new-record-title'
 import { NoSaveDraftButton as NoSaveDraftButton_16ff442f03e05105b466f0f5a1d9b7b2 } from '../../../components/admin/vehicles/hidden-controls'
@@ -77,9 +77,9 @@ export const importMap = {
   "/components/admin/cells/value-cells#RandCell": RandCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/fields/rand-preview#RandPreview": RandPreview_1839c642279d2d35c41fe313eefedb79,
   "/components/admin/fields/row-label#RowLabel": RowLabel_cd7ff53460e955d5264462e4f142fe21,
+  "/components/admin/cells/value-cells#YesNoCell": YesNoCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/cells/value-cells#StatusBadgeCell": StatusBadgeCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/vehicles/vehicle-links#VehicleLinks": VehicleLinks_e35901e3cd3add3a42cd3c63b6013db2,
-  "/components/admin/cells/value-cells#YesNoCell": YesNoCell_45cde6d7d4719519bed87e542f3a5031,
   "/components/admin/list/quick-filters#QuickFilters": QuickFilters_af04d4889f070270ea6d912c50ad9633,
   "/components/admin/brand/new-record-title#NewRecordTitle": NewRecordTitle_43a4991c5ff722fd0fb2623cc9fe3184,
   "/components/admin/vehicles/hidden-controls#NoSaveDraftButton": NoSaveDraftButton_16ff442f03e05105b466f0f5a1d9b7b2,

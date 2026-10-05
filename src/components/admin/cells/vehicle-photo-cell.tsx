@@ -67,7 +67,8 @@ export async function VehiclePhotoCell({ rowData, payload }: DefaultServerCellCo
 
   return (
     <span className="rn-admin-thumb">
-      {/* A plain img: the admin serves stored thumbnails as they are (images.unoptimized). */}
+      {/* biome-ignore lint/performance/noImgElement: the admin serves stored thumbnails as they
+          are (images.unoptimized), so next/image would add a wrapper and no saving. */}
       <img alt="" className="rn-admin-thumb__img" height={48} loading="lazy" src={src} width={64} />
     </span>
   );

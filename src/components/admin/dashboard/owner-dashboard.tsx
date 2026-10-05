@@ -10,12 +10,14 @@ import {
   Plus,
 } from "lucide-react";
 
+import { isPlatformStaff } from "@/access/roles";
 import { buildAdminNavGroups } from "@/components/admin/nav/nav-groups";
 import { adminDocUrl, adminListUrl } from "@/lib/admin-links";
 import { ADMIN_GROUP, ADMIN_GROUP_DESCRIPTIONS } from "@/lib/admin-nav";
 import { firstName, greeting, longDate, whenLabel } from "@/lib/admin-time";
 
 import { CLICK_TYPES, type DashboardData, loadDashboardData } from "./dashboard-data";
+import { StockSyncPanel } from "./stock-sync-panel";
 
 /**
  * The admin home screen (`admin.components.views.dashboard`), replacing Payload's grid of grey
@@ -417,6 +419,8 @@ export async function OwnerDashboard(props: DashboardViewServerProps) {
         <LatestEnquiries data={data} adminRoute={adminRoute} now={now} />
         <RecentCars data={data} adminRoute={adminRoute} now={now} />
       </div>
+
+      <StockSyncPanel req={req} now={now} canRun={isPlatformStaff(user)} />
 
       {groups.length > 0 ? (
         <section className="rn-admin-home__section" aria-labelledby="rn-admin-home-else">

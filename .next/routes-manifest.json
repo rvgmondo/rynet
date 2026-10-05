@@ -123,7 +123,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "929af04bd544d079ef9d9cc4dc8e8bbbcc57405b"
+          "value": "c313ec9ba35bd154d6ad494e4108deafae4ec1fa"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -133,7 +133,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "929af04bd544d079ef9d9cc4dc8e8bbbcc57405b"
+          "value": "c313ec9ba35bd154d6ad494e4108deafae4ec1fa"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -232,6 +232,12 @@
       "regex": "^/api/graphql(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/graphql(?:/)?$"
+    },
+    {
+      "page": "/api/stock-sync/run",
+      "regex": "^/api/stock\\-sync/run(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/stock\\-sync/run(?:/)?$"
     },
     {
       "page": "/api/track/phone-reveal",
@@ -372,5 +378,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "929af04bd544d079ef9d9cc4dc8e8bbbcc57405b"
+  "deploymentId": "c313ec9ba35bd154d6ad494e4108deafae4ec1fa"
 }

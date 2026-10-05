@@ -73,13 +73,19 @@ test("a listing with no photograph still says what it is, never a blank box", as
    * rectangle. It carries the car's recorded colour name when there is one, and always says that
    * photographs are coming.
    *
-   * The seed leaves about one listing in twelve without photographs, so this walks the first
-   * three pages of results to collect a sample worth asserting on.
+   * The seed leaves about one listing in twelve without photographs, so somewhere in the results
+   * there is always a sample worth asserting on. It used to be the first three pages, until real
+   * stock arrived: Amico Motors' cars sort newest first, and a real car only goes live once it has
+   * a photograph, so the first pages found nothing and the test failed for having nothing to test
+   * rather than for anything being wrong. It walks on until it finds some, and still fails if
+   * there are none anywhere, because a silently empty sample is the failure this message
+   * describes.
    */
   const placeholders: { text: string; visible: boolean }[] = [];
+  const MOST_PAGES = 12;
 
-  for (const page_ of [1, 2, 3]) {
-    await page.goto(page_ === 1 ? "/cars" : `/cars?page=${page_}`);
+  for (let number = 1; number <= MOST_PAGES && placeholders.length === 0; number += 1) {
+    await page.goto(number === 1 ? "/cars" : `/cars?page=${number}`);
     await page.waitForTimeout(400);
     placeholders.push(
       ...(await page.locator("article .rn-noimage").evaluateAll((nodes) =>
@@ -92,11 +98,14 @@ test("a listing with no photograph still says what it is, never a blank box", as
         }),
       )),
     );
+    // Stop at the end of the results rather than asking for pages that do not exist.
+    const hasNext = await page.locator('a[rel="next"]').count();
+    if (hasNext === 0) break;
   }
 
   expect(
     placeholders.length,
-    "no listing without a photograph, so nothing was tested",
+    `no listing without a photograph in the first ${MOST_PAGES} pages, so nothing was tested`,
   ).toBeGreaterThan(0);
   for (const placeholder of placeholders) {
     expect(placeholder.visible, "a placeholder was left transparent").toBe(true);

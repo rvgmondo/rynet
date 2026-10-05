@@ -26,6 +26,7 @@
   "/(payload)/api/graphql/route": "/api/graphql",
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
+  "/api/stock-sync/run/route": "/api/stock-sync/run",
   "/api/track/phone-reveal/route": "/api/track/phone-reveal",
   "/apple-icon/route": "/apple-icon",
   "/icon/route": "/icon",

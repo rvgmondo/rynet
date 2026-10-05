@@ -19,6 +19,7 @@
       "!**/src/payload-types.ts",
       "!**/docs",
       "!**/src/migrations",
+      "!**/src/lib/stock-import/fixtures",
       "!next-env.d.ts"
     ]
   },

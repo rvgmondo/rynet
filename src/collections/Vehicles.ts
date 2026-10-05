@@ -844,6 +844,124 @@ export const Vehicles: CollectionConfig = {
                 },
               ],
             },
+            /**
+             * Where a car came from, when a stock list somewhere else is the one being kept.
+             *
+             * Four of these five are written by the importer and nothing else, so they are read
+             * only on the screen and platform staff only at the API. `sourceManaged` is the one a
+             * person is meant to touch: untick it and the importer leaves the car alone from then
+             * on, which is the escape hatch for a car whose details Rynet has corrected by hand.
+             *
+             * `source` plus `externalId` plus the dealership is the key a re-import matches on, so
+             * a car that is already here is updated rather than listed twice. The database enforces
+             * that with a unique index (see the afterSchemaInit hook in payload.config.ts), and the
+             * importer looks the same key up before it writes.
+             *
+             * Not secret, and not hidden from the public read rule either: a car carries the name of
+             * the website it was read from, which is a fact about the listing rather than anything
+             * private. Nothing on the site renders them.
+             */
+            {
+              type: "collapsible",
+              label: "Where this car came from",
+              admin: { initCollapsed: true },
+              fields: [
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "source",
+                      type: "text",
+                      index: true,
+                      label: "Read from",
+                      access: {
+                        create: ({ req }) => isPlatformStaff(req.user),
+                        update: ({ req }) => isPlatformStaff(req.user),
+                      },
+                      admin: {
+                        readOnly: true,
+                        disableListColumn: true,
+                        description:
+                          "The stock list this car was read from, for example amicomotors.co.za.",
+                      },
+                    },
+                    {
+                      name: "externalId",
+                      type: "text",
+                      index: true,
+                      label: "Its reference there",
+                      access: {
+                        create: ({ req }) => isPlatformStaff(req.user),
+                        update: ({ req }) => isPlatformStaff(req.user),
+                      },
+                      admin: {
+                        readOnly: true,
+                        disableListColumn: true,
+                        disableListFilter: true,
+                        description: "How that stock list names this car. Used to match it again.",
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "lastSeenInSourceAt",
+                      type: "date",
+                      label: "Last seen there",
+                      access: {
+                        create: ({ req }) => isPlatformStaff(req.user),
+                        update: ({ req }) => isPlatformStaff(req.user),
+                      },
+                      admin: {
+                        readOnly: true,
+                        disableListColumn: true,
+                        disableListFilter: true,
+                        date: {
+                          pickerAppearance: "dayAndTime",
+                          displayFormat: "d MMM yyyy, HH:mm",
+                        },
+                        description: "The last run that still found this car on that stock list.",
+                      },
+                    },
+                    {
+                      name: "sourceManaged",
+                      type: "checkbox",
+                      defaultValue: false,
+                      label: "Kept up to date from there",
+                      access: {
+                        create: ({ req }) => isPlatformStaff(req.user),
+                        update: ({ req }) => isPlatformStaff(req.user),
+                      },
+                      admin: {
+                        disableListColumn: true,
+                        components: { Cell: CELL.yesNo },
+                        description:
+                          "Untick to stop the import changing this car. Your edits then stay as you left them.",
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: "sourceNote",
+                  type: "textarea",
+                  label: "What the last import found",
+                  access: {
+                    create: ({ req }) => isPlatformStaff(req.user),
+                    update: ({ req }) => isPlatformStaff(req.user),
+                  },
+                  admin: {
+                    readOnly: true,
+                    disableListColumn: true,
+                    disableListFilter: true,
+                    // Why a car is hidden, on the car, so the answer is where the question is
+                    // asked rather than in a report somebody has to go and find.
+                    description: "Why this car is hidden, when the import could not put it live.",
+                  },
+                },
+              ],
+            },
           ],
         },
       ],

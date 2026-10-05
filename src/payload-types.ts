@@ -134,9 +134,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'finance-defaults': FinanceDefault;
+    'stock-sync': StockSync;
   };
   globalsSelect: {
     'finance-defaults': FinanceDefaultsSelect<false> | FinanceDefaultsSelect<true>;
+    'stock-sync': StockSyncSelect<false> | StockSyncSelect<true>;
   };
   locale: null;
   widgets: {
@@ -290,6 +292,26 @@ export interface Vehicle {
     km?: number | null;
     provider?: string | null;
   };
+  /**
+   * The stock list this car was read from, for example amicomotors.co.za.
+   */
+  source?: string | null;
+  /**
+   * How that stock list names this car. Used to match it again.
+   */
+  externalId?: string | null;
+  /**
+   * The last run that still found this car on that stock list.
+   */
+  lastSeenInSourceAt?: string | null;
+  /**
+   * Untick to stop the import changing this car. Your edits then stay as you left them.
+   */
+  sourceManaged?: boolean | null;
+  /**
+   * Why this car is hidden, when the import could not put it live.
+   */
+  sourceNote?: string | null;
   /**
    * Only Live cars, and Sold cars for 90 days, can be seen on the site.
    */
@@ -1564,6 +1586,11 @@ export interface VehiclesSelect<T extends boolean = true> {
         km?: T;
         provider?: T;
       };
+  source?: T;
+  externalId?: T;
+  lastSeenInSourceAt?: T;
+  sourceManaged?: T;
+  sourceNote?: T;
   status?: T;
   dealer?: T;
   branch?: T;
@@ -2221,6 +2248,42 @@ export interface FinanceDefault {
   createdAt?: string | null;
 }
 /**
+ * Reading Amico Motors' own website and keeping their cars on Rynet up to date. Written by the site itself.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-sync".
+ */
+export interface StockSync {
+  id: number;
+  /**
+   * Off stops the site reading the dealership's website. Their cars stay exactly as they are now.
+   */
+  enabled?: boolean | null;
+  /**
+   * Set while a run is busy and cleared when it ends. If it is stuck here from a crash, it is ignored after an hour.
+   */
+  runningSince?: string | null;
+  lastFinishedAt?: string | null;
+  /**
+   * The first run that read the whole stock list and left every car either live or held back with a reason. The demonstration stock is put away on that day.
+   */
+  initialImportDoneAt?: string | null;
+  /**
+   * When the example cars and example dealerships were hidden, because a real dealership's stock went live. Nothing was deleted.
+   */
+  demonstrationStockHiddenAt?: string | null;
+  runs?:
+    | {
+        finishedAt?: string | null;
+        summary?: string | null;
+        ok?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "finance-defaults_select".
  */
@@ -2234,6 +2297,28 @@ export interface FinanceDefaultsSelect<T extends boolean = true> {
   monthlyServiceFee?: T;
   disclaimer?: T;
   lastReviewedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stock-sync_select".
+ */
+export interface StockSyncSelect<T extends boolean = true> {
+  enabled?: T;
+  runningSince?: T;
+  lastFinishedAt?: T;
+  initialImportDoneAt?: T;
+  demonstrationStockHiddenAt?: T;
+  runs?:
+    | T
+    | {
+        finishedAt?: T;
+        summary?: T;
+        ok?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

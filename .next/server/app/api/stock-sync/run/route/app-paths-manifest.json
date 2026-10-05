@@ -1,0 +1,3 @@
+{
+  "/api/stock-sync/run/route": "app/api/stock-sync/run/route.js"
+}
