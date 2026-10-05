@@ -170,7 +170,7 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
     // stickiness can put it back under their pointer.
     let anchor: { element: Element; top: number; at: number } | null = null;
 
-    const fit = () => {
+    const sizeSheet = () => {
       const p = panel();
       const s = sheet();
       if (!p || !s) return;
@@ -275,7 +275,7 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
 
     const onWide = () => {
       if (wide.matches) close(false);
-      fit();
+      sizeSheet();
     };
     const onHide = () => close(false, true);
 
@@ -285,16 +285,16 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
 
     // The sheet's height changes when a section, "Show more" or a make's models open or close.
     const sized = sheet();
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(fit);
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(sizeSheet);
     if (sized) observer?.observe(sized);
-    fit();
+    sizeSheet();
 
     document.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
     document.addEventListener("change", onChange);
     document.addEventListener("submit", onSubmit);
     wide.addEventListener("change", onWide);
-    window.addEventListener("resize", fit);
+    window.addEventListener("resize", sizeSheet);
     window.addEventListener("pagehide", onHide);
 
     return () => {
@@ -303,7 +303,7 @@ export function FilterBehaviour({ panelId = "filters" }: { panelId?: string }) {
       document.removeEventListener("change", onChange);
       document.removeEventListener("submit", onSubmit);
       wide.removeEventListener("change", onWide);
-      window.removeEventListener("resize", fit);
+      window.removeEventListener("resize", sizeSheet);
       window.removeEventListener("pagehide", onHide);
       observer?.disconnect();
       window.clearTimeout(timer);

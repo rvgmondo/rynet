@@ -45,6 +45,7 @@ function Cover({ photos }: { photos: Photo[] }) {
       className={`grid aspect-[2/1] gap-0.5 overflow-hidden rounded-t-[calc(var(--rn-radius-md)-1px)] bg-line ${layout}`}
     >
       {photos.slice(0, 3).map((photo, index) => (
+        // biome-ignore lint/performance/noImgElement: the host never resizes on request (images.unoptimized), so next/image would add a wrapper and no saving.
         <img
           key={photo.url}
           src={photo.url}

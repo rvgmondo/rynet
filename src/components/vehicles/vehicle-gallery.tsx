@@ -51,6 +51,8 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
       const small = pick(media, "thumbnail");
       const card = pick(media, "card");
       return {
+        // The photograph's own row, so a key never depends on where it sits in the list.
+        id: String(row.id ?? big.url),
         url: big.url,
         width: big.width,
         height: big.height,
@@ -127,7 +129,7 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
             const classes =
               "h-full w-full shrink-0 snap-start snap-always object-cover object-[50%_55%]";
             return index === 0 ? (
-              <picture key={`${shot.url}-${index}`} className="contents">
+              <picture key={shot.id} className="contents">
                 {shot.phone ? (
                   <source media="(max-width: 39.9375rem)" srcSet={shot.phone.url} />
                 ) : null}
@@ -144,7 +146,7 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
               </picture>
             ) : (
               <Image
-                key={`${shot.url}-${index}`}
+                key={shot.id}
                 id={`photo-${index + 1}`}
                 src={shot.url}
                 alt={alt}
@@ -168,7 +170,7 @@ export function VehicleGallery({ vehicle }: { vehicle: Vehicle }) {
         <div id={STRIP_ID} className="-mx-1 mt-2 hidden gap-2 overflow-x-auto p-1 sm:flex">
           {shots.map((shot, index) => (
             <a
-              key={`thumb-${shot.url}-${index}`}
+              key={shot.id}
               href={`#photo-${index + 1}`}
               data-shot={index}
               aria-current={index === 0 ? "true" : undefined}

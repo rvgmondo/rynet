@@ -2261,7 +2261,12 @@
   .rn-rule--brand {
     height: 2px;
     border-radius: 2px;
-    background: linear-gradient(90deg, var(--rn-heading) 0%, var(--rn-heading) 55%, var(--rn-brand-red) 100%);
+    background: linear-gradient(
+      90deg,
+      var(--rn-heading) 0%,
+      var(--rn-heading) 55%,
+      var(--rn-brand-red) 100%
+    );
   }
 
   .rn-rule--hair {

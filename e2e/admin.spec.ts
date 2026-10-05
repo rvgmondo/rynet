@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { type BrowserContext, expect, type Page, test } from "@playwright/test";
+import { type APIResponse, type BrowserContext, expect, type Page, test } from "@playwright/test";
 
 /**
  * The admin's own look: the sign-in screen, the menu and the home screen.
@@ -47,6 +47,28 @@ async function signIn(
     { name: "payload-token", value: token, domain: hostname, path: "/", httpOnly: true },
     { name: "payload-theme", value: theme, domain: hostname, path: "/" },
   ]);
+}
+
+/**
+ * A request carrying the shared admin token, sent again on a fresh session if that one was dropped.
+ *
+ * Same cause as openSignedIn's retry: two sign-ins landing on this one account together can each
+ * write its session list without the other's entry, which leaves one of the two tokens refused.
+ * A write refused for that reason was not refused by the access rules, so it is worth signing in
+ * again and asking once more. Without this, a run that happens to overlap fails on a 403 that says
+ * nothing about the site.
+ */
+async function signed(
+  context: BrowserContext,
+  baseURL: string | undefined,
+  send: (auth: { headers: Record<string, string> }) => Promise<APIResponse>,
+): Promise<APIResponse> {
+  const url = baseURL ?? "http://localhost:3100";
+  await signIn(context, url, "light");
+  const first = await send({ headers: { Authorization: `JWT ${sharedToken}` } });
+  if (first.status() !== 401 && first.status() !== 403) return first;
+  await signIn(context, url, "light", true);
+  return send({ headers: { Authorization: `JWT ${sharedToken}` } });
 }
 
 /**
@@ -330,11 +352,8 @@ test.describe("a car taken off the site", () => {
     request,
     baseURL,
   }) => {
-    await signIn(context, baseURL ?? "http://localhost:3100", "light");
-    const auth = { headers: { Authorization: `JWT ${sharedToken}` } };
-    const found = await request.get(
-      "/api/vehicles?where[status][equals]=live&limit=1&depth=0&sort=id",
-      auth,
+    const found = await signed(context, baseURL, (auth) =>
+      request.get("/api/vehicles?where[status][equals]=live&limit=1&depth=0&sort=id", auth),
     );
     const template = ((await found.json()) as { docs: Record<string, unknown>[] }).docs[0];
     test.skip(!template, "no live car to copy");
@@ -353,15 +372,19 @@ test.describe("a car taken off the site", () => {
         .filter(([key]) => !["id", "createdAt", "updatedAt", "publicRef", "_status"].includes(key))
         .map(([key, value]) => [key, withoutRowIds(value)]),
     );
-    const created = await request.post("/api/vehicles", {
-      ...auth,
-      data: { ...data, stockNumber: `HIDDEN-${Date.now()}`, status: "draft" },
-    });
+    const created = await signed(context, baseURL, (auth) =>
+      request.post("/api/vehicles", {
+        ...auth,
+        data: { ...data, stockNumber: `HIDDEN-${Date.now()}`, status: "draft" },
+      }),
+    );
     expect(created.status(), await created.text()).toBe(201);
     const id = ((await created.json()) as { doc: { id: number } }).doc.id;
 
     try {
-      const car = (await (await request.get(`/api/vehicles/${id}?depth=1`, auth)).json()) as {
+      const car = (await (
+        await signed(context, baseURL, (auth) => request.get(`/api/vehicles/${id}?depth=1`, auth))
+      ).json()) as {
         modelYear: number;
         publicRef: string;
         make: { slug: string };
@@ -378,7 +401,7 @@ test.describe("a car taken off the site", () => {
       const page = await request.get(address, { maxRedirects: 0 });
       expect(page.status(), `${address} should not show a draft car`).toBe(404);
     } finally {
-      await request.delete(`/api/vehicles/${id}`, auth);
+      await signed(context, baseURL, (auth) => request.delete(`/api/vehicles/${id}`, auth));
     }
   });
 });

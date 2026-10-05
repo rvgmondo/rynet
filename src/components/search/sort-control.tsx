@@ -66,6 +66,12 @@ export function SortControl({
     );
   };
 
+  // The same name and value twice would submit the same parameter twice, so each pair is carried
+  // once and is its own key.
+  const once = [
+    ...new Map(carried.map(([key, value]) => [`${key}:${value}`, [key, value]])).values(),
+  ];
+
   return (
     <form
       method="get"
@@ -73,8 +79,8 @@ export function SortControl({
       onSubmit={onSubmit}
       className={`flex items-center gap-2 ${className}`}
     >
-      {carried.map(([key, value], index) => (
-        <input key={`${key}:${value}:${index}`} type="hidden" name={key} value={value} />
+      {once.map(([key, value]) => (
+        <input key={`${key}:${value}`} type="hidden" name={key} value={value} />
       ))}
       <label htmlFor={id} className="shrink-0 text-sm font-medium text-body max-md:sr-only">
         Sort by
