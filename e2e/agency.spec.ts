@@ -76,9 +76,15 @@ test.describe("the pages the agency navigation points at", () => {
 
     expect(hrefs.size, "no internal links found in the agency chrome").toBeGreaterThan(5);
 
-    for (const href of hrefs) {
-      const response = await page.request.get(href);
-      expect(response.status(), `${href} returned ${response.status()}`).toBeLessThan(400);
+    // Asked for together, not one after the other. Every one of these is a cold render, and
+    // fifteen of them in a row outran the thirty second limit whenever the whole suite was
+    // running at once, which said nothing about the links and everything about the queue.
+    const answers = await Promise.all(
+      [...hrefs].map(async (href) => ({ href, status: (await page.request.get(href)).status() })),
+    );
+
+    for (const { href, status } of answers) {
+      expect(status, `${href} returned ${status}`).toBeLessThan(400);
     }
   });
 
