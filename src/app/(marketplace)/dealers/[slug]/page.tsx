@@ -451,6 +451,7 @@ export default async function DealerPage({
               {strip.length > 0 ? (
                 <div aria-hidden="true" className="mt-8 hidden grid-cols-4 gap-2 sm:grid">
                   {strip.map((photo) => (
+                    // biome-ignore lint/performance/noImgElement: the host never resizes on request (images.unoptimized), so next/image would add a wrapper and no saving.
                     <img
                       key={photo.url}
                       src={photo.url}
