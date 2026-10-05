@@ -189,6 +189,12 @@ export function FacetRail({
   if (state.sort !== "newest") hidden.push({ name: "sort", value: state.sort });
   for (const [name, value] of extra) hidden.push({ name, value });
 
+  // The same name and value twice would submit the same parameter twice, so each one is carried
+  // once and is its own key.
+  const once = [
+    ...new Map(hidden.map((input) => [`${input.name}:${input.value}`, input])).values(),
+  ];
+
   const priceFrom = withValue(PRICE_STEPS, state.minPrice);
   const priceTo = withValue(PRICE_STEPS, state.maxPrice);
   const buttonLabel =
@@ -242,9 +248,9 @@ export function FacetRail({
           data-filter-form
           className="flex min-h-0 flex-1 flex-col"
         >
-          {hidden.map((input, index) => (
+          {once.map((input) => (
             <input
-              key={`${input.name}:${input.value}:${index}`}
+              key={`${input.name}:${input.value}`}
               type="hidden"
               name={input.name}
               value={input.value}

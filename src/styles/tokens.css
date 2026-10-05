@@ -343,8 +343,9 @@
    * the hierarchy: 700 for page and section headings, 600 for card titles, prices and buttons,
    * 400 and 500 for reading. It ships real tabular figures, which every price depends on.
    */
-  --rn-font-sans: var(--font-archivo), "Archivo", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --rn-font-sans:
+    var(--font-archivo), "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   --rn-font-display: var(--rn-font-sans);
   --rn-font-body: var(--rn-font-sans);
   /* Prose used to be a serif. It is the same family now; the name stays so older markup resolves. */
