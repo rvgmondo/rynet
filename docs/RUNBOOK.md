@@ -167,6 +167,42 @@ Once R2 is configured this stops being possible, because uploads no longer touch
 
 ---
 
+## The stock sync
+
+The live app reads Amico Motors' own website, amicomotors.co.za, and keeps their cars on Rynet in
+step with it. Nobody has to run anything.
+
+**What it does.** At most every three hours it reads their stock list and every listing page on it,
+adds cars that are new, updates the ones that changed, and hides the ones that have gone. A car
+with no price, no mileage or no year, or whose own details and title name different models, is kept
+hidden with the reason written on it. Nothing is deleted and nothing is marked sold: only the
+dealership knows which it is.
+
+**Where to look.** The admin home screen has a "Stock from amicomotors.co.za" panel with the last
+few runs in plain words, and a "Read it now" button for the moment they tell you they have changed
+something. The full settings are under Website settings, Stock sync, including a switch to stop it.
+
+**The first run after this ships** reads all 97 listings and downloads their photographs, one at a
+time. It takes about half an hour and the site stays quick throughout. When it finishes, the 311
+example cars and 12 example dealerships are hidden automatically, because a marketplace that
+promises only verified dealerships cannot show invented ones beside a real one. They are hidden,
+not deleted, so they can still be shown to the next dealership.
+
+**If the host puts idle apps to sleep,** a sleeping app runs no timer. One cron job keeps it awake
+and costs nothing:
+
+```bash
+*/10 * * * * curl -s -o /dev/null https://rynet.co.za/
+```
+
+**To stop it** without touching the database, set `RYNET_STOCK_SYNC=off` in Setup Node.js App and
+restart. `RYNET_STOCK_SYNC_MINUTES` changes how often it runs.
+
+**Running it from a terminal instead** is still possible on a machine with one, against that
+machine's database: `npm run import:amico -- --dry-run` reads everything and writes nothing.
+
+---
+
 ## Routine jobs
 
 | When | What | Why |

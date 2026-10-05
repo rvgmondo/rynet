@@ -54,6 +54,12 @@ export default defineConfig({
            * part of the suite that authenticates by cookie, and it was the only part failing.
            */
           SERVER_URL: "http://localhost:3100",
+          /*
+           * The suite runs a production build, and in production the app reads a dealership's own
+           * website on a timer. A test run has no business fetching somebody's site a hundred
+           * times, so the timer stays off here.
+           */
+          RYNET_STOCK_SYNC: "off",
         },
         url: "http://localhost:3100",
         /**
