@@ -1,6 +1,14 @@
 "use client";
 
-import { Check, Copy, ExternalLink, FileSpreadsheet, Globe, MessageCircle } from "lucide-react";
+import {
+  Check,
+  Copy,
+  ExternalLink,
+  FileSpreadsheet,
+  Globe,
+  ImageIcon,
+  MessageCircle,
+} from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { adminListUrl } from "@/lib/admin-links";
@@ -702,6 +710,9 @@ function TellThem({
         >
           <MessageCircle aria-hidden="true" />
           {number ? `Send on WhatsApp to ${dealer.whatsapp}` : "Open WhatsApp"}
+        </a>
+        <a className="rn-onboard__button" href={`${adminRoute}/ad-studio?dealer=${dealer.id}`}>
+          <ImageIcon aria-hidden="true" /> Make their ads
         </a>
         <a className="rn-onboard__button" href={`${adminRoute}/collections/dealers/${dealer.id}`}>
           Open their record

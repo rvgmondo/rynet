@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Handshake,
   House,
+  ImageIcon,
   Inbox,
   LogOut,
   type LucideIcon,
@@ -180,6 +181,16 @@ export function AdminNavClient({
                 label="Onboard a dealership"
                 current={isCurrent(pathname, `${adminRoute}/onboard`, false)}
                 Icon={Handshake}
+              />
+            </li>
+          ) : null}
+          {canOnboard ? (
+            <li>
+              <NavLink
+                href={`${adminRoute}/ad-studio`}
+                label="Ad studio"
+                current={isCurrent(pathname, `${adminRoute}/ad-studio`, false)}
+                Icon={ImageIcon}
               />
             </li>
           ) : null}

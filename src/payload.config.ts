@@ -174,6 +174,11 @@ export default buildConfig({
           path: "/onboard",
           meta: { title: "Onboard a dealership" },
         },
+        adStudio: {
+          Component: "/components/admin/ad-studio/ad-studio-view#AdStudioView",
+          path: "/ad-studio",
+          meta: { title: "Ad studio" },
+        },
       },
     },
   },

@@ -176,6 +176,40 @@ test.describe("the onboarding desk", () => {
   }
 });
 
+test.describe("the ad studio", () => {
+  for (const theme of ["light", "dark"] as const) {
+    test(`offers the real dealerships and draws their ads, in ${theme}`, async ({
+      page,
+      context,
+      baseURL,
+    }) => {
+      await openSignedIn(page, context, baseURL, theme, "/admin/ad-studio");
+      const studio = page.locator(".rn-studio");
+      await expect(studio.getByRole("heading", { level: 1, name: "Ad studio" })).toBeVisible();
+      await expect(page).toHaveTitle(/^Ad studio \| Rynet admin$/);
+      await expectNoViolations(page, [".rn-studio"]);
+
+      const first = studio.locator(".rn-studio__dealers a").first();
+      if ((await first.count()) === 0) return;
+      await first.click();
+      await expect(studio.getByRole("heading", { level: 1, name: "Ad studio" })).toBeVisible();
+
+      const ads = studio.locator("canvas.rn-studio__canvas");
+      if ((await ads.count()) > 0) {
+        await expect(ads).toHaveCount(3);
+        // Drawn, not blank: the canvas is sized to the format once the artwork is painted.
+        await expect
+          .poll(() => ads.first().evaluate((canvas) => (canvas as HTMLCanvasElement).width))
+          .toBe(1080);
+        await expect(studio.getByLabel("Caption")).toHaveValue(/Rynet/);
+      } else {
+        await expect(studio).toContainText("nothing to make an ad of");
+      }
+      await expectNoViolations(page, [".rn-studio"]);
+    });
+  }
+});
+
 test.describe("the home screen", () => {
   for (const theme of ["light", "dark"] as const) {
     test(`greets, counts and links, in ${theme}`, async ({ page, context, baseURL }) => {
@@ -236,6 +270,7 @@ test.describe("the menu", () => {
         "Dealerships",
         "Enquiries",
         "Onboard a dealership",
+        "Ad studio",
       ]);
       await expect(menu.getByRole("link", { name: "Cars" })).toHaveAttribute(
         "aria-current",

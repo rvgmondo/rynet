@@ -2104,6 +2104,66 @@
     height: 16px;
   }
 
+  /* --------------------------------------------------------------- ad studio */
+
+  .rn-studio__dealers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rn-studio__pick {
+    max-width: 36rem;
+    margin-top: 8px;
+  }
+
+  .rn-studio__grid {
+    display: grid;
+    align-items: start;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    margin-top: 12px;
+  }
+
+  .rn-studio__preview {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+  }
+
+  .rn-studio__frame {
+    overflow: hidden;
+    width: 100%;
+    max-height: 520px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: #001123;
+  }
+
+  .rn-studio__canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .rn-studio__caption {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .rn-studio__format {
+    color: var(--rn-heading);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
   /* ---------------------------------------------- records nobody makes by hand */
 
   /* Enquiries arrive from the site and consent records are evidence, so the admin offers no
