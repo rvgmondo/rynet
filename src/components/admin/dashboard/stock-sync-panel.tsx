@@ -1,7 +1,6 @@
 import { RefreshCw } from "lucide-react";
 import type { PayloadRequest } from "payload";
 
-import { AMICO_SOURCE } from "@/lib/stock-import/amico";
 import type { SyncSettings } from "@/lib/stock-import/schedule";
 
 import { RunSyncButton } from "./run-sync-button";
@@ -60,17 +59,17 @@ export async function StockSyncPanel({
       <div className="rn-admin-panel__head">
         <h2 id="rn-admin-home-sync" className="rn-admin-panel__title">
           <RefreshCw aria-hidden="true" className="rn-admin-panel__icon" />
-          Stock from {AMICO_SOURCE}
+          Stock read from dealership websites
         </h2>
         {canRun ? <RunSyncButton /> : null}
       </div>
 
       {settings.enabled === false ? (
         <p className="rn-admin-panel__empty">
-          Switched off in Stock sync settings. Their cars stay exactly as they are.
+          Switched off in Stock sync settings. Every car stays exactly as it is.
         </p>
       ) : busy ? (
-        <p className="rn-admin-panel__empty">Reading their website now.</p>
+        <p className="rn-admin-panel__empty">Reading dealership websites now.</p>
       ) : last ? (
         <p className="rn-admin-panel__lead">
           {lastWhen ? `Updated ${lastWhen}: ` : ""}
@@ -96,8 +95,8 @@ export async function StockSyncPanel({
       {settings.demonstrationStockHiddenAt ? (
         <p className="rn-admin-panel__note">
           The example cars and example dealerships were put away{" "}
-          {when(settings.demonstrationStockHiddenAt, now)}, when this dealership's cars went live.
-          Nothing was deleted.
+          {when(settings.demonstrationStockHiddenAt, now)}, when the first real dealership's cars
+          went live. Nothing was deleted.
         </p>
       ) : null}
     </section>

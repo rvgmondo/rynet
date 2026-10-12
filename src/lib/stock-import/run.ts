@@ -7,8 +7,8 @@ import { priceFieldsFromSaved } from "@/lib/price-history";
 import { generatePublicRef } from "@/lib/slug";
 import { vehicleTitle } from "@/lib/vehicle-title";
 
-import { AMICO_SITEMAP, AMICO_SOURCE, isAmicoListingUrl, parseAmicoListing } from "./amico";
-import { AMICO_TRADING_NAME, ensureAmicoDealership } from "./amico-dealer";
+import { AMICO_ORIGIN, AMICO_TITLE_SUFFIXES } from "./amico";
+import { ensureAmicoDealership } from "./amico-dealer";
 import {
   changesBetween,
   type ExistingVehicle,
@@ -22,7 +22,6 @@ import {
   statusFor,
 } from "./decide";
 import { createPoliteFetcher, type PoliteFetcher } from "./fetch";
-import { sitemapLocations } from "./html";
 import {
   MAX_PHOTOS_PER_CAR,
   mediaRecord,
@@ -32,6 +31,7 @@ import {
   writePhotoFiles,
 } from "./photos";
 import { type QualityNote, qualityNotes } from "./quality";
+import { motorsWebsiteReader, type StockReader } from "./readers";
 import {
   chooseModel,
   findEntry,
@@ -128,6 +128,13 @@ export type RunOptions = {
   dryRun: boolean;
   /** Stop after this many listings. For a quick look, not for a real run: nothing is expired. */
   limit?: number;
+  /**
+   * Hide this dealership's cars from this source that the source no longer shows. True for a
+   * website, which is always the whole stock list. False for a spreadsheet unless the person
+   * uploading it says it is their whole stock, because a sheet of five new cars is not a
+   * statement that the other eighty were sold.
+   */
+  expireMissing?: boolean;
   /** Let a run hide more than half of this source's cars at once. See `expirySafety`. */
   allowLargeRemoval?: boolean;
   log?: (line: string) => void;
@@ -222,15 +229,57 @@ const idOf = (value: unknown): number | null => {
   return null;
 };
 
+/** The dealership a run writes into. */
+export type ImportTarget = {
+  dealerId: number;
+  branchId: number;
+  tradingName: string;
+  /** The start of every photograph's file name, so a re-run finds the ones already saved. */
+  photoPrefix: string;
+  /** The media library folder the photographs are filed under. */
+  photoFolder: string;
+  /** What setting the dealership up did or would do, for the report. */
+  planned: string[];
+};
+
+/**
+ * Amico Motors, as before: their record kept to what their own website publishes, then their
+ * stock read from amicomotors.co.za.
+ */
 export async function importAmicoStock(options: RunOptions): Promise<ImportReport> {
-  const { payload, dryRun, limit, req } = options;
+  const dealership = await ensureAmicoDealership({
+    payload: options.payload,
+    dryRun: options.dryRun,
+    req: options.req,
+  });
+  return importStock({
+    ...options,
+    reader: motorsWebsiteReader(AMICO_ORIGIN, AMICO_TITLE_SUFFIXES),
+    target: {
+      dealerId: dealership.dealerId,
+      branchId: dealership.branchId,
+      tradingName: "Amico Motors",
+      // The prefix every Amico photograph has been saved under since the first run.
+      photoPrefix: "amico",
+      photoFolder: "amico-motors",
+      planned: dealership.planned,
+    },
+  });
+}
+
+/** Reads every car a source has and writes the difference into one dealership's stock. */
+export async function importStock(
+  options: RunOptions & { reader: StockReader; target: ImportTarget },
+): Promise<ImportReport> {
+  const { payload, dryRun, limit, req, reader, target } = options;
   const log = options.log ?? ((line: string) => payload.logger.info(line));
   const now = options.now ?? (() => new Date());
   const fetcher = options.fetcher ?? createPoliteFetcher();
   const startedAt = now().toISOString();
+  const source = reader.source;
 
   const report: ImportReport = {
-    source: AMICO_SOURCE,
+    source,
     dryRun,
     startedAt,
     finishedAt: startedAt,
@@ -261,21 +310,20 @@ export async function importAmicoStock(options: RunOptions): Promise<ImportRepor
 
   // ----------------------------------------------------------------- the dealership and its branch
 
-  const dealership = await ensureAmicoDealership({ payload, dryRun, req });
+  const dealership = target;
   report.dealership = dealership.planned;
-  log(dealership.planned.join("; "));
+  if (dealership.planned.length > 0) log(dealership.planned.join("; "));
 
   const lists = new Lists(payload, req);
   const staticDir = mediaDirectory(payload);
 
   // ----------------------------------------------------------------------------- the stock list
 
-  const sitemap = await fetcher.text(AMICO_SITEMAP);
-  const urls = [...new Set(sitemapLocations(sitemap).filter(isAmicoListingUrl))];
+  const urls = await reader.keys(fetcher);
   const wanted = typeof limit === "number" ? urls.slice(0, limit) : urls;
   report.listingsFound = urls.length;
   log(
-    `${urls.length} listings on ${AMICO_SOURCE}${wanted.length < urls.length ? `, reading ${wanted.length}` : ""}`,
+    `${urls.length} listings on ${source}${wanted.length < urls.length ? `, reading ${wanted.length}` : ""}`,
   );
 
   const seen = new Set<string>();
@@ -285,7 +333,7 @@ export async function importAmicoStock(options: RunOptions): Promise<ImportRepor
   for (const [index, url] of wanted.entries()) {
     let listing: SourceListing;
     try {
-      listing = parseAmicoListing(await fetcher.text(url), url);
+      listing = await reader.read(url, fetcher);
     } catch (error) {
       unreadable += 1;
       report.unreadable += 1;
@@ -296,7 +344,7 @@ export async function importAmicoStock(options: RunOptions): Promise<ImportRepor
 
     seen.add(listing.externalId);
     report.contactDetailsRemoved += listing.removedContactDetails;
-    report.dataQuality.push(...qualityNotes(listing, AMICO_TRADING_NAME));
+    report.dataQuality.push(...qualityNotes(listing, target.tradingName));
     if (listing.title) titles.set(listing.title, (titles.get(listing.title) ?? 0) + 1);
 
     try {
@@ -306,6 +354,8 @@ export async function importAmicoStock(options: RunOptions): Promise<ImportRepor
         lists,
         dealerId: dealership.dealerId,
         branchId: dealership.branchId,
+        source,
+        target,
         dryRun,
         fetcher,
         staticDir,
@@ -327,9 +377,13 @@ export async function importAmicoStock(options: RunOptions): Promise<ImportRepor
   if (typeof limit === "number") {
     report.expiryWithheld =
       "only part of the stock list was read (--limit), so no car was hidden for being missing";
+  } else if (options.expireMissing === false) {
+    report.expiryWithheld =
+      "this list was not marked as the whole stock, so no car was hidden for being missing from it";
   } else {
     await expireMissing({
       payload,
+      source,
       dealerId: dealership.dealerId,
       seen,
       found: urls.length,
@@ -355,7 +409,7 @@ export async function importAmicoStock(options: RunOptions): Promise<ImportRepor
       where: {
         and: [
           { dealer: { equals: dealership.dealerId } },
-          { source: { equals: AMICO_SOURCE } },
+          { source: { equals: source } },
           { status: { equals: "live" } },
         ],
       },
@@ -387,6 +441,8 @@ type ListingContext = {
   lists: Lists;
   dealerId: number;
   branchId: number;
+  source: string;
+  target: ImportTarget;
   dryRun: boolean;
   fetcher: PoliteFetcher;
   staticDir: string;
@@ -421,7 +477,7 @@ async function handleListing(context: ListingContext): Promise<CarLine> {
   // over stock that is already here would report every car as new.
   const existing =
     context.dealerId > 0
-      ? await findExisting(payload, context.dealerId, listing.externalId, req)
+      ? await findExisting(payload, context.dealerId, context.source, listing.externalId, req)
       : null;
 
   if (existing && existing.sourceManaged === false) {
@@ -497,7 +553,7 @@ async function createCar(
     return line(listing, resolved.carName, "created", {
       reasons,
       photos,
-      note: holdNote(reasons, AMICO_SOURCE, resolved.conflict ?? undefined) || undefined,
+      note: holdNote(reasons, context.source, resolved.conflict ?? undefined) || undefined,
     });
   }
 
@@ -506,7 +562,7 @@ async function createCar(
   // its file name and uses it.
   const photos = await attachPhotos(context, resolved.carName);
   const reasons = [...missing, ...photoReasons(photos.saved)];
-  const note = holdNote(reasons, AMICO_SOURCE, resolved.conflict ?? undefined);
+  const note = holdNote(reasons, context.source, resolved.conflict ?? undefined);
   const stamp = now().toISOString();
 
   await writeCar(
@@ -520,7 +576,7 @@ async function createCar(
       dealer: context.dealerId,
       branch: context.branchId,
       isDemonstration: false,
-      source: AMICO_SOURCE,
+      source: context.source,
       externalId: listing.externalId,
       sourceManaged: true,
       lastSeenInSourceAt: stamp,
@@ -563,7 +619,7 @@ async function updateCar(
 
   const reasons = [...missing, ...photoReasons(photos.saved)];
   const status = statusFor(existing.status, reasons);
-  const note = holdNote(reasons, AMICO_SOURCE, resolved.conflict ?? undefined);
+  const note = holdNote(reasons, context.source, resolved.conflict ?? undefined);
   const description = toParagraphs(listing.description);
   const wantsDescription = fields.includes("description");
 
@@ -779,6 +835,7 @@ function vehicleFields(vehicle: Resolved["vehicle"]): Record<string, unknown> {
 async function findExisting(
   payload: Payload,
   dealerId: number,
+  source: string,
   externalId: string,
   req?: Partial<PayloadRequest>,
 ): Promise<ExistingVehicle | null> {
@@ -787,7 +844,7 @@ async function findExisting(
     where: {
       and: [
         { dealer: { equals: dealerId } },
-        { source: { equals: AMICO_SOURCE } },
+        { source: { equals: source } },
         { externalId: { equals: externalId } },
       ],
     },
@@ -848,7 +905,7 @@ async function attachPhotos(
   for (const [index, url] of urls.entries()) {
     const position = index + 1;
     const alt = photoAlt(carName, position);
-    const base = photoFilename("amico", listing.externalId, position);
+    const base = photoFilename(context.target.photoPrefix, listing.externalId, position);
 
     try {
       const existing = await payload.find({
@@ -884,8 +941,8 @@ async function attachPhotos(
           rendered,
           alt,
           dealerId: context.dealerId,
-          folder: "amico-motors",
-          credit: AMICO_TRADING_NAME,
+          folder: context.target.photoFolder,
+          credit: context.target.tradingName,
         }),
         req: req as PayloadRequest | undefined,
       });
@@ -903,6 +960,7 @@ async function attachPhotos(
 /** Cars this dealership's stock list no longer shows. Hidden, never deleted and never sold. */
 async function expireMissing(options: {
   payload: Payload;
+  source: string;
   dealerId: number;
   seen: Set<string>;
   found: number;
@@ -912,13 +970,13 @@ async function expireMissing(options: {
   report: ImportReport;
   req?: Partial<PayloadRequest>;
 }): Promise<void> {
-  const { payload, dealerId, seen, dryRun, report, req } = options;
+  const { payload, source, dealerId, seen, dryRun, report, req } = options;
   if (dealerId < 0) return;
 
   const held = await payload.find({
     collection: "vehicles",
     where: {
-      and: [{ dealer: { equals: dealerId } }, { source: { equals: AMICO_SOURCE } }],
+      and: [{ dealer: { equals: dealerId } }, { source: { equals: source } }],
     },
     limit: 0,
     pagination: false,
@@ -970,7 +1028,7 @@ async function expireMissing(options: {
     if (dryRun) continue;
     const data = {
       status,
-      sourceNote: `Hidden by the ${AMICO_SOURCE} import: this car is no longer on that stock list.`,
+      sourceNote: `Hidden by the ${source} import: this car is no longer on that stock list.`,
     };
     const complete = hasRequiredValues({
       make: idOf(doc.make),

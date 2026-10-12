@@ -1,3 +1,5 @@
+import { assertPublicUrl } from "./address-guard";
+
 /**
  * Reading somebody else's website without being a nuisance on it.
  *
@@ -28,6 +30,10 @@ export type PoliteFetcherOptions = {
   timeoutMs?: number;
   /** For tests: a stand-in for global fetch. */
   fetchImpl?: typeof fetch;
+  /** The largest page or photograph read, in bytes. A dealership's photo is a few megabytes. */
+  maxBytes?: number;
+  /** Refuse private and internal addresses. Off only in tests, which have no network. */
+  checkAddress?: boolean;
 };
 
 const wait = (ms: number): Promise<void> =>
@@ -41,6 +47,8 @@ export function createPoliteFetcher(options: PoliteFetcherOptions = {}): PoliteF
     delayMs = 700,
     timeoutMs = 30_000,
     fetchImpl = fetch,
+    maxBytes = 25 * 1024 * 1024,
+    checkAddress = true,
   } = options;
 
   let requests = 0;
@@ -62,27 +70,51 @@ export function createPoliteFetcher(options: PoliteFetcherOptions = {}): PoliteF
     return next;
   };
 
+  // Redirects are followed by hand, a few at most, so every hop goes through the address check
+  // rather than only the first. See address-guard.ts.
   const request = async (url: string): Promise<Response> => {
-    requests += 1;
-    const response = await fetchImpl(url, {
-      headers: { "user-agent": userAgent, accept: "*/*" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    if (!response.ok) {
-      throw new Error(`${response.status} ${response.statusText} for ${url}`);
+    let current = url;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+      if (checkAddress) await assertPublicUrl(current);
+      requests += 1;
+      const response = await fetchImpl(current, {
+        headers: { "user-agent": userAgent, accept: "*/*" },
+        redirect: "manual",
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      const location = response.headers.get("location");
+      if (response.status >= 300 && response.status < 400 && location) {
+        current = new URL(location, current).toString();
+        continue;
+      }
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText} for ${url}`);
+      }
+      const length = Number(response.headers.get("content-length") ?? 0);
+      if (length > maxBytes) throw new Error(`${url} is larger than this import will read`);
+      return response;
     }
-    return response;
+    throw new Error(`${url} redirects too many times`);
+  };
+
+  const body = async (response: Response, url: string): Promise<Buffer> => {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.length > maxBytes) throw new Error(`${url} is larger than this import will read`);
+    return buffer;
   };
 
   return {
-    text: (url) => run(async () => (await request(url)).text()),
+    text: (url) => run(async () => (await body(await request(url), url)).toString("utf8")),
     bytes: (url) =>
       run(async () => {
         const response = await request(url);
-        const body = Buffer.from(await response.arrayBuffer());
-        return { body, contentType: response.headers.get("content-type") };
+        return {
+          body: await body(response, url),
+          contentType: response.headers.get("content-type"),
+        };
       }),
     count: () => requests,
   };
 }
+
+const MAX_REDIRECTS = 5;

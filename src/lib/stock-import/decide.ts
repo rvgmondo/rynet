@@ -218,11 +218,17 @@ export function changesBetween(
  */
 export function holdNote(reasons: HoldReason[], source: string, detail?: string): string {
   if (reasons.length === 0) return "";
+  // A spreadsheet has rows, not pages, and its source key is not something a person should read.
+  const sheet = source.startsWith("spreadsheet:");
+  const words = sheet
+    ? reasons.map((reason) => reason.replace("on the source page", "in their spreadsheet"))
+    : reasons;
   const list =
-    reasons.length === 1
-      ? reasons[0]
-      : `${reasons.slice(0, -1).join(", ")} and ${reasons[reasons.length - 1]}`;
-  return `Hidden by the ${source} import: ${list}.${detail ? ` ${detail}` : ""}`;
+    words.length === 1
+      ? words[0]
+      : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
+  const by = sheet ? "their spreadsheet upload" : `the ${source} import`;
+  return `Hidden by ${by}: ${list}.${detail ? ` ${detail}` : ""}`;
 }
 
 /**

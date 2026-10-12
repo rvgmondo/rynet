@@ -149,6 +149,33 @@ test.describe("the sign-in screen", () => {
   }
 });
 
+test.describe("the onboarding desk", () => {
+  for (const theme of ["light", "dark"] as const) {
+    test(`lays out the three steps, in ${theme}`, async ({ page, context, baseURL }) => {
+      await openSignedIn(page, context, baseURL, theme, "/admin/onboard");
+
+      const desk = page.locator(".rn-onboard");
+      await expect(
+        desk.getByRole("heading", { level: 1, name: "Onboard a dealership" }),
+      ).toBeVisible();
+      await expect(desk.getByRole("heading", { level: 2, name: /Who they are/ })).toBeVisible();
+      await expect(desk.getByLabel("Dealership name")).toBeVisible();
+      await expect(desk.getByLabel("Province")).toBeVisible();
+      await expect(desk.getByLabel("Town")).toBeDisabled();
+      await expect(page).toHaveTitle(/^Onboard a dealership \| Rynet admin$/);
+
+      // The menu offers it to staff.
+      await expect(
+        page.getByRole("navigation", { name: "Admin menu" }).getByRole("link", {
+          name: "Onboard a dealership",
+        }),
+      ).toHaveAttribute("href", "/admin/onboard");
+
+      await expectNoViolations(page, [".rn-onboard"]);
+    });
+  }
+});
+
 test.describe("the home screen", () => {
   for (const theme of ["light", "dark"] as const) {
     test(`greets, counts and links, in ${theme}`, async ({ page, context, baseURL }) => {
@@ -203,7 +230,13 @@ test.describe("the menu", () => {
 
       const menu = page.getByRole("navigation", { name: "Admin menu" });
       const primary = menu.locator(".rn-admin-nav__list--primary a");
-      await expect(primary).toHaveText(["Home", "Cars", "Dealerships", "Enquiries"]);
+      await expect(primary).toHaveText([
+        "Home",
+        "Cars",
+        "Dealerships",
+        "Enquiries",
+        "Onboard a dealership",
+      ]);
       await expect(menu.getByRole("link", { name: "Cars" })).toHaveAttribute(
         "aria-current",
         "page",

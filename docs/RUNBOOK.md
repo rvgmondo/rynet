@@ -167,26 +167,57 @@ Once R2 is configured this stops being possible, because uploads no longer touch
 
 ---
 
+## Onboarding a dealership
+
+Admin, **Onboard a dealership** (`/admin/onboard`). One screen, three steps, and the dealership
+does nothing:
+
+1. **Who they are.** Name, who you spoke to, phone, address, and how you confirmed they are a
+   registered dealership that agreed to list. That sentence is saved on their record as the reason
+   they are verified. The dealership and its main branch are created together, verified, allowed
+   1 000 cars during the launch.
+2. **Their cars.** Paste their own website and press **Check it**. If it is a WordPress site on the
+   Motors theme (Amico's is, and so are many small dealerships'), it says how many cars it found
+   and how the first one reads, and one more press loads them all and keeps them up to date from
+   then on. Anything else, or a portal: download the template, or take their own stock export,
+   save it as CSV and upload it. Column names do not have to match.
+3. **Tell them.** Their showroom link and a WhatsApp message with it, ready to send from your phone.
+
+A car with no price, no mileage, no year or no photograph is loaded but held back, with the reason
+on it. The desk links straight to those cars: add what is missing and set them live.
+
+**No login is created.** There is nowhere for a dealership to sign in yet (the admin is staff only
+and the dealer portal is not built), so their contact person is kept on their record instead.
+
+**Never paste a portal.** AutoTrader and Cars.co.za forbid copying their listings, and the desk
+refuses them. The reader only ever reads a dealership's own site, with their permission.
+
+---
+
 ## The stock sync
 
-The live app reads Amico Motors' own website, amicomotors.co.za, and keeps their cars on Rynet in
-step with it. Nobody has to run anything.
+The live app reads every dealership's own website that has a feed switched on (Amico Motors was
+the first) and keeps their cars on Rynet in step with it. Nobody has to run anything.
 
-**What it does.** At most every three hours it reads their stock list and every listing page on it,
-adds cars that are new, updates the ones that changed, and hides the ones that have gone. A car
-with no price, no mileage or no year, or whose own details and title name different models, is kept
-hidden with the reason written on it. Nothing is deleted and nothing is marked sold: only the
-dealership knows which it is.
+**What it does.** At most every three hours it reads each site's stock list and every listing page
+on it, one dealership after another, never two at once. It adds cars that are new, updates the ones
+that changed, and hides the ones that have gone. A car with no price, no mileage or no year, or
+whose own details and title name different models, is kept hidden with the reason written on it.
+Nothing is deleted and nothing is marked sold: only the dealership knows which it is.
 
-**Where to look.** The admin home screen has a "Stock from amicomotors.co.za" panel with the last
-few runs in plain words, and a "Read it now" button for the moment they tell you they have changed
-something. The full settings are under Website settings, Stock sync, including a switch to stop it.
+**Where to look.** The admin home screen has a "Stock read from dealership websites" panel with
+the last few runs in plain words, and a "Read them now" button. Each dealership's record has a
+**Stock feed** tab with its website, the switch, and what its last read did. The full settings
+are under Website settings, Stock sync, including a switch to stop everything.
 
-**The first run after this ships** reads all 97 listings and downloads their photographs, one at a
-time. It takes about half an hour and the site stays quick throughout. When it finishes, the 311
-example cars and 12 example dealerships are hidden automatically, because a marketplace that
-promises only verified dealerships cannot show invented ones beside a real one. They are hidden,
-not deleted, so they can still be shown to the next dealership.
+**Spreadsheet uploads** run under the same lock as the timed reads, so the two never overlap. If an
+upload says the reader is busy, upload it again in a few minutes.
+
+**It only fetches public web addresses.** Every address it is given, and every redirect, is
+checked against private and internal network ranges first (`src/lib/stock-import/address-guard.ts`).
+
+**When the first real dealership's cars went live** the 311 example cars and 12 example
+dealerships were hidden automatically. They are hidden, not deleted.
 
 **If the host puts idle apps to sleep,** a sleeping app runs no timer. One cron job keeps it awake
 and costs nothing:
@@ -198,7 +229,7 @@ and costs nothing:
 **To stop it** without touching the database, set `RYNET_STOCK_SYNC=off` in Setup Node.js App and
 restart. `RYNET_STOCK_SYNC_MINUTES` changes how often it runs.
 
-**Running it from a terminal instead** is still possible on a machine with one, against that
+**Running Amico's import from a terminal** is still possible on a machine with one, against that
 machine's database: `npm run import:amico -- --dry-run` reads everything and writes nothing.
 
 ---

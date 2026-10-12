@@ -1,6 +1,7 @@
 import type { PayloadRequest, ServerProps } from "payload";
 import { PREFERENCE_KEYS } from "payload/shared";
 
+import { isPlatformStaff } from "@/access/roles";
 import { ADMIN_GROUP, ADMIN_GROUPS_COLLAPSED_BY_DEFAULT } from "@/lib/admin-nav";
 
 import { AdminNavClient, type AdminNavSection } from "./admin-nav-client";
@@ -83,6 +84,7 @@ export async function AdminNav(
       primary={primary}
       sections={sections}
       navPreferredOpen={preferences?.open !== false}
+      canOnboard={isPlatformStaff(user)}
     />
   );
 }

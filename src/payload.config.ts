@@ -169,6 +169,11 @@ export default buildConfig({
       beforeLogin: ["/components/admin/login/login-intro#LoginIntro"],
       views: {
         dashboard: { Component: "/components/admin/dashboard/owner-dashboard#OwnerDashboard" },
+        onboard: {
+          Component: "/components/admin/onboard/onboard-view#OnboardView",
+          path: "/onboard",
+          meta: { title: "Onboard a dealership" },
+        },
       },
     },
   },

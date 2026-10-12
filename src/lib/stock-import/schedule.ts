@@ -1,7 +1,8 @@
 import type { Payload } from "payload";
-
+import { AMICO_SLUG } from "./amico-dealer";
+import { motorsWebsiteReader } from "./readers";
 import { formatReport } from "./report";
-import { type ImportReport, importAmicoStock } from "./run";
+import { type ImportReport, importAmicoStock, importStock } from "./run";
 
 /**
  * The live site reading a dealership's stock list, by itself, for ever.
@@ -52,7 +53,12 @@ export type SyncSettings = {
 };
 
 export type SyncOutcome =
-  | { ran: true; report: ImportReport; summary: string; demonstrationHidden: number }
+  | {
+      ran: true;
+      reports: { dealer: string; report: ImportReport }[];
+      summary: string;
+      demonstrationHidden: number;
+    }
   | { ran: false; reason: string };
 
 const minutes = (value: string | undefined, fallback: number): number => {
@@ -166,15 +172,113 @@ export function initialImportComplete(report: ImportReport): boolean {
   return (report.liveAfter ?? 0) > 0;
 }
 
+/** A dealership whose stock Rynet reads from its own website. */
+type FeedDealer = {
+  id: number;
+  slug: string;
+  tradingName: string;
+  websiteUrl: string;
+};
+
+/** Every dealership with a website feed switched on that is not suspended or archived. */
+export async function dealersWithFeeds(payload: Payload): Promise<FeedDealer[]> {
+  const found = await payload.find({
+    collection: "dealers",
+    where: {
+      and: [
+        { "stockFeed.readWebsite": { equals: true } },
+        { "stockFeed.websiteUrl": { exists: true } },
+        { verificationStatus: { not_in: ["suspended", "archived"] } },
+        { isDemonstration: { not_equals: true } },
+      ],
+    },
+    limit: 0,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  });
+  return (found.docs as unknown as Record<string, unknown>[])
+    .map((doc) => ({
+      id: doc.id as number,
+      slug: String(doc.slug ?? ""),
+      tradingName: String(doc.tradingName ?? ""),
+      websiteUrl: String(
+        (doc.stockFeed as { websiteUrl?: string | null } | null)?.websiteUrl ?? "",
+      ).trim(),
+    }))
+    .filter((dealer) => dealer.websiteUrl.length > 0);
+}
+
+/** The branch a dealership's imported cars are placed at: its primary one, else its first. */
+export async function primaryBranchOf(payload: Payload, dealerId: number): Promise<number | null> {
+  const found = await payload.find({
+    collection: "branches",
+    where: { dealer: { equals: dealerId } },
+    sort: "-isPrimary",
+    limit: 1,
+    depth: 0,
+    overrideAccess: true,
+  });
+  return (found.docs[0] as { id?: number } | undefined)?.id ?? null;
+}
+
+/** Reads one dealership's website into its stock. Amico keeps its own record upkeep. */
+export async function syncDealer(
+  payload: Payload,
+  dealer: FeedDealer,
+  now: () => Date,
+): Promise<ImportReport> {
+  if (dealer.slug === AMICO_SLUG) return importAmicoStock({ payload, dryRun: false, now });
+
+  const branchId = await primaryBranchOf(payload, dealer.id);
+  if (!branchId) {
+    throw new Error(
+      `${dealer.tradingName} has no branch, so their cars have nowhere to be placed. Add one on their record.`,
+    );
+  }
+  return importStock({
+    payload,
+    dryRun: false,
+    now,
+    reader: motorsWebsiteReader(dealer.websiteUrl),
+    target: {
+      dealerId: dealer.id,
+      branchId,
+      tradingName: dealer.tradingName,
+      photoPrefix: dealer.slug,
+      photoFolder: dealer.slug,
+      planned: [],
+    },
+  });
+}
+
+/** Writes what a read did onto the dealership itself, straight to the row so no version is made. */
+async function recordOnDealer(
+  payload: Payload,
+  dealerId: number,
+  at: string,
+  summary: string,
+): Promise<void> {
+  await payload.db.updateOne({
+    collection: "dealers",
+    id: dealerId,
+    data: { stockFeed: { lastReadAt: at, lastSummary: summary } },
+  });
+}
+
 /**
- * One pass: take the lease, read the stock list, write what happened, release the lease.
+ * One pass: take the lease, read every dealership's website in turn, write what happened, release
+ * the lease.
  *
- * It never throws. A run that fails is recorded as a failed run and the lease is released, because
- * a lease left behind would stop every later run until somebody noticed.
+ * One dealership at a time, never two, for the same reason as one photograph at a time: this host
+ * has a hard process and memory ceiling. One dealership failing is recorded against that
+ * dealership and the pass carries on with the next.
+ *
+ * It never throws. A lease left behind would stop every later run until somebody noticed.
  */
 export async function runStockSync(
   payload: Payload,
-  options: { force?: boolean; now?: () => Date } = {},
+  options: { force?: boolean; now?: () => Date; onlyDealerId?: number } = {},
 ): Promise<SyncOutcome> {
   const now = options.now ?? (() => new Date());
   const settings = (await payload.findGlobal({
@@ -196,25 +300,52 @@ export async function runStockSync(
     overrideAccess: true,
   });
 
-  let report: ImportReport | null = null;
-  let failure: string | null = null;
+  const reports: { dealer: string; report: ImportReport }[] = [];
+  const lines: string[] = [];
+  let failures = 0;
+
   try {
-    report = await importAmicoStock({ payload, dryRun: false, now });
+    const dealers = (await dealersWithFeeds(payload)).filter(
+      (dealer) => options.onlyDealerId === undefined || dealer.id === options.onlyDealerId,
+    );
+    if (dealers.length === 0) lines.push("no dealership has a website feed switched on");
+
+    for (const dealer of dealers) {
+      try {
+        const report = await syncDealer(payload, dealer, now);
+        reports.push({ dealer: dealer.tradingName, report });
+        const line = summarise(report);
+        lines.push(`${dealer.tradingName}: ${line}`);
+        await recordOnDealer(payload, dealer.id, now().toISOString(), line);
+      } catch (error) {
+        failures += 1;
+        const message = (error as Error).message;
+        lines.push(`${dealer.tradingName}: could not be read, ${message}`);
+        payload.logger.error({ err: error, msg: `stock sync failed for ${dealer.tradingName}` });
+        await recordOnDealer(
+          payload,
+          dealer.id,
+          now().toISOString(),
+          `Could not be read: ${message}`,
+        );
+      }
+    }
   } catch (error) {
-    failure = (error as Error).message;
+    failures += 1;
+    lines.push(`the run could not finish: ${(error as Error).message}`);
     payload.logger.error({ err: error, msg: "stock sync failed" });
   }
 
   let demonstrationHidden = 0;
   const finishedAt = now().toISOString();
-  let summary = report ? summarise(report) : `the run could not finish: ${failure}`;
+  let summary = lines.join(". ");
 
   const data: Record<string, unknown> = {
     runningSince: null,
     lastFinishedAt: finishedAt,
   };
 
-  if (report && initialImportComplete(report)) {
+  if (reports.some(({ report }) => initialImportComplete(report))) {
     data.initialImportDoneAt = settings.initialImportDoneAt ?? finishedAt;
     if (!settings.demonstrationStockHiddenAt) {
       demonstrationHidden = await hideDemonstrationStock(payload);
@@ -227,7 +358,7 @@ export async function runStockSync(
 
   // Newest first, and only the last twenty: this is a record somebody reads, not an audit trail.
   data.runs = [
-    { finishedAt, summary, ok: report !== null },
+    { finishedAt, summary, ok: failures === 0 },
     ...(settings.runs ?? []).slice(0, 19).map((run) => ({
       finishedAt: run.finishedAt ?? null,
       summary: run.summary ?? null,
@@ -237,9 +368,45 @@ export async function runStockSync(
 
   await payload.updateGlobal({ slug: GLOBAL, data, overrideAccess: true });
 
-  if (!report) return { ran: false, reason: failure ?? "the run could not finish" };
-  payload.logger.info(formatReport(report).slice(0, 2000));
-  return { ran: true, report, summary, demonstrationHidden };
+  for (const { report } of reports) payload.logger.info(formatReport(report).slice(0, 2000));
+  if (reports.length === 0 && failures > 0) return { ran: false, reason: summary };
+  return { ran: true, reports, summary, demonstrationHidden };
+}
+
+/**
+ * Runs one job under the stock sync's lease, so a spreadsheet upload never overlaps a website
+ * pass. Refused, with the reason, when a run is already busy.
+ */
+export async function withSyncLease<T>(
+  payload: Payload,
+  job: () => Promise<T>,
+  now: () => Date = () => new Date(),
+): Promise<{ ok: true; value: T } | { ok: false; reason: string }> {
+  const settings = (await payload.findGlobal({
+    slug: GLOBAL,
+    depth: 0,
+    overrideAccess: true,
+  })) as SyncSettings;
+  const allowed = mayRun(
+    { ...settings, enabled: true },
+    { now: now(), intervalMinutes: intervalMinutes(), force: true },
+  );
+  if (!allowed.ok) return allowed;
+
+  await payload.updateGlobal({
+    slug: GLOBAL,
+    data: { runningSince: now().toISOString() },
+    overrideAccess: true,
+  });
+  try {
+    return { ok: true, value: await job() };
+  } finally {
+    await payload.updateGlobal({
+      slug: GLOBAL,
+      data: { runningSince: null },
+      overrideAccess: true,
+    });
+  }
 }
 
 let timer: NodeJS.Timeout | null = null;

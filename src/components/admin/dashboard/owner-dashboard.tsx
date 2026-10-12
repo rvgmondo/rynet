@@ -3,6 +3,7 @@ import { Gutter, Link } from "@payloadcms/ui";
 import {
   ArrowRight,
   BadgeCheck,
+  Handshake,
   ImagePlus,
   Inbox,
   Info,
@@ -371,9 +372,17 @@ export async function OwnerDashboard(props: DashboardViewServerProps) {
           Quick actions
         </h2>
         <ul className="rn-admin-actions">
-          {can("vehicles", "create") ? (
+          {isPlatformStaff(user) ? (
             <Action
               primary
+              href={`${adminRoute}/onboard`}
+              label="Onboard a dealership"
+              hint="Create them, load their cars, send their showroom."
+              Icon={Handshake}
+            />
+          ) : null}
+          {can("vehicles", "create") ? (
+            <Action
               href={`${adminRoute}/collections/vehicles/create`}
               label="Add a car"
               hint="Put a new car on the site."

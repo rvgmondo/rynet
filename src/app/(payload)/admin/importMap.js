@@ -44,6 +44,7 @@ import { AdminIcon as AdminIcon_14514f24fd016baf79757a752cc80e21 } from '../../.
 import { AdminLogo as AdminLogo_78c6b9411a3b5197e36221642877758f } from '../../../components/admin/brand/admin-logo'
 import { LoginIntro as LoginIntro_a31bcf80ce36156b72fe7ae9204a8e7a } from '../../../components/admin/login/login-intro'
 import { OwnerDashboard as OwnerDashboard_dc55bcb79d6cd54f5cfa545ca8470757 } from '../../../components/admin/dashboard/owner-dashboard'
+import { OnboardView as OnboardView_9c694b52eaf7437e98f0d9a79e0f39b5 } from '../../../components/admin/onboard/onboard-view'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -94,5 +95,6 @@ export const importMap = {
   "/components/admin/brand/admin-logo#AdminLogo": AdminLogo_78c6b9411a3b5197e36221642877758f,
   "/components/admin/login/login-intro#LoginIntro": LoginIntro_a31bcf80ce36156b72fe7ae9204a8e7a,
   "/components/admin/dashboard/owner-dashboard#OwnerDashboard": OwnerDashboard_dc55bcb79d6cd54f5cfa545ca8470757,
+  "/components/admin/onboard/onboard-view#OnboardView": OnboardView_9c694b52eaf7437e98f0d9a79e0f39b5,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

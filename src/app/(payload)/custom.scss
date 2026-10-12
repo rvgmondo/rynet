@@ -1732,6 +1732,378 @@
     }
   }
 
+  /* ------------------------------------------------------- onboarding desk */
+
+  /* Admin > Onboard a dealership. Three numbered panels, the same card as the home screen. */
+  .rn-onboard {
+    max-width: 64rem;
+  }
+
+  .rn-onboard__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .rn-onboard__step {
+    padding: 24px 24px 22px;
+  }
+
+  .rn-onboard__step .rn-admin-home__h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rn-onboard__number {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--rn-radius-full);
+    background: var(--rn-primary);
+    color: var(--rn-on-primary);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .rn-onboard__form {
+    display: grid;
+    gap: 20px 28px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    margin-top: 8px;
+  }
+
+  .rn-onboard__group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .rn-onboard__group--wide,
+  .rn-onboard__form .rn-onboard__problems,
+  .rn-onboard__form .rn-onboard__actions {
+    grid-column: 1 / -1;
+  }
+
+  .rn-onboard__legend {
+    margin-bottom: 4px;
+    padding: 0;
+    color: var(--rn-heading);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .rn-onboard__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .rn-onboard__existing {
+    max-width: 28rem;
+    margin: 4px 0 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rn-line);
+  }
+
+  .rn-onboard__label {
+    color: var(--rn-heading);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .rn-onboard__optional {
+    color: var(--rn-muted);
+    font-weight: 400;
+  }
+
+  .rn-onboard__input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--rn-line-control);
+    border-radius: var(--rn-radius-sm);
+    background: var(--rn-card);
+    color: var(--rn-heading);
+    font: inherit;
+    font-size: 15px;
+  }
+
+  .rn-onboard__input:focus-visible,
+  .rn-onboard__file:focus-visible,
+  .rn-onboard__check input:focus-visible,
+  .rn-onboard__button:focus-visible,
+  .rn-onboard__textbutton:focus-visible,
+  .rn-onboard__link:focus-visible {
+    outline: 2px solid var(--rn-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .rn-onboard__input:disabled {
+    background: var(--rn-subtle);
+    color: var(--rn-muted);
+  }
+
+  .rn-onboard__textarea {
+    min-height: 0;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  .rn-onboard__hint {
+    margin: 0;
+    color: var(--rn-muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .rn-onboard__hint a {
+    color: var(--rn-heading);
+    text-decoration: underline;
+  }
+
+  .rn-onboard__sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .rn-onboard__actions,
+  .rn-onboard__inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .rn-onboard__inline .rn-onboard__input {
+    flex: 1 1 16rem;
+    width: auto;
+  }
+
+  .rn-onboard__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid var(--rn-line-strong);
+    border-radius: var(--rn-radius-sm);
+    background: var(--rn-card);
+    color: var(--rn-heading);
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .rn-onboard__button svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .rn-onboard__button:hover:not(:disabled) {
+    background: var(--rn-subtle);
+  }
+
+  .rn-onboard__button:disabled {
+    color: var(--rn-muted);
+    cursor: progress;
+  }
+
+  .rn-onboard__button--primary {
+    border-color: var(--rn-primary);
+    background: var(--rn-primary);
+    color: var(--rn-on-primary);
+  }
+
+  .rn-onboard__button--primary:hover:not(:disabled) {
+    border-color: var(--rn-primary-hover);
+    background: var(--rn-primary-hover);
+  }
+
+  /* WhatsApp's own green, darkened until white text on it passes 4.5 to 1. */
+  .rn-onboard__button--whatsapp {
+    border-color: #0b7a4b;
+    background: #0b7a4b;
+    color: #ffffff;
+  }
+
+  .rn-onboard__button--whatsapp:hover {
+    border-color: #096b41;
+    background: #096b41;
+  }
+
+  .rn-onboard__textbutton {
+    padding: 6px 0;
+    border: 0;
+    background: none;
+    color: var(--rn-heading);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .rn-onboard__done {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 0;
+    font-size: 16px;
+  }
+
+  .rn-onboard__done svg,
+  .rn-onboard__result--good svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: var(--rn-success);
+  }
+
+  .rn-onboard__problems {
+    margin: 0;
+    padding: 12px 16px 12px 32px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: var(--rn-danger-subtle);
+    color: var(--rn-heading);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .rn-onboard__sources {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    margin-top: 16px;
+  }
+
+  .rn-onboard__source {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: var(--rn-page);
+  }
+
+  .rn-onboard__source-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .rn-onboard__source-title svg {
+    width: 20px;
+    height: 20px;
+    color: var(--rn-muted);
+  }
+
+  .rn-onboard__result {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .rn-onboard__result p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .rn-onboard__result--good {
+    background: var(--rn-success-subtle);
+  }
+
+  .rn-onboard__result--bad {
+    background: var(--rn-warning-subtle);
+    color: var(--rn-heading);
+  }
+
+  .rn-onboard__file {
+    font-size: 14px;
+  }
+
+  .rn-onboard__check {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--rn-body);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .rn-onboard__check input {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+  }
+
+  .rn-onboard__progress {
+    margin-top: 4px;
+    padding: 14px 16px;
+    border-radius: var(--rn-radius-md);
+    background: var(--rn-info-subtle);
+  }
+
+  .rn-onboard__counts {
+    margin: 0 0 4px;
+    color: var(--rn-heading);
+    font-size: 16px;
+  }
+
+  .rn-onboard__busy {
+    margin-left: 10px;
+    color: var(--rn-info);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .rn-onboard__tell {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+  }
+
+  .rn-onboard__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--rn-heading);
+    font-size: 16px;
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  .rn-onboard__link svg {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
   /* ---------------------------------------------- records nobody makes by hand */
 
   /* Enquiries arrive from the site and consent records are evidence, so the admin offers no

@@ -7,6 +7,7 @@ import {
   CarFront,
   ChevronDown,
   ExternalLink,
+  Handshake,
   House,
   Inbox,
   LogOut,
@@ -133,12 +134,15 @@ export function AdminNavClient({
   primary,
   sections,
   navPreferredOpen,
+  canOnboard = false,
 }: {
   adminRoute: string;
   logoutHref: string;
   primary: AdminNavEntity[];
   sections: AdminNavSection[];
   navPreferredOpen: boolean;
+  /** Staff see the onboarding desk, which is where most new stock now comes from. */
+  canOnboard?: boolean;
 }) {
   const pathname = usePathname() ?? "";
   useOpenOnLaptops(navPreferredOpen);
@@ -169,6 +173,16 @@ export function AdminNavClient({
               />
             </li>
           ))}
+          {canOnboard ? (
+            <li>
+              <NavLink
+                href={`${adminRoute}/onboard`}
+                label="Onboard a dealership"
+                current={isCurrent(pathname, `${adminRoute}/onboard`, false)}
+                Icon={Handshake}
+              />
+            </li>
+          ) : null}
         </ul>
 
         {sections.map((section) => (
