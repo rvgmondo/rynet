@@ -47,7 +47,7 @@ export function RunSyncButton() {
         onClick={run}
         disabled={state === "running"}
       >
-        {state === "running" ? "Reading their website" : "Read it now"}
+        {state === "running" ? "Reading their websites" : "Read them now"}
       </button>
       {message ? (
         <output className="rn-admin-sync__message" aria-live="polite">

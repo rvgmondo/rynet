@@ -1,6 +1,6 @@
 {
   "node": {
-    "600ab2ac08c1f6f90df01a2a41d30cfa7e8952c6c1": {
+    "600f301ab28969f914f8f5f45b46c774ad88f3fbd8": {
       "workers": {
         "app/(agency)/digital/contact/page": {
           "moduleId": 114474,
@@ -11,7 +11,7 @@
       "filename": "src/app/actions/agency-enquiry.ts",
       "exportedName": "submitAgencyEnquiry"
     },
-    "00760e293c9cf1bcea3ff3be8f0df7ed9db108b009": {
+    "002597d22e25accba79a2a14552fa8492ded760653": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -22,7 +22,7 @@
       "filename": "src/app/actions/two-factor.ts",
       "exportedName": "readTwoFactorStatus"
     },
-    "603a5cc2a90e7d76bbbf9c3053fba07e6c7102b3e0": {
+    "602acf355b80d0aa06b6b5cebf55322bdde2b14042": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -33,18 +33,7 @@
       "filename": "src/app/actions/two-factor.ts",
       "exportedName": "disableTwoFactor"
     },
-    "60832ab770199aef0f6f9b74ef23f33403edcd4e82": {
-      "workers": {
-        "app/(marketplace)/account/two-factor/page": {
-          "moduleId": 117720,
-          "async": true,
-          "codeHash": null
-        }
-      },
-      "filename": "src/app/actions/two-factor.ts",
-      "exportedName": "beginTwoFactorSetup"
-    },
-    "60a30927231871932718d393a465baeaae6eea6a6a": {
+    "60331e6267af37fe17b8e1a644d4ad8b09be954399": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -55,7 +44,7 @@
       "filename": "src/app/actions/two-factor.ts",
       "exportedName": "regenerateRecoveryCodes"
     },
-    "60ce71e4f8ad0937bf6a595c8f95f0fb732a204430": {
+    "6047ad88283792b7c42deaa229bdba2f814472cc86": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -66,7 +55,18 @@
       "filename": "src/app/actions/two-factor.ts",
       "exportedName": "confirmTwoFactorSetup"
     },
-    "40e98ca5c6be903c9284a1b97724d59228bdeabcfe": {
+    "6074c2dc0288c73f1a9aa4eeaaeb6be1f19abaef66": {
+      "workers": {
+        "app/(marketplace)/account/two-factor/page": {
+          "moduleId": 117720,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "filename": "src/app/actions/two-factor.ts",
+      "exportedName": "beginTwoFactorSetup"
+    },
+    "400b10dbc31d7a6b615099b6d8bdd5c4984dc4a3c5": {
       "workers": {
         "app/(marketplace)/cars/[...facets]/page": {
           "moduleId": 557218,
@@ -82,7 +82,18 @@
       "filename": "src/components/search/count-action.ts",
       "exportedName": "countCars"
     },
-    "60bd8e16515a26e15c96d3fa6d76fce0829c7717e2": {
+    "60c17bfa2986f4174819b7191b07d700251b2b5760": {
+      "workers": {
+        "app/(marketplace)/list-your-stock/page": {
+          "moduleId": 915384,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "filename": "src/app/actions/dealer-signup.ts",
+      "exportedName": "submitDealerSignup"
+    },
+    "60eedba53af102cdb3788f01785f3a4be93ca0b499": {
       "workers": {
         "app/(marketplace)/sell-to-a-dealer/page": {
           "moduleId": 442012,
@@ -93,7 +104,7 @@
       "filename": "src/app/actions/sell-to-dealer.ts",
       "exportedName": "submitSellToDealer"
     },
-    "60f7b6e037b2925ae2f33e7328ce87c0cc4ca7645c": {
+    "6065658b9a0f51be2087932aab3241101bdb6349c2": {
       "workers": {
         "app/(marketplace)/vehicles/[make]/[model]/[slug]/page": {
           "moduleId": 80500,
@@ -104,7 +115,7 @@
       "filename": "src/app/actions/enquiry.ts",
       "exportedName": "submitEnquiry"
     },
-    "40af71118dc21dc21789babeb4b8dfcbcdb8445ccf": {
+    "403bfaa8faee023470a730a370e7afe01ece5b82e0": {
       "workers": {
         "app/(payload)/admin/[[...segments]]/page": {
           "moduleId": 273652,
@@ -115,7 +126,7 @@
       "filename": "src/app/(payload)/layout.tsx",
       "exportedName": "$$RSC_SERVER_ACTION_0"
     },
-    "60a8d2751f9aa2884dc6e9bc2f701ce1c245b532cb": {
+    "606d8641a28c15ccdb10bbef63b2981506fcbc51b1": {
       "workers": {
         "app/(payload)/admin/[[...segments]]/page": {
           "moduleId": 273652,
@@ -128,5 +139,5 @@
     }
   },
   "edge": {},
-  "encryptionKey": "0kfwU6q1Wfazs7G4n+hQYWu3oUQeDZ8Y372NwOFr3Sk="
+  "encryptionKey": "LPQOmuJdrtV1rkCAb8nkaZlXkFokZ4agi2/K+bVIx7U="
 }

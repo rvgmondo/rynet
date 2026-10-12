@@ -34,7 +34,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 100947,
+      "htmlSize": 102244,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -62,7 +62,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 354668,
+      "htmlSize": 356448,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -77,6 +77,38 @@
       "initialRevalidateSeconds": false,
       "srcRoute": "/accessibility",
       "dataRoute": "/accessibility.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/api/onboard/template": {
+      "initialHeaders": {
+        "content-disposition": "attachment; filename=\"rynet-stock-template.csv\"",
+        "content-type": "text/csv; charset=utf-8",
+        "x-next-cache-tags": "_N_T_/layout,_N_T_/api/layout,_N_T_/api/onboard/layout,_N_T_/api/onboard/template/layout,_N_T_/api/onboard/template/route,_N_T_/api/onboard/template"
+      },
+      "routeType": "route",
+      "response": "complete",
+      "compute": "static",
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/api/onboard/template",
+      "dataRoute": null,
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -122,7 +154,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 367010,
+      "htmlSize": 368927,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -150,7 +182,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 347360,
+      "htmlSize": 349277,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -178,7 +210,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 381307,
+      "htmlSize": 382789,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -206,7 +238,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 421496,
+      "htmlSize": 422978,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -234,7 +266,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 390558,
+      "htmlSize": 391997,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -262,7 +294,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 412539,
+      "htmlSize": 414025,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -290,7 +322,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 398647,
+      "htmlSize": 400055,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -318,7 +350,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 402866,
+      "htmlSize": 404279,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -346,7 +378,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 401637,
+      "htmlSize": 403050,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -374,7 +406,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 399309,
+      "htmlSize": 400717,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -402,7 +434,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 398238,
+      "htmlSize": 399646,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -430,7 +462,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 399741,
+      "htmlSize": 401149,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -458,7 +490,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 400962,
+      "htmlSize": 402375,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -514,6 +546,34 @@
         "x-next-revalidate-tag-token"
       ]
     },
+    "/list-your-stock": {
+      "routeType": "page",
+      "response": "complete",
+      "compute": "static",
+      "htmlSize": 377948,
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/list-your-stock",
+      "dataRoute": "/list-your-stock.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/opengraph-image-nkrg6m": {
       "initialHeaders": {
         "cache-control": "public, max-age=0, must-revalidate",
@@ -550,7 +610,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 366964,
+      "htmlSize": 368881,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -610,7 +670,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 358110,
+      "htmlSize": 360027,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -670,8 +730,8 @@
   },
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "be000fc4ed20614ac03a1e06b32af36b",
-    "previewModeSigningKey": "6592b344afa45769eb45e1db9c6582549b483a89bc27b0ba9d617483fba1e118",
-    "previewModeEncryptionKey": "661160a6a9b556dcb556134e7a55ff22a7b26484e8b4b71d1096a030320aa3f2"
+    "previewModeId": "f96cc572e31c34ceb3f0d8fe6d417602",
+    "previewModeSigningKey": "2570124e8a0b1dc9bd356becc2a57b930c169e510fc4aaf850b478e044ac3ecc",
+    "previewModeEncryptionKey": "9ef53a630851a7601edc7583feee3684851fadc0e8a277236ed7f89e59132d72"
   }
 }

@@ -123,7 +123,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "bffb53b946587639e4abfaa349258d1d1064e240"
+          "value": "922b07bf67e56db65608c46f7846b8e49fc93dc9"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -133,7 +133,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "bffb53b946587639e4abfaa349258d1d1064e240"
+          "value": "922b07bf67e56db65608c46f7846b8e49fc93dc9"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -234,6 +234,42 @@
       "namedRegex": "^/api/graphql(?:/)?$"
     },
     {
+      "page": "/api/onboard/dealership",
+      "regex": "^/api/onboard/dealership(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/dealership(?:/)?$"
+    },
+    {
+      "page": "/api/onboard/probe",
+      "regex": "^/api/onboard/probe(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/probe(?:/)?$"
+    },
+    {
+      "page": "/api/onboard/spreadsheet",
+      "regex": "^/api/onboard/spreadsheet(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/spreadsheet(?:/)?$"
+    },
+    {
+      "page": "/api/onboard/status",
+      "regex": "^/api/onboard/status(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/status(?:/)?$"
+    },
+    {
+      "page": "/api/onboard/template",
+      "regex": "^/api/onboard/template(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/template(?:/)?$"
+    },
+    {
+      "page": "/api/onboard/website",
+      "regex": "^/api/onboard/website(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/website(?:/)?$"
+    },
+    {
       "page": "/api/stock-sync/run",
       "regex": "^/api/stock\\-sync/run(?:/)?$",
       "routeKeys": {},
@@ -324,6 +360,12 @@
       "namedRegex": "^/icon(?:/)?$"
     },
     {
+      "page": "/list-your-stock",
+      "regex": "^/list\\-your\\-stock(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/list\\-your\\-stock(?:/)?$"
+    },
+    {
       "page": "/opengraph-image-nkrg6m",
       "regex": "^/opengraph\\-image\\-nkrg6m(?:/)?$",
       "routeKeys": {},
@@ -378,5 +420,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "bffb53b946587639e4abfaa349258d1d1064e240"
+  "deploymentId": "922b07bf67e56db65608c46f7846b8e49fc93dc9"
 }

@@ -524,6 +524,18 @@ export interface Dealer {
    * Buyers message this number from the site.
    */
   whatsappNumber?: string | null;
+  stockFeed?: {
+    /**
+     * The dealership's own site, never AutoTrader or Cars.co.za. Use the Onboard screen to check that Rynet can read it.
+     */
+    websiteUrl?: string | null;
+    /**
+     * Rynet reads the site every few hours, adds new cars, updates prices and hides sold ones.
+     */
+    readWebsite?: boolean | null;
+    lastReadAt?: string | null;
+    lastSummary?: string | null;
+  };
   plan?: (number | null) | Plan;
   /**
    * Not enforced yet.
@@ -1156,7 +1168,8 @@ export interface Lead {
     | 'whatsapp_click'
     | 'phone_reveal'
     | 'dealer_contact'
-    | 'agency_enquiry';
+    | 'agency_enquiry'
+    | 'dealer_signup';
   vehicle?: (number | null) | Vehicle;
   /**
    * Empty for Rynet Digital enquiries and for sellers, who go to several dealerships.
@@ -1633,6 +1646,14 @@ export interface DealersSelect<T extends boolean = true> {
         phone?: T;
       };
   whatsappNumber?: T;
+  stockFeed?:
+    | T
+    | {
+        websiteUrl?: T;
+        readWebsite?: T;
+        lastReadAt?: T;
+        lastSummary?: T;
+      };
   plan?: T;
   listingLimit?: T;
   listingCount?: T;

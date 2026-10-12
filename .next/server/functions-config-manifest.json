@@ -1,6 +1,12 @@
 {
   "version": 1,
   "functions": {
+    "/api/onboard/probe": {
+      "maxDuration": 60
+    },
+    "/api/onboard/website": {
+      "maxDuration": 60
+    },
     "/api/stock-sync/run": {
       "maxDuration": 300
     }

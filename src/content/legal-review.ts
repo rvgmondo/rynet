@@ -30,6 +30,8 @@ export const LEGAL_REVIEWED_AT: Record<LegalDocument, string | null> = {
   enquiryConsent: null,
   /** The consent wording on the Rynet Digital qualification form, stored verbatim on each record. */
   agencyConsent: null,
+  /** The consent wording on the dealership sign-up at /list-your-stock, stored on each record. */
+  dealerSignupConsent: null,
 };
 
 export type LegalDocument =
@@ -39,4 +41,5 @@ export type LegalDocument =
   | "sellNotice"
   | "sellConsent"
   | "enquiryConsent"
-  | "agencyConsent";
+  | "agencyConsent"
+  | "dealerSignupConsent";

@@ -54,6 +54,10 @@ export const LEAD_QUICK_FILTERS: QuickFilter[] = [
     conditions: [{ field: "type", operator: "equals", value: "agency_enquiry" }],
   },
   {
+    label: "Dealerships to onboard",
+    conditions: [{ field: "type", operator: "equals", value: "dealer_signup" }],
+  },
+  {
     label: "Taps only",
     conditions: [{ field: "type", operator: "in", value: [...LEAD_CLICK_TYPES] }],
   },
@@ -119,11 +123,13 @@ export const LEAD_TYPE_LIST_LABELS: Record<string, string> = {
   phone_reveal: "Phone number view",
   dealer_contact: "Dealership contact",
   agency_enquiry: "Rynet Digital",
+  dealer_signup: "Wants to list",
 };
 
 export const LEAD_TYPE_TONES: Record<string, BadgeTone> = {
   trade_in: "info",
   agency_enquiry: "info",
+  dealer_signup: "success",
 };
 
 export const DEALER_STATUS_TONES: Record<string, BadgeTone> = {

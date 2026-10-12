@@ -269,3 +269,16 @@ describe("hiding the cars a run did not find", () => {
     expect(expirySafety({ ...run, wouldExpire: 4, listed: 5 }).safe).toBe(true);
   });
 });
+
+describe("holdNote for a spreadsheet", () => {
+  it("speaks of the spreadsheet, not a source page or an internal key", () => {
+    expect(
+      holdNote(
+        ["no price on the source page", "no photograph could be saved"],
+        "spreadsheet:smith-motors",
+      ),
+    ).toBe(
+      "Hidden by their spreadsheet upload: no price in their spreadsheet and no photograph could be saved.",
+    );
+  });
+});

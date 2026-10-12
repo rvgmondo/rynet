@@ -392,6 +392,67 @@ export const Dealers: CollectionConfig = {
             },
           ],
         },
+        /*
+         * Where this dealership's cars come from, when Rynet reads them for them.
+         *
+         * Staff only, read and write. A dealership pointing the reader at a website is a decision
+         * about whose cars get copied, and the answer has to be "their own, with their
+         * permission", which is something staff confirm, not a box anyone can fill in.
+         */
+        {
+          label: "Stock feed",
+          fields: [
+            {
+              name: "stockFeed",
+              type: "group",
+              label: false,
+              access: {
+                read: ({ req }) => isPlatformStaff(req.user),
+                create: ({ req }) => isPlatformStaff(req.user),
+                update: ({ req }) => isPlatformStaff(req.user),
+              },
+              fields: [
+                {
+                  name: "websiteUrl",
+                  type: "text",
+                  label: "Their own website",
+                  admin: {
+                    placeholder: "https://theirdealership.co.za",
+                    description:
+                      "The dealership's own site, never AutoTrader or Cars.co.za. Use the Onboard screen to check that Rynet can read it.",
+                  },
+                },
+                {
+                  name: "readWebsite",
+                  type: "checkbox",
+                  defaultValue: false,
+                  label: "Keep their cars up to date from their website",
+                  admin: {
+                    description:
+                      "Rynet reads the site every few hours, adds new cars, updates prices and hides sold ones.",
+                  },
+                },
+                {
+                  type: "row",
+                  fields: [
+                    {
+                      name: "lastReadAt",
+                      type: "date",
+                      label: "Last read",
+                      admin: { readOnly: true, date: { pickerAppearance: "dayAndTime" } },
+                    },
+                    {
+                      name: "lastSummary",
+                      type: "textarea",
+                      label: "What the last read did",
+                      admin: { readOnly: true, rows: 2 },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
         {
           label: "Plan",
           fields: [

@@ -217,15 +217,19 @@ test.describe("the form", () => {
     });
 
     // What actually reached the database. The screen saying "sent" has been wrong before.
-    const token = await login(request);
-    const auth = { headers: { Authorization: `JWT ${token}` } };
-
-    const leads = await (
-      await request.get(
-        "/api/leads?where[type][equals]=trade_in&limit=50&depth=0&sort=-createdAt",
-        auth,
-      )
-    ).json();
+    // Signed in again if the shared admin session was dropped by a sign-in from another suite
+    // (see admin.spec.ts): a refused read here says nothing about the form.
+    let token = await login(request);
+    let auth = { headers: { Authorization: `JWT ${token}` } };
+    const leadsUrl = "/api/leads?where[type][equals]=trade_in&limit=50&depth=0&sort=-createdAt";
+    let response = await request.get(leadsUrl, auth);
+    if (response.status() === 401 || response.status() === 403) {
+      token = await login(request);
+      auth = { headers: { Authorization: `JWT ${token}` } };
+      response = await request.get(leadsUrl, auth);
+    }
+    expect(response.ok(), await response.text()).toBe(true);
+    const leads = await response.json();
     const lead = leads.docs.find(
       (d: { tradeIn?: { model?: string } }) => d.tradeIn?.model === model,
     );

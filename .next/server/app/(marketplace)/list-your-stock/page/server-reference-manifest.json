@@ -1,0 +1,16 @@
+{
+  "node": {
+    "60c17bfa2986f4174819b7191b07d700251b2b5760": {
+      "workers": {
+        "app/(marketplace)/list-your-stock/page": {
+          "moduleId": 915384,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "submitDealerSignup",
+      "filename": "src/app/actions/dealer-signup.ts"
+    }
+  },
+  "edge": {}
+}
