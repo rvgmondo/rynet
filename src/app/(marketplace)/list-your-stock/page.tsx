@@ -260,7 +260,10 @@ export default function ListYourStockPage() {
       </section>
 
       {/* ------------------------------------------------------------- the step after */}
-      <section aria-labelledby="digital-heading" className="container-page pt-[var(--section-base)]">
+      <section
+        aria-labelledby="digital-heading"
+        className="container-page pt-[var(--section-base)]"
+      >
         <div className="flex flex-col gap-4 rounded-lg border border-line bg-card p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between lg:gap-12">
           <div className="max-w-2xl">
             <p className="rn-eyebrow">Want more than a listing?</p>
