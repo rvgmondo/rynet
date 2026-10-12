@@ -352,14 +352,14 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
             </h2>
             <p className="mt-4 text-base text-on-navy-muted sm:text-lg">
               A buyer on Rynet is only ever looking at dealership stock, because private sellers
-              cannot list here. Tell us your trading name, your CIPC registration number and roughly
-              how many units you carry, and we will take it from there.
+              cannot list here. Send us your website or your stock sheet and we load every car,
+              keep them up to date and make your ads. Free while we launch.
             </p>
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col">
             <Link
-              href="/contact"
+              href="/list-your-stock"
               className={buttonClasses({ variant: "primary", size: "lg", block: "mobile" })}
             >
               List your stock

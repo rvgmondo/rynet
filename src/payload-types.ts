@@ -1168,7 +1168,8 @@ export interface Lead {
     | 'whatsapp_click'
     | 'phone_reveal'
     | 'dealer_contact'
-    | 'agency_enquiry';
+    | 'agency_enquiry'
+    | 'dealer_signup';
   vehicle?: (number | null) | Vehicle;
   /**
    * Empty for Rynet Digital enquiries and for sellers, who go to several dealerships.

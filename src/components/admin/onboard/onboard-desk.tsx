@@ -30,6 +30,22 @@ import { liveMessage, whatsappLink, whatsappNumber } from "@/lib/onboarding/what
 
 export type Place = { id: number; name: string; parent?: number | null };
 
+/** A dealership that asked to list from /list-your-stock and has not been onboarded yet. */
+export type DeskSignup = {
+  id: number;
+  dealership: string;
+  website: string;
+  town: string;
+  stock: string;
+  contactName: string;
+  phone: string;
+  email: string;
+  askedAt: string;
+};
+
+/** What a sign-up fills in on the form, so staff never retype what the dealership gave. */
+type Prefill = Partial<FormState> & { signupLeadId?: number };
+
 export type DeskDealer = {
   id: number;
   tradingName: string;
@@ -166,12 +182,14 @@ function WhoForm({
   provinces,
   cities,
   onCreated,
+  prefill,
 }: {
   provinces: Place[];
   cities: Place[];
   onCreated: (dealer: DeskDealer) => void;
+  prefill?: Prefill;
 }) {
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>({ ...EMPTY_FORM, ...prefill });
   const [problems, setProblems] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -195,7 +213,12 @@ function WhoForm({
     setProblems([]);
     const { ok, data } = await postJson<{ dealerId?: number; slug?: string; problems?: string[] }>(
       "/api/onboard/dealership",
-      { ...form, provinceId: Number(form.provinceId), cityId: Number(form.cityId) },
+      {
+        ...form,
+        provinceId: Number(form.provinceId),
+        cityId: Number(form.cityId),
+        signupLeadId: prefill?.signupLeadId,
+      },
     );
     setSaving(false);
     if (!ok || !data.dealerId || !data.slug) {
@@ -729,10 +752,133 @@ function TellThem({
 
 /* --------------------------------------------------------------------------------------- the desk */
 
+/**
+ * "Can Rynet read this prospect's website?", before anyone has said yes. Creates nothing and
+ * copies nothing: it reads the site's car list and one car, which is what makes the opening line
+ * "we can load all 43 of your cars automatically" true rather than hopeful.
+ */
+function ProspectCheck() {
+  const [url, setUrl] = useState("");
+  const [probe, setProbe] = useState<Probe | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  async function check() {
+    if (!url.trim()) return;
+    setChecking(true);
+    setProbe(null);
+    const { data } = await postJson<Probe & { error?: string }>("/api/onboard/probe", { url });
+    setChecking(false);
+    setProbe(data.error ? { readable: false, reason: data.error } : data);
+  }
+
+  return (
+    <section className="rn-admin-panel rn-onboard__step" aria-labelledby="onboard-prospect">
+      <h2 id="onboard-prospect" className="rn-admin-home__h2">
+        Check a website
+      </h2>
+      <p className="rn-onboard__hint">
+        Before you contact a dealership: paste their own website to see whether Rynet can load their
+        cars from it, and how many. Nothing is saved.
+      </p>
+      <div className="rn-onboard__inline">
+        <label htmlFor="onboard-prospect-url" className="rn-onboard__sr">
+          Their website
+        </label>
+        <input
+          id="onboard-prospect-url"
+          className="rn-onboard__input"
+          type="url"
+          value={url}
+          placeholder="https://theirdealership.co.za"
+          onChange={(event) => {
+            setUrl(event.target.value);
+            setProbe(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void check();
+            }
+          }}
+        />
+        <button
+          type="button"
+          className="rn-onboard__button"
+          onClick={check}
+          disabled={checking || !url.trim()}
+        >
+          {checking ? "Checking" : "Check it"}
+        </button>
+      </div>
+      {probe?.readable === true ? (
+        <div className="rn-onboard__result rn-onboard__result--good" role="status">
+          <p>
+            <Check aria-hidden="true" /> Rynet can load <strong>{probe.count} cars</strong> from{" "}
+            {probe.source} and keep them up to date.
+          </p>
+          {probe.sample ? (
+            <p className="rn-onboard__hint">
+              The first one reads as {probe.sample.title ?? "a car with no name"}
+              {probe.sample.price ? `, ${rand(probe.sample.price)}` : ", no price"}, with{" "}
+              {probe.sample.photos} photographs.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {probe?.readable === false ? (
+        <p className="rn-onboard__result rn-onboard__result--bad" role="status">
+          {probe.reason}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function Signups({
+  signups,
+  onChoose,
+}: {
+  signups: DeskSignup[];
+  onChoose: (signup: DeskSignup) => void;
+}) {
+  return (
+    <section className="rn-admin-panel rn-onboard__step" aria-labelledby="onboard-signups">
+      <h2 id="onboard-signups" className="rn-admin-home__h2">
+        Asked to list ({signups.length})
+      </h2>
+      <p className="rn-onboard__hint">
+        From the sign-up form on rynet.co.za/list-your-stock. Call them, then press Onboard: the
+        form below fills itself in.
+      </p>
+      <ul className="rn-onboard__signups">
+        {signups.map((signup) => (
+          <li key={signup.id} className="rn-onboard__signup">
+            <div className="rn-onboard__signup-main">
+              <strong>{signup.dealership || "A dealership"}</strong>
+              <span className="rn-onboard__hint">
+                {[signup.town, signup.stock, signup.website].filter(Boolean).join(", ")}
+              </span>
+              <span className="rn-onboard__hint">
+                {signup.contactName},{" "}
+                <a href={`tel:${signup.phone.replace(/\s/g, "")}`}>{signup.phone}</a>
+                {signup.email ? `, ${signup.email}` : ""}
+              </span>
+            </div>
+            <button type="button" className="rn-onboard__button" onClick={() => onChoose(signup)}>
+              Onboard
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function OnboardDesk({
   provinces,
   cities,
   dealers,
+  signups = [],
   initialDealerId,
   siteUrl,
   adminRoute,
@@ -740,6 +886,7 @@ export function OnboardDesk({
   provinces: Place[];
   cities: Place[];
   dealers: DeskDealer[];
+  signups?: DeskSignup[];
   initialDealerId: number | null;
   siteUrl: string;
   adminRoute: string;
@@ -748,6 +895,29 @@ export function OnboardDesk({
     dealers.find((candidate) => candidate.id === initialDealerId) ?? null,
   );
   const [status, setStatus] = useState<Status | null>(null);
+  const [prefill, setPrefill] = useState<Prefill | null>(null);
+  const [open, setOpen] = useState<DeskSignup[]>(signups);
+
+  const choose = useCallback(
+    (signup: DeskSignup) => {
+      // The town they typed, matched to Rynet's own list where it can be, province and all.
+      const town = cities.find(
+        (city) => city.name.toLowerCase() === signup.town.trim().toLowerCase(),
+      );
+      setPrefill({
+        signupLeadId: signup.id,
+        tradingName: signup.dealership,
+        websiteUrl: signup.website,
+        contactName: signup.contactName,
+        phone: signup.phone,
+        email: signup.email,
+        provinceId: town?.parent ? String(town.parent) : "",
+        cityId: town ? String(town.id) : "",
+      });
+      document.getElementById("onboard-step-1")?.scrollIntoView({ behavior: "smooth" });
+    },
+    [cities],
+  );
   // Watched for ten minutes after anything starts, and for as long as a run is busy.
   const [watchUntil, setWatchUntil] = useState(0);
 
@@ -781,6 +951,8 @@ export function OnboardDesk({
 
   return (
     <div className="rn-onboard__steps">
+      {!dealer && open.length > 0 ? <Signups signups={open} onChoose={choose} /> : null}
+      {!dealer ? <ProspectCheck /> : null}
       <section className="rn-admin-panel rn-onboard__step" aria-labelledby="onboard-step-1">
         <div className="rn-admin-panel__head">
           <h2 id="onboard-step-1" className="rn-admin-home__h2">
@@ -832,7 +1004,25 @@ export function OnboardDesk({
                 </select>
               </div>
             ) : null}
-            <WhoForm provinces={provinces} cities={cities} onCreated={setDealer} />
+            {prefill ? (
+              <p className="rn-onboard__result rn-onboard__result--good" role="status">
+                Filled in from {prefill.tradingName || "their"} sign-up. Add the street address and
+                how you confirmed them, then create their showroom.
+              </p>
+            ) : null}
+            <WhoForm
+              key={prefill?.signupLeadId ?? "blank"}
+              provinces={provinces}
+              cities={cities}
+              prefill={prefill ?? undefined}
+              onCreated={(created) => {
+                if (prefill?.signupLeadId) {
+                  setOpen((current) => current.filter((item) => item.id !== prefill.signupLeadId));
+                }
+                setPrefill(null);
+                setDealer(created);
+              }}
+            />
           </>
         )}
       </section>

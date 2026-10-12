@@ -199,7 +199,10 @@ test.describe("the ad studio", () => {
         await expect(ads).toHaveCount(3);
         // Drawn, not blank: the canvas is sized to the format once the artwork is painted.
         await expect
-          .poll(() => ads.first().evaluate((canvas) => (canvas as HTMLCanvasElement).width))
+          .poll(() => ads.first().evaluate((canvas) => (canvas as HTMLCanvasElement).width), {
+            // Photographs load first, and under a full parallel run that takes more than 5 seconds.
+            timeout: 30_000,
+          })
           .toBe(1080);
         await expect(studio.getByLabel("Caption")).toHaveValue(/Rynet/);
       } else {

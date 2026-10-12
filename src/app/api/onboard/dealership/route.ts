@@ -39,6 +39,37 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const result = await onboardDealership(auth.payload, input, auth.user);
+
+    // Onboarded from a sign-up: close it, with a note saying which dealership it became, so it
+    // leaves the list on the desk and the enquiry keeps its own history.
+    const signupId = Number(body.signupLeadId);
+    if (Number.isInteger(signupId) && signupId > 0) {
+      const lead = (await auth.payload
+        .findByID({ collection: "leads", id: signupId, depth: 0, overrideAccess: true })
+        .catch(() => null)) as { type?: string; notes?: Record<string, unknown>[] | null } | null;
+      if (lead?.type !== "dealer_signup") return Response.json(result, { status: 201 });
+      await auth.payload
+        .update({
+          collection: "leads",
+          id: signupId,
+          data: {
+            status: "sold",
+            // Appended, so whatever staff wrote while they were talking to the dealership stays.
+            notes: [
+              ...(lead.notes ?? []),
+              {
+                body: `Onboarded as ${input.tradingName.trim()} (/dealers/${result.slug}).`,
+                createdAt: new Date().toISOString(),
+              },
+            ],
+          },
+          overrideAccess: true,
+        })
+        .catch((error: unknown) =>
+          auth.payload.logger.error({ err: error, msg: "could not close the dealer sign-up" }),
+        );
+    }
+
     return Response.json(result, { status: 201 });
   } catch (error) {
     return Response.json({ problems: [(error as Error).message] }, { status: 400 });

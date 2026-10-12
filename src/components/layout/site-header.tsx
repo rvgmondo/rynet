@@ -28,7 +28,12 @@ const NAV = [
  * route of the "sell-your-car" or "place-an-ad" shape exists (e2e/smoke.spec.ts).
  */
 const SELL = { href: "/sell-to-a-dealer", label: "Sell your car" } as const;
-const FOR_DEALERS = { href: "/digital", label: "For dealers" } as const;
+/*
+ * "For dealers" is where a dealership lists its stock, free, because that is the first thing a
+ * dealer wants from a marketplace. Rynet Digital (websites, ads) is offered from there and from the
+ * menu, as the step after.
+ */
+const FOR_DEALERS = { href: "/list-your-stock", label: "For dealers" } as const;
 
 /**
  * The marketplace header.
@@ -86,7 +91,7 @@ export function SiteHeader() {
 
           <NavLink
             href={FOR_DEALERS.href}
-            match={["/digital"]}
+            match={["/list-your-stock"]}
             className="rn-navlink hidden lg:inline-flex"
           >
             {FOR_DEALERS.label}
@@ -157,7 +162,17 @@ export function SiteHeader() {
                     </li>
                   ))}
                   <li>
-                    <NavLink href={FOR_DEALERS.href} match={["/digital"]} className="rn-menu__link">
+                    <NavLink
+                      href={FOR_DEALERS.href}
+                      match={["/list-your-stock"]}
+                      className="rn-menu__link"
+                    >
+                      For dealers: list your stock
+                      <ChevronRight aria-hidden="true" />
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink href="/digital" match={["/digital"]} className="rn-menu__link">
                       For dealers: Rynet Digital
                       <ChevronRight aria-hidden="true" />
                     </NavLink>

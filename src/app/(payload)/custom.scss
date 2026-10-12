@@ -2104,6 +2104,38 @@
     height: 16px;
   }
 
+  .rn-onboard__signups {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rn-onboard__signup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rn-line);
+  }
+
+  .rn-onboard__signup-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .rn-onboard__signup-main strong {
+    color: var(--rn-heading);
+    font-size: 16px;
+  }
+
+  .rn-onboard__signup-main a {
+    color: var(--rn-heading);
+  }
+
   /* --------------------------------------------------------------- ad studio */
 
   .rn-studio__dealers {

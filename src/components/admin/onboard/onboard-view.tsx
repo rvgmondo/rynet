@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import type { AdminViewServerProps } from "payload";
 
 import { isPlatformStaff } from "@/access/roles";
+import { readSignup } from "@/lib/dealer-signup-schema";
 
-import { type DeskDealer, OnboardDesk, type Place } from "./onboard-desk";
+import { type DeskDealer, type DeskSignup, OnboardDesk, type Place } from "./onboard-desk";
 
 /**
  * Admin > Onboard a dealership (`/admin/onboard`).
@@ -50,7 +51,7 @@ export async function OnboardView({ initPageResult, params, searchParams }: Admi
     );
   }
 
-  const [provinces, cities, dealers] = await Promise.all([
+  const [provinces, cities, dealers, signupLeads] = await Promise.all([
     payload.find({
       collection: "provinces",
       limit: 0,
@@ -81,7 +82,29 @@ export async function OnboardView({ initPageResult, params, searchParams }: Admi
       sort: "tradingName",
       overrideAccess: true,
     }),
+    payload.find({
+      collection: "leads",
+      where: {
+        and: [{ type: { equals: "dealer_signup" } }, { status: { in: ["new", "contacted"] } }],
+      },
+      limit: 30,
+      depth: 0,
+      sort: "-createdAt",
+      overrideAccess: true,
+    }),
   ]);
+
+  // Dealerships that asked to list from /list-your-stock and have not been onboarded yet.
+  const signups: DeskSignup[] = (signupLeads.docs as unknown as Record<string, unknown>[]).map(
+    (doc) => ({
+      id: doc.id as number,
+      contactName: String(doc.name ?? ""),
+      phone: String(doc.phone ?? ""),
+      email: (doc.email as string | null) ?? "",
+      askedAt: String(doc.createdAt ?? ""),
+      ...readSignup(doc.message as string | null),
+    }),
+  );
 
   const provinceList: Place[] = (provinces.docs as unknown as Record<string, unknown>[]).map(
     (doc) => ({ id: doc.id as number, name: String(doc.name ?? "") }),
@@ -128,6 +151,7 @@ export async function OnboardView({ initPageResult, params, searchParams }: Admi
         provinces={provinceList}
         cities={cityList}
         dealers={dealerList}
+        signups={signups}
         initialDealerId={Number.isInteger(requested) && requested > 0 ? requested : null}
         siteUrl={siteUrl}
         adminRoute={adminRoute}
