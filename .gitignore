@@ -15,7 +15,7 @@ deploy/
 
 # Uploaded media. Runtime data, not source. Production media lives on Cloudflare R2.
 media/
-previews/
+/previews/
 
 # Environment. Never commit real secrets.
 .env
