@@ -22,6 +22,7 @@ const ROUTES = [
   { path: "/digital/process", name: "process" },
   { path: "/digital/about", name: "about" },
   { path: "/digital/contact", name: "contact" },
+  { path: "/digital/free-mockup", name: "free mockup" },
 ];
 
 const WIDTHS = [320, 375, 768, 1024, 1440, 1920];
@@ -253,5 +254,62 @@ test.describe("the qualification form", () => {
     // submission.
     const box = await honeypot.boundingBox();
     expect(box === null || box.x < -1000, "the honeypot is inside the viewport").toBe(true);
+  });
+});
+
+test.describe("the free mockup", () => {
+  test("is the agency's headline offer, from the header and the home page", async ({ page }) => {
+    await page.goto("/digital");
+    const links = page.getByRole("link", { name: /free mockup/i });
+    await expect(links.first()).toHaveAttribute("href", "/digital/free-mockup");
+  });
+
+  test("writes a mockup request nobody but staff can see", async ({ page, request, isMobile }) => {
+    test.skip(isMobile, "the desktop run covers the submission");
+    const dealership = `Mockup Test Motors ${Date.now()}`;
+
+    await page.goto("/digital/free-mockup");
+    const form = page.locator("#request");
+    await form.getByLabel("Dealership name").fill(dealership);
+    await form.getByLabel("Your website").fill("mockuptest.example");
+    await form.getByLabel("Your name").fill("Sam Tester");
+    await form.getByLabel("Phone or WhatsApp").fill("082 555 1234");
+    await form.getByRole("checkbox").check();
+    await page.waitForTimeout(3200);
+    await form.getByRole("button", { name: "Send me my mockup" }).click();
+    await expect(form.getByRole("heading", { name: "Your mockup is on its way" })).toBeVisible();
+
+    const login = async () => {
+      const res = await request.post("/api/users/login", {
+        data: {
+          email: process.env.ADMIN_EMAIL || "admin@rynet.co.za",
+          password: process.env.ADMIN_PASSWORD || "ChangeMe123!",
+        },
+      });
+      return ((await res.json()) as { token: string }).token;
+    };
+    const url =
+      "/api/leads?where[type][equals]=mockup_request&where[name][equals]=Sam%20Tester&sort=-createdAt&limit=1&depth=0";
+    let response = await request.get(url, { headers: { Authorization: `JWT ${await login()}` } });
+    // Signed in again if another suite's sign-in dropped the shared admin session.
+    if (response.status() === 401 || response.status() === 403) {
+      response = await request.get(url, { headers: { Authorization: `JWT ${await login()}` } });
+    }
+    const lead = (
+      (await response.json()) as {
+        docs: { id: number; message: string; dealer: unknown; consent: number }[];
+      }
+    ).docs[0];
+    expect(lead?.message).toContain(`Dealership: ${dealership}`);
+    expect(lead?.dealer ?? null).toBeNull();
+
+    // A stranger cannot read it.
+    expect((await request.get(`/api/leads/${lead?.id}`)).status()).toBe(403);
+
+    const token = await login();
+    await request.delete(`/api/leads/${lead?.id}`, { headers: { Authorization: `JWT ${token}` } });
+    await request.delete(`/api/consent-records/${lead?.consent}`, {
+      headers: { Authorization: `JWT ${token}` },
+    });
   });
 });

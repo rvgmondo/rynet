@@ -32,6 +32,8 @@ export const LEGAL_REVIEWED_AT: Record<LegalDocument, string | null> = {
   agencyConsent: null,
   /** The consent wording on the dealership sign-up at /list-your-stock, stored on each record. */
   dealerSignupConsent: null,
+  /** The consent wording on the free mockup request at /digital/free-mockup. */
+  mockupConsent: null,
 };
 
 export type LegalDocument =
@@ -42,4 +44,5 @@ export type LegalDocument =
   | "sellConsent"
   | "enquiryConsent"
   | "agencyConsent"
-  | "dealerSignupConsent";
+  | "dealerSignupConsent"
+  | "mockupConsent";

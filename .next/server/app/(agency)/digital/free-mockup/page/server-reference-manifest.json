@@ -1,0 +1,16 @@
+{
+  "node": {
+    "60b57f92c74138ac0c8c143a5e6956421b839f915c": {
+      "workers": {
+        "app/(agency)/digital/free-mockup/page": {
+          "moduleId": 818445,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "submitMockupRequest",
+      "filename": "src/app/actions/mockup-request.ts"
+    }
+  },
+  "edge": {}
+}

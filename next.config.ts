@@ -133,8 +133,39 @@ const nextConfig: NextConfig = {
          * policy with no `unsafe-eval` and the Payload admin died on a CSP error. It looked
          * fine in every check that did not actually read the response headers on that route.
          */
-        source: "/((?!admin).*)",
+        source: "/((?!admin|preview/).*)",
         headers: [...sharedHeaders, { key: "Content-Security-Policy", value: cspFor("public") }],
+      },
+      {
+        /**
+         * A dealership's website mockup (src/app/preview/[token]/route.ts).
+         *
+         * `sandbox` without `allow-same-origin` is the point: the mockup's own scripts run in an
+         * origin of their own, so whatever is in the file can never reach Rynet's cookies,
+         * storage or an admin's session. Its scripts, styles and fonts may come from the CDNs
+         * mockups are built with, and its images from anywhere on https or inlined.
+         */
+        source: "/preview/:path*",
+        headers: [
+          ...sharedHeaders,
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
+              "default-src 'none'",
+              "script-src 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
+              "style-src 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+              "font-src https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
+              "img-src https: data: blob:",
+              "media-src https: data: blob:",
+              "connect-src https:",
+              "frame-src https://www.google.com https://www.youtube-nocookie.com https://player.vimeo.com",
+              "form-action 'none'",
+              "base-uri 'none'",
+              "frame-ancestors 'none'",
+            ].join("; "),
+          },
+        ],
       },
     ];
   },

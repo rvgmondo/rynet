@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { AGENCY_EMAIL, AGENCY_NAV, REVIEW_CTA } from "@/components/agency/agency-content";
 import { AgencyWordmark } from "@/components/agency/agency-wordmark";
+import { MOCKUP_CTA } from "@/content/agency/mockup-offer";
 import { SERVICES } from "@/content/agency/services";
 import { COMPANY, companyIdentityLine } from "@/content/company";
 
@@ -22,7 +23,11 @@ const COLUMNS = [
   {
     id: "agency-footer-digital",
     heading: "Rynet Digital",
-    links: [...AGENCY_NAV, { href: REVIEW_CTA.href, label: REVIEW_CTA.label }],
+    links: [
+      ...AGENCY_NAV,
+      { href: MOCKUP_CTA.href, label: MOCKUP_CTA.label },
+      { href: REVIEW_CTA.href, label: REVIEW_CTA.label },
+    ],
   },
   {
     id: "agency-footer-rynet",

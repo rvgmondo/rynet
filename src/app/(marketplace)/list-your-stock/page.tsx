@@ -268,17 +268,18 @@ export default function ListYourStockPage() {
           <div className="max-w-2xl">
             <p className="rn-eyebrow">Want more than a listing?</p>
             <h2 id="digital-heading" className="rn-h3 mt-2">
-              Rynet Digital builds dealership websites that sell
+              See your dealership's new website, free
             </h2>
             <p className="mt-2 text-body">
-              A website of your own, plus the ads and search work that bring buyers to it.
+              Rynet Digital designs a new homepage for your dealership from your own stock and
+              photographs, and sends you a private link. No cost, no obligation.
             </p>
           </div>
           <Link
-            href="/digital"
+            href="/digital/free-mockup"
             className={buttonClasses({ variant: "outline", size: "lg", block: "mobile" })}
           >
-            See Rynet Digital
+            Get a free mockup
           </Link>
         </div>
       </section>

@@ -8,9 +8,8 @@ import { VehicleCard, type VehicleCardData } from "@/components/vehicles/vehicle
  * The Rynet marketplace in a browser window: the agency's working example, shown rather than described.
  *
  * Not a screenshot. The window chrome is drawn, and the cards inside it are the marketplace's own
- * VehicleCard rendering real listings, so the frame is always current, every card keeps its
- * "Demo listing" badge, and the title links really open the listing. The caption says plainly
- * that the listings are demonstration data.
+ * VehicleCard rendering real listings, so the frame is always current and the title links really
+ * open the listing. Example stock, if any is ever shown again, keeps its "Demo listing" badge.
  *
  * The drawn chrome (address bar, mini header, filter chips) is decorative and hidden from
  * assistive technology; the figure is named by its caption.
@@ -95,7 +94,7 @@ export function ShowroomFrame({
         className={`mt-4 flex flex-col gap-1 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-4 ${navy ? "text-on-navy-muted" : "text-muted"}`}
       >
         <span>
-          The Rynet marketplace, which we built. Every listing on it today is demonstration data.
+          The Rynet marketplace, which we built, with live stock from checked dealerships.
         </span>
         <Link
           href="/cars"

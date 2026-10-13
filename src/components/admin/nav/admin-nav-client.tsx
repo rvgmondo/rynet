@@ -11,6 +11,7 @@ import {
   House,
   ImageIcon,
   Inbox,
+  LayoutTemplate,
   LogOut,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const PRIMARY_ICONS: Record<string, LucideIcon> = {
   vehicles: CarFront,
   dealers: Building2,
   leads: Inbox,
+  previews: LayoutTemplate,
 };
 
 function isCurrent(pathname: string, href: string, exact: boolean): boolean {

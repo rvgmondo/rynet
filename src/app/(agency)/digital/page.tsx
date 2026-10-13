@@ -2,13 +2,13 @@ import { Accessibility, ArrowRight, BadgeInfo, Check, Link2, Smartphone, X } fro
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AgencyClose } from "@/components/agency/agency-close";
 import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
 import { StageSteps } from "@/components/agency/stage-steps";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { SectionHeader } from "@/components/ui/section-header";
+import { MOCKUP_CTA, MOCKUP_OFFER } from "@/content/agency/mockup-offer";
 import { SERVICES } from "@/content/agency/services";
 
 export const metadata: Metadata = {
@@ -55,10 +55,10 @@ const PROOF = [
   },
   {
     icon: BadgeInfo,
-    title: "Honest about what is not real",
-    body: "Every listing on the marketplace today is demonstration data, and every card and page says so. Your site gets the same care.",
+    title: "Stock that keeps itself current",
+    body: "Dealerships' cars are read from their own websites every few hours: new cars added, prices changed, sold cars taken off. Your site can work the same way.",
     href: "/cars",
-    link: "See the labels",
+    link: "Browse the live stock",
   },
 ] as const;
 
@@ -95,7 +95,7 @@ const FIT = [
  * Rynet Digital has no clients yet, so the usual furniture of an agency home page (logo wall,
  * testimonials, case study numbers) is unavailable, and inventing any of it is out of the
  * question. The proof is the Rynet marketplace: real, on the same domain, and shown here as itself in a
- * browser frame with live listings, clearly labelled as demonstration data.
+ * browser frame with live listings.
  *
  * Order: the outcome and the terms, the working example (four numbered checks under one rule), the
  * seven services as a ruled index, the five steps, who it suits and who it does not (one split
@@ -120,10 +120,10 @@ export default async function AgencyHomePage() {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
-                href={REVIEW_CTA.href}
+                href={MOCKUP_CTA.href}
                 className={buttonClasses({ variant: "primary", size: "lg", block: "mobile" })}
               >
-                {REVIEW_CTA.label}
+                {MOCKUP_CTA.label}
                 <ArrowRight aria-hidden="true" />
               </Link>
               <Link
@@ -318,11 +318,23 @@ export default async function AgencyHomePage() {
         </div>
       </section>
 
-      <AgencyClose id="close-heading" title="Start with a free review of your site">
-        Send us your website. We come back with what is slowing it down, what is stopping it being
-        found, and what we would fix first. If the honest answer is that you do not need us, the
-        review says that.
-      </AgencyClose>
+      <section aria-labelledby="close-heading" className="container-page pb-[var(--section-base)]">
+        <div className="on-navy relative isolate overflow-hidden rounded-lg bg-navy px-6 py-10 sm:px-10 sm:py-12 lg:flex lg:items-center lg:justify-between lg:gap-16 lg:px-14">
+          <div className="max-w-2xl">
+            <h2 id="close-heading" className="rn-h2">
+              {MOCKUP_OFFER.headline}
+            </h2>
+            <p className="mt-3 text-base text-on-navy-muted sm:text-lg">{MOCKUP_OFFER.promise}</p>
+          </div>
+          <Link
+            href={MOCKUP_CTA.href}
+            className={`${buttonClasses({ variant: "primary", size: "lg", block: "mobile" })} mt-8 shrink-0 lg:mt-0`}
+          >
+            {MOCKUP_CTA.label}
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

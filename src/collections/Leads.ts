@@ -149,6 +149,7 @@ export const Leads: CollectionConfig = {
             { value: "dealer_contact", label: "Contacted a dealership" },
             { value: "agency_enquiry", label: "Rynet Digital enquiry" },
             { value: "dealer_signup", label: "Dealership wants to list" },
+            { value: "mockup_request", label: "Wants a free website mockup" },
           ],
         },
         {

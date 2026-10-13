@@ -26,7 +26,9 @@ function vehicleIdOf(value: unknown): number | string | null {
 export function LeadAboutCell({ rowData }: DefaultCellComponentProps) {
   const { documents, getRelationships } = useListRelationships();
   const vehicleId = vehicleIdOf(rowData?.vehicle);
-  const needsCar = !["agency_enquiry", "trade_in", "dealer_signup"].includes(String(rowData?.type));
+  const needsCar = !["agency_enquiry", "trade_in", "dealer_signup", "mockup_request"].includes(
+    String(rowData?.type),
+  );
   const requested = useRef<number | string | null>(null);
 
   useEffect(() => {

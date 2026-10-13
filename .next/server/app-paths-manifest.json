@@ -1,6 +1,7 @@
 {
   "/(agency)/digital/about/page": "app/(agency)/digital/about/page.js",
   "/(agency)/digital/contact/page": "app/(agency)/digital/contact/page.js",
+  "/(agency)/digital/free-mockup/page": "app/(agency)/digital/free-mockup/page.js",
   "/(agency)/digital/page": "app/(agency)/digital/page.js",
   "/(agency)/digital/pricing/page": "app/(agency)/digital/pricing/page.js",
   "/(agency)/digital/process/page": "app/(agency)/digital/process/page.js",
@@ -37,6 +38,7 @@
   "/api/track/phone-reveal/route": "app/api/track/phone-reveal/route.js",
   "/apple-icon/route": "app/apple-icon/route.js",
   "/icon/route": "app/icon/route.js",
+  "/preview/[token]/route": "app/preview/[token]/route.js",
   "/robots.txt/route": "app/robots.txt/route.js",
   "/sitemap.xml/route": "app/sitemap.xml/route.js"
 }

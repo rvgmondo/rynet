@@ -65,6 +65,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/(agency)/digital/free-mockup/page.tsx
+{
+  type __IsExpected<Specific extends AppPageConfig<"/digital/free-mockup">> = Specific
+  const handler = {} as typeof import("../../src/app/(agency)/digital/free-mockup/page.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/(agency)/digital/page.tsx
 {
   type __IsExpected<Specific extends AppPageConfig<"/digital">> = Specific
@@ -339,6 +348,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/track/phone-reveal">> = Specific
   const handler = {} as typeof import("../../src/app/api/track/phone-reveal/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/preview/[token]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/preview/[token]">> = Specific
+  const handler = {} as typeof import("../../src/app/preview/[token]/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
