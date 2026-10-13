@@ -8,7 +8,6 @@ import {
   MessageCircle,
   RefreshCw,
   Store,
-  Users,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -76,14 +75,14 @@ const GETS = [
     body: "A buyer WhatsApps or calls you from your listing. No middleman, no lead fee, no call centre in between.",
   },
   {
+    icon: Globe,
+    title: "The same stock on your own website",
+    body: "Two lines pasted into your website and it shows every car you have on Rynet, kept up to date by itself. No second list to keep.",
+  },
+  {
     icon: ImageIcon,
     title: "Your ads, made for you",
     body: "Ready-to-post artwork of your cars, with the price and your name on it, for your own Facebook page and WhatsApp status.",
-  },
-  {
-    icon: Users,
-    title: "Cars to buy, if you want them",
-    body: "People who want to sell their car to a dealership can be passed to you, if you tell us you buy that kind of car.",
   },
   {
     icon: BadgeCheck,

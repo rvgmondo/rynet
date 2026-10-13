@@ -2148,6 +2148,19 @@
     background: var(--rn-page);
   }
 
+  .rn-embed-snippet {
+    overflow-x: auto;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-sm);
+    background: var(--rn-card);
+    color: var(--rn-heading);
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre;
+  }
+
   .rn-preview-panel__status {
     margin: 0;
     color: var(--rn-heading);

@@ -451,6 +451,14 @@ export const Dealers: CollectionConfig = {
                 },
               ],
             },
+            {
+              // The two lines that put this dealership's stock on its own website. Stores nothing.
+              name: "embedPanel",
+              type: "ui",
+              admin: {
+                components: { Field: "/components/admin/dealers/embed-panel#EmbedPanel" },
+              },
+            },
           ],
         },
         {
