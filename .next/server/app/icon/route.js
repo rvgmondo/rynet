@@ -1,6 +1,6 @@
 var R=require("../../chunks/[turbopack]_runtime.js")("server/app/icon/route.js")
 R.c("server/chunks/[externals]_next_dist_compiled_@vercel_og_index_node_12thmfd.js")
-R.c("server/chunks/[root-of-the-server]__1-4v9_2._.js")
+R.c("server/chunks/[root-of-the-server]__0pqfmgx._.js")
 R.c("server/chunks/[root-of-the-server]__15bjnu5._.js")
 R.c("server/chunks/node_modules_next_dist_0zra58r._.js")
 R.c("server/chunks/node_modules_next_1n-fgeq._.js")

@@ -1,0 +1,188 @@
+/**
+ * The stock embed: a dealership's live Rynet stock on any website, with one line.
+ *
+ *   <div data-rynet-stock="their-dealer-slug"></div>
+ *   <script src="https://rynet.co.za/embed/stock.js" async></script>
+ *
+ * Options, all optional, as attributes on the div:
+ *   data-limit="12"        how many cars to show (default all)
+ *   data-accent="#c8102e"  the colour of prices and buttons (default Rynet navy)
+ *   data-credit="off"      leaves out the small "Stock kept up to date by Rynet" line
+ *
+ * HOW IT STAYS OUT OF THE WAY
+ *
+ * It draws into a shadow root, so the host site's styles cannot reach it and its styles cannot
+ * reach the host site. It takes the host's font. Every piece of text from the feed is set with
+ * textContent and every address is checked to be http or https, so nothing in a listing can turn
+ * into markup or script on somebody else's website. It has no dependencies and loads lazily.
+ *
+ * Written as a plain string so it is served exactly as written, with no build step in between.
+ * The tests parse it, so a syntax error fails the build rather than a dealer's website.
+ */
+export const STOCK_EMBED_SCRIPT = String.raw`(function () {
+  "use strict";
+  var script = document.currentScript;
+  var origin = script && script.src ? new URL(script.src).origin : "https://rynet.co.za";
+
+  var CSS = [
+    ":host{display:block;font:inherit;color:inherit}",
+    "*{box-sizing:border-box}",
+    ".bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;margin:0 0 16px}",
+    ".count{font-weight:600}",
+    "select{font:inherit;padding:8px 10px;border:1px solid #c9ced6;border-radius:8px;background:#fff;color:#0b1320;min-height:40px}",
+    ".grid{list-style:none;margin:0;padding:0;display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}",
+    ".card{display:flex;flex-direction:column;height:100%;border:1px solid #e3e6eb;border-radius:12px;overflow:hidden;background:#fff;color:#0b1320;text-decoration:none;transition:box-shadow .15s,transform .15s}",
+    ".card:hover{box-shadow:0 8px 24px rgba(0,17,35,.12);transform:translateY(-2px)}",
+    ".card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}",
+    ".photo{aspect-ratio:4/3;background:#eef0f3;overflow:hidden}",
+    ".photo img{display:block;width:100%;height:100%;object-fit:cover}",
+    ".body{display:flex;flex-direction:column;gap:6px;padding:14px 14px 16px}",
+    ".title{margin:0;font-size:1rem;font-weight:700;line-height:1.3}",
+    ".facts{margin:0;font-size:.875rem;color:#4b5563}",
+    ".price{margin:auto 0 0;padding-top:6px;font-size:1.125rem;font-weight:800;color:var(--accent)}",
+    ".empty,.error{margin:0;padding:16px;border:1px dashed #c9ced6;border-radius:12px;color:#4b5563}",
+    ".credit{margin:14px 0 0;font-size:.75rem;color:#6b7280}",
+    ".credit a{color:inherit}",
+    "@media (prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}"
+  ].join("");
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = String(text);
+    return node;
+  }
+
+  function safeUrl(value) {
+    try {
+      var url = new URL(String(value));
+      return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function card(car) {
+    var item = el("li");
+    var link = el("a", "card");
+    var href = safeUrl(car.url);
+    if (href) {
+      link.href = href;
+      link.target = "_blank";
+      link.rel = "noopener";
+    }
+    var photo = el("div", "photo");
+    var src = car.photo && safeUrl(car.photo.url);
+    if (src) {
+      var img = document.createElement("img");
+      img.src = src;
+      img.alt = String((car.photo && car.photo.alt) || car.title || "");
+      img.loading = "lazy";
+      img.decoding = "async";
+      if (car.photo.width) img.width = car.photo.width;
+      if (car.photo.height) img.height = car.photo.height;
+      photo.appendChild(img);
+    }
+    var body = el("div", "body");
+    body.appendChild(el("h3", "title", car.title));
+    var facts = [car.mileageLabel, car.transmission, car.fuel].filter(Boolean).join("  |  ");
+    if (facts) body.appendChild(el("p", "facts", facts));
+    body.appendChild(el("p", "price", car.priceLabel || "Price on request"));
+    link.appendChild(photo);
+    link.appendChild(body);
+    item.appendChild(link);
+    return item;
+  }
+
+  function render(host, feed) {
+    var root = host.shadowRoot;
+    var limit = parseInt(host.getAttribute("data-limit") || "", 10);
+    var all = feed.cars || [];
+    var makes = [];
+    all.forEach(function (car) { if (car.make && makes.indexOf(car.make) === -1) makes.push(car.make); });
+    makes.sort();
+
+    var wrap = el("div");
+    var bar = el("div", "bar");
+    var count = el("p", "count");
+    bar.appendChild(count);
+
+    var select = null;
+    if (makes.length > 1) {
+      select = document.createElement("select");
+      select.setAttribute("aria-label", "Show cars by make");
+      var any = el("option", null, "All makes");
+      any.value = "";
+      select.appendChild(any);
+      makes.forEach(function (make) { var option = el("option", null, make); option.value = make; select.appendChild(option); });
+      bar.appendChild(select);
+    }
+
+    var grid = el("ul", "grid");
+    function draw() {
+      var chosen = select ? select.value : "";
+      var shown = all.filter(function (car) { return !chosen || car.make === chosen; });
+      if (limit > 0) shown = shown.slice(0, limit);
+      while (grid.firstChild) grid.removeChild(grid.firstChild);
+      shown.forEach(function (car) { grid.appendChild(card(car)); });
+      count.textContent = shown.length === 1 ? "1 car" : shown.length + " cars";
+    }
+    if (select) select.addEventListener("change", draw);
+
+    wrap.appendChild(bar);
+    if (all.length === 0) {
+      wrap.appendChild(el("p", "empty", "No cars in stock right now. Please check back soon."));
+    } else {
+      wrap.appendChild(grid);
+      draw();
+    }
+    if (host.getAttribute("data-credit") !== "off") {
+      var credit = el("p", "credit");
+      credit.appendChild(document.createTextNode("Stock kept up to date by "));
+      var rynet = el("a", null, "Rynet");
+      rynet.href = origin + "/";
+      rynet.target = "_blank";
+      rynet.rel = "noopener";
+      credit.appendChild(rynet);
+      wrap.appendChild(credit);
+    }
+    while (root.lastChild && root.lastChild.nodeName !== "STYLE") root.removeChild(root.lastChild);
+    root.appendChild(wrap);
+  }
+
+  function mount(host) {
+    if (host.shadowRoot) return;
+    var slug = (host.getAttribute("data-rynet-stock") || "").trim();
+    if (!/^[a-z0-9-]{1,190}$/.test(slug)) return;
+    var root = host.attachShadow({ mode: "open" });
+    var accent = host.getAttribute("data-accent") || "";
+    var style = document.createElement("style");
+    style.textContent = ":host{--accent:" + (/^#[0-9a-fA-F]{3,8}$/.test(accent) ? accent : "#001123") + "}" + CSS;
+    root.appendChild(style);
+    root.appendChild(el("p", "empty", "Loading our cars"));
+
+    fetch(origin + "/api/stock/" + slug, { credentials: "omit" })
+      .then(function (response) { if (!response.ok) throw new Error(String(response.status)); return response.json(); })
+      .then(function (feed) { render(host, feed); })
+      .catch(function () {
+        while (root.lastChild && root.lastChild.nodeName !== "STYLE") root.removeChild(root.lastChild);
+        root.appendChild(el("p", "error", "Our stock could not be loaded just now. Please try again in a moment."));
+      });
+  }
+
+  function start() {
+    var hosts = document.querySelectorAll("[data-rynet-stock]");
+    for (var i = 0; i < hosts.length; i++) mount(hosts[i]);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
+})();
+`;
+
+/** The two lines a dealership pastes into its own website. */
+export function embedSnippet(siteUrl: string, slug: string): string {
+  return [
+    `<div data-rynet-stock="${slug}"></div>`,
+    `<script src="${siteUrl.replace(/\/$/, "")}/embed/stock.js" async></script>`,
+  ].join("\n");
+}

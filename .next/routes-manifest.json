@@ -161,7 +161,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "4b6616b41ede713fbfb43243aabde8bc6152dd5d"
+          "value": "0ff82a76a707624c0f5facd820a2085da157e9b1"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -171,7 +171,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "4b6616b41ede713fbfb43243aabde8bc6152dd5d"
+          "value": "0ff82a76a707624c0f5facd820a2085da157e9b1"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -190,6 +190,14 @@
         "nxtPsegments": "nxtPsegments"
       },
       "namedRegex": "^/admin(?:/(?<nxtPsegments>.+?))?(?:/)?$"
+    },
+    {
+      "page": "/api/stock/[slug]",
+      "regex": "^/api/stock/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/api/stock/(?<nxtPslug>[^/]+?)(?:/)?$"
     },
     {
       "page": "/api/[...slug]",
@@ -400,6 +408,12 @@
       "namedRegex": "^/digital/services(?:/)?$"
     },
     {
+      "page": "/embed/stock.js",
+      "regex": "^/embed/stock\\.js(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/embed/stock\\.js(?:/)?$"
+    },
+    {
       "page": "/how-verification-works",
       "regex": "^/how\\-verification\\-works(?:/)?$",
       "routeKeys": {},
@@ -472,5 +486,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "4b6616b41ede713fbfb43243aabde8bc6152dd5d"
+  "deploymentId": "0ff82a76a707624c0f5facd820a2085da157e9b1"
 }

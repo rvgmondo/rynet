@@ -154,7 +154,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 369276,
+      "htmlSize": 369354,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -182,7 +182,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 349626,
+      "htmlSize": 349704,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -210,7 +210,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 383389,
+      "htmlSize": 383560,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -238,7 +238,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 423598,
+      "htmlSize": 423769,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -266,7 +266,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 392617,
+      "htmlSize": 392788,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -350,7 +350,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 404899,
+      "htmlSize": 405133,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -378,7 +378,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 403670,
+      "htmlSize": 403904,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -490,7 +490,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 402995,
+      "htmlSize": 403229,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -505,6 +505,39 @@
       "initialRevalidateSeconds": false,
       "srcRoute": "/digital/services/[slug]",
       "dataRoute": "/digital/services/stock-feeds-and-inventory.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
+    "/embed/stock.js": {
+      "initialHeaders": {
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=3600, s-maxage=3600",
+        "content-type": "text/javascript; charset=utf-8",
+        "x-next-cache-tags": "_N_T_/layout,_N_T_/embed/layout,_N_T_/embed/stock.js/layout,_N_T_/embed/stock.js/route,_N_T_/embed/stock.js"
+      },
+      "routeType": "route",
+      "response": "complete",
+      "compute": "static",
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/embed/stock.js",
+      "dataRoute": null,
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -550,7 +583,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 378446,
+      "htmlSize": 378308,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -610,7 +643,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 369230,
+      "htmlSize": 369308,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -670,7 +703,7 @@
       "routeType": "page",
       "response": "complete",
       "compute": "static",
-      "htmlSize": 360376,
+      "htmlSize": 360454,
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -730,8 +763,8 @@
   },
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "a0e78f0cf37278be34cf2ef4e8709cf5",
-    "previewModeSigningKey": "9c756d0c02b0e19296209aefe138cbc0cc1beeeeecdf2ab835608a47dea7c3a1",
-    "previewModeEncryptionKey": "f60960e77b25e633a844c1850de2536bd1f82a4a8218dcb52816cfb5304a3a2b"
+    "previewModeId": "d52d298d363186e72ec279dd7e038920",
+    "previewModeSigningKey": "71dfb322c69ef4c6f8181e5bdb75bea80099c3c5dd43a57a73513c6f0936b8d7",
+    "previewModeEncryptionKey": "ff90a0bf22950beccaddf073928e40b26c3c792ed352f322132d8cc20138ebb0"
   }
 }

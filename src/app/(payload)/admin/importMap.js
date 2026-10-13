@@ -37,6 +37,7 @@ import { ListingState as ListingState_2436ff289fc22fc86fbf21ac43dd6f55 } from '.
 import { NoUnpublishButton as NoUnpublishButton_16ff442f03e05105b466f0f5a1d9b7b2 } from '../../../components/admin/vehicles/hidden-controls'
 import { DealerLiveCarsCell as DealerLiveCarsCell_86b5eba79c497cf18a9ae4ecad2de011 } from '../../../components/admin/cells/dealer-live-cars-cell'
 import { LiveCarsNote as LiveCarsNote_5a6f74906f9ccc25c6b83da4ab204792 } from '../../../components/admin/dealers/live-cars-note'
+import { EmbedPanel as EmbedPanel_a07df3e50620a0d70fd5352c4c283204 } from '../../../components/admin/dealers/embed-panel'
 import { LeadAboutCell as LeadAboutCell_2264a0f6cfcba6006c31b89f26ef0c40 } from '../../../components/admin/cells/lead-about-cell'
 import { PreviewSendPanel as PreviewSendPanel_34b91624a55fe821faa717c6b91daa6d } from '../../../components/admin/previews/send-panel'
 import { TwoFactorDescription as TwoFactorDescription_16031d10cff14edb2b51dffc99417cba } from '../../../components/admin/fields/two-factor-link'
@@ -90,6 +91,7 @@ export const importMap = {
   "/components/admin/vehicles/hidden-controls#NoUnpublishButton": NoUnpublishButton_16ff442f03e05105b466f0f5a1d9b7b2,
   "/components/admin/cells/dealer-live-cars-cell#DealerLiveCarsCell": DealerLiveCarsCell_86b5eba79c497cf18a9ae4ecad2de011,
   "/components/admin/dealers/live-cars-note#LiveCarsNote": LiveCarsNote_5a6f74906f9ccc25c6b83da4ab204792,
+  "/components/admin/dealers/embed-panel#EmbedPanel": EmbedPanel_a07df3e50620a0d70fd5352c4c283204,
   "/components/admin/cells/lead-about-cell#LeadAboutCell": LeadAboutCell_2264a0f6cfcba6006c31b89f26ef0c40,
   "/components/admin/previews/send-panel#PreviewSendPanel": PreviewSendPanel_34b91624a55fe821faa717c6b91daa6d,
   "/components/admin/fields/two-factor-link#TwoFactorDescription": TwoFactorDescription_16031d10cff14edb2b51dffc99417cba,

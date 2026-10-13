@@ -344,10 +344,28 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/stock/[slug]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/stock/[slug]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/stock/[slug]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/track/phone-reveal/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/track/phone-reveal">> = Specific
   const handler = {} as typeof import("../../src/app/api/track/phone-reveal/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/embed/stock.js/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/embed/stock.js">> = Specific
+  const handler = {} as typeof import("../../src/app/embed/stock.js/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
