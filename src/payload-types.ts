@@ -71,6 +71,7 @@ export interface Config {
     vehicles: Vehicle;
     dealers: Dealer;
     leads: Lead;
+    previews: Preview;
     branches: Branch;
     media: Media;
     users: User;
@@ -102,6 +103,7 @@ export interface Config {
     vehicles: VehiclesSelect<false> | VehiclesSelect<true>;
     dealers: DealersSelect<false> | DealersSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
+    previews: PreviewsSelect<false> | PreviewsSelect<true>;
     branches: BranchesSelect<false> | BranchesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -1169,7 +1171,8 @@ export interface Lead {
     | 'phone_reveal'
     | 'dealer_contact'
     | 'agency_enquiry'
-    | 'dealer_signup';
+    | 'dealer_signup'
+    | 'mockup_request';
   vehicle?: (number | null) | Vehicle;
   /**
    * Empty for Rynet Digital enquiries and for sellers, who go to several dealerships.
@@ -1319,6 +1322,41 @@ export interface ConsentRecord {
   createdAt: string;
 }
 /**
+ * Homepage mockups made for dealerships. Upload the finished HTML file, then send the private link.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "previews".
+ */
+export interface Preview {
+  id: number;
+  dealership: string;
+  contactName?: string | null;
+  phone?: string | null;
+  /**
+   * The free mockup request it answers, if there was one.
+   */
+  request?: (number | null) | Lead;
+  /**
+   * Made for you. Anyone with the link can see the mockup, nobody else.
+   */
+  token?: string | null;
+  firstViewedAt?: string | null;
+  lastViewedAt?: string | null;
+  viewCount?: number | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
  * People who signed up on the site to save cars and enquire. They can never list a car.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1397,6 +1435,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'leads';
         value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'previews';
+        value: number | Preview;
       } | null)
     | ({
         relationTo: 'branches';
@@ -1748,6 +1790,32 @@ export interface LeadsSelect<T extends boolean = true> {
   isDemonstration?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "previews_select".
+ */
+export interface PreviewsSelect<T extends boolean = true> {
+  dealership?: T;
+  contactName?: T;
+  phone?: T;
+  request?: T;
+  token?: T;
+  firstViewedAt?: T;
+  lastViewedAt?: T;
+  viewCount?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

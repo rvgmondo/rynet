@@ -67,6 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE}/digital/process`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/digital/about`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE}/digital/contact`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${SITE}/digital/free-mockup`, changeFrequency: "monthly", priority: 0.8 },
     ...SERVICES.map((service) => ({
       url: `${SITE}/digital/services/${service.slug}`,
       changeFrequency: "monthly" as const,

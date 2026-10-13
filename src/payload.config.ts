@@ -17,6 +17,7 @@ import { Dealers } from "./collections/Dealers";
 import { Leads } from "./collections/Leads";
 import { Media } from "./collections/Media";
 import { Plans } from "./collections/Plans";
+import { Previews } from "./collections/Previews";
 import { TAXONOMY_COLLECTIONS } from "./collections/taxonomies";
 import { Users } from "./collections/Users";
 import { Vehicles } from "./collections/Vehicles";
@@ -345,6 +346,7 @@ export default buildConfig({
       Vehicles,
       Dealers,
       Leads,
+      Previews,
       // Details
       Branches,
       Media,

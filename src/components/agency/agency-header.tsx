@@ -1,12 +1,13 @@
 import { ArrowLeft, ArrowUpRight, ChevronRight, Mail, Menu, X } from "lucide-react";
 import Link from "next/link";
 
-import { AGENCY_EMAIL, AGENCY_NAV, REVIEW_CTA } from "@/components/agency/agency-content";
+import { AGENCY_EMAIL, AGENCY_NAV } from "@/components/agency/agency-content";
 import { AgencyWordmark } from "@/components/agency/agency-wordmark";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { NavLink } from "@/components/layout/nav-link";
 import { ThemeMenu } from "@/components/layout/theme-menu";
 import { buttonClasses } from "@/components/ui/button-classes";
+import { MOCKUP_CTA } from "@/content/agency/mockup-offer";
 
 /*
  * The focus ring for anything sitting directly on the navy bar. The product ring is a mid blue
@@ -26,7 +27,7 @@ const RING = "focus-visible:outline-[color:var(--rn-focus-ring-on-navy)]";
  *
  * Left: RYNET DIGITAL. Then the four agency destinations with a current-page underline in brand
  * red. Right: a quiet way back to the Rynet marketplace (the agency's working example), the one
- * red action, "Book a free review", which is on every page at every width, phones included, and
+ * red action, "Get a free mockup", which is on every page at every width, phones included, and
  * the colour theme menu, the only theme control on the site.
  *
  * Below 1024px the destinations move into the same native <details> sheet the marketplace uses
@@ -75,15 +76,15 @@ export function AgencyHeader() {
           </Link>
 
           <NavLink
-            href={REVIEW_CTA.href}
+            href={MOCKUP_CTA.href}
             className={buttonClasses({
               variant: "primary",
               size: "sm",
               className: `mr-1 px-2.5 text-[0.8125rem] sm:mr-2 sm:px-4 sm:text-sm lg:mr-0 ${RING}`,
             })}
           >
-            <span className="sm:hidden">{REVIEW_CTA.short}</span>
-            <span className="hidden sm:inline">{REVIEW_CTA.label}</span>
+            <span className="sm:hidden">{MOCKUP_CTA.short}</span>
+            <span className="hidden sm:inline">{MOCKUP_CTA.label}</span>
           </NavLink>
 
           <ThemeMenu
@@ -134,10 +135,10 @@ export function AgencyHeader() {
 
               <div className="mt-auto border-t border-line px-4 py-4">
                 <Link
-                  href={REVIEW_CTA.href}
+                  href={MOCKUP_CTA.href}
                   className={buttonClasses({ variant: "primary", size: "lg", block: true })}
                 >
-                  {REVIEW_CTA.label}
+                  {MOCKUP_CTA.label}
                 </Link>
                 <a
                   href={`mailto:${AGENCY_EMAIL}`}

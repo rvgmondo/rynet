@@ -11,6 +11,7 @@ import * as migration_20260916_120000_vehicle_titles from './20260916_120000_veh
 import * as migration_20260916_120100_vehicle_saved_state from './20260916_120100_vehicle_saved_state';
 import * as migration_20261005_075751_stock_sync_settings from './20261005_075751_stock_sync_settings';
 import * as migration_20261012_064752_dealer_stock_feed from './20261012_064752_dealer_stock_feed';
+import * as migration_20261013_085810_website_previews from './20261013_085810_website_previews';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20261012_064752_dealer_stock_feed.up,
     down: migration_20261012_064752_dealer_stock_feed.down,
-    name: '20261012_064752_dealer_stock_feed'
+    name: '20261012_064752_dealer_stock_feed',
+  },
+  {
+    up: migration_20261013_085810_website_previews.up,
+    down: migration_20261013_085810_website_previews.down,
+    name: '20261013_085810_website_previews'
   },
 ];

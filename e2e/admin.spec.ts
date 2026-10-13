@@ -272,6 +272,7 @@ test.describe("the menu", () => {
         "Cars",
         "Dealerships",
         "Enquiries",
+        "Website mockups",
         "Onboard a dealership",
         "Ad studio",
       ]);

@@ -2136,6 +2136,25 @@
     color: var(--rn-heading);
   }
 
+  /* A mockup's record: the private link, the message and whether it was opened. */
+  .rn-preview-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px 0 24px;
+    padding: 18px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: var(--rn-page);
+  }
+
+  .rn-preview-panel__status {
+    margin: 0;
+    color: var(--rn-heading);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
   /* --------------------------------------------------------------- ad studio */
 
   .rn-studio__dealers {

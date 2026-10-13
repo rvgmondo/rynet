@@ -97,8 +97,8 @@ const BUILT = [
   },
   {
     icon: BadgeInfo,
-    title: "Honest labels",
-    body: "Every listing on it today is demonstration data, and every card and page says so.",
+    title: "Checked sellers only",
+    body: "Every car on it comes from a dealership Rynet has checked. No private sellers, ever.",
   },
 ] as const;
 
