@@ -18,7 +18,7 @@ export const REVIEW_CTA = {
   short: "Free review",
 } as const;
 
-export const AGENCY_EMAIL = "digital@rynet.co.za";
+export const AGENCY_EMAIL = "sales@rynet.co.za";
 
 /** Routes that exist. /digital/work stays out until there is real client work to show. */
 export const AGENCY_NAV = [

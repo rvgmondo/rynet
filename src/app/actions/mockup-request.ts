@@ -69,7 +69,7 @@ export async function submitMockupRequest(
     return {
       status: "error",
       message:
-        "That is a few requests in a short time. Try again shortly, or email digital@rynet.co.za.",
+        "That is a few requests in a short time. Try again shortly, or email sales@rynet.co.za.",
     };
   }
 
@@ -112,7 +112,7 @@ export async function submitMockupRequest(
     console.error("Mockup request failed:", error);
     return {
       status: "error",
-      message: "Something went wrong sending that. Try again, or email digital@rynet.co.za.",
+      message: "Something went wrong sending that. Try again, or email sales@rynet.co.za.",
     };
   }
 }

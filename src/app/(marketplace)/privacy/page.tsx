@@ -41,7 +41,7 @@ export default function PrivacyPage() {
       <p>
         <strong>Information Officer:</strong> to be confirmed and registered with the Information
         Regulator before launch. Contact:{" "}
-        <a href="mailto:privacy@rynet.co.za">privacy@rynet.co.za</a>.
+        <a href="mailto:info@rynet.co.za">info@rynet.co.za</a>.
       </p>
 
       <h2>What we collect, and why</h2>
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
         </li>
       </ul>
       <p>
-        Email <a href="mailto:privacy@rynet.co.za">privacy@rynet.co.za</a> and we will respond
+        Email <a href="mailto:info@rynet.co.za">info@rynet.co.za</a> and we will respond
         within 30 days. We may ask you to confirm who you are first, because handing someone else's
         information to whoever asks is its own breach.
       </p>

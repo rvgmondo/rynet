@@ -72,7 +72,7 @@ const FAQS = [
   {
     question: "Which dealerships get my details?",
     answer:
-      "A shortlist of verified dealerships in your province that buy the kind of car you are selling, and nobody else. We keep a record of every dealership that received your details and will tell you which ones if you ask. Your details are not sold on, not added to a marketing list and not handed to a lead broker. To find out who has them, or to stop it at any time, email privacy@rynet.co.za.",
+      "A shortlist of verified dealerships in your province that buy the kind of car you are selling, and nobody else. We keep a record of every dealership that received your details and will tell you which ones if you ask. Your details are not sold on, not added to a marketing list and not handed to a lead broker. To find out who has them, or to stop it at any time, email info@rynet.co.za.",
   },
   {
     question: "What if I still owe money on the car?",
@@ -490,8 +490,8 @@ export default async function SellToADealerPage() {
                  * address the day COMPANY.streetAddress is set, and not before.
                  */
                 detail: COMPANY.streetAddress
-                  ? `${COMPANY.legalName ?? COMPANY.tradingName}, ${COMPANY.streetAddress}${COMPANY.postalAddress ? `, postal address ${COMPANY.postalAddress}` : ""}. Contact privacy@rynet.co.za.`
-                  : `${COMPANY.tradingName}, of ${COMPANY.town}. Postal and physical address to be confirmed before launch. Contact privacy@rynet.co.za.`,
+                  ? `${COMPANY.legalName ?? COMPANY.tradingName}, ${COMPANY.streetAddress}${COMPANY.postalAddress ? `, postal address ${COMPANY.postalAddress}` : ""}. Contact info@rynet.co.za.`
+                  : `${COMPANY.tradingName}, of ${COMPANY.town}. Postal and physical address to be confirmed before launch. Contact info@rynet.co.za.`,
               },
               {
                 term: "What we collect",
@@ -511,7 +511,7 @@ export default async function SellToADealerPage() {
               {
                 term: "Who receives it",
                 detail:
-                  "Verified, registered dealerships in your province that trade in your kind of vehicle. We choose a shortlist of them for your car and keep a record of each dealership that received your details, which you can ask for at privacy@rynet.co.za. Once a dealership has your details it decides for itself what it does with them, so it answers for its own use of them and we cannot delete what it holds.",
+                  "Verified, registered dealerships in your province that trade in your kind of vehicle. We choose a shortlist of them for your car and keep a record of each dealership that received your details, which you can ask for at info@rynet.co.za. Once a dealership has your details it decides for itself what it does with them, so it answers for its own use of them and we cannot delete what it holds.",
               },
               {
                 term: "Where it is kept",
@@ -520,7 +520,7 @@ export default async function SellToADealerPage() {
               {
                 term: "Your rights",
                 detail:
-                  "You can ask what we hold and get a copy, have anything wrong corrected, have it deleted, object to the processing, and withdraw your consent at any time. Email privacy@rynet.co.za.",
+                  "You can ask what we hold and get a copy, have anything wrong corrected, have it deleted, object to the processing, and withdraw your consent at any time. Email info@rynet.co.za.",
               },
               {
                 term: "If we get it wrong",

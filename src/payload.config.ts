@@ -457,7 +457,7 @@ export default buildConfig({
 
   email: process.env.SMTP_HOST
     ? nodemailerAdapter({
-        defaultFromAddress: process.env.EMAIL_FROM || "noreply@rynet.co.za",
+        defaultFromAddress: process.env.EMAIL_FROM || "info@rynet.co.za",
         defaultFromName: "Rynet",
         transportOptions: {
           host: process.env.SMTP_HOST,

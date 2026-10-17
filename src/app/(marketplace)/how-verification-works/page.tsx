@@ -362,7 +362,7 @@ export default async function HowVerificationWorksPage() {
             </div>
           </div>
           <a
-            href="mailto:report@rynet.co.za"
+            href="mailto:info@rynet.co.za"
             className={buttonClasses({
               variant: "outline",
               block: "mobile",
@@ -370,7 +370,7 @@ export default async function HowVerificationWorksPage() {
             })}
           >
             <Mail aria-hidden="true" />
-            report@rynet.co.za
+            info@rynet.co.za
           </a>
         </div>
       </section>

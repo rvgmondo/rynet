@@ -555,8 +555,8 @@ function SellSuccess({ message, sent }: { message: string; sent: Sent | null }) 
         </Link>
         <p className="text-sm text-muted">
           Changed your mind? Email{" "}
-          <a href="mailto:privacy@rynet.co.za" className="rn-link">
-            privacy@rynet.co.za
+          <a href="mailto:info@rynet.co.za" className="rn-link">
+            info@rynet.co.za
           </a>{" "}
           and we stop passing it on.
         </p>

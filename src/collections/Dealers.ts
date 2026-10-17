@@ -609,9 +609,9 @@ export const Dealers: CollectionConfig = {
                     },
                   },
                 },
-                // Was: "Where each kind of lead goes. Without a rule, leads fall back to the
-                // dealer principal." NOT IMPLEMENTED: no enquiry email is sent anywhere yet.
-                description: "No enquiry emails are sent yet.",
+                // Sent by src/lib/notify/send-lead-email.ts once SMTP is set on the host.
+                description:
+                  "Where each kind of enquiry is emailed. With no rule it goes to the branch's email, then the dealer principal's.",
               },
               fields: [
                 {

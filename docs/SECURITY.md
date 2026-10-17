@@ -7,7 +7,7 @@ Companion to [THREAT-MODEL.md](THREAT-MODEL.md), which covers who might attack t
 
 ## Reporting a vulnerability
 
-Email **security@rynet.co.za** with what you found, how to reproduce it, and what you could reach.
+Email **info@rynet.co.za** with what you found, how to reproduce it, and what you could reach.
 We will acknowledge within two working days and tell you what we are doing about it.
 
 Please do not test against another dealership's real data, do not run automated scanners against

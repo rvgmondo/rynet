@@ -43,10 +43,10 @@ dealer". Talk about what they get, not about how big Rynet is.
 
 - [ ] **The site shows only real stock.** Done: the example cars were put away automatically when
       Amico's went live.
-- [ ] **Enquiry email.** Buyers reach a dealership by WhatsApp and phone from the listing, which
-      works today. The enquiry form's email to the dealership does not send until SMTP is set up
-      in Setup Node.js App (see `docs/PRODUCTION-READINESS.md`). Fix this before the tenth
-      dealership, or the first one that asks "where are my leads?".
+- [ ] **Switch email on.** Enquiries are emailed to the dealership, and sign-ups and mockup
+      requests to sales@rynet.co.za, as soon as the mail settings are in Setup Node.js App. Four
+      steps in `docs/PRODUCTION-READINESS.md`, section 1. Until then buyers reach a dealership by
+      WhatsApp and phone from the listing, which works today.
 - [ ] **Your WhatsApp number on the sign-up page.** Put it in `src/content/dealer-offer.ts`
       (`whatsapp`) so the page can offer a WhatsApp button as well as the form.
 - [ ] **Two friendly dealerships first.** Someone you know. Every later pitch is easier when you can
