@@ -18,6 +18,10 @@
 export const COMPANY = {
   /** How the company is known on the site. Real. */
   tradingName: "Rynet",
+  /** The general mailbox: buyers, privacy and accessibility requests, reports. Real. */
+  infoEmail: "info@rynet.co.za",
+  /** Dealerships listing with Rynet, and Rynet Digital's clients. Real. */
+  salesEmail: "sales@rynet.co.za",
   /** The town the footers already name. Real, and replaced by the street address once known. */
   town: "Pretoria, Gauteng",
   /** Registered name exactly as CIPC holds it, including "(Pty) Ltd". */

@@ -9,6 +9,7 @@ import {
   LEAD_TYPE_LIST_LABELS,
   LEAD_TYPE_TONES,
 } from "@/lib/admin-quick-filters";
+import { sendLeadEmail } from "@/lib/notify/send-lead-email";
 import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 
 /**
@@ -102,6 +103,14 @@ export const Leads: CollectionConfig = {
             .filter((id: unknown) => id !== null && id !== undefined);
         }
         return data;
+      },
+    ],
+    afterChange: [
+      ({ doc, operation, req }) => {
+        // After the save, so a mail fault can never lose a lead, and not awaited, so a slow mail
+        // server never holds up the person who just pressed Send. See send-lead-email.ts.
+        if (operation === "create") void sendLeadEmail(req.payload, doc as Record<string, unknown>);
+        return doc;
       },
     ],
   },

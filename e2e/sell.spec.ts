@@ -195,7 +195,7 @@ test.describe("the form", () => {
     await page.getByLabel("Province", { exact: true }).selectOption({ index: 1 });
     await page.getByLabel("Town or city").fill("Centurion");
     await page.getByLabel("Your name").fill("Nomsa Khumalo");
-    // exact again: the consent sentence mentions emailing privacy@rynet.co.za.
+    // exact again: the consent sentence mentions emailing info@rynet.co.za.
     await page.getByLabel("Email", { exact: true }).fill("nomsa@example.co.za");
     await page.getByLabel("Phone", { exact: true }).fill("082 555 0177");
 

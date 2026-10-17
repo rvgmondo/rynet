@@ -108,7 +108,7 @@ export async function submitSellToDealer(
     const minutes = Math.ceil(limit.retryAfterSeconds / 60);
     return {
       status: "error",
-      message: `That is a few submissions in a short time. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}, or email hello@rynet.co.za.`,
+      message: `That is a few submissions in a short time. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}, or email info@rynet.co.za.`,
     };
   }
 
@@ -179,7 +179,7 @@ export async function submitSellToDealer(
     console.error("Sell to dealer submission failed:", error);
     return {
       status: "error",
-      message: "Something went wrong sending that. Try again, or email hello@rynet.co.za.",
+      message: "Something went wrong sending that. Try again, or email info@rynet.co.za.",
     };
   }
 }

@@ -166,10 +166,10 @@ describe("verifyTotp", () => {
 
 describe("otpauthUrl", () => {
   it("names the issuer in both places an app might read it", () => {
-    const url = otpauthUrl({ secret: "ABCDEFGH", account: "ruben@rynet.co.za" });
+    const url = otpauthUrl({ secret: "ABCDEFGH", account: "admin@rynet.co.za" });
     // The label carries "Issuer:account", and issuer is repeated as a parameter, because
     // which one an app reads depends on how old it is.
-    expect(url).toContain("otpauth://totp/Rynet%3Aruben%40rynet.co.za");
+    expect(url).toContain("otpauth://totp/Rynet%3Aadmin%40rynet.co.za");
     expect(url).toContain("issuer=Rynet");
     expect(url).toContain("secret=ABCDEFGH");
     expect(url).toContain("digits=6");

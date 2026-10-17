@@ -100,8 +100,8 @@ export function SiteFooter() {
               </li>
               <li className="flex min-h-8 items-center gap-2">
                 <Mail aria-hidden="true" className="size-4 shrink-0" />
-                <a href="mailto:hello@rynet.co.za" className="rn-footlink min-h-8">
-                  hello@rynet.co.za
+                <a href="mailto:info@rynet.co.za" className="rn-footlink min-h-8">
+                  info@rynet.co.za
                 </a>
               </li>
             </ul>

@@ -39,7 +39,7 @@ const SUSPENDED = "suspended";
  * know, and "invalid credentials" would send a suspended dealer into a password reset loop.
  */
 const REFUSAL =
-  "This account has been suspended, so it cannot sign in. Email hello@rynet.co.za if you think that is wrong.";
+  "This account has been suspended, so it cannot sign in. Email info@rynet.co.za if you think that is wrong.";
 
 type AccountWithStatus = TypeWithID & {
   status?: string | null;

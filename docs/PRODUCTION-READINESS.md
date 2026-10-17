@@ -313,14 +313,30 @@ with a colour vision deficiency. Now a base rule, so the next inline link cannot
 
 Two items, both small, both outside the code.
 
-### 1. Email is not configured
+### 1. Email is not switched on yet
 
-`SMTP_HOST` is blank, so Payload logs enquiries to the console and sends nothing. The lead is
-written and the buyer is told the dealership has their details, and no notification goes anywhere.
+The code is ready: every new enquiry is emailed the moment it is saved (src/lib/notify/). A
+buyer's enquiry goes to the dealership (its routing rules, then the branch email, then the dealer
+principal), and Rynet's own leads go to Rynet's mailboxes: dealership sign-ups, mockup requests and
+Rynet Digital enquiries to sales@rynet.co.za, people selling a car to info@rynet.co.za. A
+dealership with no address on record has its enquiry sent to info@ instead, so nothing is missed.
 
-Needs a cPanel mailbox, then SPF, DKIM and DMARC on `rynet.co.za` or every notification lands in
-spam. **This is the one that would embarrass you fastest**, because the site tells a buyer their
-enquiry has been passed on.
+Nothing is sent until the host has a mail server set, and that is the step left. In cPanel:
+
+1. **Email Accounts**, find info@rynet.co.za, **Connect Devices**. Note the outgoing server (usually
+   mail.rynet.co.za) and the SSL port (usually 465).
+2. **Setup Node.js App**, the Rynet app, environment variables:
+   `SMTP_HOST` = that server, `SMTP_PORT` = 465, `SMTP_USER` = info@rynet.co.za,
+   `SMTP_PASS` = that mailbox's password, `EMAIL_FROM` = info@rynet.co.za. Save, then **Restart**.
+3. **Email Deliverability**: repair SPF and DKIM for rynet.co.za. If the DNS is on Cloudflare,
+   copy the two records cPanel shows into Cloudflare instead. Add a DMARC record too:
+   TXT `_dmarc`, value `v=DMARC1; p=none; rua=mailto:info@rynet.co.za`. Without these, every
+   notification lands in spam.
+4. **Test it:** ask for a free mockup at rynet.co.za/digital/free-mockup with your own number. It
+   should arrive at sales@ within a minute. Then delete the test enquiry in the admin.
+
+Still not emailed even then: the dealerships a trade-in is passed to (the distribution job writes
+who received it but sends nothing yet), and a dealership on its own login, because there is none.
 
 ### 2. No restore has ever been done
 

@@ -97,7 +97,7 @@ export async function submitAgencyEnquiry(
     const minutes = Math.ceil(limit.retryAfterSeconds / 60);
     return {
       status: "error",
-      message: `That is a few submissions in a short time. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}, or email digital@rynet.co.za.`,
+      message: `That is a few submissions in a short time. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}, or email sales@rynet.co.za.`,
     };
   }
 
@@ -162,7 +162,7 @@ export async function submitAgencyEnquiry(
     return {
       status: "error",
       message:
-        "Something went wrong sending that. Try again, or email digital@rynet.co.za directly.",
+        "Something went wrong sending that. Try again, or email sales@rynet.co.za directly.",
     };
   }
 }

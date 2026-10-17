@@ -193,4 +193,4 @@ export const SELL_CONSENT_WORDING =
   "they can contact me with an offer. Rynet chooses the shortlist, and will tell me which " +
   "dealerships received my details if I ask. Each dealership decides for itself what it does " +
   "with my details once it has them. I can withdraw this at any time by emailing " +
-  "privacy@rynet.co.za.";
+  "info@rynet.co.za.";

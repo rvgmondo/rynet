@@ -95,7 +95,7 @@ export default function TermsPage() {
 
       <h2>Contact</h2>
       <p>
-        <a href="mailto:hello@rynet.co.za">hello@rynet.co.za</a>
+        <a href="mailto:info@rynet.co.za">info@rynet.co.za</a>
       </p>
     </LegalDocument>
   );

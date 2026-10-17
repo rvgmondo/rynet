@@ -124,7 +124,7 @@ export default function AccessibilityPage() {
         do, and what you were using.
       </p>
       <p>
-        <a href="mailto:accessibility@rynet.co.za">accessibility@rynet.co.za</a>
+        <a href="mailto:info@rynet.co.za">info@rynet.co.za</a>
       </p>
       <p>We will tell you when it is fixed, or why it will take longer.</p>
     </LegalDocument>

@@ -73,7 +73,7 @@ export async function submitDealerSignup(
     return {
       status: "error",
       message:
-        "That is a few sign-ups in a short time. Try again shortly, or email hello@rynet.co.za.",
+        "That is a few sign-ups in a short time. Try again shortly, or email info@rynet.co.za.",
     };
   }
 
@@ -117,7 +117,7 @@ export async function submitDealerSignup(
     console.error("Dealer sign-up failed:", error);
     return {
       status: "error",
-      message: "Something went wrong sending that. Try again, or email hello@rynet.co.za.",
+      message: "Something went wrong sending that. Try again, or email info@rynet.co.za.",
     };
   }
 }
