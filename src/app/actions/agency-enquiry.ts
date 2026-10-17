@@ -161,8 +161,7 @@ export async function submitAgencyEnquiry(
     console.error("Agency enquiry submission failed:", error);
     return {
       status: "error",
-      message:
-        "Something went wrong sending that. Try again, or email sales@rynet.co.za directly.",
+      message: "Something went wrong sending that. Try again, or email sales@rynet.co.za directly.",
     };
   }
 }

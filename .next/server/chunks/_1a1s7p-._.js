@@ -1,4 +1,4 @@
-module.exports=[745680,e=>{"use strict";let t=String.raw`(function () {
+module.exports=[745680,e=>{"use strict";let t=`(function () {
   "use strict";
   var script = document.currentScript;
   var origin = script && script.src ? new URL(script.src).origin : "https://rynet.co.za";

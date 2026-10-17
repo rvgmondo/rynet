@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check --max-diagnostics=200 .",
     "lint:fix": "biome check --write .",
+    "lint:stored": "bash scripts/lint-stored.sh",
     "format": "biome format --write .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
