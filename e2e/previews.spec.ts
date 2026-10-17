@@ -60,15 +60,25 @@ test.describe("a mockup's private link", () => {
     expect(created.status(), await created.text()).toBe(201);
     const doc = (
       (await created.json()) as {
-        doc: { id: number; token: string; filename: string; url?: string };
+        doc: {
+          id: number;
+          token: string;
+          slug: string;
+          filename: string;
+          expiresAt: string;
+          stage: string;
+        };
       }
     ).doc;
-    expect(doc.token).toMatch(/^[A-Za-z0-9_-]{20,}$/);
+    // A readable link made from the name, a fresh mockup not yet sent, and an end date ahead.
+    expect(doc.slug).toMatch(/^preview-test-motors-b(-\d+)?$/);
+    expect(doc.stage).toBe("draft");
+    expect(Date.parse(doc.expiresAt)).toBeGreaterThan(Date.now() + 25 * 86_400_000);
 
     // A visitor with no cookies at all: the dealership opening the link.
     const stranger = await playwright.request.newContext({ baseURL });
     try {
-      const page = await stranger.get(`/preview/${doc.token}`);
+      const page = await stranger.get(`/p/${doc.slug}`);
       expect(page.status()).toBe(200);
       const html = await page.text();
       expect(html).toContain("Preview test homepage");
@@ -82,8 +92,12 @@ test.describe("a mockup's private link", () => {
       expect(headers["x-robots-tag"]).toContain("noindex");
       expect(headers["cache-control"]).toContain("no-store");
 
-      // A wrong code and a malformed one say nothing about which codes exist.
-      expect((await stranger.get(`/preview/${doc.token.slice(0, -2)}xx`)).status()).toBe(404);
+      // The older /preview/<code> link still opens the same mockup.
+      expect((await stranger.get(`/preview/${doc.token}`)).status()).toBe(200);
+
+      // A wrong name and a malformed one say nothing about which names exist.
+      expect((await stranger.get(`/p/${doc.slug}-nope`)).status()).toBe(404);
+      expect((await stranger.get("/p/NOT%20valid")).status()).toBe(404);
       expect((await stranger.get("/preview/short")).status()).toBe(404);
 
       // The uploaded file itself is staff only, by every route Payload offers.
@@ -93,19 +107,40 @@ test.describe("a mockup's private link", () => {
       await stranger.dispose();
     }
 
-    // Counted once, for the stranger.
+    // Counted twice, for the stranger's two opens.
     const afterStranger = (await (
       await call((headers) => request.get(`/api/previews/${doc.id}?depth=0`, { headers }))
     ).json()) as { viewCount: number; firstViewedAt: string | null };
-    expect(afterStranger.viewCount).toBe(1);
+    expect(afterStranger.viewCount).toBe(2);
     expect(afterStranger.firstViewedAt).toBeTruthy();
 
     // Staff checking it does not count as the dealership opening it.
-    await call((headers) => request.get(`/preview/${doc.token}`, { headers }));
+    await call((headers) => request.get(`/p/${doc.slug}`, { headers }));
     const afterStaff = (await (
       await call((headers) => request.get(`/api/previews/${doc.id}?depth=0`, { headers }))
     ).json()) as { viewCount: number };
-    expect(afterStaff.viewCount).toBe(1);
+    expect(afterStaff.viewCount).toBe(2);
+
+    // Ended: the dealership sees a note, staff still see the mockup.
+    await call((headers) =>
+      request.patch(`/api/previews/${doc.id}`, {
+        headers,
+        data: { expiresAt: new Date(Date.now() - 60_000).toISOString() },
+      }),
+    );
+    const late = await playwright.request.newContext({ baseURL });
+    try {
+      const ended = await late.get(`/p/${doc.slug}`);
+      expect(ended.status()).toBe(410);
+      const note = await ended.text();
+      expect(note).toContain("This preview has ended");
+      expect(note).not.toContain("Preview test homepage");
+      expect(ended.headers()["x-robots-tag"]).toContain("noindex");
+    } finally {
+      await late.dispose();
+    }
+    const staffView = await call((headers) => request.get(`/p/${doc.slug}`, { headers }));
+    expect(await staffView.text()).toContain("Preview test homepage");
 
     await call((headers) => request.delete(`/api/previews/${doc.id}`, { headers }));
   });
@@ -125,9 +160,9 @@ test.describe("a mockup's private link", () => {
         },
       }),
     );
-    const doc = ((await created.json()) as { doc: { id: number; token: string } }).doc;
+    const doc = ((await created.json()) as { doc: { id: number; slug: string } }).doc;
     try {
-      await page.goto(`/preview/${doc.token}`);
+      await page.goto(`/p/${doc.slug}`);
       await expect(page.getByRole("heading", { name: "Preview test homepage" })).toBeVisible();
       // Its own script ran, in an opaque origin with no access to Rynet's storage.
       await expect(page.locator("body")).toHaveAttribute("data-ran", "yes");

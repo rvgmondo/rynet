@@ -556,7 +556,7 @@ export interface Dealer {
       }[]
     | null;
   /**
-   * No enquiry emails are sent yet.
+   * Where each kind of enquiry is emailed. With no rule it goes to the branch's email, then the dealer principal's.
    */
   emailRouting?:
     | {
@@ -1337,12 +1337,15 @@ export interface Preview {
    */
   request?: (number | null) | Lead;
   /**
-   * Made for you. Anyone with the link can see the mockup, nobody else.
+   * The end of the link, for example changan-pretoria. Made from the dealership's name when left empty.
    */
+  slug?: string | null;
   token?: string | null;
   firstViewedAt?: string | null;
   lastViewedAt?: string | null;
   viewCount?: number | null;
+  stage?: ('draft' | 'sent' | 'interested' | 'won' | 'lost') | null;
+  expiresAt?: string | null;
   notes?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -1800,10 +1803,13 @@ export interface PreviewsSelect<T extends boolean = true> {
   contactName?: T;
   phone?: T;
   request?: T;
+  slug?: T;
   token?: T;
   firstViewedAt?: T;
   lastViewedAt?: T;
   viewCount?: T;
+  stage?: T;
+  expiresAt?: T;
   notes?: T;
   updatedAt?: T;
   createdAt?: T;
