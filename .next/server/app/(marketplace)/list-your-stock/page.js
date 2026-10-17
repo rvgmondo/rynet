@@ -19,7 +19,7 @@ R.c("server/chunks/ssr/src_app_(marketplace)_opengraph-image--metadata_0j3k93b.j
 R.c("server/chunks/ssr/src_1-i7hcd._.js")
 R.c("server/chunks/ssr/src_app_(marketplace)_error_tsx_1pveuy2._.js")
 R.c("server/chunks/ssr/src_app_(marketplace)_not-found_tsx_04qde8k._.js")
-R.c("server/chunks/ssr/[root-of-the-server]__0o643ke._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__0f0u-7y._.js")
 R.c("server/chunks/ssr/node_modules_next_0-3uong._.js")
 R.c("server/chunks/ssr/_0wh2bh-._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1poh_qr._.js")

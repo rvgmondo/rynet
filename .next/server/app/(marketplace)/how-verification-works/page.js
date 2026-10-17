@@ -1,5 +1,5 @@
 var R=require("../../../chunks/ssr/[turbopack]_runtime.js")("server/app/(marketplace)/how-verification-works/page.js")
-R.c("server/chunks/ssr/[root-of-the-server]__04r1768._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1c_0zgp._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__1-_tyrz._.js")
 R.c("server/chunks/ssr/_0os5no7._.js")
 R.c("server/chunks/ssr/_0wh2bh-._.js")

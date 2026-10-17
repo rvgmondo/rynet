@@ -42,7 +42,9 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: "npm run start -- --port 3100",
+        // A keep-alive longer than Node's 5 second default: with the default, a test reusing a
+        // connection at the moment the server closes it fails with ECONNRESET under load.
+        command: "npm run start -- --port 3100 --keepAliveTimeout 70000",
         // The whole suite shares one visitor hash, so the production limit of five would
         // lock the run out partway through. Raised here only, never in the shipped default.
         env: {

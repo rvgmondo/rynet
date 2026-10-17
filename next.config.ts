@@ -133,7 +133,7 @@ const nextConfig: NextConfig = {
          * policy with no `unsafe-eval` and the Payload admin died on a CSP error. It looked
          * fine in every check that did not actually read the response headers on that route.
          */
-        source: "/((?!admin|preview/).*)",
+        source: "/((?!admin|preview/|p/).*)",
         headers: [...sharedHeaders, { key: "Content-Security-Policy", value: cspFor("public") }],
       },
       {
@@ -146,6 +146,30 @@ const nextConfig: NextConfig = {
          * mockups are built with, and its images from anywhere on https or inlined.
          */
         source: "/preview/:path*",
+        headers: [
+          ...sharedHeaders,
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox",
+              "default-src 'none'",
+              "script-src 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com",
+              "style-src 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+              "font-src https://fonts.gstatic.com https://cdn.jsdelivr.net data:",
+              "img-src https: data: blob:",
+              "media-src https: data: blob:",
+              "connect-src https:",
+              "frame-src https://www.google.com https://www.youtube-nocookie.com https://player.vimeo.com",
+              "form-action 'none'",
+              "base-uri 'none'",
+              "frame-ancestors 'none'",
+            ].join("; "),
+          },
+        ],
+      },
+      {
+        // The same policy for the readable /p/<name> links.
+        source: "/p/:path*",
         headers: [
           ...sharedHeaders,
           {

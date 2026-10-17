@@ -4,6 +4,8 @@ import type { CollectionConfig } from "payload";
 
 import { isPlatformStaff, platformStaffOnly } from "@/access/roles";
 import { ADMIN_GROUP } from "@/lib/admin-nav";
+import { MOCKUP_LINK_DAYS } from "@/lib/preview-link";
+import { slugify } from "@/lib/slug";
 
 /**
  * Website mockups made for dealerships, and the private links they are sent.
@@ -28,7 +30,7 @@ export const Previews: CollectionConfig = {
   labels: { singular: "Website mockup", plural: "Website mockups" },
   admin: {
     useAsTitle: "dealership",
-    defaultColumns: ["dealership", "contactName", "firstViewedAt", "viewCount", "updatedAt"],
+    defaultColumns: ["dealership", "stage", "firstViewedAt", "viewCount", "expiresAt"],
     group: ADMIN_GROUP.daily,
     description:
       "Homepage mockups made for dealerships. Upload the finished HTML file, then send the private link.",
@@ -44,6 +46,16 @@ export const Previews: CollectionConfig = {
     staticDir: "previews",
     mimeTypes: ["text/html"],
     filesRequiredOnCreate: true,
+  },
+  hooks: {
+    beforeChange: [
+      ({ data, operation }) => {
+        if (operation === "create" && data && !data.expiresAt) {
+          data.expiresAt = new Date(Date.now() + MOCKUP_LINK_DAYS * 86_400_000).toISOString();
+        }
+        return data;
+      },
+    ],
   },
   fields: [
     {
@@ -76,15 +88,56 @@ export const Previews: CollectionConfig = {
       },
     },
     {
+      // The link the dealership gets: rynet.co.za/p/<slug>. Readable on purpose. The pages are
+      // noindex, listed nowhere and in no sitemap, so a link is only found by being sent.
+      name: "slug",
+      type: "text",
+      unique: true,
+      index: true,
+      label: "Link name",
+      admin: {
+        position: "sidebar",
+        description:
+          "The end of the link, for example changan-pretoria. Made from the dealership's name when left empty.",
+      },
+      hooks: {
+        beforeValidate: [
+          async ({ value, data, req, originalDoc }) => {
+            const base =
+              slugify(
+                typeof value === "string" && value.trim() ? value : String(data?.dealership ?? ""),
+              ) || "mockup";
+            // Another mockup may already use the name: add -2, -3 until it is free.
+            for (let attempt = 1; attempt < 50; attempt += 1) {
+              const candidate = attempt === 1 ? base : `${base}-${attempt}`;
+              const taken = await req.payload.count({
+                collection: "previews",
+                where: {
+                  and: [
+                    { slug: { equals: candidate } },
+                    ...(originalDoc?.id ? [{ id: { not_equals: originalDoc.id } }] : []),
+                  ],
+                },
+                overrideAccess: true,
+                req,
+              });
+              if (taken.totalDocs === 0) return candidate;
+            }
+            return `${base}-${randomBytes(3).toString("hex")}`;
+          },
+        ],
+      },
+    },
+    {
       name: "token",
       type: "text",
       unique: true,
       index: true,
-      label: "Private link code",
+      label: "Old link code",
       admin: {
         readOnly: true,
-        position: "sidebar",
-        description: "Made for you. Anyone with the link can see the mockup, nobody else.",
+        hidden: true,
+        // Kept so a /preview/<code> link sent before readable links existed still opens.
       },
       hooks: {
         beforeValidate: [
@@ -113,6 +166,28 @@ export const Previews: CollectionConfig = {
       defaultValue: 0,
       label: "Times opened",
       admin: { readOnly: true, position: "sidebar" },
+    },
+    {
+      name: "stage",
+      type: "select",
+      defaultValue: "draft",
+      label: "Where it stands",
+      options: [
+        { value: "draft", label: "Not sent yet" },
+        { value: "sent", label: "Sent" },
+        { value: "interested", label: "They like it" },
+        { value: "won", label: "Became a client" },
+        { value: "lost", label: "Not interested" },
+      ],
+      admin: { position: "sidebar" },
+    },
+    {
+      // The link stops working after this. Set on creation (see MOCKUP_LINK_DAYS) and moved with
+      // the buttons on the panel above. An ended link shows a short note, never the mockup.
+      name: "expiresAt",
+      type: "date",
+      label: "Link works until",
+      admin: { position: "sidebar", date: { pickerAppearance: "dayAndTime" } },
     },
     { name: "notes", type: "textarea", label: "Notes" },
   ],

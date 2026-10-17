@@ -40,6 +40,7 @@
   "/apple-icon/route": "/apple-icon",
   "/embed/stock.js/route": "/embed/stock.js",
   "/icon/route": "/icon",
+  "/p/[slug]/route": "/p/[slug]",
   "/preview/[token]/route": "/preview/[token]",
   "/robots.txt/route": "/robots.txt",
   "/sitemap.xml/route": "/sitemap.xml"

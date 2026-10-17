@@ -213,6 +213,57 @@ test.describe("the ad studio", () => {
   }
 });
 
+test.describe("a website mockup's record", () => {
+  test("extends and ends its link from the buttons, saving at once", async ({
+    page,
+    context,
+    request,
+    baseURL,
+    isMobile,
+  }) => {
+    test.skip(isMobile, "the desktop run covers the buttons");
+    const created = await signed(context, baseURL, (auth) =>
+      request.post("/api/previews", {
+        ...auth,
+        multipart: {
+          file: {
+            name: `record-test-${Date.now()}.html`,
+            mimeType: "text/html",
+            buffer: Buffer.from("<!doctype html><html><body><h1>Record test</h1></body></html>"),
+          },
+          _payload: JSON.stringify({ dealership: "Record Test Motors", phone: "082 555 1234" }),
+        },
+      }),
+    );
+    expect(created.status(), await created.text()).toBe(201);
+    const id = ((await created.json()) as { doc: { id: number } }).doc.id;
+
+    try {
+      await openSignedIn(page, context, baseURL, "light", `/admin/collections/previews/${id}`);
+      const panel = page.locator(".rn-preview-panel");
+      await expect(panel).toContainText("/p/record-test-motors");
+      await expect(panel).toContainText(/Works for (29|30) more days/);
+
+      await panel.getByRole("button", { name: "Add 30 days" }).click();
+      await expect(page.locator(".rn-preview-panel")).toContainText(/Works for (59|60) more days/, {
+        timeout: 15_000,
+      });
+      // The button saves and reloads the record; wait for the reloaded page to be ready to click.
+      await page.waitForLoadState("networkidle");
+
+      await page.locator(".rn-preview-panel").getByRole("button", { name: "End it now" }).click();
+      await expect(page.locator(".rn-preview-panel")).toContainText("Ended today", {
+        timeout: 15_000,
+      });
+      await expect(
+        page.locator(".rn-preview-panel").getByRole("button", { name: "Open it for 7 days" }),
+      ).toBeVisible();
+    } finally {
+      await signed(context, baseURL, (auth) => request.delete(`/api/previews/${id}`, auth));
+    }
+  });
+});
+
 test.describe("the home screen", () => {
   for (const theme of ["light", "dark"] as const) {
     test(`greets, counts and links, in ${theme}`, async ({ page, context, baseURL }) => {
