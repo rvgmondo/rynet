@@ -16,10 +16,11 @@
  * textContent and every address is checked to be http or https, so nothing in a listing can turn
  * into markup or script on somebody else's website. It has no dependencies and loads lazily.
  *
- * Written as a plain string so it is served exactly as written, with no build step in between.
+ * Written as a plain string (with no backslashes in it, so nothing is escaped on the way) and
+ * served exactly as written, with no build step in between.
  * The tests parse it, so a syntax error fails the build rather than a dealer's website.
  */
-export const STOCK_EMBED_SCRIPT = String.raw`(function () {
+export const STOCK_EMBED_SCRIPT = `(function () {
   "use strict";
   var script = document.currentScript;
   var origin = script && script.src ? new URL(script.src).origin : "https://rynet.co.za";

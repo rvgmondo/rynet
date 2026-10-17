@@ -252,6 +252,9 @@ git ls-files | grep -E '\.(ts|tsx|css|json|md)$' | xargs sed -i 's/\r$//'
 
 Git will not see that as a change, because it stores Unix endings either way.
 
+**Simplest of all:** stage your changes (`git add -A`) and run `npm run lint:stored`. It lints a
+copy of exactly what git will commit, with Unix line endings, so it agrees with CI.
+
 ---
 
 ## Routine jobs
