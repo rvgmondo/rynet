@@ -8,6 +8,8 @@ import {
   type Page,
 } from "@playwright/test";
 
+import sharp from "sharp";
+
 import { DEALER_A_SLUG } from "../src/seed/fixture-accounts";
 import { renderEverything } from "./axe-context";
 import { ADMIN_TOKEN_FILE } from "./global-setup";
@@ -90,11 +92,35 @@ export async function dealerAId(request: APIRequestContext): Promise<number> {
   return id as number;
 }
 
+/**
+ * A photograph uploaded as Rynet's own, for a test car. CI seeds no photographs, and the Ad studio
+ * draws nothing for a car without one. A plain 1200 by 900 JPEG made on the spot.
+ */
+export async function makePhoto(request: APIRequestContext, call: AdminCall): Promise<number> {
+  const buffer = await sharp({
+    create: { width: 1200, height: 900, channels: 3, background: "#5a6f86" },
+  })
+    .jpeg()
+    .toBuffer();
+  const res = await call((headers) =>
+    request.post("/api/media", {
+      headers,
+      multipart: {
+        file: { name: `portal-test-${Date.now()}.jpg`, mimeType: "image/jpeg", buffer },
+        _payload: JSON.stringify({ alt: "Test photograph of a car" }),
+      },
+    }),
+  );
+  expect(res.status(), await res.text()).toBe(201);
+  return ((await res.json()) as { doc: { id: number } }).doc.id;
+}
+
 /** A live car of dealer A's own, copied from any live listing so it passes validation. */
 export async function makeCar(
   request: APIRequestContext,
   call: AdminCall,
   dealerId: number,
+  photoId?: number,
 ): Promise<number> {
   const any = await request.get("/api/vehicles?where[status][equals]=live&limit=1&depth=0");
   const template = ((await any.json()) as { docs: Record<string, unknown>[] }).docs[0];
@@ -116,9 +142,12 @@ export async function makeCar(
       headers,
       data: {
         ...fields,
-        gallery: ((fields.gallery as { id?: unknown }[] | undefined) ?? []).map(
-          ({ id: _rowId, ...row }) => row,
-        ),
+        gallery: photoId
+          ? [{ image: photoId }]
+          : ((fields.gallery as { id?: unknown; image?: unknown }[] | undefined) ?? [])
+              // A row whose photograph has since been deleted would fail validation.
+              .filter((row) => Boolean(row.image))
+              .map(({ id: _rowId, ...row }) => row),
         dealer: dealerId,
         branch: null,
         stockNumber: `PORTAL-${Date.now()}-${Math.round(Math.random() * 1e6)}`,

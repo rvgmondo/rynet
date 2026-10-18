@@ -1,3 +1,3 @@
-:HL["/_next/static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2?dpl=6ac03c093e4db75682d18b2e4126546d16f9d734","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/_next/static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2?dpl=db0b9daff6dbf614975ea0d778a3ce613d07958b","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/_next/static/chunks/2dwqnoi3ei7_d.css","style"]
 0:{"tree":{"name":"","param":null,"prefetchHints":4112,"slots":{"children":{"name":"(agency)","param":null,"prefetchHints":4112,"slots":{"children":{"name":"digital","param":null,"prefetchHints":4112,"slots":{"children":{"name":"services","param":null,"prefetchHints":4160,"slots":{"children":{"name":"slug","param":{"type":"d","key":"paid-media","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}}}}}},"staleTime":300}

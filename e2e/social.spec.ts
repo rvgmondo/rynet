@@ -10,6 +10,7 @@ import {
   expectNoAxeViolations,
   expectNoOverflow,
   makeCar,
+  makePhoto,
   signedInDealer,
   tokenFor,
 } from "./portal-helpers";
@@ -63,6 +64,7 @@ test.describe
     let dealerId: number;
     let accountId: number;
     const cars: number[] = [];
+    let photoId: number | null = null;
 
     test.beforeAll(async ({ browser, playwright, baseURL }) => {
       request = await playwright.request.newContext({ baseURL });
@@ -80,7 +82,8 @@ test.describe
         await call((headers) => request.delete(`/api/social-accounts/${row.id}`, { headers }));
       }
 
-      cars.push(await makeCar(request, call, dealerId));
+      photoId = await makePhoto(request, call);
+      cars.push(await makeCar(request, call, dealerId, photoId));
       ({ page, email } = await signedInDealer(browser, request, call, dealerId, "social"));
     });
 
@@ -101,6 +104,7 @@ test.describe
         await call((headers) => request.delete(`/api/vehicles/${id}`, { headers }));
       }
       if (email) await deleteUserByEmail(request, call, email);
+      if (photoId) await call((headers) => request.delete(`/api/media/${photoId}`, { headers }));
     });
 
     test("before anything is connected, the page says how it will work", async () => {
@@ -184,7 +188,7 @@ test.describe
       await page.getByRole("button", { name: /Post new cars automatically/ }).click();
       await expect(page.getByRole("button", { name: /New cars post automatically/ })).toBeVisible();
 
-      const carId = await makeCar(request, call, dealerId);
+      const carId = await makeCar(request, call, dealerId, photoId ?? undefined);
       cars.push(carId);
 
       await expect(async () => {
