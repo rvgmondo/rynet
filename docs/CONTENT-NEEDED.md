@@ -102,6 +102,8 @@ Every item below renders the one quiet "Requires legal review" marker until its 
 | Cookie notice (`/cookies`) | Drafted, dated 14 September 2026. Now discloses the form drafts kept in the browser |
 | POPIA section 18 notice on `/sell-to-a-dealer` | Drafted, unreviewed, always fully visible |
 | Consent wording: sell form, listing enquiry, Rynet Digital form | Drafted, unreviewed, stored verbatim on every consent record. The consent policy version is now `2026-09-privacy-v3`, bumped when the sell wording changed from a count of dealerships to a shortlist |
+| Privacy notice: dealership social posting | Not written. `/privacy` must say a dealership can connect its Facebook Page and Instagram, what Rynet keeps (the Page name, its id, an encrypted token that lets Rynet post), that Rynet posts only what the dealership asks for or switches on, and how to disconnect. Meta checks for it in App Review (docs/SOCIAL-POSTING.md) |
+| Dealer portal sign-in and set-password pages | No legal copy on them. Whether the dealer agreement needs accepting at first sign-in is a decision for the agreement |
 | Dealer agreement | Not written |
 | Responsible disclosure policy | Not written |
 

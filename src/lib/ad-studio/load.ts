@@ -64,35 +64,51 @@ export async function loadAdStudio(
   });
 
   const cars: AdCar[] = (vehicles.docs as unknown as Record<string, unknown>[])
-    .map((doc) => {
-      const gallery = (doc.gallery as { image?: Media | number | null }[] | null) ?? [];
-      const photos = gallery
-        .map((row) =>
-          row.image && typeof row.image === "object" ? pick(row.image, "gallery")?.url : null,
-        )
-        .filter((url): url is string => Boolean(url))
-        .slice(0, 3);
-      const make = doc.make as { slug?: string } | null;
-      const model = doc.model as { slug?: string } | null;
-      return {
-        id: doc.id as number,
-        title: String(doc.title ?? ""),
-        year: (doc.modelYear as number | null) ?? null,
-        price: (doc.price as number | null) ?? null,
-        mileageKm: (doc.mileageKm as number | null) ?? null,
-        transmission: nameOf(doc.transmission),
-        town,
-        url: `${siteUrl}${vehicleUrl({
-          makeSlug: make?.slug ?? "",
-          modelSlug: model?.slug ?? "",
-          modelYear: (doc.modelYear as number | null) ?? 0,
-          variantName: nameOf(doc.variant),
-          publicRef: String(doc.publicRef ?? ""),
-        })}`,
-        photos,
-      };
-    })
+    .map((doc) => toAdCar(doc, town, siteUrl))
     .filter((car) => car.photos.length > 0);
 
   return { dealer, cars, totalLive: vehicles.totalDocs };
+}
+
+/** One car as the Ad studio and the caption writers see it. Its photos are the gallery's first three. */
+export function toAdCar(doc: Record<string, unknown>, town: string | null, siteUrl: string): AdCar {
+  const gallery = (doc.gallery as { image?: Media | number | null }[] | null) ?? [];
+  const photos = gallery
+    .map((row) =>
+      row.image && typeof row.image === "object" ? pick(row.image, "gallery")?.url : null,
+    )
+    .filter((url): url is string => Boolean(url))
+    .slice(0, 3);
+  const make = doc.make as { slug?: string } | null;
+  const model = doc.model as { slug?: string } | null;
+  return {
+    id: doc.id as number,
+    title: String(doc.title ?? ""),
+    year: (doc.modelYear as number | null) ?? null,
+    price: (doc.price as number | null) ?? null,
+    mileageKm: (doc.mileageKm as number | null) ?? null,
+    transmission: nameOf(doc.transmission),
+    town,
+    url: `${siteUrl}${vehicleUrl({
+      makeSlug: make?.slug ?? "",
+      modelSlug: model?.slug ?? "",
+      modelYear: (doc.modelYear as number | null) ?? 0,
+      variantName: nameOf(doc.variant),
+      publicRef: String(doc.publicRef ?? ""),
+    })}`,
+    photos,
+  };
+}
+
+/** The town a dealership's main branch is in, for captions. */
+export async function dealerTown(payload: Payload, dealerId: number): Promise<string | null> {
+  const branch = await payload.find({
+    collection: "branches",
+    where: { dealer: { equals: dealerId } },
+    sort: "-isPrimary",
+    limit: 1,
+    depth: 1,
+    overrideAccess: true,
+  });
+  return nameOf((branch.docs[0] as Record<string, unknown> | undefined)?.city);
 }

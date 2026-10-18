@@ -31,6 +31,7 @@
   "/(portal)/portal/(app)/details/page": "/portal/details",
   "/(portal)/portal/(app)/enquiries/page": "/portal/enquiries",
   "/(portal)/portal/(app)/page": "/portal",
+  "/(portal)/portal/(app)/social/page": "/portal/social",
   "/(portal)/portal/set-password/page": "/portal/set-password",
   "/(portal)/portal/sign-in/page": "/portal/sign-in",
   "/_global-error/page": "/_global-error",
@@ -42,6 +43,9 @@
   "/api/onboard/status/route": "/api/onboard/status",
   "/api/onboard/template/route": "/api/onboard/template",
   "/api/onboard/website/route": "/api/onboard/website",
+  "/api/portal/social/callback/route": "/api/portal/social/callback",
+  "/api/portal/social/connect/route": "/api/portal/social/connect",
+  "/api/portal/social/post/route": "/api/portal/social/post",
   "/api/stock-sync/run/route": "/api/stock-sync/run",
   "/api/stock/[slug]/route": "/api/stock/[slug]",
   "/api/track/phone-reveal/route": "/api/track/phone-reveal",
@@ -51,5 +55,6 @@
   "/p/[slug]/route": "/p/[slug]",
   "/preview/[token]/route": "/preview/[token]",
   "/robots.txt/route": "/robots.txt",
-  "/sitemap.xml/route": "/sitemap.xml"
+  "/sitemap.xml/route": "/sitemap.xml",
+  "/social-media/[file]/route": "/social-media/[file]"
 }

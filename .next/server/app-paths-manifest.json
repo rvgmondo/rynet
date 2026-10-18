@@ -31,6 +31,7 @@
   "/(portal)/portal/(app)/details/page": "app/(portal)/portal/(app)/details/page.js",
   "/(portal)/portal/(app)/enquiries/page": "app/(portal)/portal/(app)/enquiries/page.js",
   "/(portal)/portal/(app)/page": "app/(portal)/portal/(app)/page.js",
+  "/(portal)/portal/(app)/social/page": "app/(portal)/portal/(app)/social/page.js",
   "/(portal)/portal/set-password/page": "app/(portal)/portal/set-password/page.js",
   "/(portal)/portal/sign-in/page": "app/(portal)/portal/sign-in/page.js",
   "/_global-error/page": "app/_global-error/page.js",
@@ -42,6 +43,9 @@
   "/api/onboard/status/route": "app/api/onboard/status/route.js",
   "/api/onboard/template/route": "app/api/onboard/template/route.js",
   "/api/onboard/website/route": "app/api/onboard/website/route.js",
+  "/api/portal/social/callback/route": "app/api/portal/social/callback/route.js",
+  "/api/portal/social/connect/route": "app/api/portal/social/connect/route.js",
+  "/api/portal/social/post/route": "app/api/portal/social/post/route.js",
   "/api/stock-sync/run/route": "app/api/stock-sync/run/route.js",
   "/api/stock/[slug]/route": "app/api/stock/[slug]/route.js",
   "/api/track/phone-reveal/route": "app/api/track/phone-reveal/route.js",
@@ -51,5 +55,6 @@
   "/p/[slug]/route": "app/p/[slug]/route.js",
   "/preview/[token]/route": "app/preview/[token]/route.js",
   "/robots.txt/route": "app/robots.txt/route.js",
-  "/sitemap.xml/route": "app/sitemap.xml/route.js"
+  "/sitemap.xml/route": "app/sitemap.xml/route.js",
+  "/social-media/[file]/route": "app/social-media/[file]/route.js"
 }

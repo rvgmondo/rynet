@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Download } from "lucide-react";
+import { Copy, Download, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -8,6 +8,8 @@ import {
   type AdDealer,
   carCaption,
   detailLine,
+  ownCaption,
+  ownShowroomCaption,
   priceLabel,
   showroomCaption,
 } from "@/lib/ad-studio/caption";
@@ -83,6 +85,125 @@ function Preview({
   );
 }
 
+export type StudioSocial = {
+  accounts: { id: number; network: "facebook" | "instagram"; displayName: string }[];
+  /** Only a principal or manager posts to the dealership's Page. */
+  canPost: boolean;
+};
+
+/**
+ * Post it: the square ad, drawn again at full size, sent to the dealership's own Page and
+ * Instagram through Rynet. Only on the dealership's own screen.
+ */
+function PostPanel({
+  social,
+  content,
+  caption,
+  vehicleId,
+}: {
+  social: StudioSocial;
+  content: AdContent | null;
+  caption: string;
+  vehicleId: number | null;
+}) {
+  const [chosen, setChosen] = useState<number[]>(social.accounts.map((account) => account.id));
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const square = AD_FORMATS.find((format) => format.id === "post");
+
+  if (social.accounts.length === 0) {
+    return (
+      <p className="rn-onboard__hint">
+        Connect your Facebook Page in <a href="/portal/social">Social</a> and you can post this
+        straight to it from here.
+      </p>
+    );
+  }
+  if (!social.canPost) {
+    return (
+      <p className="rn-onboard__hint">
+        Your dealer principal or a manager can post this to your Page. Download it to share it
+        yourself.
+      </p>
+    );
+  }
+
+  async function post() {
+    if (!content || !square || chosen.length === 0) return;
+    setBusy(true);
+    setResult(null);
+    const canvas = document.createElement("canvas");
+    renderAd(canvas, square, content);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.92),
+    );
+    if (!blob) {
+      setBusy(false);
+      setResult({ ok: false, text: "The picture could not be made. Try again." });
+      return;
+    }
+    const form = new FormData();
+    form.set("image", blob, "ad.jpg");
+    form.set("caption", caption);
+    form.set("accounts", chosen.join(","));
+    if (vehicleId) form.set("vehicleId", String(vehicleId));
+    const response = await fetch("/api/portal/social/post", {
+      method: "POST",
+      credentials: "include",
+      body: form,
+    }).catch(() => null);
+    const body = (await response?.json().catch(() => null)) as { error?: string } | null;
+    setBusy(false);
+    setResult(
+      response?.ok
+        ? { ok: true, text: "Sent. It is on its way to your Page now. Follow it in Social." }
+        : { ok: false, text: body?.error ?? "That did not go. Try again." },
+    );
+  }
+
+  return (
+    <div className="rn-onboard__field">
+      <fieldset className="rn-studio__targets">
+        <legend className="rn-onboard__label">Post the square ad to</legend>
+        {social.accounts.map((account) => (
+          <label key={account.id} className="rn-studio__target">
+            <input
+              type="checkbox"
+              checked={chosen.includes(account.id)}
+              onChange={(event) =>
+                setChosen((now) =>
+                  event.target.checked
+                    ? [...now, account.id]
+                    : now.filter((id) => id !== account.id),
+                )
+              }
+            />
+            {account.network === "instagram" ? "Instagram" : "Facebook"}: {account.displayName}
+          </label>
+        ))}
+      </fieldset>
+      <div className="rn-onboard__actions">
+        <button
+          type="button"
+          className="rn-onboard__button rn-onboard__button--primary"
+          disabled={busy || !content || chosen.length === 0}
+          onClick={() => void post()}
+        >
+          <Send aria-hidden="true" /> {busy ? "Sending" : "Post now"}
+        </button>
+      </div>
+      {result ? (
+        <p
+          className={`rn-onboard__result${result.ok ? "" : " rn-onboard__result--bad"}`}
+          role={result.ok ? "status" : "alert"}
+        >
+          {result.text}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function AdStudio({
   dealer,
   cars,
@@ -90,6 +211,7 @@ export function AdStudio({
   siteUrl,
   emptyText,
   own = false,
+  social = null,
 }: {
   dealer: AdDealer;
   cars: AdCar[];
@@ -99,6 +221,8 @@ export function AdStudio({
   emptyText?: string;
   /** True on the dealership's own screen, where "their" becomes "your". */
   own?: boolean;
+  /** The dealership's connected Page, on its own screen. Staff post nothing from here. */
+  social?: StudioSocial | null;
 }) {
   const [choice, setChoice] = useState<string>(cars[0] ? String(cars[0].id) : SHOWROOM);
   const [content, setContent] = useState<AdContent | null>(null);
@@ -109,8 +233,15 @@ export function AdStudio({
   const domain = siteUrl.replace(/^https?:\/\//, "");
 
   const caption = useMemo(
-    () => (car ? carCaption(car, dealer) : showroomCaption(dealer, totalLive)),
-    [car, dealer, totalLive],
+    () =>
+      own
+        ? car
+          ? ownCaption(car)
+          : ownShowroomCaption(dealer, totalLive)
+        : car
+          ? carCaption(car, dealer)
+          : showroomCaption(dealer, totalLive),
+    [car, dealer, totalLive, own],
   );
   const [text, setText] = useState(caption);
   useEffect(() => setText(caption), [caption]);
@@ -206,47 +337,107 @@ export function AdStudio({
         ) : null}
       </section>
 
-      <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-ads">
-        <h2 id="studio-ads" className="rn-admin-home__h2">
-          The ads
-        </h2>
-        <div className="rn-studio__grid">
-          {AD_FORMATS.map((format) => (
-            <Preview key={format.id} format={format} content={content} filename={filename} />
-          ))}
-        </div>
-      </section>
+      {own ? (
+        <>
+          <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-words">
+            <h2 id="studio-words" className="rn-admin-home__h2">
+              The words to post with it
+            </h2>
+            <div className="rn-onboard__field">
+              <label htmlFor="studio-caption" className="rn-onboard__label">
+                Caption
+              </label>
+              <textarea
+                id="studio-caption"
+                className="rn-onboard__input rn-onboard__textarea"
+                rows={5}
+                value={text}
+                onChange={(event) => setText(event.target.value)}
+              />
+            </div>
+            <div className="rn-onboard__actions">
+              <button
+                type="button"
+                className="rn-onboard__button"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(text);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy the caption"}
+              </button>
+            </div>
+          </section>
+          {social ? (
+            <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-post">
+              <h2 id="studio-post" className="rn-admin-home__h2">
+                Post it
+              </h2>
+              <PostPanel
+                social={social}
+                content={content}
+                caption={text}
+                vehicleId={car?.id ?? null}
+              />
+            </section>
+          ) : null}
+          <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-ads">
+            <h2 id="studio-ads" className="rn-admin-home__h2">
+              The ads
+            </h2>
+            <div className="rn-studio__grid">
+              {AD_FORMATS.map((format) => (
+                <Preview key={format.id} format={format} content={content} filename={filename} />
+              ))}
+            </div>
+          </section>
+        </>
+      ) : (
+        <>
+          <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-ads">
+            <h2 id="studio-ads" className="rn-admin-home__h2">
+              The ads
+            </h2>
+            <div className="rn-studio__grid">
+              {AD_FORMATS.map((format) => (
+                <Preview key={format.id} format={format} content={content} filename={filename} />
+              ))}
+            </div>
+          </section>
 
-      <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-words">
-        <h2 id="studio-words" className="rn-admin-home__h2">
-          The words to post with it
-        </h2>
-        <div className="rn-onboard__field">
-          <label htmlFor="studio-caption" className="rn-onboard__label">
-            Caption
-          </label>
-          <textarea
-            id="studio-caption"
-            className="rn-onboard__input rn-onboard__textarea"
-            rows={5}
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-          />
-        </div>
-        <div className="rn-onboard__actions">
-          <button
-            type="button"
-            className="rn-onboard__button"
-            onClick={async () => {
-              await navigator.clipboard.writeText(text);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-          >
-            <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy the caption"}
-          </button>
-        </div>
-      </section>
+          <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-words">
+            <h2 id="studio-words" className="rn-admin-home__h2">
+              The words to post with it
+            </h2>
+            <div className="rn-onboard__field">
+              <label htmlFor="studio-caption" className="rn-onboard__label">
+                Caption
+              </label>
+              <textarea
+                id="studio-caption"
+                className="rn-onboard__input rn-onboard__textarea"
+                rows={5}
+                value={text}
+                onChange={(event) => setText(event.target.value)}
+              />
+            </div>
+            <div className="rn-onboard__actions">
+              <button
+                type="button"
+                className="rn-onboard__button"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(text);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy the caption"}
+              </button>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }

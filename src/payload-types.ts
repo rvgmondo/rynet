@@ -93,6 +93,8 @@ export interface Config {
     'dealer-groups': DealerGroup;
     accreditations: Accreditation;
     'consent-records': ConsentRecord;
+    'social-accounts': SocialAccount;
+    'social-posts': SocialPost;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -125,6 +127,8 @@ export interface Config {
     'dealer-groups': DealerGroupsSelect<false> | DealerGroupsSelect<true>;
     accreditations: AccreditationsSelect<false> | AccreditationsSelect<true>;
     'consent-records': ConsentRecordsSelect<false> | ConsentRecordsSelect<true>;
+    'social-accounts': SocialAccountsSelect<false> | SocialAccountsSelect<true>;
+    'social-posts': SocialPostsSelect<false> | SocialPostsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -1404,6 +1408,56 @@ export interface Buyer {
   collection: 'buyers';
 }
 /**
+ * Facebook Pages and Instagram accounts dealerships have connected from their portal.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-accounts".
+ */
+export interface SocialAccount {
+  id: number;
+  dealer: number | Dealer;
+  network: 'facebook' | 'instagram';
+  displayName: string;
+  externalId: string;
+  pageId?: string | null;
+  token?: string | null;
+  state: 'pending' | 'connected' | 'reconnect';
+  autoPost?: boolean | null;
+  connectedBy?: (number | null) | User;
+  connectedAt?: string | null;
+  lastPostedAt?: string | null;
+  lastError?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Posts sent to dealerships' Facebook Pages and Instagram, and what happened.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-posts".
+ */
+export interface SocialPost {
+  id: number;
+  dealer: number | Dealer;
+  account?: (number | null) | SocialAccount;
+  network: 'facebook' | 'instagram';
+  kind: 'manual' | 'auto';
+  vehicle?: (number | null) | Vehicle;
+  caption: string;
+  imageFile: string;
+  status: 'queued' | 'publishing' | 'posted' | 'failed';
+  runAfter?: string | null;
+  attempts?: number | null;
+  startedAt?: string | null;
+  postedAt?: string | null;
+  externalPostId?: string | null;
+  permalink?: string | null;
+  error?: string | null;
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -1526,6 +1580,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'consent-records';
         value: number | ConsentRecord;
+      } | null)
+    | ({
+        relationTo: 'social-accounts';
+        value: number | SocialAccount;
+      } | null)
+    | ({
+        relationTo: 'social-posts';
+        value: number | SocialPost;
       } | null);
   globalSlug?: string | null;
   user:
@@ -2264,6 +2326,50 @@ export interface ConsentRecordsSelect<T extends boolean = true> {
   policyVersion?: T;
   evidence?: T;
   ipHash?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-accounts_select".
+ */
+export interface SocialAccountsSelect<T extends boolean = true> {
+  dealer?: T;
+  network?: T;
+  displayName?: T;
+  externalId?: T;
+  pageId?: T;
+  token?: T;
+  state?: T;
+  autoPost?: T;
+  connectedBy?: T;
+  connectedAt?: T;
+  lastPostedAt?: T;
+  lastError?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "social-posts_select".
+ */
+export interface SocialPostsSelect<T extends boolean = true> {
+  dealer?: T;
+  account?: T;
+  network?: T;
+  kind?: T;
+  vehicle?: T;
+  caption?: T;
+  imageFile?: T;
+  status?: T;
+  runAfter?: T;
+  attempts?: T;
+  startedAt?: T;
+  postedAt?: T;
+  externalPostId?: T;
+  permalink?: T;
+  error?: T;
+  createdBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }

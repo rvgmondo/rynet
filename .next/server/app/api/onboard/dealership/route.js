@@ -1,9 +1,10 @@
 var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/onboard/dealership/route.js")
+R.c("server/chunks/[root-of-the-server]__1jgah2r._.js")
 R.c("server/chunks/_1l-zrbs._.js")
-R.c("server/chunks/[root-of-the-server]__1_3bvjl._.js")
-R.c("server/chunks/_041xe4i._.js")
+R.c("server/chunks/[root-of-the-server]__1crhu7m._.js")
 R.c("server/chunks/[root-of-the-server]__15bjnu5._.js")
 R.c("server/chunks/node_modules_next_dist_201403r._.js")
+R.c("server/chunks/_21bbtws._.js")
 R.c("server/chunks/_next-internal_server_app_api_onboard_dealership_route_actions_0rw2_s8.js")
 R.m(312576)
 module.exports=R.m(312576).exports

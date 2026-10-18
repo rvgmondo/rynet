@@ -10,6 +10,7 @@ import { canManageDealer } from "@/access/roles";
 import { nextCarState, type PortalCarAction } from "@/lib/portal/cars";
 import { passwordProblem } from "@/lib/portal/password";
 import { requirePortalSession } from "@/lib/portal/session";
+import { choosePage } from "@/lib/social/accounts";
 
 /**
  * Everything a dealership does in the portal.
@@ -189,4 +190,63 @@ export async function saveDetails(_state: FormState, formData: FormData): Promis
   }
   revalidatePath("/portal", "layout");
   return { ok: true, message: "Saved. Your showroom shows the new details now." };
+}
+
+/* ------------------------------------------------------------------ social */
+
+/**
+ * The social settings are written with access switched off, because the rows carry a token and
+ * the collection takes writes from Rynet staff only. So these check for themselves, and narrowly:
+ * a principal or manager, and only rows of their own dealership, found by the dealership id from
+ * their session, never one sent by the browser.
+ */
+async function socialManager() {
+  const session = await requirePortalSession();
+  if (!canManageDealer(session.user)) redirect("/portal/social?problem=not-manager");
+  return session;
+}
+
+export async function chooseSocialPage(formData: FormData): Promise<void> {
+  const { payload, user, dealerId } = await socialManager();
+  const pageId = String(formData.get("pageId") ?? "");
+  const ok = await choosePage(payload, dealerId, Number(user.id), pageId);
+  revalidatePath("/portal", "layout");
+  redirect(ok ? "/portal/social?connected=1" : "/portal/social?problem=expired");
+}
+
+export async function setAutoPost(formData: FormData): Promise<void> {
+  const { payload, dealerId } = await socialManager();
+  const id = idFrom(formData.get("id"));
+  const on = formData.get("on") === "1";
+  if (!id) return;
+  const found = await payload.count({
+    collection: "social-accounts",
+    where: { and: [{ id: { equals: id } }, { dealer: { equals: dealerId } }] },
+    overrideAccess: true,
+  });
+  if (found.totalDocs === 0) return;
+  await payload.update({
+    collection: "social-accounts",
+    id,
+    // Switching it on starts from now: the cars already live are not all posted at once.
+    data: on ? { autoPost: true, connectedAt: new Date().toISOString() } : { autoPost: false },
+    overrideAccess: true,
+  });
+  revalidatePath("/portal", "layout");
+}
+
+export async function disconnectSocial(): Promise<void> {
+  const { payload, dealerId } = await socialManager();
+  await payload.db.deleteMany({
+    collection: "social-accounts",
+    where: { dealer: { equals: dealerId } },
+  });
+  // Anything still waiting to go out would have nowhere to go.
+  await payload.db.updateMany({
+    collection: "social-posts",
+    where: { and: [{ dealer: { equals: dealerId } }, { status: { equals: "queued" } }] },
+    data: { status: "failed", error: "The page was disconnected before this went out." },
+  });
+  revalidatePath("/portal", "layout");
+  redirect("/portal/social?disconnected=1");
 }

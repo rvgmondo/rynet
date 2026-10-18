@@ -16,6 +16,8 @@ deploy/
 # Uploaded media. Runtime data, not source. Production media lives on Cloudflare R2.
 media/
 /previews/
+# Pictures posted to dealerships' Facebook and Instagram. Runtime data, like media.
+/social-media/
 
 # Environment. Never commit real secrets.
 .env

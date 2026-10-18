@@ -199,7 +199,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "0c9cb1ae5036a7c32784b24d5c4c1cee6d4e6e47"
+          "value": "6ac03c093e4db75682d18b2e4126546d16f9d734"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -209,7 +209,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "0c9cb1ae5036a7c32784b24d5c4c1cee6d4e6e47"
+          "value": "6ac03c093e4db75682d18b2e4126546d16f9d734"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -284,6 +284,14 @@
         "nxtPtoken": "nxtPtoken"
       },
       "namedRegex": "^/preview/(?<nxtPtoken>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/social-media/[file]",
+      "regex": "^/social\\-media/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPfile": "nxtPfile"
+      },
+      "namedRegex": "^/social\\-media/(?<nxtPfile>[^/]+?)(?:/)?$"
     },
     {
       "page": "/vehicles/[make]/[model]/[slug]",
@@ -374,6 +382,24 @@
       "regex": "^/api/onboard/website(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/onboard/website(?:/)?$"
+    },
+    {
+      "page": "/api/portal/social/callback",
+      "regex": "^/api/portal/social/callback(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/portal/social/callback(?:/)?$"
+    },
+    {
+      "page": "/api/portal/social/connect",
+      "regex": "^/api/portal/social/connect(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/portal/social/connect(?:/)?$"
+    },
+    {
+      "page": "/api/portal/social/post",
+      "regex": "^/api/portal/social/post(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/portal/social/post(?:/)?$"
     },
     {
       "page": "/api/stock-sync/run",
@@ -532,6 +558,12 @@
       "namedRegex": "^/portal/sign\\-in(?:/)?$"
     },
     {
+      "page": "/portal/social",
+      "regex": "^/portal/social(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal/social(?:/)?$"
+    },
+    {
       "page": "/privacy",
       "regex": "^/privacy(?:/)?$",
       "routeKeys": {},
@@ -580,5 +612,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "0c9cb1ae5036a7c32784b24d5c4c1cee6d4e6e47"
+  "deploymentId": "6ac03c093e4db75682d18b2e4126546d16f9d734"
 }
