@@ -29,7 +29,7 @@ export default function PrivacyPage() {
       eyebrow="Privacy and POPIA"
       title="Privacy notice"
       intro="What we collect, why, who sees it, and how to get it back. Written under the Protection of Personal Information Act."
-      updated="17 September 2026"
+      updated="18 October 2026"
       path="/privacy"
       reviewedAt={LEGAL_REVIEWED_AT.privacy}
     >
@@ -88,6 +88,36 @@ export default function PrivacyPage() {
         vehicle, which is a structural property of the platform rather than a setting.
       </p>
 
+      <h3>If you work at a dealership on Rynet</h3>
+      <p>
+        Your name, work email address and mobile number, the dealership you work for, your role
+        there, a hashed password, and your open sign-in sessions. We collect it to give you a login
+        to your dealership&apos;s portal. A dealership&apos;s principal or manager can see the
+        logins of their own team.
+      </p>
+
+      <h3>If your dealership connects its Facebook Page</h3>
+      <p>
+        A principal or manager can connect the dealership&apos;s Facebook Page, and the Instagram
+        account linked to it, so Rynet can post the dealership&apos;s ads there. We keep the
+        Page&apos;s name, its Facebook and Instagram identifiers, who connected it and when, and an
+        access token that lets us post to it. The token is encrypted and nobody, at Rynet or at the
+        dealership, can read it back.
+      </p>
+      <p>
+        We only ever post: an ad somebody at the dealership asked for, or, if they switched it on,
+        each new car as it goes live. We do not read the Page&apos;s messages, comments or
+        followers. A record of every post is kept with the dealership&apos;s account, and the
+        pictures we post are stored at a public address so Facebook can fetch them.
+      </p>
+      <p>
+        <strong>To disconnect</strong>, open Social in the portal and press Disconnect. That deletes
+        the token and the Page&apos;s details straight away. Removing Rynet under Business
+        integrations in your Facebook settings also stops our access at once, and we delete the
+        details when you press Disconnect or ask us to. To have the post records and pictures
+        deleted as well, email <a href="mailto:info@rynet.co.za">info@rynet.co.za</a>.
+      </p>
+
       <h2>Who we share it with</h2>
       <ul>
         <li>
@@ -99,6 +129,10 @@ export default function PrivacyPage() {
           <strong>If you offer your car to dealerships, a shortlist of verified dealerships</strong>{" "}
           in your province that buy that kind of car, as the consent you gave says. We keep a record
           of every dealership that received your details and will tell you which ones if you ask.
+        </li>
+        <li>
+          <strong>Meta (Facebook and Instagram)</strong>, only for a dealership that connected its
+          Page, and only the posts it asked for: the picture and the words, sent to its own Page.
         </li>
         <li>
           <strong>Our hosting and email providers</strong>, as operators processing on our
@@ -129,6 +163,11 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Accounts:</strong> until you delete yours, or after three years of no sign-in.
+        </li>
+        <li>
+          <strong>A connected Facebook Page:</strong> until the dealership disconnects it or leaves
+          Rynet. Post records and their pictures for as long as the dealership is on Rynet, unless
+          it asks us to delete them sooner.
         </li>
       </ul>
 

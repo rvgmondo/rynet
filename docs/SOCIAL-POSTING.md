@@ -70,7 +70,7 @@ App Review asks for a short screen recording of each permission in use. Record e
 
 ## Requires legal review
 
-- The privacy policy does not yet mention that a dealership can connect its Facebook Page, what Rynet keeps (the Page's name, its id and an encrypted token that lets Rynet post), that Rynet posts only what the dealership asks for or switches on, and how to disconnect (Social > Disconnect, or remove Rynet in Facebook's Business integrations). Meta checks for this during App Review. Listed in `docs/CONTENT-NEEDED.md`.
+- The privacy notice now has a draft section on dealership logins and connected Facebook Pages (18 October 2026), including how to disconnect, which is what Meta asks for as data deletion instructions. It still carries the "Requires legal review" marker until an attorney signs it off. Listed in `docs/CONTENT-NEEDED.md`.
 
 ## When something goes wrong
 

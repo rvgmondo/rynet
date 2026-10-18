@@ -1,6 +1,6 @@
 {
   "node": {
-    "008dd837e1066499f2be96af405b1f1a63d1fb2967": {
+    "008ff90f26104732a45b308aab5852954b13aa4753": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -11,7 +11,7 @@
       "exportedName": "readTwoFactorStatus",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "6010034e86d1fa86929b02f44fa02ab8a576937140": {
+    "607016572f2ee29a645754accddb11afee33f6618a": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -19,21 +19,10 @@
           "codeHash": null
         }
       },
-      "exportedName": "confirmTwoFactorSetup",
+      "exportedName": "beginTwoFactorSetup",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "601ffde46c5c4da7e77504dcf558a42dbf65b5eb7c": {
-      "workers": {
-        "app/(marketplace)/account/two-factor/page": {
-          "moduleId": 117720,
-          "async": true,
-          "codeHash": null
-        }
-      },
-      "exportedName": "regenerateRecoveryCodes",
-      "filename": "src/app/actions/two-factor.ts"
-    },
-    "606d72a9c84c3dc99429f91e8c7161ed16a7bc4123": {
+    "6098d8e8d86b5ee36aeef9ac26d77c03f367fdc8e0": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -44,7 +33,7 @@
       "exportedName": "disableTwoFactor",
       "filename": "src/app/actions/two-factor.ts"
     },
-    "60f6a76b666bebb8dc6cc8bdb88969cff419eb0ef3": {
+    "609d3da47c90c5297c7fbc383a635cdabc1d855454": {
       "workers": {
         "app/(marketplace)/account/two-factor/page": {
           "moduleId": 117720,
@@ -52,7 +41,18 @@
           "codeHash": null
         }
       },
-      "exportedName": "beginTwoFactorSetup",
+      "exportedName": "confirmTwoFactorSetup",
+      "filename": "src/app/actions/two-factor.ts"
+    },
+    "60a19fac54d758b02109ce31ebb301ec72d6a6d44c": {
+      "workers": {
+        "app/(marketplace)/account/two-factor/page": {
+          "moduleId": 117720,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "regenerateRecoveryCodes",
       "filename": "src/app/actions/two-factor.ts"
     }
   },
