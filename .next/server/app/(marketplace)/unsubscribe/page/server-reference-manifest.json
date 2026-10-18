@@ -1,0 +1,16 @@
+{
+  "node": {
+    "4097c60a2de807840aabaf80668a813f0a66e0de94": {
+      "workers": {
+        "app/(marketplace)/unsubscribe/page": {
+          "moduleId": 218420,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "$$RSC_SERVER_ACTION_0",
+      "filename": "src/app/(marketplace)/unsubscribe/page.tsx"
+    }
+  },
+  "edge": {}
+}

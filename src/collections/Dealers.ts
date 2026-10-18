@@ -390,6 +390,21 @@ export const Dealers: CollectionConfig = {
               // wins on the dealership page).
               admin: { description: "Buyers message this number from the site." },
             },
+            {
+              /*
+               * Set when somebody at the dealership presses "Stop these emails" in a mailing
+               * (src/app/unsubscribe), or by staff when asked. The Mailer leaves an opted-out
+               * dealership out of every send. Enquiry emails are not marketing and still go.
+               */
+              name: "emailOptOut",
+              type: "checkbox",
+              defaultValue: false,
+              label: "No emails from Rynet's Mailer",
+              admin: {
+                description:
+                  "Ticked when they ask not to get Rynet's news emails. Enquiries still reach them.",
+              },
+            },
           ],
         },
         /*

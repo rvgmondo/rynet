@@ -199,7 +199,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "32b42bded5577d592f721422a14015af138d4c97"
+          "value": "1625311c71dae8bb54476f933f8e7ecf7a16f74c"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -209,7 +209,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "32b42bded5577d592f721422a14015af138d4c97"
+          "value": "1625311c71dae8bb54476f933f8e7ecf7a16f74c"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -336,10 +336,46 @@
       "namedRegex": "^/account/two\\-factor(?:/)?$"
     },
     {
+      "page": "/api/admin/social/connect",
+      "regex": "^/api/admin/social/connect(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/social/connect(?:/)?$"
+    },
+    {
+      "page": "/api/admin/social/post",
+      "regex": "^/api/admin/social/post(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/social/post(?:/)?$"
+    },
+    {
       "page": "/api/graphql",
       "regex": "^/api/graphql(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/graphql(?:/)?$"
+    },
+    {
+      "page": "/api/mailer/preview",
+      "regex": "^/api/mailer/preview(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/mailer/preview(?:/)?$"
+    },
+    {
+      "page": "/api/mailer/send",
+      "regex": "^/api/mailer/send(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/mailer/send(?:/)?$"
+    },
+    {
+      "page": "/api/mailer/template",
+      "regex": "^/api/mailer/template(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/mailer/template(?:/)?$"
+    },
+    {
+      "page": "/api/mailer/test",
+      "regex": "^/api/mailer/test(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/mailer/test(?:/)?$"
     },
     {
       "page": "/api/onboard/dealership",
@@ -352,6 +388,12 @@
       "regex": "^/api/onboard/login(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/onboard/login(?:/)?$"
+    },
+    {
+      "page": "/api/onboard/login/email",
+      "regex": "^/api/onboard/login/email(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/login/email(?:/)?$"
     },
     {
       "page": "/api/onboard/probe",
@@ -412,6 +454,12 @@
       "regex": "^/api/track/phone\\-reveal(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/track/phone\\-reveal(?:/)?$"
+    },
+    {
+      "page": "/api/unsubscribe",
+      "regex": "^/api/unsubscribe(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/unsubscribe(?:/)?$"
     },
     {
       "page": "/apple-icon",
@@ -592,6 +640,12 @@
       "regex": "^/terms(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/terms(?:/)?$"
+    },
+    {
+      "page": "/unsubscribe",
+      "regex": "^/unsubscribe(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/unsubscribe(?:/)?$"
     }
   ],
   "dataRoutes": [],
@@ -612,5 +666,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "32b42bded5577d592f721422a14015af138d4c97"
+  "deploymentId": "1625311c71dae8bb54476f933f8e7ecf7a16f74c"
 }

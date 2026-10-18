@@ -8,6 +8,7 @@ import {
   Globe,
   ImageIcon,
   KeyRound,
+  Mail,
   MessageCircle,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
@@ -765,7 +766,9 @@ function GiveLogin({ dealer }: { dealer: DeskDealer }) {
   const [busy, setBusy] = useState(false);
   const [problems, setProblems] = useState<string[]>([]);
   const [link, setLink] = useState("");
+  const [path, setPath] = useState("");
   const [copied, setCopied] = useState(false);
+  const [mailed, setMailed] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function make(event: FormEvent) {
     event.preventDefault();
@@ -780,6 +783,8 @@ function GiveLogin({ dealer }: { dealer: DeskDealer }) {
       setProblems(data.problems ?? ["That did not work. Try again."]);
       return;
     }
+    setPath(data.path);
+    setMailed(null);
     setLink(`${window.location.origin}${data.path}`);
   }
 
@@ -871,7 +876,32 @@ function GiveLogin({ dealer }: { dealer: DeskDealer }) {
             >
               <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy the link"}
             </button>
+            <button
+              type="button"
+              className="rn-onboard__button"
+              onClick={async () => {
+                const { ok, data } = await postJson<{ sentTo?: string; problems?: string[] }>(
+                  "/api/onboard/login/email",
+                  { dealerId: dealer.id, email, path },
+                );
+                setMailed(
+                  ok
+                    ? { ok: true, text: `Emailed to ${data.sentTo}.` }
+                    : { ok: false, text: (data.problems ?? ["That did not send."]).join(" ") },
+                );
+              }}
+            >
+              <Mail aria-hidden="true" /> Email it to them
+            </button>
           </div>
+          {mailed ? (
+            <p
+              className={`rn-onboard__result${mailed.ok ? "" : " rn-onboard__result--bad"}`}
+              role={mailed.ok ? "status" : "alert"}
+            >
+              {mailed.text}
+            </p>
+          ) : null}
         </>
       ) : null}
     </div>

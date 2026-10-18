@@ -26,10 +26,10 @@ const TABS: Tab[] = [
 export default async function PortalCars({
   searchParams,
 }: {
-  searchParams: Promise<{ show?: string }>;
+  searchParams: Promise<{ show?: string; problem?: string }>;
 }) {
   const session = await requirePortalSession();
-  const { show } = await searchParams;
+  const { show, problem } = await searchParams;
   const tab = TABS.find((each) => each.id === show) ?? LIVE;
 
   const cars = await portalCars(session);
@@ -52,6 +52,17 @@ export default async function PortalCars({
           </p>
         </div>
       </header>
+
+      {problem ? (
+        <p className="rn-portal-problem mb-6" role="alert">
+          That car could not be changed: something on its listing needs fixing first, usually a
+          photograph that is no longer there. Tell us on WhatsApp or at{" "}
+          <a className="rn-link" href="mailto:info@rynet.co.za">
+            info@rynet.co.za
+          </a>{" "}
+          and we will put it right.
+        </p>
+      ) : null}
 
       <nav className="rn-portal-tabs" aria-label="Which cars">
         {TABS.map((each) => (

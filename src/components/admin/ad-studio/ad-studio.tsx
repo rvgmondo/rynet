@@ -89,6 +89,11 @@ export type StudioSocial = {
   accounts: { id: number; network: "facebook" | "instagram"; displayName: string }[];
   /** Only a principal or manager posts to the dealership's Page. */
   canPost: boolean;
+  /** Where the post goes: the portal's route for a dealership, the admin's for Rynet. */
+  endpoint?: string;
+  /** Where to connect a Page, and whose it is, for the empty state. */
+  connectHref?: string;
+  whose?: "your" | "Rynet's";
 };
 
 /**
@@ -114,8 +119,9 @@ function PostPanel({
   if (social.accounts.length === 0) {
     return (
       <p className="rn-onboard__hint">
-        Connect your Facebook Page in <a href="/portal/social">Social</a> and you can post this
-        straight to it from here.
+        Connect {social.whose ?? "your"} Facebook Page in{" "}
+        <a href={social.connectHref ?? "/portal/social"}>Social</a> and you can post this straight
+        to it from here.
       </p>
     );
   }
@@ -147,7 +153,7 @@ function PostPanel({
     form.set("caption", caption);
     form.set("accounts", chosen.join(","));
     if (vehicleId) form.set("vehicleId", String(vehicleId));
-    const response = await fetch("/api/portal/social/post", {
+    const response = await fetch(social.endpoint ?? "/api/portal/social/post", {
       method: "POST",
       credentials: "include",
       body: form,
@@ -156,7 +162,10 @@ function PostPanel({
     setBusy(false);
     setResult(
       response?.ok
-        ? { ok: true, text: "Sent. It is on its way to your Page now. Follow it in Social." }
+        ? {
+            ok: true,
+            text: `Sent. It is on its way to ${social.whose ?? "your"} Page now. Follow it in Social.`,
+          }
         : { ok: false, text: body?.error ?? "That did not go. Try again." },
     );
   }
@@ -436,6 +445,19 @@ export function AdStudio({
               </button>
             </div>
           </section>
+          {social ? (
+            <section className="rn-admin-panel rn-onboard__step" aria-labelledby="studio-post">
+              <h2 id="studio-post" className="rn-admin-home__h2">
+                Post it to Rynet&apos;s Page
+              </h2>
+              <PostPanel
+                social={social}
+                content={content}
+                caption={text}
+                vehicleId={car?.id ?? null}
+              />
+            </section>
+          ) : null}
         </>
       )}
     </div>

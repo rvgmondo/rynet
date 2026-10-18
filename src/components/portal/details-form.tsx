@@ -10,6 +10,7 @@ export type DetailsValues = {
   principalName: string;
   principalEmail: string;
   principalPhone: string;
+  rynetEmails: boolean;
 };
 
 /** How buyers reach the dealership. The principal and managers can change it. */
@@ -17,7 +18,7 @@ export function DetailsForm({ values, canEdit }: { values: DetailsValues; canEdi
   const [state, action, pending] = useActionState<FormState, FormData>(saveDetails, {});
 
   const field = (
-    name: keyof DetailsValues,
+    name: Exclude<keyof DetailsValues, "rynetEmails">,
     label: string,
     hint: string,
     type: "text" | "email" | "tel" = "text",
@@ -57,6 +58,21 @@ export function DetailsForm({ values, canEdit }: { values: DetailsValues; canEdi
         "email",
       )}
       {field("principalPhone", "Their phone", "For Rynet only. Never shown on the site.", "tel")}
+      <label className="flex min-h-11 items-start gap-3 text-sm text-heading">
+        <input
+          type="checkbox"
+          name="rynetEmails"
+          defaultChecked={values.rynetEmails}
+          disabled={!canEdit}
+          className="mt-0.5 size-5 accent-[var(--rn-primary)]"
+        />
+        <span>
+          News and reminders from Rynet by email
+          <span className="block text-xs text-muted">
+            Enquiries from buyers always reach you, whatever this says.
+          </span>
+        </span>
+      </label>
       {state.problem ? (
         <p className="rn-portal-problem" role="alert">
           {state.problem}

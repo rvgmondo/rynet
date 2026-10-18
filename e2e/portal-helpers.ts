@@ -10,9 +10,9 @@ import {
 
 import sharp from "sharp";
 
-import { DEALER_A_SLUG } from "../src/seed/fixture-accounts";
+import { DEALER_A_SLUG, FIXTURES } from "../src/seed/fixture-accounts";
 import { renderEverything } from "./axe-context";
-import { ADMIN_TOKEN_FILE } from "./global-setup";
+import { ADMIN_TOKEN_FILE, OWNER_A_TOKEN_FILE } from "./global-setup";
 
 /**
  * What the portal suites share: signing in as the admin, a car of dealer A's own, and a dealer A
@@ -25,6 +25,16 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "ChangeMe123!";
 export const PORTAL_PASSWORD = "a long portal password";
 
 export async function tokenFor(request: APIRequestContext, email: string, password: string) {
+  // Dealer A's owner is signed in once before the run (e2e/global-setup.ts). Signing in again
+  // here, in parallel with the isolation suite, would drop that suite's own session.
+  if (email === FIXTURES.ownerA) {
+    try {
+      const shared = readFileSync(OWNER_A_TOKEN_FILE, "utf8").trim();
+      if (shared) return shared;
+    } catch {
+      // No shared token: sign in below.
+    }
+  }
   const res = await request.post("/api/users/login", { data: { email, password } });
   expect(res.ok(), `could not sign in as ${email}, run npm run seed:fixtures`).toBe(true);
   return ((await res.json()) as { token: string }).token;
@@ -56,7 +66,7 @@ export function adminCaller(request: APIRequestContext): AdminCall {
 }
 
 /** The token e2e/global-setup.ts made before any suite ran, when there is one. */
-function sharedAdminToken(): string | null {
+export function sharedAdminToken(): string | null {
   try {
     return readFileSync(ADMIN_TOKEN_FILE, "utf8").trim() || null;
   } catch {
@@ -122,7 +132,8 @@ export async function makeCar(
   dealerId: number,
   photoId?: number,
 ): Promise<number> {
-  const any = await request.get("/api/vehicles?where[status][equals]=live&limit=1&depth=0");
+  // The oldest live car: never one another suite just made, whose photo it deletes afterwards.
+  const any = await request.get("/api/vehicles?where[status][equals]=live&sort=id&limit=1&depth=0");
   const template = ((await any.json()) as { docs: Record<string, unknown>[] }).docs[0];
   expect(template, "no live car to copy, run npm run seed").toBeTruthy();
   const {

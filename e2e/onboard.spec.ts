@@ -1,6 +1,6 @@
-import { type APIRequestContext, type APIResponse, expect, test } from "@playwright/test";
+import { type APIResponse, expect, test } from "@playwright/test";
 import { FIXTURE_PASSWORD, FIXTURES } from "../src/seed/fixture-accounts";
-import { adminCaller } from "./portal-helpers";
+import { adminCaller, tokenFor } from "./portal-helpers";
 
 /**
  * The onboarding desk's routes, over HTTP.
@@ -12,12 +12,6 @@ import { adminCaller } from "./portal-helpers";
  *
  * Needs the fixture accounts: `npm run seed && npm run seed:fixtures`.
  */
-
-async function tokenFor(request: APIRequestContext, email: string, password: string) {
-  const res = await request.post("/api/users/login", { data: { email, password } });
-  expect(res.ok(), `could not sign in as ${email}, run npm run seed:fixtures`).toBe(true);
-  return ((await res.json()) as { token: string }).token;
-}
 
 const auth = (token: string) => ({ Authorization: `JWT ${token}` });
 

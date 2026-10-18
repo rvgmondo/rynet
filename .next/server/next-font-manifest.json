@@ -66,6 +66,9 @@
     "[project]/src/app/(marketplace)/terms/page": [
       "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
     ],
+    "[project]/src/app/(marketplace)/unsubscribe/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
     "[project]/src/app/(marketplace)/vehicles/[make]/[model]/[slug]/page": [
       "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
     ],

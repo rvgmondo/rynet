@@ -14,6 +14,8 @@ import {
   LayoutTemplate,
   LogOut,
   type LucideIcon,
+  Mail,
+  Share2,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { PREFERENCE_KEYS } from "payload/shared";
@@ -193,6 +195,26 @@ export function AdminNavClient({
                 label="Ad studio"
                 current={isCurrent(pathname, `${adminRoute}/ad-studio`, false)}
                 Icon={ImageIcon}
+              />
+            </li>
+          ) : null}
+          {canOnboard ? (
+            <li>
+              <NavLink
+                href={`${adminRoute}/mailer`}
+                label="Mailer"
+                current={isCurrent(pathname, `${adminRoute}/mailer`, false)}
+                Icon={Mail}
+              />
+            </li>
+          ) : null}
+          {canOnboard ? (
+            <li>
+              <NavLink
+                href={`${adminRoute}/social`}
+                label="Social"
+                current={isCurrent(pathname, `${adminRoute}/social`, false)}
+                Icon={Share2}
               />
             </li>
           ) : null}

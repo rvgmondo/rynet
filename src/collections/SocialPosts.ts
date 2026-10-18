@@ -37,10 +37,10 @@ export const SocialPosts: CollectionConfig = {
       type: "row",
       fields: [
         {
+          // Empty for a post to Rynet's own Page.
           name: "dealer",
           type: "relationship",
           relationTo: "dealers",
-          required: true,
           index: true,
           label: "Dealership",
         },

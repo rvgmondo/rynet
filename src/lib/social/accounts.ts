@@ -1,4 +1,4 @@
-import type { Payload } from "payload";
+import type { Payload, Where } from "payload";
 
 import type { MetaAccount } from "@/lib/social/meta";
 import { encryptToken } from "@/lib/social/secrets";
@@ -10,16 +10,27 @@ import { encryptToken } from "@/lib/social/secrets";
  * `pending`, tokens encrypted) until the dealership chooses one, which happens on its own when
  * there is only one. One Page per dealership, with the Instagram account linked to it: choosing
  * another replaces the first.
+ *
+ * WHOSE PAGE
+ *
+ * A dealership's (its id), or Rynet's own (null), connected by staff from Admin > Social so the
+ * marketplace can post to its own followers. The same tables and the same publisher serve both.
  */
+
+/** Rynet's own Pages have no dealership. */
+export type Owner = number | null;
+
+export const ownerWhere = (owner: Owner): Where =>
+  owner === null ? { dealer: { exists: false } } : { dealer: { equals: owner } };
 
 export async function offerAccounts(
   payload: Payload,
-  dealerId: number,
+  dealerId: Owner,
   accounts: MetaAccount[],
 ): Promise<void> {
   await payload.db.deleteMany({
     collection: "social-accounts",
-    where: { and: [{ dealer: { equals: dealerId } }, { state: { equals: "pending" } }] },
+    where: { and: [ownerWhere(dealerId), { state: { equals: "pending" } }] },
   });
   for (const account of accounts) {
     await payload.create({
@@ -49,14 +60,14 @@ type Row = {
 /** Makes one offered Page (and its Instagram) this dealership's connection. False if not offered. */
 export async function choosePage(
   payload: Payload,
-  dealerId: number,
+  dealerId: Owner,
   userId: number,
   pageId: string,
 ): Promise<boolean> {
   const rows = (
     await payload.find({
       collection: "social-accounts",
-      where: { dealer: { equals: dealerId } },
+      where: ownerWhere(dealerId),
       depth: 0,
       limit: 100,
       overrideAccess: true,
