@@ -192,9 +192,12 @@ test.describe
         });
 
       await button("Reserved").click();
+      // The page redraws without it once the save has landed; leaving earlier cancels the save.
+      await expect(button("Reserved")).toHaveCount(0);
       await page.goto("/portal/cars?show=reserved");
       await expect(button("Back on sale")).toBeVisible();
       await button("Back on sale").click();
+      await expect(button("Back on sale")).toHaveCount(0);
       await page.goto("/portal/cars");
       await expect(button("Reserved")).toBeVisible();
     });
