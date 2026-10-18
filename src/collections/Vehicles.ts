@@ -18,6 +18,7 @@ import {
 import { priceFieldsFromSaved } from "@/lib/price-history";
 import { dropTag } from "@/lib/revalidate";
 import { generatePublicRef } from "@/lib/slug";
+import { queueAutoPosts } from "@/lib/social/queue";
 import { vehicleTitle } from "@/lib/vehicle-title";
 
 /**
@@ -263,7 +264,24 @@ export const Vehicles: CollectionConfig = {
      * car sold and is looking at it still for sale on the front page. Both hooks fire on the
      * status change as well as on the price, because either one changes what the public sees.
      */
-    afterChange: [() => dropTag("vehicles")],
+    afterChange: [
+      () => dropTag("vehicles"),
+      /*
+       * A car that has just gone live is offered to the dealership's automatic social posting
+       * (src/lib/social/queue.ts decides whether anything is posted, and when). After the save
+       * has finished, and never awaited: a car going live must not wait on, or fail because of,
+       * a social post.
+       */
+      ({ doc, previousDoc, operation, req }) => {
+        const wentLive =
+          doc?.status === "live" && (operation === "create" || previousDoc?.status !== "live");
+        if (wentLive && typeof doc.id === "number") {
+          const id = doc.id;
+          const timer = setTimeout(() => void queueAutoPosts(req.payload, id), 1500);
+          timer.unref?.();
+        }
+      },
+    ],
     afterDelete: [() => dropTag("vehicles")],
   },
 

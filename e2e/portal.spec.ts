@@ -1,15 +1,16 @@
-import AxeBuilder from "@axe-core/playwright";
-import {
-  type APIRequestContext,
-  type APIResponse,
-  type Browser,
-  expect,
-  type Page,
-  test,
-} from "@playwright/test";
+import { type Browser, expect, type Page, test } from "@playwright/test";
 
-import { DEALER_A_SLUG, FIXTURE_PASSWORD, FIXTURES } from "../src/seed/fixture-accounts";
-import { renderEverything } from "./axe-context";
+import { FIXTURE_PASSWORD, FIXTURES } from "../src/seed/fixture-accounts";
+import {
+  adminCaller,
+  auth,
+  dealerAId,
+  expectNoAxeViolations,
+  expectNoOverflow,
+  makeCar,
+  PORTAL_PASSWORD,
+  tokenFor,
+} from "./portal-helpers";
 
 /**
  * The dealer portal, /portal: a dealership's own login, end to end.
@@ -25,48 +26,7 @@ import { renderEverything } from "./axe-context";
  * Needs the fixture accounts: `npm run seed && npm run seed:fixtures`.
  */
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@rynet.co.za";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "ChangeMe123!";
-const NEW_PASSWORD = "a long portal password";
-
-async function tokenFor(request: APIRequestContext, email: string, password: string) {
-  const res = await request.post("/api/users/login", { data: { email, password } });
-  expect(res.ok(), `could not sign in as ${email}, run npm run seed:fixtures`).toBe(true);
-  return ((await res.json()) as { token: string }).token;
-}
-
-const auth = (token: string) => ({ Authorization: `JWT ${token}` });
-
-/** Admin requests, signed in again once if the shared admin session was dropped. */
-function adminCaller(request: APIRequestContext) {
-  let token: string | null = null;
-  return async (send: (headers: Record<string, string>) => Promise<APIResponse>) => {
-    token ??= await tokenFor(request, ADMIN_EMAIL, ADMIN_PASSWORD);
-    const first = await send(auth(token));
-    if (first.status() !== 401 && first.status() !== 403) return first;
-    token = await tokenFor(request, ADMIN_EMAIL, ADMIN_PASSWORD);
-    return send(auth(token));
-  };
-}
-
-async function expectNoAxeViolations(page: Page) {
-  await renderEverything(page);
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
-    .analyze();
-  for (const v of results.violations) {
-    console.error(`\n${v.id} (${v.impact}): ${v.help}`);
-    for (const node of v.nodes.slice(0, 3)) console.error(`  ${node.html.slice(0, 160)}`);
-  }
-  expect(results.violations).toEqual([]);
-}
-
-async function expectNoOverflow(page: Page) {
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  expect(overflow).toBeLessThanOrEqual(1);
-}
+const NEW_PASSWORD = PORTAL_PASSWORD;
 
 test.describe("the way in", () => {
   test("a stranger is sent to sign in", async ({ page }) => {
@@ -125,47 +85,9 @@ test.describe
       const request = await playwright.request.newContext({ baseURL });
       call = adminCaller(request);
 
-      const dealers = await request.get(
-        `/api/dealers?where[slug][equals]=${DEALER_A_SLUG}&limit=1&depth=0`,
-      );
-      const dealerId = ((await dealers.json()) as { docs: { id: number }[] }).docs[0]?.id;
-      expect(dealerId, "dealer A is missing, run npm run seed:fixtures").toBeTruthy();
-
-      // A live car of dealer A's own, copied from any live listing so it passes validation, and
-      // deleted afterwards. The fixtures give dealer A leads but no stock.
-      const any = await request.get("/api/vehicles?where[status][equals]=live&limit=1&depth=0");
-      const template = ((await any.json()) as { docs: Record<string, unknown>[] }).docs[0];
-      expect(template, "no live car to copy, run npm run seed").toBeTruthy();
-      const {
-        id: _id,
-        createdAt: _createdAt,
-        updatedAt: _updatedAt,
-        publicRef: _publicRef,
-        _status: _draft,
-        vin: _vin,
-        source: _source,
-        externalId: _externalId,
-        sourceManaged: _managed,
-        ...fields
-      } = template as Record<string, unknown>;
-      const made = await call((headers) =>
-        request.post("/api/vehicles", {
-          headers,
-          data: {
-            ...fields,
-            gallery: ((fields.gallery as { id?: unknown }[] | undefined) ?? []).map(
-              ({ id: _rowId, ...row }) => row,
-            ),
-            dealer: dealerId,
-            branch: null,
-            stockNumber: `PORTAL-${Date.now()}`,
-            isDemonstration: false,
-            status: "live",
-          },
-        }),
-      );
-      expect(made.status(), await made.text()).toBe(201);
-      carId = ((await made.json()) as { doc: { id: number } }).doc.id;
+      const dealerId = await dealerAId(request);
+      // A live car of dealer A's own, deleted afterwards. The fixtures give dealer A no stock.
+      carId = await makeCar(request, call, dealerId);
 
       email = `portal-${info.project.name}-${Date.now()}@rynet.test`.toLowerCase();
       const res = await call((headers) =>

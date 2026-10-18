@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
-import { type APIRequestContext, type APIResponse, expect, test } from "@playwright/test";
-
+import { expect, test } from "@playwright/test";
 import { renderEverything } from "./axe-context";
+import { adminCaller } from "./portal-helpers";
 
 /**
  * /list-your-stock, the page that sells listing to a dealership, and the sign-up on it.
@@ -13,27 +13,6 @@ import { renderEverything } from "./axe-context";
 
 const PATH = "/list-your-stock";
 const WIDTHS = [320, 375, 768, 1024, 1440];
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@rynet.co.za";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "ChangeMe123!";
-
-function adminCaller(request: APIRequestContext) {
-  let token: string | null = null;
-  const login = async () => {
-    const res = await request.post("/api/users/login", {
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-    });
-    expect(res.ok()).toBe(true);
-    return ((await res.json()) as { token: string }).token;
-  };
-  // Signed in again once if the shared admin session was dropped (see admin.spec.ts).
-  return async (send: (headers: Record<string, string>) => Promise<APIResponse>) => {
-    token ??= await login();
-    const first = await send({ Authorization: `JWT ${token}` });
-    if (first.status() !== 401 && first.status() !== 403) return first;
-    token = await login();
-    return send({ Authorization: `JWT ${token}` });
-  };
-}
 
 test.describe("the page", () => {
   test("says the dealership does nothing, and has no axe violations", async ({ page }) => {

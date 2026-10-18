@@ -13,6 +13,7 @@ import * as migration_20261005_075751_stock_sync_settings from './20261005_07575
 import * as migration_20261012_064752_dealer_stock_feed from './20261012_064752_dealer_stock_feed';
 import * as migration_20261013_085810_website_previews from './20261013_085810_website_previews';
 import * as migration_20261017_081431_mockup_links from './20261017_081431_mockup_links';
+import * as migration_20261018_152516_social_posting from './20261018_152516_social_posting';
 
 export const migrations = [
   {
@@ -88,6 +89,11 @@ export const migrations = [
   {
     up: migration_20261017_081431_mockup_links.up,
     down: migration_20261017_081431_mockup_links.down,
-    name: '20261017_081431_mockup_links'
+    name: '20261017_081431_mockup_links',
+  },
+  {
+    up: migration_20261018_152516_social_posting.up,
+    down: migration_20261018_152516_social_posting.down,
+    name: '20261018_152516_social_posting'
   },
 ];

@@ -1,6 +1,6 @@
 import { type APIRequestContext, type APIResponse, expect, test } from "@playwright/test";
-
 import { FIXTURE_PASSWORD, FIXTURES } from "../src/seed/fixture-accounts";
+import { adminCaller } from "./portal-helpers";
 
 /**
  * The onboarding desk's routes, over HTTP.
@@ -13,9 +13,6 @@ import { FIXTURE_PASSWORD, FIXTURES } from "../src/seed/fixture-accounts";
  * Needs the fixture accounts: `npm run seed && npm run seed:fixtures`.
  */
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@rynet.co.za";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "ChangeMe123!";
-
 async function tokenFor(request: APIRequestContext, email: string, password: string) {
   const res = await request.post("/api/users/login", { data: { email, password } });
   expect(res.ok(), `could not sign in as ${email}, run npm run seed:fixtures`).toBe(true);
@@ -23,21 +20,6 @@ async function tokenFor(request: APIRequestContext, email: string, password: str
 }
 
 const auth = (token: string) => ({ Authorization: `JWT ${token}` });
-
-/**
- * Admin requests, signed in again once if the session was dropped. Every suite signs in as the
- * same admin, and two sign-ins landing together can leave one token refused (see admin.spec.ts).
- */
-function adminCaller(request: APIRequestContext) {
-  let token: string | null = null;
-  return async (send: (headers: Record<string, string>) => Promise<APIResponse>) => {
-    token ??= await tokenFor(request, ADMIN_EMAIL, ADMIN_PASSWORD);
-    const first = await send(auth(token));
-    if (first.status() !== 401 && first.status() !== 403) return first;
-    token = await tokenFor(request, ADMIN_EMAIL, ADMIN_PASSWORD);
-    return send(auth(token));
-  };
-}
 
 test.describe("the onboarding routes refuse anyone who is not staff", () => {
   // Desktop only: the mobile project would only repeat the same HTTP calls.

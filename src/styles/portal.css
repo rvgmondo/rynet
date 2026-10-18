@@ -28,6 +28,9 @@
     .rn-portal {
       display: grid;
       grid-template-columns: 17rem minmax(0, 1fr);
+      /* The rail is sticky and one screen tall, so the column it sits in is painted navy all the
+         way down a long page. */
+      background: linear-gradient(90deg, var(--rn-navy-900) 17rem, var(--rn-page) 17rem);
     }
   }
 
@@ -53,6 +56,7 @@
     .rn-portal-rail {
       position: sticky;
       top: 0;
+      align-self: start;
       height: 100dvh;
       padding: 1.75rem 1.25rem;
     }
@@ -259,6 +263,7 @@
 
   .rn-portal-rail__signout--mobile {
     min-height: 2.75rem;
+    margin-top: -0.75rem;
     font-size: var(--rn-text-xs);
   }
 
@@ -716,6 +721,19 @@
     font-size: var(--rn-text-sm);
   }
 
+  .rn-portal-net {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.0625rem 0.5rem;
+    border: 1px solid var(--rn-line-strong);
+    border-radius: var(--rn-radius-xs);
+    color: var(--rn-heading);
+    font-size: var(--rn-text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
   /* ---------------------------------------------------------------- sign in */
 
   .rn-portal-door {
@@ -790,6 +808,7 @@
 
   .rn-portal-door__lockup {
     position: relative;
+    align-self: flex-start;
     height: 2rem;
     width: auto;
   }
@@ -1042,6 +1061,45 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
+  }
+
+  .rn-studio__targets {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+    padding: 0;
+    border: 0;
+  }
+
+  .rn-studio__target {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.75rem;
+    color: var(--rn-heading);
+    font-size: var(--rn-text-sm);
+  }
+
+  .rn-studio__target input {
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--rn-primary);
+  }
+
+  .rn-onboard__button--primary {
+    border-color: var(--rn-primary);
+    background: var(--rn-primary);
+    color: var(--rn-on-primary);
+  }
+
+  .rn-onboard__button--primary:hover:not(:disabled) {
+    border-color: var(--rn-primary-hover);
+    background: var(--rn-primary-hover);
+  }
+
+  .rn-onboard__hint a {
+    color: var(--rn-heading);
+    text-decoration: underline;
   }
 
   .rn-studio__format {

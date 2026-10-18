@@ -57,3 +57,27 @@ export function showroomCaption(dealer: AdDealer, liveCars: number): string {
     dealer.showroomUrl,
   ].join("\n");
 }
+
+/**
+ * The same car in the dealership's own voice, for posting on its own Page: "we", not "a dealership
+ * Rynet has checked", which reads oddly from the dealership itself.
+ */
+export function ownCaption(car: AdCar): string {
+  const price = priceLabel(car.price);
+  const facts = [car.title, price, detailLine(car)].filter(Boolean).join(", ");
+  return [
+    `Just in: ${facts}.`,
+    "Send us a message to see it or book a test drive.",
+    "",
+    car.url,
+  ].join("\n");
+}
+
+export function ownShowroomCaption(dealer: AdDealer, liveCars: number): string {
+  return [
+    `${liveCars === 1 ? "1 car" : `${liveCars} cars`} ready to drive away, all on Rynet.`,
+    "Have a look and send us a message about any of them.",
+    "",
+    dealer.showroomUrl,
+  ].join("\n");
+}

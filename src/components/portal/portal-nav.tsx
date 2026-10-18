@@ -1,6 +1,6 @@
 "use client";
 
-import { Car, Gauge, ImageIcon, Inbox, LogOut, Store } from "lucide-react";
+import { Car, Gauge, ImageIcon, Inbox, LogOut, Share2, Store } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/portal/cars", label: "Your cars", icon: Car },
   { href: "/portal/enquiries", label: "Enquiries", icon: Inbox, counted: true },
   { href: "/portal/ads", label: "Ads", icon: ImageIcon },
+  { href: "/portal/social", label: "Social", icon: Share2 },
   { href: "/portal/details", label: "Your details", icon: Store },
 ] as const;
 

@@ -18,6 +18,8 @@ import { Leads } from "./collections/Leads";
 import { Media } from "./collections/Media";
 import { Plans } from "./collections/Plans";
 import { Previews } from "./collections/Previews";
+import { SocialAccounts } from "./collections/SocialAccounts";
+import { SocialPosts } from "./collections/SocialPosts";
 import { TAXONOMY_COLLECTIONS } from "./collections/taxonomies";
 import { Users } from "./collections/Users";
 import { Vehicles } from "./collections/Vehicles";
@@ -25,6 +27,7 @@ import { FinanceDefaults } from "./globals/FinanceDefaults";
 import { StockSync } from "./globals/StockSync";
 import { withPlainPickers } from "./lib/admin-pickers";
 import { migrateOnBoot } from "./lib/migrate-on-boot";
+import { startSocialPublisher } from "./lib/social/publisher";
 import { startStockSync } from "./lib/stock-import/schedule";
 
 /**
@@ -127,13 +130,14 @@ export default buildConfig({
     await migrateOnBoot(payload);
     // After the migrations, because the first run needs the stock sync's own settings table.
     startStockSync(payload);
+    startSocialPublisher(payload);
   },
 
   admin: {
-    // The Payload admin is for platform staff. The plan is a separate dealer portal, a normal
-    // Next route group talking to Payload through the Local API, because bending this admin into
-    // a lead pipeline and a feed mapper would mean fighting it on every screen. No portal route
-    // exists yet, so dealership staff have nowhere to manage stock but here.
+    // The Payload admin is for platform staff. Dealerships have their own portal at /portal, a
+    // normal Next route group talking to Payload through the Local API as the signed-in user,
+    // because bending this admin into a dealership's workspace would mean fighting it on every
+    // screen. See src/app/(portal).
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
     meta: {
@@ -360,6 +364,8 @@ export default buildConfig({
       // collections/taxonomy.ts.
       ...TAXONOMY_COLLECTIONS,
       ConsentRecords,
+      SocialAccounts,
+      SocialPosts,
     ]),
   ),
 

@@ -1,36 +1,10 @@
-import {
-  type APIRequestContext,
-  type APIResponse,
-  expect,
-  type Page,
-  test,
-} from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+import { adminCaller } from "./portal-helpers";
 
 /**
  * A dealership's stock on its own website: the feed (/api/stock/<slug>) and the one-line embed
  * (/embed/stock.js), tested the way a dealer's site uses them, from another origin.
  */
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@rynet.co.za";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "ChangeMe123!";
-
-function adminCaller(request: APIRequestContext) {
-  let token: string | null = null;
-  const login = async () => {
-    const res = await request.post("/api/users/login", {
-      data: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD },
-    });
-    expect(res.ok()).toBe(true);
-    return ((await res.json()) as { token: string }).token;
-  };
-  return async (send: (headers: Record<string, string>) => Promise<APIResponse>) => {
-    token ??= await login();
-    const first = await send({ Authorization: `JWT ${token}` });
-    if (first.status() !== 401 && first.status() !== 403) return first;
-    token = await login();
-    return send({ Authorization: `JWT ${token}` });
-  };
-}
 
 /**
  * Opens a stand-in for a dealership's own website, on an origin that is not Rynet's.

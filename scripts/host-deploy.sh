@@ -136,10 +136,11 @@ for file in server.cjs package.json package-lock.json next.config.ts tsconfig.js
 done
 if [ -d "$REPO/public" ]; then cp -R "$REPO/public" "$APP/"; fi
 
-# Uploads (photographs in media, website mockups in previews) and the Passenger restart file.
+# Uploads (photographs in media, website mockups in previews, social post pictures in
+# social-media) and the Passenger restart file.
 # `-p` so an existing media directory with live
 # photographs in it is left exactly alone.
-mkdir -p "$APP/media" "$APP/previews" "$APP/tmp"
+mkdir -p "$APP/media" "$APP/previews" "$APP/social-media" "$APP/tmp"
 
 # A checkout can arrive with the execute bit set on things that should not have it.
 # node_modules is pruned: it is 74 000 files, re-permissioning it every deploy is minutes of
