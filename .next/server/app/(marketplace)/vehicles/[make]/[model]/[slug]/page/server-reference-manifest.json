@@ -1,6 +1,6 @@
 {
   "node": {
-    "605a822177e0791aa3aabd4b57809f8966730fc42a": {
+    "6003d69772421b19aa3ad3fe969ba0920cb6d18067": {
       "workers": {
         "app/(marketplace)/vehicles/[make]/[model]/[slug]/page": {
           "moduleId": 80500,
