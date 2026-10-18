@@ -94,7 +94,23 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
-
-  # Lighthouse budgets are not wired yet and this job is deliberately absent rather than
-  # present and passing vacuously. It lands in Phase 3 alongside the templates it measures,
-  # because a budget on a page that does not exist proves nothing. See docs/DELIVERY-PLAN.md.
+      - name: Lighthouse budget
+        # The same build and database the suite just ran against, on a throttled phone, three
+        # runs per page. What it holds and why is at the top of scripts/lighthouse.mjs.
+        env:
+          DATABASE_URI: file:./rynet.db
+          PAYLOAD_SECRET: ci-only-not-a-real-secret-value-000000
+          NEXT_PUBLIC_SERVER_URL: http://localhost:3100
+        run: |
+          npm run start -- --port 3100 --keepAliveTimeout 70000 > lighthouse-server.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3100/privacy && break
+            sleep 2
+          done
+          npm run lighthouse
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 14

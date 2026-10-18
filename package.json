@@ -22,6 +22,7 @@
     "contrast": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/contrast-report.ts",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation tsx --env-file-if-exists=.env src/seed/index.ts",
     "test": "vitest run",
+    "lighthouse": "node scripts/lighthouse.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "prepare": "node -e \"try{require('husky')()}catch(e){}\"",
@@ -37,6 +38,7 @@
     "deploy:build": "node scripts/build-deploy.mjs"
   },
   "dependencies": {
+    "@hookform/resolvers": "5.9.1",
     "@payloadcms/db-postgres": "3.88.0",
     "@payloadcms/db-sqlite": "3.88.0",
     "@payloadcms/email-nodemailer": "3.88.0",
@@ -48,7 +50,6 @@
     "@payloadcms/richtext-lexical": "3.88.0",
     "@payloadcms/storage-s3": "3.88.0",
     "@payloadcms/ui": "3.88.0",
-    "@hookform/resolvers": "5.9.1",
     "@radix-ui/react-accordion": "1.2.20",
     "@radix-ui/react-checkbox": "1.3.11",
     "@radix-ui/react-dialog": "1.1.23",
@@ -83,6 +84,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
     "@biomejs/biome": "2.5.10",
+    "@lhci/cli": "0.15.1",
     "@playwright/test": "1.62.1",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.20.1",
