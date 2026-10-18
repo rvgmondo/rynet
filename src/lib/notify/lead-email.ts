@@ -1,4 +1,5 @@
 import { COMPANY } from "@/content/company";
+import { renderEmail } from "@/lib/mail/layout";
 
 /**
  * Who hears about a new enquiry, and what the email says. Pure, so both are tested.
@@ -82,8 +83,10 @@ export function leadEmail(
     carTitle?: string | null;
     carUrl?: string | null;
     adminUrl: string;
+    /** The dealership's own enquiries page, for a dealership with a portal login. */
+    portalUrl?: string | null;
   },
-): { subject: string; text: string; replyTo?: string } {
+): { subject: string; text: string; html: string; replyTo?: string } {
   const kind = KIND[lead.type] ?? "A new enquiry";
   const about = context.carTitle ? `: ${context.carTitle}` : "";
   const lines = [
@@ -102,6 +105,7 @@ export function leadEmail(
     lines.push(
       "They asked through Rynet and agreed to their details being passed to you. Reply to this email to answer them directly.",
     );
+    if (context.portalUrl) lines.push("", `All your enquiries: ${context.portalUrl}`);
   } else {
     if (recipient.fallback) {
       lines.push(
@@ -112,9 +116,47 @@ export function leadEmail(
     lines.push(`In the admin: ${context.adminUrl}`);
   }
 
+  const details = [
+    `**Name:** ${lead.name}`,
+    lead.phone ? `**Phone:** ${lead.phone}` : null,
+    lead.email ? `**Email:** ${lead.email}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const note =
+    recipient.audience === "dealer"
+      ? "They asked through Rynet and agreed to their details being passed to you. Reply to this email to answer them directly."
+      : recipient.fallback
+        ? `This should have gone to ${context.dealerName ?? "the dealership"}, but they have no email address on record. Pass it on, and add one to their record.`
+        : null;
+  const button =
+    recipient.audience === "dealer"
+      ? context.portalUrl
+        ? { label: "Open your enquiries", url: context.portalUrl }
+        : context.carUrl
+          ? { label: "See the car", url: context.carUrl }
+          : null
+      : { label: "Open it in the admin", url: context.adminUrl };
+  const { html } = renderEmail({
+    preheader: `${lead.name}${lead.message ? `: ${lead.message.trim().slice(0, 90)}` : ""}`,
+    heading: `${kind}${about}`,
+    body: [
+      details,
+      context.carUrl && context.carTitle
+        ? `**The car:** [${context.carTitle}](${context.carUrl})`
+        : null,
+      lead.message?.trim() || "No message.",
+      note,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+    button,
+  });
+
   return {
     subject: `${kind}${about}`,
     text: lines.join("\n"),
+    html,
     ...(recipient.audience === "dealer" && lead.email ? { replyTo: lead.email } : {}),
   };
 }

@@ -89,17 +89,32 @@ export async function sendLeadEmail(
         })}`
       : null;
 
+    const hasLogin =
+      dealerId !== null &&
+      recipient.audience === "dealer" &&
+      (
+        await payload.count({
+          collection: "users",
+          where: { and: [{ dealer: { equals: dealerId } }, { status: { equals: "active" } }] },
+          overrideAccess: true,
+        })
+      ).totalDocs > 0;
+
     const email = leadEmail(forEmail, recipient, {
       dealerName: dealer?.tradingName ?? null,
       carTitle: vehicleDoc?.title ?? null,
       carUrl,
       adminUrl: `${siteUrl}${payload.config.routes.admin}/collections/leads/${forEmail.id}`,
+      // Only for a dealership somebody can sign in to. Otherwise the button would open a sign-in
+      // page nobody at that dealership has a password for.
+      portalUrl: hasLogin ? `${siteUrl}/portal/enquiries` : null,
     });
 
     await payload.sendEmail({
       to: recipient.to,
       subject: email.subject,
       text: email.text,
+      html: email.html,
       ...(email.replyTo ? { replyTo: email.replyTo } : {}),
     });
   } catch (error) {

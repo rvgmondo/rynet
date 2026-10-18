@@ -13,6 +13,7 @@ function fakePayload(records: Record<string, Record<number, Record<string, unkno
       if (!doc) throw new Error("not found");
       return doc;
     },
+    count: async () => ({ totalDocs: 0 }),
     sendEmail: async (message: Record<string, unknown>) => {
       sent.push(message);
     },

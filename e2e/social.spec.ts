@@ -66,7 +66,10 @@ test.describe
     const cars: number[] = [];
     let photoId: number | null = null;
 
-    test.beforeAll(async ({ browser, playwright, baseURL }) => {
+    test.beforeAll(async ({ browser, playwright, baseURL }, info) => {
+      // The file skips its tests on the phone project, but not its hooks: without this the
+      // phone run would set up and tear down the same dealership under the desktop run.
+      if (info.project.name === "mobile") return;
       request = await playwright.request.newContext({ baseURL });
       call = adminCaller(request);
       dealerId = await dealerAId(request);
@@ -87,7 +90,8 @@ test.describe
       ({ page, email } = await signedInDealer(browser, request, call, dealerId, "social"));
     });
 
-    test.afterAll(async () => {
+    test.afterAll(async ({ playwright: _playwright }, info) => {
+      if (info.project.name === "mobile") return;
       await page?.context().close();
       const posts = await call((headers) =>
         request.get(`/api/social-posts?where[dealer][equals]=${dealerId}&limit=100&depth=0`, {

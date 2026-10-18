@@ -15,6 +15,7 @@ import { Buyers } from "./collections/Buyers";
 import { ConsentRecords } from "./collections/ConsentRecords";
 import { Dealers } from "./collections/Dealers";
 import { Leads } from "./collections/Leads";
+import { EmailTemplates, MailDeliveries, Mailings } from "./collections/Mailings";
 import { Media } from "./collections/Media";
 import { Plans } from "./collections/Plans";
 import { Previews } from "./collections/Previews";
@@ -26,6 +27,7 @@ import { Vehicles } from "./collections/Vehicles";
 import { FinanceDefaults } from "./globals/FinanceDefaults";
 import { StockSync } from "./globals/StockSync";
 import { withPlainPickers } from "./lib/admin-pickers";
+import { startMailer } from "./lib/mail/mailer";
 import { migrateOnBoot } from "./lib/migrate-on-boot";
 import { startSocialPublisher } from "./lib/social/publisher";
 import { startStockSync } from "./lib/stock-import/schedule";
@@ -131,6 +133,7 @@ export default buildConfig({
     // After the migrations, because the first run needs the stock sync's own settings table.
     startStockSync(payload);
     startSocialPublisher(payload);
+    startMailer(payload);
   },
 
   admin: {
@@ -183,6 +186,16 @@ export default buildConfig({
           Component: "/components/admin/ad-studio/ad-studio-view#AdStudioView",
           path: "/ad-studio",
           meta: { title: "Ad studio" },
+        },
+        mailer: {
+          Component: "/components/admin/mailer/mailer-view#MailerView",
+          path: "/mailer",
+          meta: { title: "Mailer" },
+        },
+        social: {
+          Component: "/components/admin/social/social-view#SocialView",
+          path: "/social",
+          meta: { title: "Social" },
         },
       },
     },
@@ -366,6 +379,9 @@ export default buildConfig({
       ConsentRecords,
       SocialAccounts,
       SocialPosts,
+      EmailTemplates,
+      Mailings,
+      MailDeliveries,
     ]),
   ),
 

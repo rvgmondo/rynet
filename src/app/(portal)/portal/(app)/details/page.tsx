@@ -44,6 +44,7 @@ export default async function PortalDetails() {
                 principalName: principal.name ?? "",
                 principalEmail: principal.email ?? "",
                 principalPhone: principal.phone ?? "",
+                rynetEmails: dealer.emailOptOut !== true,
               }}
             />
           </div>

@@ -2240,6 +2240,214 @@
     font-weight: 700;
   }
 
+  /* ---------------------------------------------------------------- social */
+
+  .rn-social__list {
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rn-social__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--rn-line);
+  }
+
+  .rn-social__name {
+    margin: 0 0 4px;
+    color: var(--rn-heading);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .rn-social__net {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 1px 8px;
+    border: 1px solid var(--rn-line-strong);
+    border-radius: var(--rn-radius-sm);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    vertical-align: 2px;
+  }
+
+  .rn-social__actions {
+    margin: 12px 0;
+  }
+
+  /* ---------------------------------------------------------------- mailer */
+
+  .rn-mailer {
+    max-width: 80rem;
+  }
+
+  .rn-mailer__grid {
+    display: grid;
+    gap: 24px;
+    align-items: start;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  }
+
+  .rn-mailer__compose {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rn-mailer__row {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  }
+
+  .rn-mailer__picks {
+    border: 0;
+    min-width: 0;
+  }
+
+  .rn-mailer__fields,
+  .rn-mailer__picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rn-mailer__field {
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px dashed var(--rn-line-strong);
+    border-radius: var(--rn-radius-sm);
+    background: var(--rn-subtle);
+    color: var(--rn-heading);
+    font: 600 13px/1.2 var(--rn-font-mono, ui-monospace, monospace);
+    cursor: pointer;
+  }
+
+  .rn-mailer__field:hover {
+    border-style: solid;
+  }
+
+  .rn-mailer__field:focus-visible {
+    outline: 2px solid var(--rn-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .rn-mailer__search,
+  .rn-mailer__as {
+    max-width: 28rem;
+    margin-top: 16px;
+  }
+
+  .rn-mailer__count {
+    margin: 14px 0 10px;
+    color: var(--rn-heading);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .rn-mailer__list {
+    max-height: 420px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    list-style: none;
+  }
+
+  .rn-mailer__list > li + li {
+    border-top: 1px solid var(--rn-line);
+  }
+
+  .rn-mailer__dealer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px 12px;
+    align-items: center;
+    min-height: 52px;
+    padding: 8px 14px;
+    cursor: pointer;
+  }
+
+  .rn-mailer__dealer input {
+    grid-row: span 2;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--rn-primary);
+  }
+
+  .rn-mailer__dealer-name {
+    color: var(--rn-heading);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .rn-mailer__dealer-meta {
+    color: var(--rn-muted);
+    font-size: 13px;
+    white-space: pre-wrap;
+  }
+
+  .rn-mailer__warn {
+    color: var(--rn-danger);
+    font-weight: 600;
+  }
+
+  .rn-mailer__icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: -3px;
+  }
+
+  .rn-mailer__subject {
+    margin: 14px 0 10px;
+    color: var(--rn-heading);
+    font-size: 15px;
+  }
+
+  .rn-mailer__frame {
+    display: block;
+    width: 100%;
+    height: 640px;
+    border: 1px solid var(--rn-line);
+    border-radius: var(--rn-radius-md);
+    background: #f3f5f8;
+  }
+
+  .rn-mailer__history {
+    width: 100%;
+    margin: 4px 0 12px;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .rn-mailer__history th,
+  .rn-mailer__history td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--rn-line);
+    color: var(--rn-body);
+    text-align: left;
+  }
+
+  .rn-mailer__history th {
+    color: var(--rn-heading);
+    font-weight: 700;
+  }
+
+  .rn-mailer__history a {
+    color: var(--rn-heading);
+    font-weight: 600;
+  }
+
   /* ---------------------------------------------- records nobody makes by hand */
 
   /* Enquiries arrive from the site and consent records are evidence, so the admin offers no

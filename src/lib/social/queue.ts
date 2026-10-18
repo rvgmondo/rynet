@@ -1,6 +1,6 @@
 import type { Payload } from "payload";
 
-import { ownCaption } from "@/lib/ad-studio/caption";
+import { carCaption, ownCaption } from "@/lib/ad-studio/caption";
 import { dealerTown, toAdCar } from "@/lib/ad-studio/load";
 import { photoBytes, storeAdImage, storeCarImage } from "@/lib/social/media";
 import { nextAutoSlot } from "@/lib/social/slots";
@@ -15,12 +15,18 @@ import { nextAutoSlot } from "@/lib/social/slots";
 
 export const MAX_CAPTION = 2200;
 
-type Account = { id: number; network: "facebook" | "instagram"; connectedAt?: string | null };
+type Account = {
+  id: number;
+  network: "facebook" | "instagram";
+  connectedAt?: string | null;
+  dealer?: number | { id: number } | null;
+};
 
 export async function queueManualPost(
   payload: Payload,
   input: {
-    dealerId: number;
+    /** Null for a post to Rynet's own Page. */
+    dealerId: number | null;
     userId: number;
     accounts: Account[];
     image: Buffer;
@@ -74,11 +80,20 @@ export async function queueAutoPosts(payload: Payload, vehicleId: number): Promi
     const dealerId = Number(typeof dealer === "object" ? dealer?.id : dealer);
     if (!Number.isInteger(dealerId)) return;
 
+    // The dealership's own accounts, and Rynet's own, each where automatic posting is on. Rynet's
+    // Page only takes cars from verified dealerships: it speaks for the marketplace.
+    const verified =
+      (dealer as { verificationStatus?: string } | null)?.verificationStatus === "verified";
     const accounts = await payload.find({
       collection: "social-accounts",
       where: {
         and: [
-          { dealer: { equals: dealerId } },
+          {
+            or: [
+              { dealer: { equals: dealerId } },
+              ...(verified ? [{ dealer: { exists: false } }] : []),
+            ],
+          },
           { state: { equals: "connected" } },
           { autoPost: { equals: true } },
         ],
@@ -148,12 +163,21 @@ export async function queueAutoPosts(payload: Payload, vehicleId: number): Promi
       await payload.create({
         collection: "social-posts",
         data: {
-          dealer: dealerId,
+          // A post to Rynet's own Page belongs to Rynet, and says so in Rynet's voice.
+          dealer: account.dealer ? dealerId : null,
           account: account.id,
           network: account.network,
           kind: "auto",
           vehicle: vehicleId,
-          caption: ownCaption(adCar).slice(0, MAX_CAPTION),
+          caption: (account.dealer
+            ? ownCaption(adCar)
+            : carCaption(adCar, {
+                tradingName: String(dealer?.tradingName ?? ""),
+                logoUrl: null,
+                showroomUrl: `${siteUrl}/dealers/${String(dealer?.slug ?? "")}`,
+                town: adCar.town,
+              })
+          ).slice(0, MAX_CAPTION),
           imageFile,
           status: "queued",
           runAfter: nextAutoSlot(times, new Date()).toISOString(),

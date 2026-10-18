@@ -48,6 +48,8 @@ import { LoginIntro as LoginIntro_a31bcf80ce36156b72fe7ae9204a8e7a } from '../..
 import { OwnerDashboard as OwnerDashboard_dc55bcb79d6cd54f5cfa545ca8470757 } from '../../../components/admin/dashboard/owner-dashboard'
 import { OnboardView as OnboardView_9c694b52eaf7437e98f0d9a79e0f39b5 } from '../../../components/admin/onboard/onboard-view'
 import { AdStudioView as AdStudioView_74a02c10b216ebb492086e0c7ab1eb5e } from '../../../components/admin/ad-studio/ad-studio-view'
+import { MailerView as MailerView_230385b3180190b975dd6ffa7f39867f } from '../../../components/admin/mailer/mailer-view'
+import { SocialView as SocialView_8c76a5cb3f9e93e91aa632511ffe1ff3 } from '../../../components/admin/social/social-view'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -102,5 +104,7 @@ export const importMap = {
   "/components/admin/dashboard/owner-dashboard#OwnerDashboard": OwnerDashboard_dc55bcb79d6cd54f5cfa545ca8470757,
   "/components/admin/onboard/onboard-view#OnboardView": OnboardView_9c694b52eaf7437e98f0d9a79e0f39b5,
   "/components/admin/ad-studio/ad-studio-view#AdStudioView": AdStudioView_74a02c10b216ebb492086e0c7ab1eb5e,
+  "/components/admin/mailer/mailer-view#MailerView": MailerView_230385b3180190b975dd6ffa7f39867f,
+  "/components/admin/social/social-view#SocialView": SocialView_8c76a5cb3f9e93e91aa632511ffe1ff3,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

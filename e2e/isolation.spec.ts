@@ -118,7 +118,12 @@ test.beforeAll(async ({ playwright, baseURL }) => {
 
   // Everything below is looked up as the platform admin, because the entire point of the
   // suite is that dealer A cannot look dealer B's identifiers up for itself.
-  const leads = await (await request.get("/api/leads?limit=500&depth=0", as(admin))).json();
+  // Looked up by name, not by paging: a long-lived test database accumulates enquiries, and the
+  // fixtures, made first, fall off the end of any fixed page.
+  const names = [FIXTURES.leadNameA, FIXTURES.leadNameB, FIXTURES.tradeInLeadName]
+    .map((name) => `where[name][in][]=${encodeURIComponent(name)}`)
+    .join("&");
+  const leads = await (await request.get(`/api/leads?${names}&limit=10&depth=0`, as(admin))).json();
   leadAId = leads.docs.find((d: { name: string }) => d.name === FIXTURES.leadNameA)?.id;
   leadBId = leads.docs.find((d: { name: string }) => d.name === FIXTURES.leadNameB)?.id;
   tradeInLeadId = leads.docs.find((d: { name: string }) => d.name === FIXTURES.tradeInLeadName)?.id;

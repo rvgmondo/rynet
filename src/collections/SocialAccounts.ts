@@ -43,12 +43,13 @@ export const SocialAccounts: CollectionConfig = {
   },
   fields: [
     {
+      // Empty for Rynet's own Pages, connected by staff from Admin > Social.
       name: "dealer",
       type: "relationship",
       relationTo: "dealers",
-      required: true,
       index: true,
       label: "Dealership",
+      admin: { description: "Empty for Rynet's own Facebook Page and Instagram." },
     },
     {
       type: "row",

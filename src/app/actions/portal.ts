@@ -105,13 +105,20 @@ export async function changeCarState(formData: FormData): Promise<void> {
   const next = nextCarState(car.status, action);
   if (!next) return;
 
-  await payload.update({
-    collection: "vehicles",
-    id,
-    data: { status: next, ...(next === "live" ? { soldAt: null } : {}) },
-    user,
-    overrideAccess: false,
-  });
+  try {
+    await payload.update({
+      collection: "vehicles",
+      id,
+      data: { status: next, ...(next === "live" ? { soldAt: null } : {}) },
+      user,
+      overrideAccess: false,
+    });
+  } catch (error) {
+    // A car that no longer passes its own checks (a photograph deleted, say) cannot be saved, and
+    // the dealer must hear that rather than see nothing happen. Rynet gets the detail in the log.
+    payload.logger.warn({ err: error, msg: "portal car change refused", car: id, to: next });
+    redirect(`/portal/cars?problem=${id}`);
+  }
   revalidatePath("/portal", "layout");
 }
 
@@ -176,6 +183,7 @@ export async function saveDetails(_state: FormState, formData: FormData): Promis
       id: dealerId,
       data: {
         whatsappNumber: text("whatsappNumber"),
+        emailOptOut: formData.get("rynetEmails") !== "on",
         principal: {
           name: text("principalName"),
           email,

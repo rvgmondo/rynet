@@ -56,7 +56,10 @@ export function decryptToken(stored: string): string {
  */
 const STATE_TTL_MS = 10 * 60_000;
 
+/** The dealership connecting, or RYNET_OWNER when staff connect Rynet's own Page. */
 export type ConnectState = { dealerId: number; userId: number };
+
+export const RYNET_OWNER = 0;
 
 export function signState(state: ConnectState, now = Date.now()): string {
   const raw = process.env.SOCIAL_TOKEN_KEY;

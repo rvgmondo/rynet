@@ -95,6 +95,9 @@ export interface Config {
     'consent-records': ConsentRecord;
     'social-accounts': SocialAccount;
     'social-posts': SocialPost;
+    'email-templates': EmailTemplate;
+    mailings: Mailing;
+    'mail-deliveries': MailDelivery;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -129,6 +132,9 @@ export interface Config {
     'consent-records': ConsentRecordsSelect<false> | ConsentRecordsSelect<true>;
     'social-accounts': SocialAccountsSelect<false> | SocialAccountsSelect<true>;
     'social-posts': SocialPostsSelect<false> | SocialPostsSelect<true>;
+    'email-templates': EmailTemplatesSelect<false> | EmailTemplatesSelect<true>;
+    mailings: MailingsSelect<false> | MailingsSelect<true>;
+    'mail-deliveries': MailDeliveriesSelect<false> | MailDeliveriesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -530,6 +536,10 @@ export interface Dealer {
    * Buyers message this number from the site.
    */
   whatsappNumber?: string | null;
+  /**
+   * Ticked when they ask not to get Rynet's news emails. Enquiries still reach them.
+   */
+  emailOptOut?: boolean | null;
   stockFeed?: {
     /**
      * The dealership's own site, never AutoTrader or Cars.co.za. Use the Onboard screen to check that Rynet can read it.
@@ -1415,7 +1425,10 @@ export interface Buyer {
  */
 export interface SocialAccount {
   id: number;
-  dealer: number | Dealer;
+  /**
+   * Empty for Rynet's own Facebook Page and Instagram.
+   */
+  dealer?: (number | null) | Dealer;
   network: 'facebook' | 'instagram';
   displayName: string;
   externalId: string;
@@ -1438,7 +1451,7 @@ export interface SocialAccount {
  */
 export interface SocialPost {
   id: number;
-  dealer: number | Dealer;
+  dealer?: (number | null) | Dealer;
   account?: (number | null) | SocialAccount;
   network: 'facebook' | 'instagram';
   kind: 'manual' | 'auto';
@@ -1454,6 +1467,60 @@ export interface SocialPost {
   permalink?: string | null;
   error?: string | null;
   createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Emails to dealerships you send often. Pick one in the Mailer to start from it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-templates".
+ */
+export interface EmailTemplate {
+  id: number;
+  name: string;
+  subject: string;
+  /**
+   * A blank line starts a paragraph, a line starting with a dash is a bullet, **bold**, [link](https://...). Fields like {{firstName}} and {{dealership}} are filled in for each dealership.
+   */
+  body: string;
+  buttonLabel?: string | null;
+  buttonUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Emails sent to dealerships from the Mailer. Each one's deliveries are listed with it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailings".
+ */
+export interface Mailing {
+  id: number;
+  subject: string;
+  body: string;
+  buttonLabel?: string | null;
+  buttonUrl?: string | null;
+  audience?: string | null;
+  status: 'sending' | 'done' | 'cancelled';
+  createdBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Each dealership's copy of a mailing, and whether it went.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mail-deliveries".
+ */
+export interface MailDelivery {
+  id: number;
+  mailing: number | Mailing;
+  dealer?: (number | null) | Dealer;
+  to: string;
+  status: 'queued' | 'sent' | 'failed' | 'skipped';
+  error?: string | null;
+  sentAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1588,6 +1655,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'social-posts';
         value: number | SocialPost;
+      } | null)
+    | ({
+        relationTo: 'email-templates';
+        value: number | EmailTemplate;
+      } | null)
+    | ({
+        relationTo: 'mailings';
+        value: number | Mailing;
+      } | null)
+    | ({
+        relationTo: 'mail-deliveries';
+        value: number | MailDelivery;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1753,6 +1832,7 @@ export interface DealersSelect<T extends boolean = true> {
         phone?: T;
       };
   whatsappNumber?: T;
+  emailOptOut?: T;
   stockFeed?:
     | T
     | {
@@ -2370,6 +2450,48 @@ export interface SocialPostsSelect<T extends boolean = true> {
   permalink?: T;
   error?: T;
   createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-templates_select".
+ */
+export interface EmailTemplatesSelect<T extends boolean = true> {
+  name?: T;
+  subject?: T;
+  body?: T;
+  buttonLabel?: T;
+  buttonUrl?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailings_select".
+ */
+export interface MailingsSelect<T extends boolean = true> {
+  subject?: T;
+  body?: T;
+  buttonLabel?: T;
+  buttonUrl?: T;
+  audience?: T;
+  status?: T;
+  createdBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mail-deliveries_select".
+ */
+export interface MailDeliveriesSelect<T extends boolean = true> {
+  mailing?: T;
+  dealer?: T;
+  to?: T;
+  status?: T;
+  error?: T;
+  sentAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

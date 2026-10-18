@@ -6,7 +6,7 @@ import type { AdminViewServerProps } from "payload";
 import { isPlatformStaff } from "@/access/roles";
 import { loadAdStudio } from "@/lib/ad-studio/load";
 
-import { AdStudio } from "./ad-studio";
+import { AdStudio, type StudioSocial } from "./ad-studio";
 
 /**
  * Admin > Ad studio (`/admin/ad-studio?dealer=ID`).
@@ -98,12 +98,43 @@ export async function AdStudioView({ initPageResult, params, searchParams }: Adm
   if (!data) return template(head("That dealership is not on Rynet."));
   const { dealer, cars, totalLive } = data;
 
+  // Rynet's own Page and Instagram, for Post it. A dealership's own Page is theirs to post to.
+  const rynetAccounts = (
+    (
+      await payload.find({
+        collection: "social-accounts",
+        where: { and: [{ dealer: { exists: false } }, { state: { equals: "connected" } }] },
+        depth: 0,
+        limit: 10,
+        overrideAccess: true,
+      })
+    ).docs as unknown as StudioSocial["accounts"]
+  )
+    .map((account) => ({
+      id: account.id,
+      network: account.network,
+      displayName: account.displayName,
+    }))
+    .sort((a, b) => a.network.localeCompare(b.network));
+
   return template(
     <>
       {head(
         `Ready-to-post ads of ${dealer.tradingName}'s cars, for their Facebook, Instagram and WhatsApp. Pick a car, download, send.`,
       )}
-      <AdStudio dealer={dealer} cars={cars} totalLive={totalLive} siteUrl={siteUrl} />
+      <AdStudio
+        dealer={dealer}
+        cars={cars}
+        totalLive={totalLive}
+        siteUrl={siteUrl}
+        social={{
+          accounts: rynetAccounts,
+          canPost: true,
+          endpoint: "/api/admin/social/post",
+          connectHref: `${adminRoute}/social`,
+          whose: "Rynet's",
+        }}
+      />
     </>,
   );
 }

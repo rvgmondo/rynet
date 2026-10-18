@@ -326,6 +326,8 @@ test.describe("the menu", () => {
         "Website mockups",
         "Onboard a dealership",
         "Ad studio",
+        "Mailer",
+        "Social",
       ]);
       await expect(menu.getByRole("link", { name: "Cars" })).toHaveAttribute(
         "aria-current",
