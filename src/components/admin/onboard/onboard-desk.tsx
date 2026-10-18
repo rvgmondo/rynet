@@ -7,19 +7,22 @@ import {
   FileSpreadsheet,
   Globe,
   ImageIcon,
+  KeyRound,
   MessageCircle,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { adminListUrl } from "@/lib/admin-links";
 import { liveMessage, whatsappLink, whatsappNumber } from "@/lib/onboarding/whatsapp";
+import { INVITE_DAYS, inviteMessage } from "@/lib/portal/invite-message";
 
 /**
- * The onboarding desk: three steps on one screen.
+ * The onboarding desk: four steps on one screen.
  *
  *   1. Who they are. Creates the dealership and its branch, verified.
  *   2. Their cars. From their website when Rynet can read it, otherwise from a spreadsheet.
  *   3. Tell them. Their showroom link and a WhatsApp message with it, ready to send.
+ *   4. Their login. An account and a link for them to choose a password, for /portal.
  *
  * Loading cars runs in the background on the server and this screen asks how it is going every
  * few seconds, because a full stock list takes minutes and nobody should sit on a spinner.
@@ -51,6 +54,7 @@ export type DeskDealer = {
   tradingName: string;
   slug: string;
   contactName: string | null;
+  contactEmail: string | null;
   whatsapp: string | null;
   websiteUrl: string | null;
   readsWebsite: boolean;
@@ -230,6 +234,7 @@ function WhoForm({
       tradingName: form.tradingName.trim(),
       slug: data.slug,
       contactName: form.contactName.trim(),
+      contactEmail: form.email.trim() || null,
       whatsapp: form.whatsapp.trim() || form.phone.trim(),
       websiteUrl: form.websiteUrl.trim() || null,
       readsWebsite: false,
@@ -750,6 +755,129 @@ function TellThem({
   );
 }
 
+/**
+ * Step 4: their own login. Makes the account and a link for them to choose a password, sent the
+ * same way as everything else, from staff's own WhatsApp. Asking again sends a fresh link.
+ */
+function GiveLogin({ dealer }: { dealer: DeskDealer }) {
+  const [name, setName] = useState(dealer.contactName ?? "");
+  const [email, setEmail] = useState(dealer.contactEmail ?? "");
+  const [busy, setBusy] = useState(false);
+  const [problems, setProblems] = useState<string[]>([]);
+  const [link, setLink] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  async function make(event: FormEvent) {
+    event.preventDefault();
+    setBusy(true);
+    setProblems([]);
+    const { ok, data } = await postJson<{ path?: string; problems?: string[] }>(
+      "/api/onboard/login",
+      { dealerId: dealer.id, name, email, phone: dealer.whatsapp },
+    );
+    setBusy(false);
+    if (!ok || !data.path) {
+      setProblems(data.problems ?? ["That did not work. Try again."]);
+      return;
+    }
+    setLink(`${window.location.origin}${data.path}`);
+  }
+
+  const text = link ? inviteMessage({ name, tradingName: dealer.tradingName, link }) : "";
+  const number = whatsappNumber(dealer.whatsapp);
+
+  return (
+    <div className="rn-onboard__tell">
+      <p className="rn-onboard__hint">
+        Their own place on Rynet: their cars, their enquiries and their ads. They choose the
+        password, so nobody at Rynet ever knows it. The link works for {INVITE_DAYS} days.
+      </p>
+      <form className="rn-onboard__form" onSubmit={make} noValidate>
+        <div className="rn-onboard__field">
+          <label htmlFor="login-name" className="rn-onboard__label">
+            Their name
+          </label>
+          <input
+            id="login-name"
+            className="rn-onboard__input"
+            value={name}
+            autoComplete="off"
+            onChange={(event) => setName(event.target.value)}
+          />
+        </div>
+        <div className="rn-onboard__field">
+          <label htmlFor="login-email" className="rn-onboard__label">
+            Their email, which they sign in with
+          </label>
+          <input
+            id="login-email"
+            type="email"
+            className="rn-onboard__input"
+            value={email}
+            autoComplete="off"
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </div>
+        {problems.length > 0 ? (
+          <ul className="rn-onboard__problems" role="alert">
+            {problems.map((problem) => (
+              <li key={problem}>{problem}</li>
+            ))}
+          </ul>
+        ) : null}
+        <div className="rn-onboard__actions">
+          <button
+            type="submit"
+            className="rn-onboard__button rn-onboard__button--primary"
+            disabled={busy}
+          >
+            <KeyRound aria-hidden="true" />
+            {busy ? "Making it" : link ? "Make a fresh link" : "Give them a login"}
+          </button>
+        </div>
+      </form>
+      {link ? (
+        <>
+          <div className="rn-onboard__field">
+            <label htmlFor="login-message" className="rn-onboard__label">
+              The message
+            </label>
+            <textarea
+              id="login-message"
+              className="rn-onboard__input rn-onboard__textarea"
+              rows={6}
+              readOnly
+              value={text}
+            />
+          </div>
+          <div className="rn-onboard__actions">
+            <a
+              className="rn-onboard__button rn-onboard__button--whatsapp"
+              href={whatsappLink(number, text)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <MessageCircle aria-hidden="true" />
+              {number ? `Send on WhatsApp to ${dealer.whatsapp}` : "Open WhatsApp"}
+            </a>
+            <button
+              type="button"
+              className="rn-onboard__button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(link);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+            >
+              <Copy aria-hidden="true" /> {copied ? "Copied" : "Copy the link"}
+            </button>
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 /* --------------------------------------------------------------------------------------- the desk */
 
 /**
@@ -1052,6 +1180,15 @@ export function OnboardDesk({
             siteUrl={siteUrl}
             adminRoute={adminRoute}
           />
+        </section>
+      ) : null}
+
+      {dealer ? (
+        <section className="rn-admin-panel rn-onboard__step" aria-labelledby="onboard-step-4">
+          <h2 id="onboard-step-4" className="rn-admin-home__h2">
+            <span className="rn-onboard__number">4</span> Give them their own login
+          </h2>
+          <GiveLogin key={`login-${dealer.id}`} dealer={dealer} />
         </section>
       ) : null}
     </div>

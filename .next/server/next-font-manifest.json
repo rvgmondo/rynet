@@ -72,6 +72,27 @@
     "[project]/src/app/(payload)/admin/[[...segments]]/page": [
       "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
     ],
+    "[project]/src/app/(portal)/portal/(app)/ads/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
+    "[project]/src/app/(portal)/portal/(app)/cars/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
+    "[project]/src/app/(portal)/portal/(app)/details/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
+    "[project]/src/app/(portal)/portal/(app)/enquiries/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
+    "[project]/src/app/(portal)/portal/(app)/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
+    "[project]/src/app/(portal)/portal/set-password/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
+    "[project]/src/app/(portal)/portal/sign-in/page": [
+      "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
+    ],
     "[project]/src/app/_not-found/page": [
       "static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2"
     ]

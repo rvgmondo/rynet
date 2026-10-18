@@ -4,10 +4,7 @@ import { redirect } from "next/navigation";
 import type { AdminViewServerProps } from "payload";
 
 import { isPlatformStaff } from "@/access/roles";
-import type { AdCar, AdDealer } from "@/lib/ad-studio/caption";
-import { vehicleUrl } from "@/lib/urls";
-import { pick } from "@/lib/vehicle-photo";
-import type { Media } from "@/payload-types";
+import { loadAdStudio } from "@/lib/ad-studio/load";
 
 import { AdStudio } from "./ad-studio";
 
@@ -21,11 +18,6 @@ import { AdStudio } from "./ad-studio";
  * Live cars only, and only cars with a photograph: an ad of a car a buyer cannot find on Rynet,
  * or of a grey box, does more harm than none.
  */
-
-const nameOf = (value: unknown): string | null =>
-  value && typeof value === "object" && "name" in value
-    ? String((value as { name?: unknown }).name ?? "") || null
-    : null;
 
 export async function AdStudioView({ initPageResult, params, searchParams }: AdminViewServerProps) {
   const { req, permissions, visibleEntities, locale } = initPageResult;
@@ -102,77 +94,16 @@ export async function AdStudioView({ initPageResult, params, searchParams }: Adm
     );
   }
 
-  const dealerDoc = (await payload
-    .findByID({ collection: "dealers", id: dealerId, depth: 1, overrideAccess: true })
-    .catch(() => null)) as Record<string, unknown> | null;
-  if (!dealerDoc) return template(head("That dealership is not on Rynet."));
-
-  const branch = await payload.find({
-    collection: "branches",
-    where: { dealer: { equals: dealerId } },
-    sort: "-isPrimary",
-    limit: 1,
-    depth: 1,
-    overrideAccess: true,
-  });
-  const town = nameOf((branch.docs[0] as Record<string, unknown> | undefined)?.city);
-
-  const logo = dealerDoc.logo as Media | number | null | undefined;
-  const logoUrl = logo && typeof logo === "object" ? (pick(logo, "card")?.url ?? null) : null;
-  const slug = String(dealerDoc.slug ?? "");
-  const dealer: AdDealer = {
-    tradingName: String(dealerDoc.tradingName ?? ""),
-    logoUrl,
-    showroomUrl: `${siteUrl}/dealers/${slug}`,
-    town,
-  };
-
-  const vehicles = await payload.find({
-    collection: "vehicles",
-    where: { and: [{ dealer: { equals: dealerId } }, { status: { equals: "live" } }] },
-    sort: "-updatedAt",
-    limit: 200,
-    depth: 1,
-    overrideAccess: true,
-  });
-
-  const cars: AdCar[] = (vehicles.docs as unknown as Record<string, unknown>[])
-    .map((doc) => {
-      const gallery = (doc.gallery as { image?: Media | number | null }[] | null) ?? [];
-      const photos = gallery
-        .map((row) =>
-          row.image && typeof row.image === "object" ? pick(row.image, "gallery")?.url : null,
-        )
-        .filter((url): url is string => Boolean(url))
-        .slice(0, 3);
-      const make = doc.make as { slug?: string } | null;
-      const model = doc.model as { slug?: string } | null;
-      return {
-        id: doc.id as number,
-        title: String(doc.title ?? ""),
-        year: (doc.modelYear as number | null) ?? null,
-        price: (doc.price as number | null) ?? null,
-        mileageKm: (doc.mileageKm as number | null) ?? null,
-        transmission: nameOf(doc.transmission),
-        town,
-        url: `${siteUrl}${vehicleUrl({
-          makeSlug: make?.slug ?? "",
-          modelSlug: model?.slug ?? "",
-          modelYear: (doc.modelYear as number | null) ?? 0,
-          variantName: nameOf(doc.variant),
-          publicRef: String(doc.publicRef ?? ""),
-        })}`,
-        photos,
-      };
-    })
-    .filter((car) => car.photos.length > 0);
+  const data = await loadAdStudio(payload, dealerId, siteUrl, { overrideAccess: true });
+  if (!data) return template(head("That dealership is not on Rynet."));
+  const { dealer, cars, totalLive } = data;
 
   return template(
     <>
       {head(
         `Ready-to-post ads of ${dealer.tradingName}'s cars, for their Facebook, Instagram and WhatsApp. Pick a car, download, send.`,
       )}
-      <AdStudio dealer={dealer} cars={cars} totalLive={vehicles.totalDocs} siteUrl={siteUrl} />
+      <AdStudio dealer={dealer} cars={cars} totalLive={totalLive} siteUrl={siteUrl} />
     </>,
   );
 }

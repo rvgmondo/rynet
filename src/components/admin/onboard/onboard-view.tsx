@@ -116,7 +116,11 @@ export async function OnboardView({ initPageResult, params, searchParams }: Admi
   }));
   const dealerList: DeskDealer[] = (dealers.docs as unknown as Record<string, unknown>[]).map(
     (doc) => {
-      const principal = (doc.principal ?? {}) as { name?: string | null; phone?: string | null };
+      const principal = (doc.principal ?? {}) as {
+        name?: string | null;
+        email?: string | null;
+        phone?: string | null;
+      };
       const feed = (doc.stockFeed ?? {}) as {
         websiteUrl?: string | null;
         readWebsite?: boolean | null;
@@ -126,6 +130,7 @@ export async function OnboardView({ initPageResult, params, searchParams }: Admi
         tradingName: String(doc.tradingName ?? ""),
         slug: String(doc.slug ?? ""),
         contactName: principal.name ?? null,
+        contactEmail: principal.email ?? null,
         whatsapp: (doc.whatsappNumber as string | null) ?? principal.phone ?? null,
         websiteUrl: feed.websiteUrl ?? null,
         readsWebsite: feed.readWebsite === true,

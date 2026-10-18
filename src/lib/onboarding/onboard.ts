@@ -17,12 +17,11 @@ import { slugify } from "@/lib/slug";
  * agreed to list. The verification note records who confirmed it, when, and on what, which is the
  * audit trail behind "every seller is checked".
  *
- * NO LOGIN IS CREATED
+ * NO LOGIN IS CREATED HERE
  *
- * There is nowhere for a dealership to sign in to yet: the Payload admin is staff only and the
- * dealer portal is not built. An account nobody can use is clutter and a password nobody chose,
- * so the contact person is kept on the dealership's record, and the account is made when there
- * is a portal to give them.
+ * The login is its own step (src/lib/portal/invite.ts, step 4 on the desk), because a password
+ * nobody chose is not a login: the account is made with a link for the dealership to choose
+ * theirs, and only once staff have the person's email address to sign in with.
  */
 
 export type OnboardInput = {

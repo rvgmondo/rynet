@@ -1,0 +1,60 @@
+{
+  "node": {
+    "40447c2232e0ed7fb591341a40f50cbd6a0c95a512": {
+      "workers": {
+        "app/(portal)/portal/(app)/cars/page": {
+          "moduleId": 56406,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "changeCarState",
+      "filename": "src/app/actions/portal.ts"
+    },
+    "40f6c839fe1d73bec4cf64f943ff2c1697d3ea52ad": {
+      "workers": {
+        "app/(portal)/portal/(app)/cars/page": {
+          "moduleId": 56406,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "changeEnquiryState",
+      "filename": "src/app/actions/portal.ts"
+    },
+    "6003e49e22d10a8140736cee99b86e1f4de3d8a190": {
+      "workers": {
+        "app/(portal)/portal/(app)/cars/page": {
+          "moduleId": 56406,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "changeCarPrice",
+      "filename": "src/app/actions/portal.ts"
+    },
+    "605bfd4ade9b9c40d2da208695d61dcbf986117cf1": {
+      "workers": {
+        "app/(portal)/portal/(app)/cars/page": {
+          "moduleId": 56406,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "choosePassword",
+      "filename": "src/app/actions/portal.ts"
+    },
+    "60813571944da08e3d6369232c1655794f8315fcf9": {
+      "workers": {
+        "app/(portal)/portal/(app)/cars/page": {
+          "moduleId": 56406,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "saveDetails",
+      "filename": "src/app/actions/portal.ts"
+    }
+  },
+  "edge": {}
+}

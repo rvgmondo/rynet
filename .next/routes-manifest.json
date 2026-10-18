@@ -199,7 +199,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "93045621abe3cc3fdca7567d8a65e1c5e02e237d"
+          "value": "0c9cb1ae5036a7c32784b24d5c4c1cee6d4e6e47"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -209,7 +209,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "93045621abe3cc3fdca7567d8a65e1c5e02e237d"
+          "value": "0c9cb1ae5036a7c32784b24d5c4c1cee6d4e6e47"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -338,6 +338,12 @@
       "regex": "^/api/onboard/dealership(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/api/onboard/dealership(?:/)?$"
+    },
+    {
+      "page": "/api/onboard/login",
+      "regex": "^/api/onboard/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/onboard/login(?:/)?$"
     },
     {
       "page": "/api/onboard/probe",
@@ -484,6 +490,48 @@
       "namedRegex": "^/opengraph\\-image\\-nkrg6m(?:/)?$"
     },
     {
+      "page": "/portal",
+      "regex": "^/portal(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal(?:/)?$"
+    },
+    {
+      "page": "/portal/ads",
+      "regex": "^/portal/ads(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal/ads(?:/)?$"
+    },
+    {
+      "page": "/portal/cars",
+      "regex": "^/portal/cars(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal/cars(?:/)?$"
+    },
+    {
+      "page": "/portal/details",
+      "regex": "^/portal/details(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal/details(?:/)?$"
+    },
+    {
+      "page": "/portal/enquiries",
+      "regex": "^/portal/enquiries(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal/enquiries(?:/)?$"
+    },
+    {
+      "page": "/portal/set-password",
+      "regex": "^/portal/set\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal/set\\-password(?:/)?$"
+    },
+    {
+      "page": "/portal/sign-in",
+      "regex": "^/portal/sign\\-in(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/portal/sign\\-in(?:/)?$"
+    },
+    {
       "page": "/privacy",
       "regex": "^/privacy(?:/)?$",
       "routeKeys": {},
@@ -532,5 +580,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "93045621abe3cc3fdca7567d8a65e1c5e02e237d"
+  "deploymentId": "0c9cb1ae5036a7c32784b24d5c4c1cee6d4e6e47"
 }

@@ -15,8 +15,9 @@ globalThis.__BUILD_MANIFEST = {
     "static/chunks/1edfvwc5_eck-.js",
     "static/chunks/0if-vqkhyn-zc.js",
     "static/chunks/15_5lmimh628v.js",
-    "static/chunks/3b5grfuuumv9s.js",
-    "static/chunks/turbopack-2vvx2b3rfn30x.js"
+    "static/chunks/2fqdvvaw7flds.js",
+    "static/chunks/2-urkx3cuhmdn.js",
+    "static/chunks/turbopack-2l9eigr7uqwid.js"
   ],
   "rootMainFilesTree": {},
   "pagesChunkGroupBootstrapParams": {},
