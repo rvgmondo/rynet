@@ -88,11 +88,17 @@ export function AdStudio({
   cars,
   totalLive,
   siteUrl,
+  emptyText,
+  own = false,
 }: {
   dealer: AdDealer;
   cars: AdCar[];
   totalLive: number;
   siteUrl: string;
+  /** What to say when there is nothing to advertise. */
+  emptyText?: string;
+  /** True on the dealership's own screen, where "their" becomes "your". */
+  own?: boolean;
 }) {
   const [choice, setChoice] = useState<string>(cars[0] ? String(cars[0].id) : SHOWROOM);
   const [content, setContent] = useState<AdContent | null>(null);
@@ -160,8 +166,8 @@ export function AdStudio({
   if (cars.length === 0) {
     return (
       <p className="rn-onboard__result rn-onboard__result--bad">
-        {dealer.tradingName} has no live cars with photographs yet, so there is nothing to make an
-        ad of. Load their cars on the onboarding screen first.
+        {emptyText ??
+          `${dealer.tradingName} has no live cars with photographs yet, so there is nothing to make an ad of. Load their cars on the onboarding screen first.`}
       </p>
     );
   }
@@ -174,7 +180,7 @@ export function AdStudio({
         </h2>
         <div className="rn-onboard__field rn-studio__pick">
           <label htmlFor="studio-car" className="rn-onboard__label">
-            A car, or their whole showroom
+            {own ? "A car, or your whole showroom" : "A car, or their whole showroom"}
           </label>
           <select
             id="studio-car"
@@ -182,7 +188,9 @@ export function AdStudio({
             value={choice}
             onChange={(event) => setChoice(event.target.value)}
           >
-            <option value={SHOWROOM}>The whole showroom ({totalLive} cars)</option>
+            <option value={SHOWROOM}>
+              {own ? "Your" : "The"} whole showroom ({totalLive} cars)
+            </option>
             {cars.map((each) => (
               <option key={each.id} value={each.id}>
                 {each.title}
