@@ -475,21 +475,19 @@ light up when there is a mailbox to send from.
 problems and pass on every template. A full NVDA and VoiceOver pass has not happened. The
 accessibility statement says so rather than claiming conformance nobody has checked.
 
-**Lighthouse runs in CI, and the performance half of the brief's budget cannot be met on this
-stack.** Every push runs `npm run lighthouse` (scripts/lighthouse.mjs) on eight pages, three runs
-each, on Lighthouse's throttled phone profile. Accessibility, best practices and SEO are held at
-95 and layout shift at 0.05, as the brief asks, and all pass (accessibility 100 and layout shift 0
-everywhere). Performance is held at a floor of 0.6 and LCP at 3.5 seconds, just below today's
-scores, so the site cannot get slower unnoticed.
+**Lighthouse runs in CI and holds the brief's whole budget.** Every push runs `npm run lighthouse`
+(scripts/lighthouse.mjs) on eight pages (home, search, a listing, a dealership, privacy, list your
+stock, the agency home, portal sign-in), three runs each, on Lighthouse's throttled phone profile:
+95 or above in performance, accessibility, best practices and SEO, LCP under 2 seconds, layout
+shift under 0.05. Demonstration stock and /portal are noindex on purpose and are not graded on SEO.
 
-Measured 18 October 2026 (real throttling, one run): home 67, /cars 76, a dealership 76, /privacy
-80, /list-your-stock 73, /digital 75, /portal/sign-in 85; LCP 2.2 to 3.1 seconds. A page with only a
-heading and a paragraph scores 79 to 89: React and Next's client runtime, one 71KB chunk, costs
-about 1.2 seconds of script work at the 4x CPU slowdown on every page. Reaching 95 and a two second
-LCP would mean pages that do not hydrate React at all, which is a change of framework, not a fix.
-Two things were tried and ruled out: linking the stylesheet instead of inlining it (every page got
-slower, home 67 to 54) and removing individual CSS features (none dominated layout time). Raise
-the floor in scripts/lighthouse.mjs as pages get faster.
+First passing run, 18 October 2026 (CI, medians of three): performance 0.99 on every page, LCP 1.46
+to 1.50 seconds, accessibility 1.00, best practices 0.96 to 1.00, layout shift 0.03 at most. Getting
+there took one real fix: next/font's fallback font pointed only at Arial, which Android and Linux do
+not have, so the first paint used an unmatched font and jumped when Archivo arrived (layout shift
+up to 0.28 on CI). "Archivo Fallback" in src/styles/tokens.css now covers Arial's metric twins,
+Helvetica and Roboto. The same budget run on a busy Windows laptop scores far lower (0.65 to 0.86);
+judge by CI. Keep `experimental.inlineCss`: linking the stylesheet instead made every page slower.
 
 **View and lead counters are not flushed.** The fields exist and nothing increments them, which is
 correct for now: writing per page view on SQLite would be a write lock on the busiest page. The

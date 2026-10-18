@@ -5,15 +5,12 @@
  * Run `npm run build`, start it (`npm run start -- --port 3100`), then `npm run lighthouse`.
  * CI does the same after the end to end suite. LHCI_BASE_URL points it somewhere else.
  *
- * WHAT IT HOLDS, AND WHY PERFORMANCE IS A GUARD RATHER THAN THE PLAN'S 95
+ * WHAT IT HOLDS
  *
- * Accessibility, best practices and SEO are held at 95, and layout shift at 0.05, as
- * docs/DELIVERY-PLAN.md asks. Performance is held at a floor below today's scores so that the site
- * cannot get slower without CI saying so. The plan's 95 and its two second LCP cannot be met on
- * this stack: measured 18 October 2026, a page with nothing on it but a heading and a paragraph
- * scores 79 to 89, because React and Next's own client runtime (one 71KB chunk) takes about 1.2
- * seconds of script work at Lighthouse's 4x CPU slowdown on every page. See
- * docs/PRODUCTION-READINESS.md. Raise PERF_FLOOR as the pages get faster; never lower it.
+ * The budget in docs/DELIVERY-PLAN.md, in full: 95 or above in performance, accessibility, best
+ * practices and SEO, LCP under 2 seconds and layout shift under 0.05. CI is where it is judged. On
+ * CI's runner every page scored 0.99 with LCP about 1.5 seconds (18 October 2026). The same run on
+ * a busy Windows laptop scores far lower, so a local miss is worth reading but is not the verdict.
  *
  * The listing and the dealership are looked up from the running site rather than written in,
  * because a seeded listing's address carries a random reference.
@@ -24,10 +21,9 @@ import path from "node:path";
 
 import { chromium } from "@playwright/test";
 
-/** Below every page's score on 18 October 2026 (lowest: home, 0.67). Only ever raised. */
-const PERF_FLOOR = Number(process.env.LHCI_PERF_FLOOR || 0.6);
-/** Above every page's LCP on 18 October 2026 (highest: home, 3.1 seconds). Only ever lowered. */
-const LCP_CEILING_MS = Number(process.env.LHCI_LCP_CEILING_MS || 3500);
+/** The plan's line. LHCI_PERF_FLOOR loosens it for a local look on a slow machine, never in CI. */
+const PERF_FLOOR = Number(process.env.LHCI_PERF_FLOOR || 0.95);
+const LCP_CEILING_MS = Number(process.env.LHCI_LCP_CEILING_MS || 2000);
 
 const BASE = (process.env.LHCI_BASE_URL || "http://localhost:3100").replace(/\/$/, "");
 
