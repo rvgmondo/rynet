@@ -43,7 +43,11 @@ const LIVE = "/api/vehicles?where[status][equals]=live&sort=-updatedAt&limit=1&d
 const listing =
   (await json(`${LIVE}&where[isDemonstration][not_equals]=true`)).docs[0] ??
   (await json(LIVE)).docs[0];
-const dealer = (await json("/api/dealers?limit=1&depth=0&sort=tradingName")).docs[0];
+const DEALERS = "/api/dealers?limit=1&depth=0&sort=tradingName";
+const dealer =
+  (await json(`${DEALERS}&where[isDemonstration][not_equals]=true`)).docs[0] ??
+  (await json(DEALERS)).docs[0];
+const dealerPath = dealer ? `/dealers/${dealer.slug}` : null;
 
 const vehiclePath = listing
   ? `/vehicles/${listing.make?.slug}/${listing.model?.slug}/${[
@@ -64,7 +68,7 @@ const pages = [
   "/",
   "/cars",
   vehiclePath,
-  dealer ? `/dealers/${dealer.slug}` : null,
+  dealerPath,
   "/privacy",
   "/list-your-stock",
   "/digital",
@@ -72,7 +76,11 @@ const pages = [
 ].filter(Boolean);
 
 const literal = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const unindexed = ["/portal/", ...(listing?.isDemonstration && vehiclePath ? [vehiclePath] : [])];
+const unindexed = [
+  "/portal/",
+  ...(listing?.isDemonstration && vehiclePath ? [vehiclePath] : []),
+  ...(dealer?.isDemonstration && dealerPath ? [dealerPath] : []),
+];
 const seoPattern = `^(?!.*(${unindexed.map(literal).join("|")})).*$`;
 
 const config = {
