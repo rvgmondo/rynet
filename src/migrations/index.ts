@@ -15,6 +15,7 @@ import * as migration_20261013_085810_website_previews from './20261013_085810_w
 import * as migration_20261017_081431_mockup_links from './20261017_081431_mockup_links';
 import * as migration_20261018_152516_social_posting from './20261018_152516_social_posting';
 import * as migration_20261018_173633_mailer_and_rynet_social from './20261018_173633_mailer_and_rynet_social';
+import * as migration_20261019_120000_real_thumbnails from './20261019_120000_real_thumbnails';
 
 export const migrations = [
   {
@@ -101,5 +102,10 @@ export const migrations = [
     up: migration_20261018_173633_mailer_and_rynet_social.up,
     down: migration_20261018_173633_mailer_and_rynet_social.down,
     name: '20261018_173633_mailer_and_rynet_social'
+  },
+  {
+    up: migration_20261019_120000_real_thumbnails.up,
+    down: migration_20261019_120000_real_thumbnails.down,
+    name: '20261019_120000_real_thumbnails',
   },
 ];

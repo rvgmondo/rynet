@@ -77,7 +77,10 @@ test.describe("responsive", () => {
               const parent = el.parentElement;
               if (!parent) return false;
               if (parent.getBoundingClientRect().right > vw + 1) return false;
-              return getComputedStyle(parent).overflowX !== "auto";
+              // Contained means it scrolls inside its own box (auto) or is cut off at the box
+              // edge (hidden, clip), like the home page floor, which is wider than any screen by
+              // design. Either way the page itself never moves sideways.
+              return !["auto", "hidden", "clip"].includes(getComputedStyle(parent).overflowX);
             })
             .map((el) => `${el.tagName}.${(el.className || "").toString().slice(0, 40)}`);
         });
