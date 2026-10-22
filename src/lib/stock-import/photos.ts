@@ -14,9 +14,11 @@ import sharp from "sharp";
  * runs in parallel and nothing here runs inside a page request: an import is a command a person
  * runs, it works through one photograph, finishes it, and starts the next.
  *
- * TWO SIZES, MADE ONCE.
+ * THREE SIZES, MADE ONCE.
  *
- * A 1280px original and a 640px card copy, both WebP, exactly the shape src/seed/demo-photos.ts
+ * A 1280px original, a 640px card copy and a 320px thumbnail, all WebP. The thumbnail is what the
+ * home page floor lays eighty of at once and what an admin list shows; the card copy standing in
+ * for it sent four times the bytes per tile. Otherwise exactly the shape src/seed/demo-photos.ts
  * registers. That shape matters because `pick()` in src/lib/vehicle-photo.ts falls back through
  * the sizes: a results page takes the card copy, and a listing page falls back to the original.
  * Without the card copy a results page would send every buyer the full size original twenty four
@@ -28,11 +30,13 @@ import sharp from "sharp";
 
 export const ORIGINAL_WIDTH = 1280;
 export const CARD_WIDTH = 640;
+export const THUMBNAIL_WIDTH = 320;
 export const WEBP_QUALITY = 82;
 
 export type RenderedPhoto = {
   original: { data: Buffer; width: number; height: number };
   card: { data: Buffer; width: number; height: number };
+  thumbnail: { data: Buffer; width: number; height: number };
 };
 
 /** Photographs per car. Twelve is plenty for a buyer and keeps the file count sane on the host. */
@@ -57,7 +61,8 @@ export async function renderPhoto(input: Buffer): Promise<RenderedPhoto> {
   // Sequential on purpose. See the note above.
   const original = await make(ORIGINAL_WIDTH);
   const card = await make(CARD_WIDTH);
-  return { original, card };
+  const thumbnail = await make(THUMBNAIL_WIDTH);
+  return { original, card, thumbnail };
 }
 
 /** A file name that cannot collide with a dealer's own upload or with another source's. */
@@ -78,29 +83,31 @@ export function photoAlt(carName: string, index: number): string {
   return `${name}, photo ${index}`;
 }
 
-/** Both files onto disk, under the media directory, leaving anything already there alone. */
+/** The three files onto disk, under the media directory. */
 export async function writePhotoFiles(
   staticDir: string,
   baseName: string,
   rendered: RenderedPhoto,
-): Promise<{ original: string; card: string }> {
+): Promise<{ original: string; card: string; thumbnail: string }> {
   await mkdir(staticDir, { recursive: true });
   const original = `${baseName}.webp`;
   const card = `${baseName}-card.webp`;
   await writeFile(path.join(staticDir, original), rendered.original.data);
   await writeFile(path.join(staticDir, card), rendered.card.data);
-  return { original, card };
+  const thumbnail = `${baseName}-thumb.webp`;
+  await writeFile(path.join(staticDir, thumbnail), rendered.thumbnail.data);
+  return { original, card, thumbnail };
 }
 
 /**
  * The media record's own fields, the way demo-photos.ts writes them.
  *
  * Written straight to the database rather than through the upload pipeline, because the upload
- * pipeline would make four more sizes of every photograph. The card copy is registered as both the
- * card and the thumbnail rendition, which is what a results page and an admin list ask for.
+ * pipeline would make four more sizes of every photograph. The card copy stands in for the larger
+ * renditions through pick(), and the thumbnail is its own file.
  */
 export function mediaRecord(options: {
-  files: { original: string; card: string };
+  files: { original: string; card: string; thumbnail: string };
   rendered: RenderedPhoto;
   alt: string;
   dealerId: number;
@@ -133,6 +140,16 @@ export function mediaRecord(options: {
     url: `/api/media/file/${files.original}`,
     focalX: 50,
     focalY: 50,
-    sizes: { card: cardRendition, thumbnail: cardRendition },
+    sizes: {
+      card: cardRendition,
+      thumbnail: {
+        url: `/api/media/file/${files.thumbnail}`,
+        width: rendered.thumbnail.width,
+        height: rendered.thumbnail.height,
+        mimeType: "image/webp",
+        filesize: rendered.thumbnail.data.byteLength,
+        filename: files.thumbnail,
+      },
+    },
   };
 }

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-
+import { FloorSearch } from "@/components/home/floor-search";
+import { FloorSection } from "@/components/home/floor-section";
+import { getFloor } from "@/components/home/floor-stock";
 import { HomeBrowse } from "@/components/home/home-browse";
-import { HomeHero } from "@/components/home/home-hero";
 import { PhotoCredits, SellAndListBands, VerificationSteps } from "@/components/home/home-sections";
 import { getHomeStock } from "@/components/home/home-stock";
-import { HeroSearch } from "@/components/marketplace/hero-search";
+import { paramsFromSearch, readState } from "@/components/search/params";
+import { countSearch } from "@/components/search/stock";
 import { Notice } from "@/components/ui/notice";
 import { SectionHeader } from "@/components/ui/section-header";
 import { VehicleCard } from "@/components/vehicles/vehicle-card";
@@ -12,12 +14,14 @@ import { getHomeData } from "@/lib/home-data";
 import { organisationJsonLd, websiteJsonLd } from "@/lib/structured-data";
 
 /**
- * Marketplace home, in the SHOWROOM design.
+ * Marketplace home, in the FLOOR design.
  *
  * The first screen answers the two things a buyer arrives with: are there cars here, and can I
- * search them. So it opens on a navy band with a photographed listing beside the promise, and a
- * white search panel lifted over the band's edge (on a phone the search comes before the
- * photograph). After it, in order: the newest cars as a scroll-snap row, one "Browse cars" section
+ * search them. So it opens on one box that takes the car in the buyer's own words ("automatic SUV
+ * under R 250 000", or said out loud), with every photographed car laid on a showroom floor behind
+ * it. As the words come in, the matching cars light up, the box says back what it understood, and
+ * the button carries the count /cars will show (see src/components/home/floor-search.tsx). After
+ * it, in order: the newest cars as a scroll-snap row, one "Browse cars" section
  * that switches between body type photo tiles, make tiles, budget bands and provinces (no
  * JavaScript), the four checks every dealership goes through as a short numbered list, and one
  * panel with the two other doors (selling a car to dealerships, and a dealership applying to
@@ -46,10 +50,42 @@ export const metadata: Metadata = {
 
 const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
+/**
+ * Ready-made searches under the box, each shown with the count it finds today. One that finds
+ * nothing is left out, so a suggestion never leads to an empty page.
+ */
+const EXAMPLES = [
+  "Automatic SUV under R 250 000",
+  "Diesel bakkie",
+  "VW Polo",
+  "R 4 000 a month",
+  "2018 or newer under 120 000 km",
+  "Cheapest hatchback",
+];
+
 export default async function HomePage() {
   // getHomeData's own featured list is not used here (getHomeStock picks photographed cars), so it
   // is asked for none and reads only the counts, provinces and colours.
-  const [data, stock] = await Promise.all([getHomeData(0), getHomeStock()]);
+  const [data, stock, floor, exampleCounts] = await Promise.all([
+    getHomeData(0),
+    getHomeStock(),
+    getFloor(),
+    Promise.all(
+      EXAMPLES.map((text) =>
+        countSearch(readState(paramsFromSearch(new URLSearchParams({ q: text })))).catch(() => 0),
+      ),
+    ),
+  ]);
+  const examples = EXAMPLES.map((text, i) => ({ text, count: exampleCounts[i] ?? 0 })).filter(
+    (example) => example.count > 0,
+  );
+
+  // Every Commons photograph on the page owes its credit, the floor's thumbnails included.
+  const credits = [
+    ...new Map(
+      [...stock.credits, ...floor.credits].map((line) => [`${line.subject}|${line.credit}`, line]),
+    ).values(),
+  ].sort((a, b) => a.subject.localeCompare(b.subject, "en-ZA"));
 
   const hasDemonstration = data.demonstrationCount > 0;
   const allDemonstration = hasDemonstration && data.demonstrationCount >= data.totalLive;
@@ -64,6 +100,16 @@ export default async function HomePage() {
       : allDemonstration
         ? `Search ${plural(data.totalLive, "demo listing", "demo listings")}`
         : `Search ${plural(data.totalLive, "car", "cars")}`;
+
+  /*
+   * The line under the floor before anything is typed. Demonstration stock never borrows the
+   * word "checked": that is the promise about real dealerships, and hard rule 1 keeps it theirs.
+   */
+  const idleStatus = allDemonstration
+    ? `${plural(data.totalLive, "demo listing", "demo listings")} to try the search on. Type and watch.`
+    : hasDemonstration
+      ? `${plural(data.totalLive, "car", "cars")}, some of them demo listings. Type and watch.`
+      : `${plural(data.totalLive, "car", "cars")} from checked dealerships. Type and watch.`;
 
   const allCarsLabel = allDemonstration ? "Browse every demo listing" : "Browse every car";
 
@@ -85,54 +131,44 @@ export default async function HomePage() {
         }}
       />
 
-      <HomeHero
-        hero={stock.hero}
-        eyebrow="Cars for sale from dealerships only"
-        shortLead="Only checked, registered dealerships can list. No private sellers."
-        lead="Only registered dealerships can list on Rynet, and our team checks each one before its first car goes live. No private sellers."
-        secondary={{
-          href: "/sell-to-a-dealer",
-          label: "Selling a car instead? Offer it to dealerships",
-        }}
-        below={
-          hasDemonstration ? (
-            <Notice
-              compact
-              title={
-                allDemonstration
-                  ? "Every listing is a demonstration for now. Nothing here is for sale."
-                  : "Some listings are demonstrations, and those are not for sale."
-              }
-              details={allDemonstration ? "Why these are examples" : "What that means"}
-              className="mt-4 sm:mt-6"
-            >
-              {allDemonstration ? (
-                <p>
-                  The cars and dealerships you can browse are example data, there to show how Rynet
-                  works. None of these cars is for sale and none of these dealerships exists. The
-                  search, the filters and the checks a dealership must pass before it can list are
-                  all real.
-                </p>
-              ) : (
-                <p>
-                  A listing marked Demo listing is example data, there to show how Rynet works. That
-                  car is not for sale.
-                </p>
-              )}
-            </Notice>
-          ) : null
-        }
-      >
-        <div className="rn-panel p-4 shadow-overlay min-[22.5rem]:p-5 sm:p-6 lg:p-7">
-          <HeroSearch
-            makes={stock.makes}
-            models={stock.models}
-            provinces={data.provinces}
-            prices={stock.prices}
-            submitLabel={submitLabel}
-          />
-        </div>
-      </HomeHero>
+      <FloorSection tiles={floor.tiles}>
+        <FloorSearch
+          all={data.totalLive}
+          idleLabel={submitLabel}
+          idleStatus={idleStatus}
+          noun={allDemonstration ? ["demo listing", "demo listings"] : ["car", "cars"]}
+          examples={examples}
+        />
+      </FloorSection>
+
+      <div className="container-page">
+        {hasDemonstration ? (
+          <Notice
+            compact
+            title={
+              allDemonstration
+                ? "Every listing is a demonstration for now. Nothing here is for sale."
+                : "Some listings are demonstrations, and those are not for sale."
+            }
+            details={allDemonstration ? "Why these are examples" : "What that means"}
+            className="mt-4 sm:mt-6"
+          >
+            {allDemonstration ? (
+              <p>
+                The cars and dealerships you can browse are example data, there to show how Rynet
+                works. None of these cars is for sale and none of these dealerships exists. The
+                search, the filters and the checks a dealership must pass before it can list are all
+                real.
+              </p>
+            ) : (
+              <p>
+                A listing marked Demo listing is example data, there to show how Rynet works. That
+                car is not for sale.
+              </p>
+            )}
+          </Notice>
+        ) : null}
+      </div>
 
       {stock.featured.length > 0 ? (
         <section
@@ -172,7 +208,7 @@ export default async function HomePage() {
 
       <SellAndListBands />
 
-      <PhotoCredits credits={stock.credits} />
+      <PhotoCredits credits={credits} />
     </>
   );
 }

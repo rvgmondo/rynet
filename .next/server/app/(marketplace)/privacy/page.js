@@ -2,7 +2,7 @@ var R=require("../../../chunks/ssr/[turbopack]_runtime.js")("server/app/(marketp
 R.c("server/chunks/ssr/[root-of-the-server]__10sa6_m._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1n3w9lb._.js")
 R.c("server/chunks/ssr/_05pgiu2._.js")
-R.c("server/chunks/ssr/[root-of-the-server]__1j19ec6._.js")
+R.c("server/chunks/ssr/[root-of-the-server]__1s0iq57._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_compiled_1iylvrn._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_04xyasy._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_compiled_react-server-dom-turbopack_0a23vc4._.js")

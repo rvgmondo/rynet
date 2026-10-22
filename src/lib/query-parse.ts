@@ -42,11 +42,43 @@ export type ParsedQuery = {
   city?: string;
   minPrice?: number;
   maxPrice?: number;
+  minYear?: number;
+  maxYear?: number;
+  maxMileage?: number;
+  /** A monthly budget in rand. The caller turns it into a price on the finance defaults. */
+  monthly?: number;
+  /** The price that budget reaches, once the caller has converted it. */
+  monthlyCeiling?: number;
+  sort?: "price-asc" | "newest" | "mileage";
   /** What was understood, in the buyer's own words, so the page can say it back to them. */
   matched: string[];
   /** What was not. Shown rather than swallowed. */
   unmatched: string[];
+  /**
+   * Each thing understood, with the exact words it came from, so a chip can say it back and
+   * removing the chip can remove those words. `typed` is set when the words were a near miss
+   * ("toyta" read as Toyota), so the page can say what it assumed.
+   */
+  parts: QueryPart[];
 };
+
+export type PartKey =
+  | "make"
+  | "model"
+  | "body"
+  | "fuel"
+  | "transmission"
+  | "city"
+  | "province"
+  | "minPrice"
+  | "maxPrice"
+  | "year"
+  | "minYear"
+  | "maxMileage"
+  | "monthly"
+  | "sort";
+
+export type QueryPart = { key: PartKey; value: string | number; phrase: string; typed?: string };
 
 /**
  * Category order decides who wins when the same phrase appears in two taxonomies.
@@ -69,7 +101,7 @@ const ORDER = [
 const normalise = (text: string) =>
   text
     .toLowerCase()
-    .replace(/[^a-z0-9\s.]/g, " ")
+    .replace(/[^a-z0-9\s.+]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -138,6 +170,139 @@ export function extractPrice(text: string): {
   return { rest: rest.replace(/\s+/g, " ").trim(), minPrice, maxPrice, matched };
 }
 
+/**
+ * Words that carry no filter. "I want a" used to come back as three things the search did not
+ * understand, which reads as the search failing at the easiest part of the sentence.
+ */
+const FILLER = new Set(
+  "i im want wanna a an the looking look for car cars with and please something me show find need my that is of or to some get like would we our any one".split(
+    " ",
+  ),
+);
+
+/** The number in a mileage or monthly phrase: "100 000", "100k", "80". Thousands below a limit. */
+function toAmount(raw: string, thousandsBelow: number): number | null {
+  const cleaned = raw.replace(/\s/g, "");
+  const hasK = /k$/.test(cleaned);
+  const value = Number.parseFloat(cleaned.replace(/k$/, ""));
+  if (!Number.isFinite(value) || value <= 0) return null;
+  if (hasK || value < thousandsBelow) return Math.round(value * 1000);
+  return Math.round(value);
+}
+
+export type Extras = {
+  rest: string;
+  parts: QueryPart[];
+  monthly?: number;
+  maxMileage?: number;
+  minYear?: number;
+  maxYear?: number;
+  sort?: ParsedQuery["sort"];
+};
+
+/**
+ * Monthly budgets, mileage, years and the orders people ask for in words.
+ *
+ * Run before the price phrases on purpose: "from 2019" is a year and "under 100 000 km" is a
+ * mileage, and the price reader would otherwise claim both as rand.
+ */
+export function extractExtras(text: string): Extras {
+  let rest = ` ${text} `;
+  const out: Extras = { rest: "", parts: [] };
+  const take = (re: RegExp, read: (m: RegExpMatchArray) => Omit<QueryPart, "phrase"> | null) => {
+    const m = rest.match(re);
+    if (!m) return;
+    const part = read(m);
+    if (!part) return;
+    out.parts.push({ ...part, phrase: m[0].trim() });
+    rest = rest.replace(m[0], " ");
+  };
+
+  take(
+    /(?:\b(?:under|below|max|about|around|up to|less than)\s+)?\br?\s?(\d[\d\s]*k?)\s*(?:a month|per month|a mth|monthly|pm|p m)\b/,
+    (m) => {
+      const value = toAmount(m[1] ?? "", 100);
+      if (!value) return null;
+      out.monthly = value;
+      return { key: "monthly", value };
+    },
+  );
+  take(
+    /\b(?:under|below|less than|max|up to)\s+(\d[\d\s]*k?)\s*(?:km|kms|kilometres|kilometers|mileage)\b/,
+    (m) => {
+      const value = toAmount(m[1] ?? "", 1000);
+      if (!value) return null;
+      out.maxMileage = value;
+      return { key: "maxMileage", value };
+    },
+  );
+  take(/\b(?:low|lowish)\s+(?:km|kms|kilometres|mileage)\b/, () => {
+    out.maxMileage = 100_000;
+    return { key: "maxMileage", value: 100_000 };
+  });
+  take(/\b(?:newer than|after)\s+((?:19|20)\d\d)\b/, (m) => {
+    out.minYear = Number(m[1]) + 1;
+    return { key: "minYear", value: out.minYear };
+  });
+  take(
+    /\b(?:(?:from|since)\s+)?((?:19|20)\d\d)\s*(?:\+|or newer|and newer|or later|onwards|and up|upwards)/,
+    (m) => {
+      out.minYear = Number(m[1]);
+      return { key: "minYear", value: out.minYear };
+    },
+  );
+  take(/\b(?:from|since)\s+((?:19|20)\d\d)\b/, (m) => {
+    out.minYear = Number(m[1]);
+    return { key: "minYear", value: out.minYear };
+  });
+  take(/\b((?:19|20)\d\d)\b(?!\s*(?:km|k\b))/, (m) => {
+    const year = Number(m[1]);
+    if (year < 1950 || year > new Date().getFullYear() + 1) return null;
+    out.minYear = year;
+    out.maxYear = year;
+    return { key: "year", value: year };
+  });
+  take(/\blowest (?:km|kms|mileage)\b/, () => {
+    out.sort = "mileage";
+    return { key: "sort", value: "mileage" };
+  });
+  take(/\b(?:cheapest|cheap|affordable)\b/, () => {
+    out.sort = "price-asc";
+    return { key: "sort", value: "price-asc" };
+  });
+  take(/\b(?:newest|latest)\b/, () => {
+    out.sort = "newest";
+    return { key: "sort", value: "newest" };
+  });
+
+  out.rest = rest.replace(/\s+/g, " ").trim();
+  return out;
+}
+
+/**
+ * How far apart two words are, counting a swapped pair of letters as one slip (restricted
+ * Damerau-Levenshtein). Bails out early when the lengths alone rule a match out.
+ */
+export function editDistance(a: string, b: string, limit = 2): number {
+  if (Math.abs(a.length - b.length) > limit) return limit + 1;
+  let prev2: number[] = [];
+  let prev: number[] = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i += 1) {
+    const row: number[] = [i];
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let best = Math.min((prev[j] ?? 0) + 1, (row[j - 1] ?? 0) + 1, (prev[j - 1] ?? 0) + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        best = Math.min(best, (prev2[j - 2] ?? 0) + 1);
+      }
+      row.push(best);
+    }
+    prev2 = prev;
+    prev = row;
+  }
+  return prev[b.length] ?? limit + 1;
+}
+
 /** Every string that should resolve to this taxonomy row, longest first. */
 function phrasesFor(term: Term): string[] {
   return [term.name, ...(term.aliases ?? [])]
@@ -147,13 +312,30 @@ function phrasesFor(term: Term): string[] {
 }
 
 export function parseQuery(raw: string | undefined | null, taxonomies: Taxonomies): ParsedQuery {
-  const result: ParsedQuery = { matched: [], unmatched: [] };
+  const result: ParsedQuery = { matched: [], unmatched: [], parts: [] };
   if (!raw?.trim()) return result;
 
-  const price = extractPrice(normalise(raw));
+  const extras = extractExtras(normalise(raw));
+  result.monthly = extras.monthly;
+  result.maxMileage = extras.maxMileage;
+  result.minYear = extras.minYear;
+  result.maxYear = extras.maxYear;
+  result.sort = extras.sort;
+  result.parts.push(...extras.parts);
+  result.matched.push(...extras.parts.map((part) => part.phrase));
+
+  const price = extractPrice(extras.rest);
   result.minPrice = price.minPrice;
   result.maxPrice = price.maxPrice;
   result.matched.push(...price.matched);
+  for (const phrase of price.matched) {
+    const isCeiling = new RegExp(`^(?:${CEILING_WORDS})\\b`).test(phrase);
+    result.parts.push({
+      key: isCeiling ? "maxPrice" : "minPrice",
+      value: (isCeiling ? price.maxPrice : price.minPrice) ?? 0,
+      phrase,
+    });
+  }
 
   // Words are consumed as they are claimed, so "Golf GTI" cannot match a model and then let
   // the same words match again as something else.
@@ -191,14 +373,51 @@ export function parseQuery(raw: string | undefined | null, taxonomies: Taxonomie
 
       (result[candidate.key] as unknown) = candidate.slug;
       result.matched.push(window.join(" "));
+      result.parts.push({
+        key: candidate.key as PartKey,
+        value: candidate.slug,
+        phrase: window.join(" "),
+      });
       tokens = [...tokens.slice(0, i), ...tokens.slice(i + candidate.phrase.length)];
       break;
     }
   }
 
-  // A city already tells us the province, so keeping both would filter twice for one fact.
-  if (result.city) result.province = undefined;
+  /*
+   * Near misses, last. A word nothing claimed, four letters or more, that is one slip from a
+   * single-word make, model, body type, fuel or gearbox (two slips from seven letters) reads as
+   * that word, and the part says what was typed so the page can show its working. Places are
+   * left out: a town one letter from another town is a different town.
+   */
+  const fuzzy = candidates.filter(
+    (c) => c.phrase.length === 1 && c.rank <= 4 && (c.phrase[0] ?? "").length >= 4,
+  );
+  tokens = tokens.filter((token) => {
+    if (FILLER.has(token) || /^\d/.test(token) || token.length < 4) return true;
+    const limit = token.length >= 7 ? 2 : 1;
+    let best: Candidate | null = null;
+    let bestDistance = limit + 1;
+    for (const candidate of fuzzy) {
+      if (result[candidate.key] !== undefined) continue;
+      const distance = editDistance(token, candidate.phrase[0] as string, limit);
+      if (distance < bestDistance) {
+        best = candidate;
+        bestDistance = distance;
+      }
+    }
+    if (!best || bestDistance > limit) return true;
+    (result[best.key] as unknown) = best.slug;
+    result.matched.push(token);
+    result.parts.push({ key: best.key as PartKey, value: best.slug, phrase: token, typed: token });
+    return false;
+  });
 
-  result.unmatched = tokens;
+  // A city already tells us the province, so keeping both would filter twice for one fact.
+  if (result.city) {
+    result.province = undefined;
+    result.parts = result.parts.filter((part) => part.key !== "province");
+  }
+
+  result.unmatched = tokens.filter((token) => !FILLER.has(token));
   return result;
 }

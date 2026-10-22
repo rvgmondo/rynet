@@ -193,3 +193,42 @@ export function defaultEstimate(
     monthlyServiceFee: defaults.monthlyServiceFee ?? 0,
   });
 }
+
+/**
+ * The highest cash price a monthly budget reaches, on the same defaults a listing page uses.
+ *
+ * This is `defaultEstimate` run backwards, so a buyer who types "R4 000 a month" gets every car
+ * whose default estimate is at or under R4 000, and no car whose estimate is above it. The
+ * deposit is a percentage of the price and the balloon too, so both move with the answer:
+ *
+ *   instalment - fee = k * (price * ((1 - d) * g - b) + fee0 * g)
+ *
+ * where k = r / (g - 1), g = (1 + r)^n, d and b the deposit and balloon fractions and fee0 the
+ * financed initiation fee. Solved for price. Rounded down to the rand, so it never overreaches.
+ *
+ * It is the same estimate, never a quotation, and the caller shows the same disclaimer.
+ */
+export function priceForMonthly(
+  monthly: number,
+  defaults: Parameters<typeof defaultEstimate>[1],
+): number | null {
+  const prime = defaults.primeRatePercent ?? 10.5;
+  const offset = defaults.defaultRateOffsetPercent ?? 1.5;
+  const d = (defaults.defaultDepositPercent ?? 10) / 100;
+  const b = (defaults.defaultBalloonPercent ?? 0) / 100;
+  const n = defaults.defaultTermMonths ?? 72;
+  const init = defaults.initiationFee ?? 0;
+  const fee = defaults.monthlyServiceFee ?? 0;
+
+  const payment = monthly - fee;
+  if (!Number.isFinite(payment) || payment <= 0) return null;
+
+  const r = (prime + offset) / 100 / 12;
+  const g = r === 0 ? 1 : (1 + r) ** n;
+  const perRand = r === 0 ? (1 - d - b) / n : (r / (g - 1)) * ((1 - d) * g - b);
+  const fixed = r === 0 ? init / n : (r / (g - 1)) * init * g;
+  if (perRand <= 0) return null;
+
+  const price = Math.floor((payment - fixed) / perRand);
+  return price > 0 ? price : null;
+}

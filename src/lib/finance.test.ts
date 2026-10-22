@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateFinance, defaultEstimate } from "./finance";
+import { calculateFinance, defaultEstimate, priceForMonthly } from "./finance";
 
 /**
  * The finance calculator gets the most thorough tests in the codebase, because a wrong
@@ -294,5 +294,44 @@ describe("defaultEstimate", () => {
       monthlyServiceFee: null,
     });
     expect(result.monthlyInstalment).toBeGreaterThan(0);
+  });
+});
+
+describe("priceForMonthly", () => {
+  const defaults = {
+    primeRatePercent: 10.5,
+    defaultRateOffsetPercent: 1.5,
+    defaultTermMonths: 72,
+    defaultDepositPercent: 10,
+    defaultBalloonPercent: 0,
+    initiationFee: 1207.5,
+    monthlyServiceFee: 69,
+  };
+
+  it("is defaultEstimate run backwards: the price it returns costs the budget, a rand more does not fit", () => {
+    for (const budget of [2500, 4000, 6500, 12_000]) {
+      const price = priceForMonthly(budget, defaults);
+      expect(price, String(budget)).not.toBeNull();
+      expect(defaultEstimate(price as number, defaults).monthlyInstalment).toBeLessThanOrEqual(
+        budget,
+      );
+      expect(defaultEstimate((price as number) + 50, defaults).monthlyInstalment).toBeGreaterThan(
+        budget,
+      );
+    }
+  });
+
+  it("follows a balloon and an interest-free rate", () => {
+    const balloon = { ...defaults, defaultBalloonPercent: 30 };
+    const price = priceForMonthly(5000, balloon) as number;
+    expect(defaultEstimate(price, balloon).monthlyInstalment).toBeLessThanOrEqual(5000);
+    const free = { ...defaults, primeRatePercent: 0, defaultRateOffsetPercent: 0 };
+    const p0 = priceForMonthly(5000, free) as number;
+    expect(defaultEstimate(p0, free).monthlyInstalment).toBeLessThanOrEqual(5000);
+  });
+
+  it("refuses a budget the fees alone eat", () => {
+    expect(priceForMonthly(50, defaults)).toBeNull();
+    expect(priceForMonthly(Number.NaN, defaults)).toBeNull();
   });
 });

@@ -1,4 +1,16 @@
 {
-  "node": {},
+  "node": {
+    "405afb908e32effe62e3d9befebcaa40610228681e": {
+      "workers": {
+        "app/(marketplace)/page": {
+          "moduleId": 249670,
+          "async": true,
+          "codeHash": null
+        }
+      },
+      "exportedName": "understandSearch",
+      "filename": "src/components/home/floor-action.ts"
+    }
+  },
   "edge": {}
 }
