@@ -160,3 +160,66 @@ describe("parseQuery", () => {
     expect(result.unmatched).toEqual(["volkswagen"]);
   });
 });
+
+describe("the words a buyer adds once a search box talks back", () => {
+  it("reads years the ways they are said", () => {
+    expect(parseQuery("polo 2019 or newer", TAXONOMIES)).toMatchObject({
+      model: "polo",
+      minYear: 2019,
+    });
+    expect(parseQuery("hilux 2018+", TAXONOMIES).minYear).toBe(2018);
+    expect(parseQuery("hilux newer than 2018", TAXONOMIES).minYear).toBe(2019);
+    expect(parseQuery("bakkie from 2020", TAXONOMIES)).toMatchObject({ minYear: 2020 });
+    expect(parseQuery("bakkie from 2020", TAXONOMIES).minPrice).toBeUndefined();
+    expect(parseQuery("2017 polo", TAXONOMIES)).toMatchObject({ minYear: 2017, maxYear: 2017 });
+  });
+
+  it("reads mileage without mistaking it for a price", () => {
+    const result = parseQuery("hatch under 100 000 km under 200k", TAXONOMIES);
+    expect(result).toMatchObject({ body: "hatchback", maxMileage: 100_000, maxPrice: 200_000 });
+    expect(parseQuery("low km polo", TAXONOMIES).maxMileage).toBe(100_000);
+    expect(parseQuery("under 80k km", TAXONOMIES).maxMileage).toBe(80_000);
+  });
+
+  it("keeps a monthly budget apart from the price, for the caller to convert", () => {
+    const result = parseQuery("suv R4000 a month", TAXONOMIES);
+    expect(result).toMatchObject({ body: "suv", monthly: 4000 });
+    expect(result.maxPrice).toBeUndefined();
+    expect(parseQuery("about 4 500 per month", TAXONOMIES).monthly).toBe(4500);
+    expect(parseQuery("6k pm", TAXONOMIES).monthly).toBe(6000);
+  });
+
+  it("hears an order asked for in words", () => {
+    expect(parseQuery("cheapest automatic", TAXONOMIES)).toMatchObject({
+      sort: "price-asc",
+      transmission: "automatic",
+    });
+    expect(parseQuery("newest hilux", TAXONOMIES).sort).toBe("newest");
+  });
+
+  it("reads one slip as the word that was meant, and says so", () => {
+    const result = parseQuery("toyta deisel automatc", TAXONOMIES);
+    expect(result).toMatchObject({ make: "toyota", fuel: "diesel", transmission: "automatic" });
+    expect(result.parts.find((p) => p.key === "make")?.typed).toBe("toyta");
+    expect(result.unmatched).toEqual([]);
+  });
+
+  it("does not stretch a near miss into a different word", () => {
+    // "polar" is one slip from Polo; "pole" too. Neither is a request for a Polo.
+    expect(parseQuery("legend", TAXONOMIES).unmatched).toEqual(["legend"]);
+    expect(parseQuery("red", TAXONOMIES).unmatched).toEqual(["red"]);
+  });
+
+  it("drops the words that carry no filter instead of reporting them as not understood", () => {
+    const result = parseQuery("I want a diesel bakkie for the farm", TAXONOMIES);
+    expect(result).toMatchObject({ fuel: "diesel", body: "bakkie" });
+    expect(result.unmatched).toEqual(["farm"]);
+  });
+
+  it("gives every understood thing back with the words it came from", () => {
+    const text = "vw polo under 150k 2018 or newer";
+    const result = parseQuery(text, TAXONOMIES);
+    for (const part of result.parts) expect(text, part.key).toContain(part.phrase);
+    expect(result.parts.map((p) => p.key).sort()).toEqual(["make", "maxPrice", "minYear", "model"]);
+  });
+});

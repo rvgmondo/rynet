@@ -6,14 +6,13 @@ import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
 import { formatRand } from "@/lib/format";
 import { relId, relName } from "@/lib/relations";
 import { toCard } from "@/lib/search";
-import { vehicleUrl } from "@/lib/urls";
 import { photoCredit, type VehiclePhoto, vehiclePhoto } from "@/lib/vehicle-photo";
 import type { Vehicle } from "@/payload-types";
 
 /**
  * What the SHOWROOM home page needs beyond the counts in src/lib/home-data.ts.
  *
- * The home page leads with a photograph, a search with real make and model lists, photo tiles
+ * The home page has a search with real make and model lists, photo tiles
  * per body type and a row of photographed cars. None of that is in getHomeData, and that file
  * belongs to the shared library, so the surface keeps its own loader here. It returns card data
  * only, never a document, so nothing a card does not draw (the VIN above all) reaches the cache
@@ -21,19 +20,6 @@ import type { Vehicle } from "@/payload-types";
  *
  * Everything is a live query, cached for a minute and dropped on any stock or taxonomy write.
  */
-
-export type HeroListing = {
-  card: VehicleCardData;
-  href: string;
-  /** The "gallery" rendition: the listing hero size, not the 640px card copy. */
-  photo: VehiclePhoto;
-  /**
-   * The 640px "card" copy of the same photograph, offered to phones through srcset. On a throttled
-   * phone the 1280px file alone took the home page's largest paint past two seconds.
-   */
-  small: VehiclePhoto | null;
-  credit: string | null;
-};
 
 export type BodyTypeTile = {
   slug: string;
@@ -52,7 +38,6 @@ export type PriceOption = { value: number; label: string };
 export type PhotoCreditLine = { subject: string; credit: string };
 
 export type HomeStock = {
-  hero: HeroListing | null;
   featured: VehicleCardData[];
   bodyTypes: BodyTypeTile[];
   /** Alphabetical, for the select. */
@@ -113,24 +98,6 @@ function budgetBands(prices: number[]): BudgetBand[] {
 }
 
 /**
- * Photographs clean enough to open the site on, in order of preference: the whole car, a plain
- * or showroom ground, and no other company's banners or crowds behind it. Chosen by eye from the
- * demonstration library's contact sheet. The Audi A3 on a studio plinth against a dark wall is the
- * one true studio shot in the library, a clean front three-quarter that sits on the navy band as if
- * it were lit for it; the white Hilux on a show stand follows. The hero is the newest live listing that leads with one
- * of these; with none live it falls back to the newest landscape photograph, as before. When
- * dealerships upload their own studio photography this list stops mattering.
- */
-const HERO_PHOTOS = [
-  "demo-audi-a3--3.webp",
-  "demo-toyota-hilux--2.webp",
-  "demo-toyota-hilux--3.webp",
-  "demo-haval-h6--2.webp",
-  "demo-mahindra-xuv700--2.webp",
-  "demo-bmw-3-series--3.webp",
-];
-
-/**
  * The same judgement for the body type tiles, which are the other large photographs on the home
  * page: plain, studio or showroom grounds first. A tile takes the first of these its body type has
  * live and not already on the page, and otherwise falls back to the newest photographed listing.
@@ -149,9 +116,6 @@ const TILE_PHOTOS = [
   "demo-bmw-3-series--2.webp",
   "demo-mercedes-benz-c-class--1.webp",
 ];
-
-/** A photograph wide enough to crop to the hero's 16:9 without losing the car. */
-const isLandscape = (photo: VehiclePhoto) => photo.width / photo.height >= 1.45;
 
 function subjectOf(doc: Vehicle): string {
   return [relName(doc.make), relName(doc.model)].filter(Boolean).join(" ") || "Vehicle";
@@ -245,11 +209,6 @@ async function leadingWith(
   }
 }
 
-async function cleanHero(payload: Payload): Promise<Vehicle | null> {
-  const docs = await leadingWith(payload, HERO_PHOTOS, { depth: 2 });
-  return docs.find((doc) => vehiclePhoto(doc, "gallery") !== null) ?? null;
-}
-
 async function readHomeStock(): Promise<HomeStock> {
   const payload = await getPayload({ config });
 
@@ -330,17 +289,7 @@ async function readHomeStock(): Promise<HomeStock> {
     .filter((model) => model.count > 0 && model.makeSlug)
     .sort((a, b) => a.name.localeCompare(b.name, "en-ZA"));
 
-  // The hero: the newest listing that leads with one of the clean photographs, else the newest
-  // photographed listing whose photograph is wide enough to crop well.
   const docs = recent.docs;
-  const heroDoc =
-    (await cleanHero(payload)) ??
-    docs.find((doc) => {
-      const photo = vehiclePhoto(doc, "gallery");
-      return photo ? isLandscape(photo) : false;
-    }) ??
-    docs.find((doc) => vehiclePhoto(doc, "gallery"));
-
   const used = new Set<string>();
   const credits = new Map<string, PhotoCreditLine>();
   const credit = (doc: Vehicle) => {
@@ -350,30 +299,7 @@ async function readHomeStock(): Promise<HomeStock> {
     credits.set(`${subject}|${line}`, { subject, credit: line });
   };
 
-  let hero: HeroListing | null = null;
-  if (heroDoc) {
-    const photo = vehiclePhoto(heroDoc, "gallery");
-    const card = toCard(heroDoc);
-    if (photo) {
-      const cardPhoto = vehiclePhoto(heroDoc, "card");
-      hero = {
-        card,
-        href: vehicleUrl(card),
-        photo,
-        small: cardPhoto && cardPhoto.url !== photo.url ? cardPhoto : null,
-        credit: photoCredit(heroDoc),
-      };
-      used.add(photo.url);
-      if (cardPhoto) used.add(cardPhoto.url);
-      credit(heroDoc);
-    }
-  }
-
-  const featuredDocs = pickFeatured(
-    docs.filter((doc) => doc.id !== heroDoc?.id),
-    used,
-    8,
-  );
+  const featuredDocs = pickFeatured(docs, used, 8);
   for (const doc of featuredDocs) if (vehiclePhoto(doc, "card")) credit(doc);
 
   /*
@@ -450,7 +376,6 @@ async function readHomeStock(): Promise<HomeStock> {
     }));
 
   return {
-    hero,
     featured: featuredDocs.map(toCard),
     bodyTypes,
     makes,

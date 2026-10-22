@@ -36,10 +36,22 @@ function enquirySummary(vehicle: Vehicle): EnquirySummary {
   };
 }
 
+/**
+ * Questions a buyer can send in one tap, the car and its reference already in the message. A
+ * dealership answers "is it still available?" faster than "hi", and the buyer does not have to
+ * work out how to start.
+ */
+const WHATSAPP_QUESTIONS = [
+  "Is it still available?",
+  "Can I book a test drive?",
+  "Does it have a full service history?",
+  "Would you take my car as a trade-in?",
+];
+
 /** The wa.me address for a South African number written the way people write it. */
-function whatsappHref(number: string, vehicle: Vehicle): string {
+function whatsappHref(number: string, vehicle: Vehicle, question?: string): string {
   const digits = number.replace(/[^0-9]/g, "").replace(/^0/, "27");
-  const message = `Hi, I am interested in the ${shortTitle(vehicle)} (ref ${vehicle.publicRef}) on Rynet.`;
+  const message = `Hi, I am interested in the ${shortTitle(vehicle)} (ref ${vehicle.publicRef}) on Rynet.${question ? ` ${question}` : ""}`;
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
 }
 
@@ -223,6 +235,27 @@ export function ListingSummary({
                     <span className="sr-only">, opens in a new tab</span>
                   </a>
                 ) : null}
+              </div>
+            ) : null}
+
+            {whatsapp ? (
+              <div className="mt-2">
+                <p className="text-sm font-semibold text-heading">Or ask on WhatsApp in one tap</p>
+                <ul className="mt-2 flex flex-wrap gap-2">
+                  {WHATSAPP_QUESTIONS.map((question) => (
+                    <li key={question}>
+                      <a
+                        href={whatsappHref(whatsapp, vehicle, question)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rn-chip min-h-11"
+                      >
+                        {question}
+                        <span className="sr-only">, opens WhatsApp in a new tab</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ) : null}
 

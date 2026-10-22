@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import type { Where } from "payload";
 import { getPayload } from "payload";
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
+import { priceForMonthly } from "@/lib/finance";
 import { type ParsedQuery, parseQuery, type Term } from "@/lib/query-parse";
 import { populated, relName, relSlug } from "@/lib/relations";
 import { vehiclePhoto } from "@/lib/vehicle-photo";
@@ -141,9 +142,25 @@ const getCorpus = unstable_cache(readCorpus, ["search-corpus"], {
 });
 
 export async function resolveQuery(q: string | undefined | null): Promise<ParsedQuery> {
-  if (!q?.trim()) return { matched: [], unmatched: [] };
+  if (!q?.trim()) return { matched: [], unmatched: [], parts: [] };
 
-  return parseQuery(q, await getCorpus());
+  const parsed = parseQuery(q, await getCorpus());
+
+  /*
+   * "R4 000 a month" becomes a price ceiling on the same finance defaults every listing page uses
+   * for its estimate, so a car on the result list never shows an estimate above the budget the
+   * buyer typed. A typed price ceiling wins over the monthly one, as the lower of the two.
+   */
+  if (parsed.monthly) {
+    const payload = await getPayload({ config });
+    const defaults = await payload.findGlobal({ slug: "finance-defaults" });
+    const ceiling = priceForMonthly(parsed.monthly, defaults);
+    if (ceiling) {
+      parsed.maxPrice = parsed.maxPrice ? Math.min(parsed.maxPrice, ceiling) : ceiling;
+      parsed.monthlyCeiling = ceiling;
+    }
+  }
+  return parsed;
 }
 
 export function toCard(doc: Vehicle): VehicleCardData {

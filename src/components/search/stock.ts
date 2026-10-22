@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { getPayload } from "payload";
 
 import type { VehicleCardData } from "@/components/vehicles/vehicle-card";
+import type { ParsedQuery } from "@/lib/query-parse";
 import { resolveQuery, toCard } from "@/lib/search";
 import type { Vehicle } from "@/payload-types";
 
@@ -231,7 +232,7 @@ export type Resolved = {
   /** Set when a city had no stock and the search widened to its province. */
   widened: { from: string; to: string } | null;
   /** What the search box did with the words, when there were any. */
-  query: { text: string; matched: string[]; unmatched: string[] } | null;
+  query: { text: string; matched: string[]; unmatched: string[]; parsed: ParsedQuery } | null;
 };
 
 const pick = <T extends Term>(list: T[], slugs: string[]) =>
@@ -269,7 +270,11 @@ export async function resolveSearch(
         parsed.province ||
         parsed.city ||
         parsed.minPrice ||
-        parsed.maxPrice,
+        parsed.maxPrice ||
+        parsed.minYear ||
+        parsed.maxYear ||
+        parsed.maxMileage ||
+        parsed.sort,
     );
 
   const or = (explicit: string[], fromQuery: string | undefined) =>
@@ -347,10 +352,13 @@ export async function resolveSearch(
     condition: state.condition ?? null,
     minPrice: minPrice ?? null,
     maxPrice: maxPrice ?? null,
-    minYear: state.minYear ?? null,
-    maxYear: state.maxYear ?? null,
-    maxMileage: state.maxMileage ?? null,
+    minYear: state.minYear ?? parsed.minYear ?? null,
+    maxYear: state.maxYear ?? parsed.maxYear ?? null,
+    maxMileage: state.maxMileage ?? parsed.maxMileage ?? null,
   };
+
+  // An order asked for in words ("cheapest") applies unless the sort control set one.
+  const sort = state.sort !== "newest" ? state.sort : (parsed.sort ?? state.sort);
 
   return {
     filters,
@@ -367,6 +375,10 @@ export async function resolveSearch(
       variant: variantTerm?.slug,
       minPrice,
       maxPrice,
+      minYear: filters.minYear ?? undefined,
+      maxYear: filters.maxYear ?? undefined,
+      maxMileage: filters.maxMileage ?? undefined,
+      sort,
     },
     terms: {
       make,
@@ -381,7 +393,9 @@ export async function resolveSearch(
     },
     missing,
     widened,
-    query: state.q ? { text: state.q, matched: parsed.matched, unmatched: parsed.unmatched } : null,
+    query: state.q
+      ? { text: state.q, matched: parsed.matched, unmatched: parsed.unmatched, parsed }
+      : null,
   };
 }
 
@@ -428,7 +442,7 @@ export async function searchSet(
   const resolved = await resolveSearch(state, rows, taxonomy, options);
   const matching = sortRows(
     rows.filter((row) => matches(row, resolved.filters)),
-    state.sort,
+    resolved.effective.sort,
   );
   return { resolved, rows, taxonomy, matching, facets: facetCounts(rows, resolved.filters) };
 }
