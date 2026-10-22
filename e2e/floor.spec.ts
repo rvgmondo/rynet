@@ -73,9 +73,8 @@ test.describe("the floor", () => {
     await expect(call).toBeVisible();
     const gain = count(await call.locator("span").first().textContent());
     await call.click();
-    await expect(button).toHaveText(
-      `Show ${before + gain} ${before + gain === 1 ? "car" : "cars"}`,
-    );
+    // The noun follows the stock: "cars", or "demo listings" while every listing is a demo.
+    await expect(button).toHaveText(new RegExp(`^Show ${before + gain} (cars?|demo listings?)$`));
   });
 
   test("with JavaScript off it is still a search", async ({ browser }) => {
