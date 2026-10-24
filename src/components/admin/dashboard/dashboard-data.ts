@@ -198,8 +198,17 @@ export async function loadDashboardData({
       and: [{ type: { in: [...CLICK_TYPES] } }, { createdAt: { greater_than_equal: since } }],
     }),
     count("dealers", { verificationStatus: { equals: "pending" } }),
-    count("vehicles", { isDemonstration: { equals: true } }),
-    count("dealers", { isDemonstration: { equals: true } }),
+    // Only what buyers can see: example stock put away when real stock went live is archived,
+    // and counting it made the banner claim the site still shows it.
+    count("vehicles", {
+      and: [{ isDemonstration: { equals: true } }, { status: { equals: "live" } }],
+    }),
+    count("dealers", {
+      and: [
+        { isDemonstration: { equals: true } },
+        { verificationStatus: { not_equals: "archived" } },
+      ],
+    }),
     latestEnquiries(),
     recentCars(),
   ]);
