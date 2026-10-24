@@ -1,6 +1,6 @@
 {
   "node": {
-    "60da6b0448744300ef9aa6d092ba6e0817c0d3b1d1": {
+    "608ddb809e34ac8631af761711ee0c74ec2341c93a": {
       "workers": {
         "app/(marketplace)/list-your-stock/page": {
           "moduleId": 915384,
