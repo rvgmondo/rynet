@@ -1,6 +1,6 @@
 {
   "node": {
-    "60a324f9465fbdd1e94f2c42d762f4cb01d1babce4": {
+    "60cb1189f751f3e8e4399550a3dd316473e38d0ea9": {
       "workers": {
         "app/(portal)/portal/set-password/page": {
           "moduleId": 13936,
