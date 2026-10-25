@@ -20,6 +20,7 @@ import Link from "next/link";
 
 import { AgencyClose } from "@/components/agency/agency-close";
 import { AgencyPageHead } from "@/components/agency/agency-page-head";
+import { OnlyDealers } from "@/components/agency/only-dealers";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
 import { buttonClasses } from "@/components/ui/button-classes";
@@ -161,25 +162,24 @@ export default async function AboutPage() {
             </Link>
           </>
         }
-        aside={
-          <div className="rn-panel p-6 sm:p-8">
-            <h2 className="text-base font-semibold text-heading">At a glance</h2>
-            <ul className="mt-5 divide-y divide-line">
-              {AT_A_GLANCE.map((fact) => (
-                <li key={fact.label} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  <span aria-hidden="true" className="rn-icon-tile">
-                    <fact.icon className="size-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm text-muted">{fact.label}</p>
-                    <p className="mt-0.5 font-semibold text-heading">{fact.value}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        }
+        aside={<OnlyDealers />}
       />
+
+      <section aria-label="At a glance" className="border-b border-line bg-card">
+        <ul className="container-page grid gap-4 py-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          {AT_A_GLANCE.map((fact) => (
+            <li key={fact.label} className="flex gap-3">
+              <span aria-hidden="true" className="rn-icon-tile">
+                <fact.icon className="size-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm text-muted">{fact.label}</p>
+                <p className="mt-0.5 font-semibold text-heading">{fact.value}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section aria-labelledby="only-heading" className="py-[var(--section-base)]">
         <div className="container-page grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:gap-16">
