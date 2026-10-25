@@ -3,7 +3,13 @@ import { FloorSearch } from "@/components/home/floor-search";
 import { FloorSection } from "@/components/home/floor-section";
 import { getFloor } from "@/components/home/floor-stock";
 import { HomeBrowse } from "@/components/home/home-browse";
-import { PhotoCredits, SellAndListBands, VerificationSteps } from "@/components/home/home-sections";
+import { DealerStrip, getHomeDealers } from "@/components/home/home-dealers";
+import {
+  ClosingSearch,
+  PhotoCredits,
+  SellAndListBands,
+  VerificationSteps,
+} from "@/components/home/home-sections";
 import { getHomeStock } from "@/components/home/home-stock";
 import { paramsFromSearch, readState } from "@/components/search/params";
 import { countSearch } from "@/components/search/stock";
@@ -66,10 +72,11 @@ const EXAMPLES = [
 export default async function HomePage() {
   // getHomeData's own featured list is not used here (getHomeStock picks photographed cars), so it
   // is asked for none and reads only the counts, provinces and colours.
-  const [data, stock, floor, exampleCounts] = await Promise.all([
+  const [data, stock, floor, dealers, exampleCounts] = await Promise.all([
     getHomeData(0),
     getHomeStock(),
     getFloor(),
+    getHomeDealers(),
     Promise.all(
       EXAMPLES.map((text) =>
         countSearch(readState(paramsFromSearch(new URLSearchParams({ q: text })))).catch(() => 0),
@@ -204,9 +211,15 @@ export default async function HomePage() {
         provinces={data.provinces}
       />
 
-      <VerificationSteps />
+      <DealerStrip dealers={dealers} />
+
+      <div className="pt-[var(--section-base)]">
+        <VerificationSteps />
+      </div>
 
       <SellAndListBands />
+
+      <ClosingSearch total={allDemonstration ? 0 : data.totalLive} />
 
       <PhotoCredits credits={credits} />
     </>

@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronDown, HandCoins, Store } from "lucide-react";
+import { ArrowRight, BadgeCheck, Check, ChevronDown, HandCoins, Store } from "lucide-react";
 import Link from "next/link";
 
 import type { PhotoCreditLine } from "@/components/home/home-stock";
@@ -10,8 +10,11 @@ import { VERIFICATION_CHECKS } from "@/content/verification-checks";
  * /how-verification-works (src/content/verification-checks.ts) so this summary can never promise
  * more than the full page.
  *
- * A short numbered list, not four cards: the full version, with every sentence, is one link away,
- * and the cards repeated it almost word for word. Each step is its title and one sentence.
+ * Drawn as the file a dealership has on Rynet: four checks, each ticking as it scrolls into view,
+ * and the status at the top turning from Pending to Verified once they are all done. That is the
+ * order the code enforces (a dealership starts pending; only staff verify it), shown rather than
+ * listed. Where scroll-driven animation is not supported, or motion is reduced, the file simply
+ * shows as verified with every check ticked.
  */
 export function VerificationSteps() {
   return (
@@ -19,15 +22,16 @@ export function VerificationSteps() {
       aria-labelledby="checks-heading"
       className="rn-defer border-y border-line bg-card py-[var(--section-base)]"
     >
-      <div className="container-page grid gap-8 lg:grid-cols-[minmax(0,4fr)_minmax(0,7fr)] lg:gap-16">
+      <div className="container-page grid items-center gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div>
           <p className="rn-eyebrow">Before a dealership can list</p>
           <h2 id="checks-heading" className="rn-h2 mt-2">
-            How Rynet checks dealerships
+            No car goes live until the business behind it is checked
           </h2>
           <p className="mt-3 text-body">
-            The checks cover the business behind every listing, not the car itself. Still look the
-            car over properly, or have it inspected, before you buy.
+            Every dealership starts as pending, and a person at Rynet checks it before a single car
+            can go live. The checks cover the business, not the car itself, so still look the car
+            over properly, or have it inspected, before you buy.
           </p>
           <Link href="/how-verification-works" className="rn-link-arrow mt-5 min-h-11">
             Read how we verify dealerships
@@ -35,22 +39,37 @@ export function VerificationSteps() {
           </Link>
         </div>
 
-        <ol className="grid gap-x-10 sm:grid-cols-2">
-          {VERIFICATION_CHECKS.map((check, index) => (
-            <li key={check.title} className="flex gap-4 border-t border-line py-5">
-              <span
-                aria-hidden="true"
-                className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-on-secondary tabular"
-              >
-                {index + 1}
+        <div className="rn-checkfile rn-panel overflow-hidden">
+          <div className="flex items-center justify-between gap-4 border-b border-line bg-subtle/60 px-5 py-4 sm:px-6">
+            <p className="text-sm font-semibold text-heading">A dealership&apos;s file on Rynet</p>
+            <p className="rn-checkfile__status text-xs font-semibold">
+              <span className="rn-checkfile__pending">Pending</span>
+              <span className="rn-checkfile__verified">
+                <BadgeCheck aria-hidden="true" className="size-4" />
+                Verified
               </span>
-              <div className="min-w-0">
-                <h3 className="rn-h3 text-lg leading-snug">{check.title}</h3>
-                <p className="mt-1 text-sm text-body">{check.summary}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
+            </p>
+          </div>
+          <ol className="divide-y divide-line">
+            {VERIFICATION_CHECKS.map((check) => {
+              const Icon = check.icon;
+              return (
+                <li key={check.title} className="rn-checkfile__row flex gap-4 px-5 py-5 sm:px-6">
+                  <span className="rn-icon-tile shrink-0">
+                    <Icon aria-hidden="true" className="size-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="rn-h3 text-lg leading-snug">{check.title}</h3>
+                    <p className="mt-1 text-sm text-body">{check.summary}</p>
+                  </div>
+                  <span aria-hidden="true" className="rn-checkfile__tick">
+                    <Check className="size-4" strokeWidth={3} />
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       </div>
     </section>
   );
@@ -175,5 +194,50 @@ export function PhotoCredits({ credits }: { credits: PhotoCreditLine[] }) {
         </div>
       </details>
     </div>
+  );
+}
+
+/**
+ * The page's last word goes back to its first: one search box, the same plain-language search as
+ * the floor at the top, for the buyer who has scrolled the whole page without finding the car.
+ * A plain GET form, so it works before scripts load and with scripting off.
+ */
+export function ClosingSearch({ total }: { total: number }) {
+  return (
+    <section
+      aria-labelledby="closing-heading"
+      className="rn-defer container-page pb-[var(--section-base)]"
+    >
+      <div className="on-navy rounded-xl border border-line-on-navy bg-navy-raised px-6 py-12 text-center sm:px-12 sm:py-16">
+        <div className="mx-auto max-w-3xl">
+          <h2 id="closing-heading" className="rn-h2 text-on-navy">
+            Still looking? <span className="text-brand-red">Say the car.</span>
+          </h2>
+          <p className="mt-3 text-on-navy-muted">
+            Type it the way you would say it: a make, a body type, a budget or a monthly amount.
+          </p>
+          <search className="mt-7">
+            <form action="/cars" method="get" className="flex flex-col gap-3 sm:flex-row">
+              <label htmlFor="closing-q" className="sr-only">
+                Describe the car you want
+              </label>
+              <input
+                id="closing-q"
+                name="q"
+                type="search"
+                maxLength={200}
+                autoComplete="off"
+                enterKeyHint="search"
+                placeholder="Try: diesel bakkie under R 300 000"
+                className="rn-input rn-input--lg min-w-0 flex-1"
+              />
+              <button type="submit" className={buttonClasses({ variant: "primary", size: "lg" })}>
+                {total > 0 ? `Search ${total.toLocaleString("en-ZA")} cars` : "Search cars"}
+              </button>
+            </form>
+          </search>
+        </div>
+      </div>
+    </section>
   );
 }
