@@ -78,7 +78,7 @@ export function ShowroomFrame({
           </div>
         </div>
 
-        <ul className="grid grid-cols-1 gap-3 p-3 xs:grid-cols-2 sm:p-4">
+        <ul className="grid grid-cols-1 gap-3 p-3 xs:grid-cols-[repeat(auto-fit,minmax(13.5rem,1fr))] sm:p-4">
           {cards.map((card, index) => (
             <li
               key={card.publicRef}
