@@ -6,13 +6,13 @@ import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
 import { LiveProof } from "@/components/agency/live-proof";
 import { MockupWipe } from "@/components/agency/mockup-wipe";
 import { OneCarHero } from "@/components/agency/one-car-hero";
+import { ServicePlaces } from "@/components/agency/service-places";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
 import { StageRoad } from "@/components/agency/stage-road";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { SectionHeader } from "@/components/ui/section-header";
 import { MOCKUP_CTA, MOCKUP_OFFER } from "@/content/agency/mockup-offer";
-import { SERVICES } from "@/content/agency/services";
 
 export const metadata: Metadata = {
   title: "Websites, stock feeds and advertising for car dealerships",
@@ -192,54 +192,14 @@ export default async function AgencyHomePage() {
           <SectionHeader
             id="services-heading"
             eyebrow="What we do"
-            title="Seven services, built around how a dealership sells"
+            title="Seven services, one for each place your cars have to be right"
+            lead="Each picture is the place the service works on, with the same example car as above."
             action={{ href: "/digital/services", label: "All services" }}
           />
 
-          {/*
-            An index, not a wall of cards: one ruled row per service, two columns from 1024px, the
-            whole row the link. The last row is the way in for somebody who does not know which.
-          */}
-          <ul className="mt-6 grid border-t border-line sm:mt-10 lg:grid-cols-2 lg:gap-x-12">
-            {SERVICES.map((service) => (
-              <li
-                key={service.slug}
-                className="group relative flex items-start gap-4 border-b border-line py-5 sm:gap-5 sm:py-6"
-              >
-                <span className="rn-icon-tile">
-                  <service.Icon aria-hidden="true" className="size-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-base font-semibold text-heading sm:text-lg">
-                    <Link
-                      href={`/digital/services/${service.slug}`}
-                      className="transition-colors duration-[var(--duration-micro)] group-hover:text-accent after:absolute after:inset-0 after:rounded-sm focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-[color:var(--rn-focus-ring)] focus-visible:after:outline-solid"
-                    >
-                      {service.name}
-                    </Link>
-                  </h3>
-                  <p className="mt-1 text-sm text-body sm:text-[0.9375rem]">{service.summary}</p>
-                </div>
-                <ArrowRight
-                  aria-hidden="true"
-                  className="mt-3 size-5 shrink-0 text-muted transition-transform duration-[var(--duration-micro)] group-hover:translate-x-0.5 group-hover:text-accent motion-reduce:transition-none"
-                />
-              </li>
-            ))}
-            <li className="flex flex-col justify-center gap-2 border-b border-line py-5 sm:py-6">
-              <h3 className="text-base font-semibold text-heading sm:text-lg">
-                Not sure which you need?
-              </h3>
-              <p className="text-sm text-body sm:text-[0.9375rem]">
-                Most dealerships need three or four of these, and nobody needs all seven on day one.
-                The free review tells you where to start.
-              </p>
-              <Link href={REVIEW_CTA.href} className="rn-link-arrow mt-1 self-start">
-                {REVIEW_CTA.label}
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </li>
-          </ul>
+          <div className="mt-6 sm:mt-10">
+            <ServicePlaces />
+          </div>
         </div>
       </section>
 
