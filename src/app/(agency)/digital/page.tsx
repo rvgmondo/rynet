@@ -105,7 +105,7 @@ const FIT = [
  * one icon-card module down its length.
  */
 export default async function AgencyHomePage() {
-  const cards = await getShowroomSample(2);
+  const cards = await getShowroomSample(3);
 
   return (
     <>

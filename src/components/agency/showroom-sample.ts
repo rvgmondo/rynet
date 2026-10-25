@@ -27,11 +27,19 @@ async function readSample(limit: number): Promise<VehicleCardData[]> {
     depth: 2,
   });
 
+  // One per dealership first, so the frame shows the range of who sells here; then, while there
+  // are fewer dealerships than places, more of the same ones rather than an empty frame.
+  const cards = recent.docs.map(toCard).filter((card) => card.photo);
   const seen = new Set<string>();
   const chosen: VehicleCardData[] = [];
-  for (const card of recent.docs.map(toCard)) {
-    if (!card.photo || seen.has(card.dealerSlug)) continue;
+  for (const card of cards) {
+    if (seen.has(card.dealerSlug)) continue;
     seen.add(card.dealerSlug);
+    chosen.push(card);
+    if (chosen.length >= limit) return chosen;
+  }
+  for (const card of cards) {
+    if (chosen.includes(card)) continue;
     chosen.push(card);
     if (chosen.length >= limit) break;
   }
