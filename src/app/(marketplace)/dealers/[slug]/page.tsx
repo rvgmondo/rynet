@@ -375,6 +375,7 @@ export default async function DealerPage({
               <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 sm:gap-x-6">
                 <DealerMonogram
                   name={dealer.tradingName}
+                  logo={dealer.logo}
                   size="lg"
                   className="col-start-1 row-start-1 sm:row-span-3"
                 />

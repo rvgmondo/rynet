@@ -29,15 +29,44 @@ const SIZE = {
   lg: "size-16 rounded-md text-2xl sm:size-20 sm:text-[1.75rem]",
 } as const;
 
+/**
+ * The dealership's own logo where it has uploaded one, on a white tile the size of the monogram
+ * so the two line up wherever they appear. The original file, not a rendition: every rendition
+ * is cropped to 4:3, which cuts a square or tall logo, and logos are small files. Anything else
+ * falls back to the monogram.
+ */
+export function logoOf(logo: unknown): string | null {
+  if (!logo || typeof logo !== "object") return null;
+  const url = (logo as { url?: unknown }).url;
+  return typeof url === "string" && url ? url : null;
+}
+
 export function DealerMonogram({
   name,
   size = "md",
   className = "",
+  logo = null,
 }: {
   name: string;
   size?: keyof typeof SIZE;
   className?: string;
+  /** The populated `logo` relation of a dealership, or its URL. */
+  logo?: unknown;
 }) {
+  const logoUrl = typeof logo === "string" ? logo : logoOf(logo);
+  if (logoUrl) {
+    return (
+      // biome-ignore lint/performance/noImgElement: a small original file shown at a fixed tile size.
+      <img
+        src={logoUrl}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        className={`shrink-0 border border-line bg-white object-contain p-0.5 shadow-xs ${SIZE[size]} ${className}`}
+      />
+    );
+  }
+
   return (
     <span
       aria-hidden="true"

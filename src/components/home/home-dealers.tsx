@@ -3,9 +3,9 @@ import { ArrowRight, BadgeCheck, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 import { getPayload } from "payload";
 
-import { DealerMonogram } from "@/components/dealers/dealer-monogram";
+import { DealerMonogram, logoOf } from "@/components/dealers/dealer-monogram";
 import { populated, relId, relName } from "@/lib/relations";
-import { pick, vehiclePhoto } from "@/lib/vehicle-photo";
+import { vehiclePhoto } from "@/lib/vehicle-photo";
 import type { Media, Vehicle } from "@/payload-types";
 
 type Shot = { url: string; width: number; height: number };
@@ -15,7 +15,7 @@ export type HomeDealer = {
   name: string;
   town: string | null;
   cars: number;
-  logo: Shot | null;
+  logo: string | null;
   shots: Shot[];
 };
 
@@ -99,7 +99,7 @@ export async function getHomeDealers(): Promise<HomeDealer[]> {
           name: dealer.tradingName,
           town: primary ? relName(primary.city) : null,
           cars: counts.get(dealer.id) ?? 0,
-          logo: logoMedia ? pick(logoMedia, "thumbnail") : null,
+          logo: logoOf(logoMedia),
           shots,
         };
       }),
@@ -171,19 +171,7 @@ export function DealerStrip({ dealers }: { dealers: HomeDealer[] }) {
                 </div>
               ) : null}
               <div className="flex flex-1 items-center gap-4 p-5">
-                {dealer.logo ? (
-                  // biome-ignore lint/performance/noImgElement: the dealership's own logo rendition.
-                  <img
-                    src={dealer.logo.url}
-                    width={dealer.logo.width}
-                    height={dealer.logo.height}
-                    alt=""
-                    loading="lazy"
-                    className="size-14 shrink-0 rounded-md border border-line bg-white object-contain p-1"
-                  />
-                ) : (
-                  <DealerMonogram name={dealer.name} />
-                )}
+                <DealerMonogram name={dealer.name} logo={dealer.logo} />
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 text-xs font-semibold text-success">
                     <BadgeCheck aria-hidden="true" className="size-4" />
