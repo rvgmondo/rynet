@@ -8,6 +8,7 @@ import {
   DealerDirectoryCard,
   type DirectoryDealer,
 } from "@/components/dealers/dealer-directory-card";
+import { logoOf } from "@/components/dealers/dealer-monogram";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -68,7 +69,8 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
       where: { verificationStatus: { equals: "verified" } },
       sort: "tradingName",
       limit: 100,
-      depth: 0,
+      // depth 1 for the logo, the one relation the card shows.
+      depth: 1,
     }),
     payload.find({
       collection: "branches",
@@ -167,6 +169,7 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
       id: dealer.id,
       slug: dealer.slug,
       tradingName: dealer.tradingName,
+      logo: logoOf(dealer.logo),
       isDemonstration: Boolean(dealer.isDemonstration),
       foundedYear: dealer.foundedYear ?? null,
       location: primary

@@ -11,6 +11,8 @@ export type DirectoryDealer = {
   id: number;
   slug: string;
   tradingName: string;
+  /** The dealership's uploaded logo, original file. */
+  logo?: string | null;
   isDemonstration: boolean;
   foundedYear: number | null;
   /** "Pretoria, Gauteng", from the primary branch. */
@@ -107,6 +109,7 @@ export function DealerDirectoryCard({ dealer }: { dealer: DirectoryDealer }) {
         >
           <DealerMonogram
             name={dealer.tradingName}
+            logo={dealer.logo}
             className={hasCover ? "ring-4 ring-[var(--rn-card)]" : ""}
           />
           {hasCover ? null : <DealershipStatusBadge isDemonstration={dealer.isDemonstration} />}

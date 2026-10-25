@@ -2958,3 +2958,95 @@
     transform: none !important;
   }
 }
+
+/*
+ * The dealership file on the home page (VerificationSteps). The static state is the finished one:
+ * every check ticked, the status Verified. Where the browser can drive animation from scroll and
+ * motion is welcome, each row arrives and ticks as it scrolls in, and the status turns from
+ * Pending to Verified as the file passes the middle of the screen. Keyframes hold only the
+ * starting state, so the end of every animation is the static style.
+ */
+.rn-checkfile__tick {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  align-self: center;
+  border-radius: 999px;
+  background: var(--color-success);
+  color: #fff;
+}
+.rn-checkfile__status {
+  display: inline-grid;
+}
+.rn-checkfile__status > span {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.625rem;
+}
+.rn-checkfile__pending {
+  visibility: hidden;
+  background: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+.rn-checkfile__verified {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rn-checkfile {
+      view-timeline: --rn-file block;
+    }
+    .rn-checkfile__row {
+      animation: rn-file-row linear both;
+      animation-timeline: view();
+      animation-range: entry 40% cover 30%;
+    }
+    .rn-checkfile__tick {
+      animation: rn-file-tick linear both;
+      animation-timeline: view();
+      animation-range: cover 22% cover 34%;
+    }
+    .rn-checkfile__pending {
+      animation: rn-file-pending linear both;
+      animation-timeline: --rn-file;
+      animation-range: cover 0% cover 58%;
+    }
+    .rn-checkfile__verified {
+      animation: rn-file-verified linear both;
+      animation-timeline: --rn-file;
+      animation-range: cover 52% cover 60%;
+    }
+  }
+}
+/* Position only: a faded row would fail contrast while it is on its way in. */
+@keyframes rn-file-row {
+  from {
+    transform: translateY(1rem);
+  }
+}
+@keyframes rn-file-tick {
+  from {
+    background: transparent;
+    color: transparent;
+    box-shadow: inset 0 0 0 2px var(--color-line-strong);
+    transform: scale(0.8);
+  }
+}
+@keyframes rn-file-pending {
+  from,
+  99% {
+    visibility: visible;
+  }
+}
+@keyframes rn-file-verified {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
