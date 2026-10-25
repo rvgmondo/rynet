@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
+import { LiveProof } from "@/components/agency/live-proof";
 import { MockupWipe } from "@/components/agency/mockup-wipe";
 import { OneCarHero } from "@/components/agency/one-car-hero";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
@@ -135,6 +136,7 @@ export default async function AgencyHomePage() {
           />
 
           <div className="mt-10 grid gap-10">
+            <LiveProof />
             <ShowroomFrame cards={cards} />
 
             {/*
