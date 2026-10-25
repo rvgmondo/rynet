@@ -147,11 +147,17 @@ export function photoUrls(html: string): string[] {
 
   if (seen.size === 0) {
     // No gallery markup: fall back to the one image the page names as its own in structured data.
-    const primary = html.match(
-      /"@type"\s*:\s*"ImageObject"[\s\S]{0,400}?"contentUrl"\s*:\s*"([^"]+)"/,
-    );
-    const url = primary?.[1] ? decodeEntities(primary[1].replace(/\\\//g, "/")) : "";
-    if (url) seen.add(url);
+    // Never the site's logo, which a WordPress page also declares as an ImageObject, and which is
+    // the only one when the listing has no photograph yet (Amico's 2017 Ford Focus led with it).
+    for (const match of html.matchAll(
+      /"@type"\s*:\s*"ImageObject"[\s\S]{0,400}?"contentUrl"\s*:\s*"([^"]+)"/g,
+    )) {
+      const url = match[1] ? decodeEntities(match[1].replace(/\\\//g, "/")) : "";
+      if (url && !/logo/i.test(url)) {
+        seen.add(url);
+        break;
+      }
+    }
   }
 
   return [...seen];
