@@ -3024,10 +3024,10 @@
     }
   }
 }
+/* Position only: a faded row would fail contrast while it is on its way in. */
 @keyframes rn-file-row {
   from {
-    opacity: 0.25;
-    transform: translateY(0.75rem);
+    transform: translateY(1rem);
   }
 }
 @keyframes rn-file-tick {

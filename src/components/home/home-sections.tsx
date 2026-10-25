@@ -219,7 +219,7 @@ export function ClosingSearch({ total }: { total: number }) {
           <search className="mt-7">
             <form action="/cars" method="get" className="flex flex-col gap-3 sm:flex-row">
               <label htmlFor="closing-q" className="sr-only">
-                Describe the car you want
+                What car are you looking for?
               </label>
               <input
                 id="closing-q"
