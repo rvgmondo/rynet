@@ -299,7 +299,10 @@ async function readHomeStock(): Promise<HomeStock> {
     credits.set(`${subject}|${line}`, { subject, credit: line });
   };
 
-  const featuredDocs = pickFeatured(docs, used, 8);
+  // Two per dealership keeps one big dealer from owning the row, but only once there are enough
+  // dealerships to fill it: with one dealership live, the cap left a row of eight showing two.
+  const dealerships = new Set(docs.map((doc) => String(relId(doc.dealer) ?? ""))).size;
+  const featuredDocs = pickFeatured(docs, used, 8, dealerships >= 4 ? 2 : 8);
   for (const doc of featuredDocs) if (vehiclePhoto(doc, "card")) credit(doc);
 
   /*
