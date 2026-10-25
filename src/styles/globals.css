@@ -3969,3 +3969,271 @@
   font-size: 0.9375rem;
   color: var(--color-on-navy-muted);
 }
+
+/*
+ * THE SEVEN SERVICES, AS THE PLACES THEY WORK ON (src/components/agency/service-places.tsx).
+ * Each tile is a small navy stage holding the place in miniature, then the service. On hover the
+ * miniature tilts up towards the reader, the same depth the hero uses; with reduced motion it
+ * stays put.
+ */
+.rn-places {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (min-width: 640px) {
+  .rn-places {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .rn-places {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.rn-places__tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: 1rem;
+  background: var(--color-card);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.3s;
+}
+.rn-places__tile:hover {
+  border-color: var(--color-line-strong);
+  box-shadow: 0 24px 40px -28px rgb(0 17 35 / 0.45);
+}
+.rn-places__tile--ask {
+  justify-content: center;
+  border-style: dashed;
+  background: transparent;
+}
+.rn-places__stage {
+  display: grid;
+  place-items: center;
+  height: 11rem;
+  padding: 1.25rem;
+  background:
+    radial-gradient(70% 70% at 50% 40%, rgb(255 255 255 / 0.08), transparent 70%), var(--color-navy);
+  perspective: 900px;
+}
+.rn-places__card {
+  position: relative;
+  width: 100%;
+  max-width: 13.5rem;
+  border-radius: 0.625rem;
+  background: #fff;
+  color: #13233a;
+  padding: 0.5rem 0.625rem 0.625rem;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  box-shadow: 0 18px 30px -18px rgb(0 0 0 / 0.8);
+  transform: rotateX(8deg) rotateY(-10deg);
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.1, 1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rn-places__tile:hover .rn-places__card {
+    transform: rotateX(0deg) rotateY(0deg) translateZ(40px);
+  }
+}
+.rn-places__car {
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  border-radius: 0.375rem;
+  background: linear-gradient(#eef2f7, #dde4ec);
+  padding: 0.25rem 1rem 0;
+}
+.rn-places__bar {
+  margin: -0.5rem -0.625rem 0.375rem;
+  padding: 0.2rem 0.625rem;
+  background: #eef2f7;
+  color: #4a5568;
+  font-size: 0.5625rem;
+}
+.rn-places__strong {
+  margin-top: 0.25rem;
+  font-weight: 600;
+  color: #0b1626;
+}
+.rn-places__price {
+  font-weight: 800;
+  color: #0b1626;
+}
+.rn-places__muted {
+  color: #4a5568;
+}
+.rn-places__card--code {
+  background: #0a1220;
+  color: #e8eef6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.625rem;
+}
+.rn-places__card--code .rn-places__muted {
+  margin-top: 0.375rem;
+  color: #9fb0c6;
+}
+.rn-places__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+}
+.rn-places__ok {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: #3ddc84;
+}
+.rn-places__split {
+  margin-top: 0.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rn-places__btn {
+  border-radius: 0.3rem;
+  background: #e7edf8;
+  color: #1a4fbf;
+  padding: 0.15rem 0.4rem;
+  font-weight: 600;
+}
+.rn-places__url {
+  color: #1f5c31;
+  font-size: 0.625rem;
+}
+.rn-places__link {
+  color: #1a4fbf;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.rn-places__actions {
+  margin-top: 0.375rem;
+  display: flex;
+  gap: 0.3rem;
+}
+.rn-places__actions span {
+  border: 1px solid #d5dde8;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  color: #1a4fbf;
+}
+.rn-places__card--photo {
+  padding: 0.75rem;
+}
+.rn-places__card--photo .rn-places__muted {
+  margin-top: 0.375rem;
+  text-align: center;
+}
+.rn-places__corner {
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-color: #c62a32;
+  border-style: solid;
+}
+.rn-places__corner--tl {
+  top: 0.35rem;
+  left: 0.35rem;
+  border-width: 2px 0 0 2px;
+}
+.rn-places__corner--tr {
+  top: 0.35rem;
+  right: 0.35rem;
+  border-width: 2px 2px 0 0;
+}
+.rn-places__corner--bl {
+  bottom: 1.6rem;
+  left: 0.35rem;
+  border-width: 0 0 2px 2px;
+}
+.rn-places__corner--br {
+  bottom: 1.6rem;
+  right: 0.35rem;
+  border-width: 0 2px 2px 0;
+}
+.rn-places__card--chat {
+  background: #e9f6e4;
+  display: grid;
+  gap: 0.3rem;
+}
+.rn-places__bubble {
+  width: fit-content;
+  max-width: 85%;
+  border-radius: 0.5rem;
+  background: #fff;
+  padding: 0.25rem 0.5rem;
+}
+.rn-places__bubble--us {
+  margin-left: auto;
+  background: #d4f0c8;
+}
+.rn-places__bars {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+  color: #4a5568;
+}
+.rn-places__track {
+  height: 0.35rem;
+  border-radius: 99px;
+  background: #eef2f7;
+  overflow: hidden;
+}
+.rn-places__track > span {
+  display: block;
+  height: 100%;
+  background: #13233a;
+}
+.rn-places__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.25rem;
+}
+.rn-places__name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-heading);
+}
+.rn-places__link-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+}
+.rn-places__link-cover:focus-visible {
+  outline: none;
+}
+.rn-places__link-cover:focus-visible::after {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.rn-places__tile:hover .rn-places__name {
+  color: var(--color-accent);
+}
+.rn-places__summary {
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  color: var(--color-body);
+}
+.rn-places__more {
+  margin-top: auto;
+  padding-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
