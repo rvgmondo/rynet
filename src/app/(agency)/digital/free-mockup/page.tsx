@@ -39,7 +39,7 @@ export const dynamic = "force-dynamic";
  * marketplace, built by the same team and open on this domain.
  */
 export default async function FreeMockupPage() {
-  const cards = await getShowroomSample(2);
+  const cards = await getShowroomSample(3);
 
   return (
     <>
