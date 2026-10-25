@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { AgencyClose } from "@/components/agency/agency-close";
 import { STAGES } from "@/components/agency/agency-content";
 import { AgencyPageHead } from "@/components/agency/agency-page-head";
+import { StageRoad } from "@/components/agency/stage-road";
 import { Badge } from "@/components/ui/badge";
 import { SectionHeader } from "@/components/ui/section-header";
 
@@ -46,30 +47,7 @@ export default function ProcessPage() {
         eyebrow="How we work"
         title="Five stages, and you know your part in each"
         lead="The first stage is free and the second ends with a figure in writing. What you have to do at each stage is listed too, because that is usually the part nobody mentions until it is late."
-        aside={
-          <ol aria-label="The five stages at a glance" className="relative grid gap-4">
-            {STAGES.map((stage, index) => (
-              <li key={stage.name} className="relative flex items-start gap-4">
-                {index < STAGES.length - 1 ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute top-9 bottom-[-1rem] left-[1.0625rem] w-px bg-line-strong"
-                  />
-                ) : null}
-                <span
-                  aria-hidden="true"
-                  className="relative grid size-9 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-on-secondary tabular"
-                >
-                  {index + 1}
-                </span>
-                <span className="min-w-0 pt-1.5">
-                  <span className="block font-semibold text-heading">{stage.name}</span>
-                  <span className="mt-0.5 block text-sm text-muted">{stage.short}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        }
+        below={<StageRoad />}
       />
 
       <section aria-labelledby="stages-heading" className="py-[var(--section-base)]">
