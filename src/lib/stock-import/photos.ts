@@ -66,6 +66,20 @@ export async function renderPhoto(input: Buffer): Promise<RenderedPhoto> {
 }
 
 /** A file name that cannot collide with a dealer's own upload or with another source's. */
+/**
+ * Whether an image is a banner or a logo rather than a photograph of the car.
+ *
+ * Dealership galleries sometimes lead with their own sign: Amico's 2017 Ford Focus opened on a
+ * 347 by 103 "Multi-Franchise Motor Group" banner, which then became the car's cover in every
+ * search result. A photograph of a car is never much wider than 2 to 1, and never under 400
+ * pixels wide on a site that sells it; a banner is both. Such an image is skipped, and the next
+ * photograph becomes the cover.
+ */
+export function looksLikeBanner(size: { width: number; height: number }): boolean {
+  if (!size.width || !size.height) return false;
+  return size.width / size.height > 2.4 || size.width < 400;
+}
+
 export function photoFilename(prefix: string, externalId: string, index: number): string {
   const safeId = externalId.replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return `${prefix}-${safeId}-${String(index).padStart(2, "0")}`;

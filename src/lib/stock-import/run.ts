@@ -24,6 +24,7 @@ import {
 } from "./decide";
 import { createPoliteFetcher, type PoliteFetcher } from "./fetch";
 import {
+  looksLikeBanner,
   MAX_PHOTOS_PER_CAR,
   mediaRecord,
   photoAlt,
@@ -931,7 +932,13 @@ async function attachPhotos(
         overrideAccess: true,
         req,
       });
-      const found = existing.docs[0] as { id: number; alt?: string | null } | undefined;
+      const found = existing.docs[0] as
+        | { id: number; alt?: string | null; width?: number | null; height?: number | null }
+        | undefined;
+      if (found && looksLikeBanner({ width: found.width ?? 0, height: found.height ?? 0 })) {
+        report.photosSkipped += 1;
+        continue;
+      }
       if (found) {
         if (found.alt !== alt) {
           await payload.db.updateOne({
@@ -948,6 +955,13 @@ async function attachPhotos(
 
       const downloaded = await fetcher.bytes(url);
       const rendered = await renderPhoto(downloaded.body);
+      if (looksLikeBanner(rendered.original)) {
+        report.photosSkipped += 1;
+        report.problems.push(
+          `${url} skipped: shaped like a banner or logo (${rendered.original.width} by ${rendered.original.height}), not a photograph of the car`,
+        );
+        continue;
+      }
       const files = await writePhotoFiles(staticDir, base, rendered);
       const created = await payload.db.create({
         collection: "media",
