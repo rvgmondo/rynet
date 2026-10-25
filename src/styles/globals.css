@@ -3745,11 +3745,149 @@
   top: calc((100% - 1.2rem) * var(--w) - 1.6rem);
   background: #e32432;
   color: #fff;
-  opacity: clamp(0, var(--w) * 6, 1);
+  opacity: calc(clamp(0, var(--w) * 6, 1) - clamp(0, (var(--w) - 0.9) / 0.08, 1));
 }
 .rn-wipe__tag--before {
   top: calc((100% - 1.2rem) * var(--w) + 1.6rem);
   background: #fff;
   color: #0b1626;
   opacity: calc(1 - clamp(0, (var(--w) - 0.85) / 0.1, 1));
+}
+
+/*
+ * THE FIVE STAGES, AS A ROAD (src/components/agency/stage-road.tsx). --r runs 0 to 1 while the
+ * road crosses the screen; each stage (--k, its place along the road) lights when the bakkie
+ * reaches it. Static: --r is 1, so the bakkie is parked at the end and every stage is lit.
+ */
+.rn-road {
+  --r: 1;
+  position: relative;
+  display: grid;
+  gap: 1.75rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.rn-road__track {
+  position: absolute;
+  left: 1.25rem;
+  top: 1.25rem;
+  bottom: 1.25rem;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(
+    180deg,
+    var(--color-line-strong) 0 10px,
+    transparent 10px 18px
+  );
+}
+.rn-road__done {
+  position: absolute;
+  inset: 0 0 auto;
+  height: calc(var(--r) * 100%);
+  border-radius: 4px;
+  background: var(--color-brand-red);
+}
+.rn-road__car {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: calc(var(--r) * 100%);
+  width: 3.75rem;
+  transform: translate(-50%, -50%) rotate(90deg);
+  filter: drop-shadow(0 6px 8px rgb(0 0 0 / 0.25));
+}
+.rn-road__car svg {
+  display: block;
+  width: 100%;
+}
+.rn-road__stage {
+  --on: clamp(0, (var(--r) - var(--k) + 0.03) / 0.03, 1);
+  position: relative;
+  padding-left: 3.75rem;
+  min-height: 2.5rem;
+}
+.rn-road__dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--color-secondary) calc(var(--on) * 100%), var(--color-card));
+  color: color-mix(in srgb, var(--color-on-secondary) calc(var(--on) * 100%), var(--color-heading));
+  box-shadow:
+    0 0 0 2px var(--color-line-strong),
+    0 0 0 calc(var(--on) * 6px) rgb(227 36 50 / 0.18);
+  z-index: 1;
+}
+.rn-road__name {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  padding-top: 0.5rem;
+}
+.rn-road__when {
+  margin-top: 0.125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+.rn-road__what {
+  margin-top: 0.375rem;
+  font-size: 0.9375rem;
+  color: var(--color-body);
+}
+@media (min-width: 1024px) {
+  .rn-road {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding-top: 4.5rem;
+  }
+  .rn-road__track {
+    left: 10%;
+    right: 10%;
+    top: 5.75rem;
+    bottom: auto;
+    width: auto;
+    height: 4px;
+    margin-left: 0;
+    margin-top: -2px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--color-line-strong) 0 12px,
+      transparent 12px 22px
+    );
+  }
+  .rn-road__done {
+    inset: 0 auto 0 0;
+    height: auto;
+    width: calc(var(--r) * 100%);
+  }
+  .rn-road__car {
+    display: block;
+    left: calc(var(--r) * 100%);
+    top: -1.9rem;
+    width: 5.5rem;
+    transform: translateX(-50%);
+  }
+  .rn-road__stage {
+    padding-left: 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .rn-road__dot {
+    position: relative;
+    margin-bottom: 0.75rem;
+  }
+  .rn-road__name {
+    padding-top: 0;
+  }
 }

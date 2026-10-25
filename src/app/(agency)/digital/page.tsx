@@ -7,7 +7,7 @@ import { MockupWipe } from "@/components/agency/mockup-wipe";
 import { OneCarHero } from "@/components/agency/one-car-hero";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
-import { StageSteps } from "@/components/agency/stage-steps";
+import { StageRoad } from "@/components/agency/stage-road";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { SectionHeader } from "@/components/ui/section-header";
 import { MOCKUP_CTA, MOCKUP_OFFER } from "@/content/agency/mockup-offer";
@@ -253,7 +253,7 @@ export default async function AgencyHomePage() {
           />
 
           <div className="mt-10">
-            <StageSteps />
+            <StageRoad />
           </div>
         </div>
       </section>
