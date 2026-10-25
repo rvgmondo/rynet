@@ -199,7 +199,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "695fd0daab1cdda30e9d6edc25f76253b1ed22e6"
+          "value": "84016f3ee7efd1e9c9e5130228d1f8dcc1a86c77"
         }
       ],
       "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))?(?:/)?$"
@@ -209,7 +209,7 @@
       "headers": [
         {
           "key": "x-nextjs-deployment-id",
-          "value": "695fd0daab1cdda30e9d6edc25f76253b1ed22e6"
+          "value": "84016f3ee7efd1e9c9e5130228d1f8dcc1a86c77"
         }
       ],
       "regex": "^/_next/data(?:/(.*))(?:/)?$"
@@ -302,6 +302,16 @@
         "nxtPslug": "nxtPslug"
       },
       "namedRegex": "^/vehicles/(?<nxtPmake>[^/]+?)/(?<nxtPmodel>[^/]+?)/(?<nxtPslug>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/vehicles/[make]/[model]/[slug]/opengraph-image-1jqd9q",
+      "regex": "^/vehicles/([^/]+?)/([^/]+?)/([^/]+?)/opengraph\\-image\\-1jqd9q(?:/)?$",
+      "routeKeys": {
+        "nxtPmake": "nxtPmake",
+        "nxtPmodel": "nxtPmodel",
+        "nxtPslug": "nxtPslug"
+      },
+      "namedRegex": "^/vehicles/(?<nxtPmake>[^/]+?)/(?<nxtPmodel>[^/]+?)/(?<nxtPslug>[^/]+?)/opengraph\\-image\\-1jqd9q(?:/)?$"
     }
   ],
   "staticRoutes": [
@@ -666,5 +676,5 @@
     "pathHeader": "x-nextjs-rewritten-path",
     "queryHeader": "x-nextjs-rewritten-query"
   },
-  "deploymentId": "695fd0daab1cdda30e9d6edc25f76253b1ed22e6"
+  "deploymentId": "84016f3ee7efd1e9c9e5130228d1f8dcc1a86c77"
 }

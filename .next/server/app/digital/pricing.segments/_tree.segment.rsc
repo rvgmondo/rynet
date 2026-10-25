@@ -1,3 +1,3 @@
-:HL["/_next/static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2?dpl=695fd0daab1cdda30e9d6edc25f76253b1ed22e6","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/_next/static/media/75affa71d1e2f6a7-s.p.17-aodiw50953.woff2?dpl=84016f3ee7efd1e9c9e5130228d1f8dcc1a86c77","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/_next/static/chunks/0qheol2b-_4kw.css","style"]
 0:{"tree":{"name":"","param":null,"prefetchHints":4112,"slots":{"children":{"name":"(agency)","param":null,"prefetchHints":4112,"slots":{"children":{"name":"digital","param":null,"prefetchHints":4112,"slots":{"children":{"name":"pricing","param":null,"prefetchHints":4160,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}}}},"staleTime":300}

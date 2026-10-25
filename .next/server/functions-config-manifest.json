@@ -9,6 +9,7 @@
     },
     "/api/stock-sync/run": {
       "maxDuration": 300
-    }
+    },
+    "/vehicles/[make]/[model]/[slug]/opengraph-image-1jqd9q": {}
   }
 }

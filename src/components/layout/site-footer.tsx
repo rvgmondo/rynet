@@ -14,13 +14,13 @@ const COLUMNS = [
     heading: "Buy a car",
     links: [
       { href: "/cars", label: "All cars for sale" },
-      { href: "/cars/new", label: "New vehicles" },
-      // "Ex-demo", the trade's word for a dealer's former demonstrator, so it is never read as a
-      // link to the demonstration data the site is seeded with.
-      { href: "/cars/demo", label: "Ex-demo vehicles" },
+      // New and ex-demo come back once a dealership lists them: a footer link to "No cars match"
+      // is the worst place to send someone.
       { href: "/cars/body/bakkie", label: "Bakkies" },
       { href: "/cars/body/suv", label: "SUVs" },
       { href: "/cars/body/hatchback", label: "Hatchbacks" },
+      { href: "/cars/body/sedan", label: "Sedans" },
+      { href: "/cars/fuel/diesel", label: "Diesel" },
     ],
   },
   {
@@ -61,11 +61,10 @@ const QUICK_SEARCHES = [
   { href: "/cars/suzuki", label: "Suzuki" },
   { href: "/cars/hyundai", label: "Hyundai" },
   { href: "/cars/bmw", label: "BMW" },
-  { href: "/cars/body/sedan", label: "Sedans" },
-  { href: "/cars/fuel/diesel", label: "Diesel" },
+  { href: "/cars/kia", label: "Kia" },
+  { href: "/cars/nissan", label: "Nissan" },
   { href: "/cars/in/gauteng", label: "Gauteng" },
-  { href: "/cars/in/western-cape", label: "Western Cape" },
-  { href: "/cars/in/kwazulu-natal", label: "KwaZulu-Natal" },
+  { href: "/cars/in/gauteng/pretoria", label: "Pretoria" },
 ] as const;
 
 /**

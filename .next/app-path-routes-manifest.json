@@ -23,6 +23,7 @@
   "/(marketplace)/sell-to-a-dealer/page": "/sell-to-a-dealer",
   "/(marketplace)/terms/page": "/terms",
   "/(marketplace)/unsubscribe/page": "/unsubscribe",
+  "/(marketplace)/vehicles/[make]/[model]/[slug]/opengraph-image-1jqd9q/route": "/vehicles/[make]/[model]/[slug]/opengraph-image-1jqd9q",
   "/(marketplace)/vehicles/[make]/[model]/[slug]/page": "/vehicles/[make]/[model]/[slug]",
   "/(payload)/admin/[[...segments]]/page": "/admin/[[...segments]]",
   "/(payload)/api/[...slug]/route": "/api/[...slug]",

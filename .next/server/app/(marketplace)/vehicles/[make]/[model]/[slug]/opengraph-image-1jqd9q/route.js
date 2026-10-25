@@ -1,0 +1,11 @@
+var R=require("../../../../../../../chunks/[turbopack]_runtime.js")("server/app/(marketplace)/vehicles/[make]/[model]/[slug]/opengraph-image-1jqd9q/route.js")
+R.c("server/chunks/[root-of-the-server]__1pacn_m._.js")
+R.c("server/chunks/node_modules_next_1n-fgeq._.js")
+R.c("server/chunks/[root-of-the-server]__1crhu7m._.js")
+R.c("server/chunks/_0rcmi4t._.js")
+R.c("server/chunks/node_modules_next_dist_0zra58r._.js")
+R.c("server/chunks/[root-of-the-server]__15bjnu5._.js")
+R.c("server/chunks/_0koz8sn._.js")
+R.c("server/chunks/0-h1_vehicles_[make]_[model]_[slug]_opengraph-image-1jqd9q_route_actions_1ffgcby.js")
+R.m(861308)
+module.exports=R.m(861308).exports
