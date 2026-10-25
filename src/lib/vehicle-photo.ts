@@ -158,6 +158,10 @@ export function vehiclePhoto(vehicle: Vehicle, size: Size = "card"): VehiclePhot
  * Real dealer photography carries no credit, so this returns null and nothing is drawn.
  */
 export function photoCredit(vehicle: Vehicle): string | null {
+  // Only the demonstration stock is illustrated with photographs of the model from Wikimedia
+  // Commons. A dealership's own photographs carry the dealership as their credit too, and
+  // captioning those "not of this car" told buyers the real car was a stand-in.
+  if (!vehicle.isDemonstration) return null;
   const first = (vehicle.gallery ?? [])[0];
   if (!first) return null;
   const media = populated(first.image as number | Media | null);

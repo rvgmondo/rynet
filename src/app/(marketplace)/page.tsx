@@ -178,7 +178,7 @@ export default async function HomePage() {
           <SectionHeader
             id="fresh-heading"
             title="Just listed"
-            lead="The newest cars on Rynet, with no more than two from any one dealership."
+            lead="The newest cars on Rynet, every one from a checked dealership."
             action={{ href: "/cars", label: allCarsLabel }}
           />
 
