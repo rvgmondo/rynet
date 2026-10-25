@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
+import { MockupWipe } from "@/components/agency/mockup-wipe";
 import { OneCarHero } from "@/components/agency/one-car-hero";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
@@ -240,6 +241,8 @@ export default async function AgencyHomePage() {
         </div>
       </section>
 
+      <MockupWipe />
+
       <section aria-labelledby="steps-heading" className="bg-card py-[var(--section-base)]">
         <div className="container-page">
           <SectionHeader
@@ -298,9 +301,12 @@ export default async function AgencyHomePage() {
         <div className="on-navy relative isolate overflow-hidden rounded-lg bg-navy px-6 py-10 sm:px-10 sm:py-12 lg:flex lg:items-center lg:justify-between lg:gap-16 lg:px-14">
           <div className="max-w-2xl">
             <h2 id="close-heading" className="rn-h2">
-              {MOCKUP_OFFER.headline}
+              Your homepage, in {MOCKUP_OFFER.turnaround}.
             </h2>
-            <p className="mt-3 text-base text-on-navy-muted sm:text-lg">{MOCKUP_OFFER.promise}</p>
+            <p className="mt-3 text-base text-on-navy-muted sm:text-lg">
+              Designed for your dealership from your own cars, on a private link. Free, and you owe
+              us nothing.
+            </p>
           </div>
           <Link
             href={MOCKUP_CTA.href}
