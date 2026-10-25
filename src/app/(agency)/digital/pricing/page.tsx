@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AgencyClose } from "@/components/agency/agency-close";
 import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
 import { AgencyPageHead } from "@/components/agency/agency-page-head";
+import { QuoteSheet } from "@/components/agency/quote-sheet";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { Notice } from "@/components/ui/notice";
@@ -96,28 +97,7 @@ export default function PricingPage() {
         eyebrow="Pricing"
         title="What it costs, and the terms behind it"
         lead="What each kind of engagement covers, what moves the price up or down, and the terms that apply whatever the figure turns out to be."
-        aside={
-          <div className="rounded-lg border border-line bg-page p-5 sm:p-6">
-            <p className="text-sm font-semibold text-heading">How a figure is reached</p>
-            <ol className="mt-4 grid gap-3">
-              {[
-                "A free review of your site, stock feed and advertising",
-                "A call to agree what matters this year",
-                "A scope and a figure in writing, before you commit",
-              ].map((step, index) => (
-                <li key={step} className="flex items-start gap-3 text-[0.9375rem] text-body">
-                  <span
-                    aria-hidden="true"
-                    className="grid size-7 shrink-0 place-items-center rounded-full bg-secondary text-xs font-semibold text-on-secondary tabular"
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="pt-0.5">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        }
+        aside={<QuoteSheet />}
       />
 
       <section aria-labelledby="terms-heading" className="py-[var(--section-base)]">

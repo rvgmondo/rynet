@@ -16,6 +16,7 @@ export function AgencyPageHead({
   lead,
   actions,
   aside,
+  below,
 }: {
   trail: Crumb[];
   eyebrow?: ReactNode;
@@ -23,6 +24,8 @@ export function AgencyPageHead({
   lead?: ReactNode;
   actions?: ReactNode;
   aside?: ReactNode;
+  /** Full width under the heading, inside the same band: a picture that belongs to the opening. */
+  below?: ReactNode;
 }) {
   return (
     <section className="border-b border-line bg-card">
@@ -47,6 +50,7 @@ export function AgencyPageHead({
           </div>
           {aside ? <div className="min-w-0">{aside}</div> : null}
         </div>
+        {below ? <div className="mt-12 sm:mt-14">{below}</div> : null}
       </div>
     </section>
   );
