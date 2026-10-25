@@ -1,6 +1,24 @@
 import { describe, expect, it } from "vitest";
 
+import { photoUrls } from "./motors";
 import { looksLikeBanner } from "./photos";
+
+describe("photoUrls fallback", () => {
+  const logo =
+    '"@type":"ImageObject","@id":"https://amicomotors.co.za/#/schema/logo/image/","url":"https://amicomotors.co.za/wp-content/uploads/2024/12/Multi-Franchise-Logo-3.jpg","contentUrl":"https://amicomotors.co.za/wp-content/uploads/2024/12/Multi-Franchise-Logo-3.jpg"';
+  const primary =
+    '"@type":"ImageObject","@id":"https://amicomotors.co.za/listings/focus/#primaryimage","url":"https://amicomotors.co.za/wp-content/uploads/2026/10/IMG-20261012-WA0099.jpg","contentUrl":"https://amicomotors.co.za/wp-content/uploads/2026/10/IMG-20261012-WA0099.jpg"';
+
+  it("never takes the site's logo when a listing has no gallery yet", () => {
+    expect(photoUrls(`<script>{${logo}}</script>`)).toEqual([]);
+  });
+
+  it("takes the page's own photograph over the logo, in either order", () => {
+    const want = ["https://amicomotors.co.za/wp-content/uploads/2026/10/IMG-20261012-WA0099.jpg"];
+    expect(photoUrls(`<script>{${logo}},{${primary}}</script>`)).toEqual(want);
+    expect(photoUrls(`<script>{${primary}},{${logo}}</script>`)).toEqual(want);
+  });
+});
 
 describe("looksLikeBanner", () => {
   it("catches the banner Amico's 2017 Ford Focus led with", () => {
