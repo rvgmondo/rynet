@@ -3,9 +3,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { REVIEW_CTA, TERMS } from "@/components/agency/agency-content";
+import { MockupWipe } from "@/components/agency/mockup-wipe";
+import { OneCarHero } from "@/components/agency/one-car-hero";
 import { ShowroomFrame } from "@/components/agency/showroom-frame";
 import { getShowroomSample } from "@/components/agency/showroom-sample";
-import { StageSteps } from "@/components/agency/stage-steps";
+import { StageRoad } from "@/components/agency/stage-road";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { SectionHeader } from "@/components/ui/section-header";
 import { MOCKUP_CTA, MOCKUP_OFFER } from "@/content/agency/mockup-offer";
@@ -107,45 +109,20 @@ export default async function AgencyHomePage() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line-on-navy bg-navy">
-        <div className="container-page relative grid gap-12 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-14 lg:py-20 xl:gap-20">
-          <div className="on-navy">
-            <p className="rn-eyebrow text-on-navy-muted">For South African car dealerships</p>
-            <h1 className="rn-h1 mt-4">Turn your stock into test drives.</h1>
-            <p className="mt-5 max-w-xl text-[1.0625rem] leading-relaxed sm:text-lg">
-              Dealership websites, stock feeds and advertising, built by the team behind the Rynet
-              marketplace. We work with car dealerships and nobody else, and you own everything we
-              build.
-            </p>
+      <OneCarHero mockup={MOCKUP_CTA} review={REVIEW_CTA} />
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href={MOCKUP_CTA.href}
-                className={buttonClasses({ variant: "primary", size: "lg", block: "mobile" })}
-              >
-                {MOCKUP_CTA.label}
-                <ArrowRight aria-hidden="true" />
-              </Link>
-              <Link
-                href="/digital/services"
-                className={buttonClasses({ variant: "outline", size: "lg", block: "mobile" })}
-              >
-                See what we do
-              </Link>
-            </div>
-
-            <ul className="mt-10 grid gap-3 border-t border-line-on-navy pt-8 text-sm sm:grid-cols-3 sm:gap-6">
-              {TERMS.map((term) => (
-                <li key={term.title} className="flex gap-3 sm:flex-col sm:gap-2">
-                  <term.icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-on-navy" />
-                  <span className="font-medium text-on-navy">{term.title}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <ShowroomFrame cards={cards} tone="navy" className="hidden lg:block" />
-        </div>
+      <section aria-label="Terms" className="border-b border-line bg-card">
+        <ul className="container-page grid gap-4 py-6 text-sm sm:grid-cols-3 sm:gap-8">
+          {TERMS.map((term) => (
+            <li key={term.title} className="flex items-start gap-3">
+              <term.icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-accent" />
+              <span>
+                <span className="block font-semibold text-heading">{term.title}</span>
+                <span className="text-body">{term.body}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section aria-labelledby="proof-heading" className="bg-card py-[var(--section-base)]">
@@ -158,7 +135,7 @@ export default async function AgencyHomePage() {
           />
 
           <div className="mt-10 grid gap-10">
-            <ShowroomFrame cards={cards} className="lg:hidden" />
+            <ShowroomFrame cards={cards} />
 
             {/*
               Four things to check, numbered under one rule, with no card chrome: they are claims
@@ -264,6 +241,8 @@ export default async function AgencyHomePage() {
         </div>
       </section>
 
+      <MockupWipe />
+
       <section aria-labelledby="steps-heading" className="bg-card py-[var(--section-base)]">
         <div className="container-page">
           <SectionHeader
@@ -274,7 +253,7 @@ export default async function AgencyHomePage() {
           />
 
           <div className="mt-10">
-            <StageSteps />
+            <StageRoad />
           </div>
         </div>
       </section>
@@ -322,9 +301,12 @@ export default async function AgencyHomePage() {
         <div className="on-navy relative isolate overflow-hidden rounded-lg bg-navy px-6 py-10 sm:px-10 sm:py-12 lg:flex lg:items-center lg:justify-between lg:gap-16 lg:px-14">
           <div className="max-w-2xl">
             <h2 id="close-heading" className="rn-h2">
-              {MOCKUP_OFFER.headline}
+              Your homepage, in {MOCKUP_OFFER.turnaround}.
             </h2>
-            <p className="mt-3 text-base text-on-navy-muted sm:text-lg">{MOCKUP_OFFER.promise}</p>
+            <p className="mt-3 text-base text-on-navy-muted sm:text-lg">
+              Designed for your dealership from your own cars, on a private link. Free, and you owe
+              us nothing.
+            </p>
           </div>
           <Link
             href={MOCKUP_CTA.href}
