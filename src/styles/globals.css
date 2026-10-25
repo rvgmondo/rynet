@@ -4047,6 +4047,9 @@
   from {
     transform: translateY(0.5rem) scale(0.96);
   }
+}
+
+/*
  * THE SEVEN SERVICES, AS THE PLACES THEY WORK ON (src/components/agency/service-places.tsx).
  * Each tile is a small navy stage holding the place in miniature, then the service. On hover the
  * miniature tilts up towards the reader, the same depth the hero uses; with reduced motion it
