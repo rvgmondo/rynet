@@ -4323,6 +4323,11 @@
  */
 .rn-quote {
   perspective: 1200px;
+  /* The tilt and the shadow reach past the paper; clipping here keeps a 320px phone from
+     scrolling sideways, with room left for the shadow to show. */
+  overflow: clip;
+  padding: 0.75rem;
+  margin: -0.75rem;
 }
 .rn-quote__paper {
   position: relative;
@@ -4370,6 +4375,7 @@
 .rn-quote__line,
 .rn-quote__total {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 1rem;
   padding: 0.55rem 0;
@@ -4398,6 +4404,7 @@
   gap: 0.5rem;
 }
 .rn-quote__stamp {
+  max-width: 100%;
   border: 2px solid #b3141e;
   border-radius: 0.375rem;
   padding: 0.2rem 0.55rem;
@@ -4436,5 +4443,18 @@
   }
   1% {
     visibility: visible;
+  }
+}
+@media (max-width: 400px) {
+  .rn-quote__paper {
+    padding: 1.125rem 1rem 1rem;
+  }
+  .rn-quote__line,
+  .rn-quote__total {
+    font-size: 0.875rem;
+  }
+  .rn-quote__stamp {
+    font-size: 0.6875rem;
+    letter-spacing: 0.03em;
   }
 }
