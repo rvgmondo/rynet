@@ -3969,3 +3969,82 @@
   font-size: 0.9375rem;
   color: var(--color-on-navy-muted);
 }
+
+/*
+ * THE RESTRICTION, SHOWN (src/components/agency/only-dealers.tsx). Each strike draws across its
+ * word on a delay set inline; the last line is never struck and arrives last. Reduced motion: the
+ * strikes are drawn and the last line is lit from the start.
+ */
+.rn-only {
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(80% 60% at 20% 0%, rgb(255 255 255 / 0.07), transparent 70%), var(--color-navy);
+  padding: 1.75rem 1.75rem 2rem;
+  box-shadow: 0 30px 60px -36px rgb(0 17 35 / 0.6);
+}
+@media (min-width: 640px) {
+  .rn-only {
+    padding: 2.25rem 2.5rem 2.5rem;
+  }
+}
+.rn-only__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+}
+.rn-only__word {
+  position: relative;
+  width: fit-content;
+  font-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-on-navy-muted);
+}
+.rn-only__strike {
+  position: absolute;
+  left: -0.15em;
+  right: -0.15em;
+  top: 52%;
+  height: 0.12em;
+  border-radius: 99px;
+  background: var(--color-brand-red);
+  transform-origin: left center;
+}
+.rn-only__word--us {
+  margin-top: 0.5rem;
+  color: #fff;
+  font-size: clamp(2rem, 1.4rem + 2.2vw, 3.25rem);
+}
+.rn-only__word--us .rn-only__text {
+  background: linear-gradient(transparent 62%, rgb(227 36 50 / 0.55) 62%);
+}
+.rn-only__tag {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-on-navy-muted);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rn-only__strike {
+    animation: rn-only-strike 0.35s cubic-bezier(0.6, 0, 0.2, 1) both;
+  }
+  .rn-only__word--us {
+    animation: rn-only-us 0.6s cubic-bezier(0.2, 0.7, 0.1, 1) 1.45s both;
+  }
+}
+@keyframes rn-only-strike {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes rn-only-us {
+  from {
+    transform: translateY(0.5rem) scale(0.96);
+  }
+}
