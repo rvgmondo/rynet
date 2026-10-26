@@ -83,7 +83,7 @@ const GROUPS: { id: string; title: string; routes: Route[] }[] = [
         id: "listing",
         icon: Building2,
         title: "Listing your dealership",
-        body: "Run a registered dealership and want your stock on Rynet? Sign up in under a minute and we load every car for you, from your website or your stock sheet. Free while we launch.",
+        body: "Run a registered dealership and want your stock on Rynet? Sign up in under a minute and we load every car ourselves. You don't send or type a thing. Free while we launch.",
         email: "sales@rynet.co.za",
         link: { href: "/list-your-stock", label: "List your stock" },
       },

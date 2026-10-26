@@ -2,12 +2,12 @@ import {
   BadgeCheck,
   Check,
   ChevronDown,
-  FileSpreadsheet,
   Globe,
   ImageIcon,
   MessageCircle,
   RefreshCw,
   Store,
+  Wrench,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -21,7 +21,7 @@ import { faqJsonLd } from "@/lib/structured-data";
 export const metadata: Metadata = {
   title: "List your stock on Rynet",
   description:
-    "Your cars on Rynet, a marketplace where only checked dealerships sell. We load every car from your website or stock sheet, keep them up to date and make your social ads. Free while we launch.",
+    "Your cars on Rynet, a marketplace where only checked dealerships sell. We load every car ourselves, keep them up to date and make your social ads. Free while we launch.",
   alternates: { canonical: "/list-your-stock" },
 };
 
@@ -50,7 +50,7 @@ const STEPS = [
   },
   {
     title: "We load your stock",
-    body: "From your website or your stock sheet. You do not retype a single car.",
+    body: "We do it ourselves, usually from your website. You don't send or type a single car.",
   },
   {
     title: "You get your showroom and your ads",
@@ -98,14 +98,9 @@ const SOURCES = [
     body: "Give us the address. If your cars are on it, we load them from there and keep them in step.",
   },
   {
-    icon: FileSpreadsheet,
-    title: "Your stock sheet",
-    body: "Whatever your system exports, as a spreadsheet. The columns do not have to match anything of ours.",
-  },
-  {
-    icon: MessageCircle,
-    title: "Anything else",
-    body: "A PDF stock list, a printout, photos on WhatsApp. Send it how you have it, and we load it.",
+    icon: Wrench,
+    title: "Not on your website?",
+    body: "Then we load them by hand, ourselves. You don't have to send us anything. Prefer to send a list or photos? That works too.",
   },
 ];
 
@@ -114,7 +109,7 @@ const FAQS = [
   {
     question: "Do I have to type my cars in?",
     answer:
-      "No. We load them from your website or your stock sheet, and if your website lists them, Rynet keeps them up to date from there on its own. You never retype a car for us.",
+      "No. We load them ourselves, and if your website lists them, Rynet keeps them up to date from there on its own. You never send or retype a car for us.",
   },
   {
     question: "We already use AutoTrader and Cars.co.za.",
@@ -239,7 +234,7 @@ export default function ListYourStockPage() {
               reason most dealerships never bother. So you do not.
             </p>
           </div>
-          <ul className="grid border-t border-line md:grid-cols-3 md:divide-x md:divide-line">
+          <ul className="grid border-t border-line md:grid-cols-2 md:divide-x md:divide-line">
             {SOURCES.map(({ icon: Icon, title, body }) => (
               <li
                 key={title}
@@ -324,7 +319,7 @@ export default function ListYourStockPage() {
               Five questions, and your cars are on Rynet
             </h2>
             <p className="mt-3 text-base text-on-navy-muted sm:text-lg">
-              {DEALER_OFFER.price}. No contract, no card.
+              {DEALER_OFFER.price}. No contract.
             </p>
           </div>
           <a
