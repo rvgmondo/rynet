@@ -100,7 +100,7 @@ const SOURCES = [
   {
     icon: Wrench,
     title: "Not on your website?",
-    body: "Then we load them by hand, ourselves. You don't send us a list, a sheet or a photo.",
+    body: "Then we load them by hand, ourselves. You don't have to send us anything. Prefer to send a list or photos? That works too.",
   },
 ];
 
