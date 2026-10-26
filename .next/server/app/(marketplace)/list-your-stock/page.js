@@ -1,7 +1,7 @@
 var R=require("../../../chunks/ssr/[turbopack]_runtime.js")("server/app/(marketplace)/list-your-stock/page.js")
 R.c("server/chunks/ssr/[root-of-the-server]__0hm_ioc._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1n3w9lb._.js")
-R.c("server/chunks/ssr/_1n3_jog._.js")
+R.c("server/chunks/ssr/_0mltun7._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__1s0iq57._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_compiled_1iylvrn._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_04xyasy._.js")

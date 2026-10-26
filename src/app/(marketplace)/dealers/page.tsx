@@ -355,8 +355,8 @@ export default async function DealersPage({ searchParams }: { searchParams: Sear
             </h2>
             <p className="mt-4 text-base text-on-navy-muted sm:text-lg">
               A buyer on Rynet is only ever looking at dealership stock, because private sellers
-              cannot list here. Send us your website or your stock sheet and we load every car, keep
-              them up to date and make your ads. Free while we launch.
+              cannot list here. We load every car ourselves, keep them up to date and make your ads.
+              You don't send or type a thing. Free while we launch.
             </p>
           </div>
 

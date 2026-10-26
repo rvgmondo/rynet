@@ -209,7 +209,7 @@ export function DealerStrip({ dealers }: { dealers: HomeDealer[] }) {
                 Your dealership here
               </span>
               <span className="mt-1 block text-sm text-body">
-                Free while we launch. Send your website or stock sheet and we load every car.
+                Free while we launch. We load every car ourselves.
               </span>
             </span>
           </Link>
