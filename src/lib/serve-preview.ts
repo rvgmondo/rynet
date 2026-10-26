@@ -6,6 +6,7 @@ import { getPayload, type Where } from "payload";
 
 import { isPlatformStaff } from "@/access/roles";
 import { COMPANY } from "@/content/company";
+import { openPush, sendPush, shouldPushOpen } from "@/lib/notify/push";
 import { previewBar, withBar } from "@/lib/preview-bar";
 import { isExpired } from "@/lib/preview-link";
 
@@ -28,7 +29,8 @@ import { isExpired } from "@/lib/preview-link";
  *
  * WHAT IT RECORDS
  *
- * The first and latest open and how many, never counting staff. An unknown link gets the same
+ * The first and latest open and how many, never counting staff, and a push to Ruben's phone on
+ * the first open and at most once an hour after that. An unknown link gets the same
  * plain "not found" as one that never existed.
  */
 
@@ -37,6 +39,7 @@ type PreviewRow = {
   filename?: string | null;
   dealership?: string | null;
   firstViewedAt?: string | null;
+  lastViewedAt?: string | null;
   viewCount?: number | null;
   expiresAt?: string | null;
 };
@@ -150,6 +153,17 @@ export async function servePreview(request: Request, where: Where): Promise<Resp
       .catch((error: unknown) =>
         payload.logger.error({ err: error, msg: "preview view not recorded" }),
       );
+    // A push to Ruben's phone: the first open, then at most one an hour (see lib/notify/push.ts).
+    if (shouldPushOpen(preview.lastViewedAt)) {
+      const site = (payload.config.serverURL || "https://rynet.co.za").replace(/\/$/, "");
+      sendPush(
+        openPush({
+          dealership,
+          count: (preview.viewCount ?? 0) + 1,
+          adminUrl: `${site}/admin/collections/previews/${preview.id}`,
+        }),
+      );
+    }
   }
 
   return new Response(withBar(html, previewBar({ dealership, email: COMPANY.salesEmail })), {

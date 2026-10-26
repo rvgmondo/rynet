@@ -9,6 +9,7 @@ import {
   LEAD_TYPE_LIST_LABELS,
   LEAD_TYPE_TONES,
 } from "@/lib/admin-quick-filters";
+import { leadPush, sendPush } from "@/lib/notify/push";
 import { sendLeadEmail } from "@/lib/notify/send-lead-email";
 import { MAX_DEALERSHIPS } from "@/lib/sell-to-dealer-schema";
 
@@ -109,7 +110,19 @@ export const Leads: CollectionConfig = {
       ({ doc, operation, req }) => {
         // After the save, so a mail fault can never lose a lead, and not awaited, so a slow mail
         // server never holds up the person who just pressed Send. See send-lead-email.ts.
-        if (operation === "create") void sendLeadEmail(req.payload, doc as Record<string, unknown>);
+        if (operation === "create") {
+          void sendLeadEmail(req.payload, doc as Record<string, unknown>);
+          // And a push to Ruben's phone, for the kinds a person filled in (see lib/notify/push.ts).
+          if (!doc.isDemonstration) {
+            const site = (req.payload.config.serverURL || "https://rynet.co.za").replace(/\/$/, "");
+            const push = leadPush({
+              type: String(doc.type ?? ""),
+              name: typeof doc.name === "string" ? doc.name : null,
+              adminUrl: `${site}/admin/collections/leads/${doc.id}`,
+            });
+            if (push) sendPush(push);
+          }
+        }
         return doc;
       },
     ],
