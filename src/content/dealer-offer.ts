@@ -18,7 +18,7 @@ export const DEALER_OFFER = {
   price: "Free while we launch",
   /** One line under the headline. */
   promise:
-    "Send us your website or your stock sheet. We load every car, keep them up to date and make your social ads. No contract, no card.",
+    "We load every car ourselves, keep them up to date and make your social ads. You don't send or type a thing. No contract.",
   /** What happens to the price later, said plainly. */
   later:
     "Listing is free while Rynet launches. If that ever changes you will hear from us well before, and you decide whether to stay. There is no contract to get out of.",
