@@ -242,9 +242,11 @@ export function holdNote(reasons: HoldReason[], source: string, detail?: string)
  *   - the list came back empty, which is their site failing far more often than every car selling
  *     on the same night;
  *   - any listing page could not be read, because that car would be hidden for a network error;
- *   - more than half of what is listed would go at once, which is what a changed theme or a broken
- *     sitemap looks like. A person who has checked their site and seen it really is so can let it
- *     through with `allowLargeRemoval`.
+ *   - more than 15% of what is listed (and more than five cars) would go at once, which is what a
+ *     changed theme, a broken sitemap or a website move looks like. On 27 Oct 2026 Amico's move to
+ *     its new site hid 18 of 95 cars (19%) under the old "more than half" rule. A dealership sells
+ *     a few cars between runs, not a fifth of its floor. A person who has checked their site and
+ *     seen it really is so can let it through with `allowLargeRemoval`.
  *
  * The cars are not lost by waiting: the next complete run hides them.
  */
@@ -268,11 +270,11 @@ export function expirySafety(run: {
       reason: `${run.unreadable} listing ${run.unreadable === 1 ? "page" : "pages"} could not be read, so nothing was hidden this run: a car that could not be read would look exactly like one that has gone`,
     };
   }
-  const tooMany = run.wouldExpire > 5 && run.wouldExpire * 2 > run.listed;
+  const tooMany = run.wouldExpire > 5 && run.wouldExpire * 100 > run.listed * 15;
   if (tooMany && !run.allowLargeRemoval) {
     return {
       safe: false,
-      reason: `this run would hide ${run.wouldExpire} of the ${run.listed} cars listed from this source, more than half at once, so nothing was hidden. Check their site, and if it really shows that, run again with --allow-large-removal`,
+      reason: `this run would hide ${run.wouldExpire} of the ${run.listed} cars listed from this source, more than 15% at once, so nothing was hidden. Check their site, and if it really shows that, run again with --allow-large-removal`,
     };
   }
   return { safe: true };

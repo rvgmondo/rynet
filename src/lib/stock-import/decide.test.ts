@@ -260,9 +260,23 @@ describe("hiding the cars a run did not find", () => {
     expect(!answer.safe && answer.reason).toMatch(/1 listing page could not be read/);
   });
 
-  it("hides nothing when more than half would go at once, unless a person says so", () => {
+  it("hides nothing when more than 15% would go at once, unless a person says so", () => {
     expect(expirySafety({ ...run, wouldExpire: 60 }).safe).toBe(false);
     expect(expirySafety({ ...run, wouldExpire: 60, allowLargeRemoval: true }).safe).toBe(true);
+  });
+
+  it("would have kept Amico's floor through its website move", () => {
+    // 27 Oct 2026: the move hid 18 of 95 cars under the old "more than half" rule.
+    const answer = expirySafety({ found: 77, unreadable: 0, wouldExpire: 18, listed: 95 });
+    expect(answer.safe).toBe(false);
+    expect(!answer.safe && answer.reason).toMatch(/18 of the 95 cars/);
+  });
+
+  it("lets the few cars sold between two runs go", () => {
+    expect(expirySafety({ ...run, wouldExpire: 5 }).safe).toBe(true);
+    expect(expirySafety({ found: 120, unreadable: 0, wouldExpire: 12, listed: 100 }).safe).toBe(
+      true,
+    );
   });
 
   it("does not make a fuss about a handful of cars on a small list", () => {
