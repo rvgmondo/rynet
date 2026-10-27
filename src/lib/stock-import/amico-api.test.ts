@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   amicoExternalId,
+  cleanModelText,
   lexicalText,
   looksLikeAmicoApi,
   oldSlug,
@@ -97,5 +98,22 @@ describe("Amico's new site, read through its API", () => {
   it("tells the new API from the old WordPress site", () => {
     expect(looksLikeAmicoApi(JSON.stringify({ docs: [] }))).toBe(true);
     expect(looksLikeAmicoApi("<!doctype html><title>Page not found</title>")).toBe(false);
+  });
+});
+
+describe("cleanModelText", () => {
+  it("takes out the make and a bare year the site's move left in the model", () => {
+    expect(cleanModelText("Isuzu 2023", "Isuzu")).toBeNull();
+    expect(cleanModelText("Isuzu", "Isuzu")).toBeNull();
+    expect(cleanModelText("2017", "Mercedes-Benz")).toBeNull();
+    expect(cleanModelText("Toyota Hilux", "Toyota")).toBe("Hilux");
+    expect(cleanModelText("Renault 2021", "Renault")).toBeNull();
+  });
+
+  it("leaves a real model alone, including one that only looks like another", () => {
+    expect(cleanModelText("EcoSport", "Ford")).toBe("EcoSport");
+    expect(cleanModelText("2 Series", "BMW")).toBe("2 Series");
+    expect(cleanModelText("Cerato", "Kia")).toBe("Cerato");
+    expect(cleanModelText(null, "Kia")).toBeNull();
   });
 });

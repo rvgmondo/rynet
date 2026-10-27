@@ -88,6 +88,27 @@ export function amicoExternalId(vehicle: AmicoApiVehicle, ids = POST_IDS): strin
   return ids[oldSlug(vehicle)] ?? ids[vehicle.slug ?? ""] ?? `amico-site-${vehicle.id}`;
 }
 
+/**
+ * The model as the new site stores it, tidied. Its move from WordPress left some models holding the
+ * make or the year ("Isuzu 2023", "Ford 2015", "Toyota Hilux", "2017"), which Rynet read as a
+ * page contradicting its own title and held the car back (27 Oct 2026: 14 of Amico's cars). The
+ * make and a bare year are taken out; when nothing is left, the title decides the model.
+ */
+export function cleanModelText(model: string | null, make: string | null): string | null {
+  if (!model) return null;
+  let words = model.trim().split(/\s+/);
+  const makeWords = make ? make.trim().toLowerCase().split(/\s+/) : [];
+  if (
+    makeWords.length &&
+    words.slice(0, makeWords.length).join(" ").toLowerCase() === makeWords.join(" ")
+  ) {
+    words = words.slice(makeWords.length);
+  }
+  words = words.filter((word) => !/^(19|20)\d\d$/.test(word));
+  const left = words.join(" ").trim();
+  return left ? left : null;
+}
+
 /** Title-case a stored value such as "suv" or "automatic" the way the listing pages showed it. */
 const label = (value: string | null | undefined): string | null =>
   value
@@ -113,7 +134,7 @@ export function parseAmicoApiVehicle(
     slug,
     title: vehicle.title?.trim() || null,
     makeText: nameOf(vehicle.make),
-    modelText: nameOf(vehicle.model),
+    modelText: cleanModelText(nameOf(vehicle.model), nameOf(vehicle.make)),
     year: typeof vehicle.year === "number" ? vehicle.year : null,
     mileageKm: typeof vehicle.mileage === "number" ? vehicle.mileage : null,
     price: typeof vehicle.price === "number" && vehicle.price > 0 ? vehicle.price : null,
