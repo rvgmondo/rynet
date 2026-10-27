@@ -1,6 +1,6 @@
 {
   "node": {
-    "601f763c5fbe91b0c063bea9f333fb880d2224c360": {
+    "60e3dd0f86aa729dbdf67f5a329be84cc35c1ccac0": {
       "workers": {
         "app/(portal)/portal/(app)/details/page": {
           "moduleId": 543304,

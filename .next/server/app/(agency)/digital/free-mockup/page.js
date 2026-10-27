@@ -20,7 +20,7 @@ R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-e
 R.c("server/chunks/ssr/_1pxj_6k._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__01uxui2._.js")
 R.c("server/chunks/ssr/node_modules_next_0-3uong._.js")
-R.c("server/chunks/ssr/_1sbeatp._.js")
+R.c("server/chunks/ssr/_1w8rtw-._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1poh_qr._.js")
 R.m(286504)
 module.exports=R.m(286504).exports

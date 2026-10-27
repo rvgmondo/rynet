@@ -18,7 +18,7 @@ R.c("server/chunks/ssr/src_app_(portal)_layout_tsx_00fk7yf._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__16n97uq._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__09zn2t6._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1poh_qr._.js")
-R.c("server/chunks/ssr/_1sbeatp._.js")
+R.c("server/chunks/ssr/_1w8rtw-._.js")
 R.c("server/chunks/ssr/node_modules_next_0-3uong._.js")
 R.m(454106)
 module.exports=R.m(454106).exports

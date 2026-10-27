@@ -17,7 +17,7 @@ R.c("server/chunks/ssr/node_modules_next_dist_client_components_builtin_global-e
 R.c("server/chunks/ssr/_1pxj_6k._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__04m554i._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__1le61xl._.js")
-R.c("server/chunks/ssr/_1sbeatp._.js")
+R.c("server/chunks/ssr/_1w8rtw-._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1poh_qr._.js")
 R.c("server/chunks/ssr/node_modules_next_0-3uong._.js")
 R.m(670372)

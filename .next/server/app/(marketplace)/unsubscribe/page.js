@@ -21,6 +21,6 @@ R.c("server/chunks/ssr/src_app_(marketplace)_not-found_tsx_04qde8k._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__0v2ul0n._.js")
 R.c("server/chunks/ssr/[root-of-the-server]__16nga45._.js")
 R.c("server/chunks/ssr/node_modules_next_dist_1poh_qr._.js")
-R.c("server/chunks/ssr/_1sbeatp._.js")
+R.c("server/chunks/ssr/_1w8rtw-._.js")
 R.m(673561)
 module.exports=R.m(673561).exports
