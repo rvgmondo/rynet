@@ -141,7 +141,7 @@ export function SellAndListBands() {
           <p className="mt-3 max-w-[34rem] text-body">
             On Rynet every seller is a registered business that has been checked, and a buyer can
             see which dealership they are dealing with before they call. We load your cars
-            ourselves, so you never send or retype one.
+            ourselves, so you never retype one.
           </p>
           <div className="mt-auto flex flex-col gap-3 pt-7 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
             <Link

@@ -50,7 +50,7 @@ const STEPS = [
   },
   {
     title: "We load your stock",
-    body: "We do it ourselves, usually from your website. You don't send or type a single car.",
+    body: "We do it ourselves from your website. If some cars are only on a spreadsheet, send that and we do the rest.",
   },
   {
     title: "You get your showroom and your ads",
@@ -100,7 +100,7 @@ const SOURCES = [
   {
     icon: Wrench,
     title: "Not on your website?",
-    body: "Then we load them by hand, ourselves. You don't have to send us anything. Prefer to send a list or photos? That works too.",
+    body: "If they're online, we load them by hand, ourselves. If some are only on a spreadsheet, send that and we do the rest. Photos on WhatsApp work too.",
   },
 ];
 
@@ -109,7 +109,7 @@ const FAQS = [
   {
     question: "Do I have to type my cars in?",
     answer:
-      "No. We load them ourselves, and if your website lists them, Rynet keeps them up to date from there on its own. You never send or retype a car for us.",
+      "No. We load them ourselves, and if your website lists them, Rynet keeps them up to date from there on its own. You never retype a car for us. The one thing we'd ask for is a spreadsheet of any cars that aren't online anywhere.",
   },
   {
     question: "We already use AutoTrader and Cars.co.za.",
