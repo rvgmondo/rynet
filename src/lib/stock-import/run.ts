@@ -3,6 +3,7 @@ import path from "node:path";
 
 import type { Payload, PayloadRequest, RequiredDataFromCollectionSlug } from "payload";
 
+import { sendPush } from "@/lib/notify/push";
 import { priceFieldsFromSaved } from "@/lib/price-history";
 import { generatePublicRef } from "@/lib/slug";
 import { vehicleTitle } from "@/lib/vehicle-title";
@@ -401,6 +402,7 @@ export async function importStock(
       payload,
       source,
       dealerId: dealership.dealerId,
+      dealerName: target.tradingName,
       seen,
       found: urls.length,
       unreadable,
@@ -991,6 +993,7 @@ async function expireMissing(options: {
   payload: Payload;
   source: string;
   dealerId: number;
+  dealerName: string;
   seen: Set<string>;
   found: number;
   unreadable: number;
@@ -1037,6 +1040,14 @@ async function expireMissing(options: {
   if (!safety.safe) {
     report.expiryWithheld = safety.reason;
     report.problems.push(safety.reason);
+    // Ruben hears about it at once: a dealer's site looking broken is worth a look the same day.
+    if (!dryRun) {
+      sendPush({
+        title: `Rynet import: ${options.dealerName} looks broken, nothing expired`,
+        message: `The stock read for ${options.dealerName} was held back: ${safety.reason}.`,
+        tags: "warning",
+      });
+    }
     return;
   }
 
