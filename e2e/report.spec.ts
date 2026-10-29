@@ -7,9 +7,15 @@ import { expect, test } from "@playwright/test";
  * and with REPORT_KEY set, so the report route can be read without signing in.
  */
 
+/**
+ * A person on a phone, with an address of their own. The whole suite otherwise shares one visitor,
+ * and the counter rightly counts one view per visitor per car per day, so the desktop and mobile
+ * runs of this test would see each other's view. The rate limiter reads cf-connecting-ip first.
+ */
 const PERSON = {
   "user-agent":
     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1",
+  "cf-connecting-ip": `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`,
 };
 
 const thisMonth = () =>
