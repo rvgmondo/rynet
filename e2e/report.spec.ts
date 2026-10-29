@@ -12,11 +12,11 @@ import { expect, test } from "@playwright/test";
  * and the counter rightly counts one view per visitor per car per day, so the desktop and mobile
  * runs of this test would see each other's view. The rate limiter reads cf-connecting-ip first.
  */
-const PERSON = {
+const person = () => ({
   "user-agent":
     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1",
   "cf-connecting-ip": `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}`,
-};
+});
 
 const thisMonth = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Africa/Johannesburg" })
@@ -24,6 +24,7 @@ const thisMonth = () =>
     .slice(0, 7);
 
 test("a view and a WhatsApp tap reach the monthly report", async ({ request }) => {
+  const PERSON = person();
   const listed = await request.get("/api/vehicles?limit=1&depth=0&where[status][equals]=live");
   const car = (await listed.json()).docs[0] as { publicRef: string; dealer: number };
   expect(car?.publicRef).toBeTruthy();
