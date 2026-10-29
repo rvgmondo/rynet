@@ -16,7 +16,11 @@
 
 export type PendingView = { vehicle: number; dealer: number | null; day: string; views: number };
 
-const FLUSH_AFTER_MS = 60_000;
+/** A minute in production. The end-to-end suite sets VIEW_FLUSH_MS=0 so a view is written at once. */
+const flushAfterMs = () => {
+  const set = process.env.VIEW_FLUSH_MS;
+  return set && /^\d+$/.test(set) ? Number(set) : 60_000;
+};
 
 const pending = new Map<string, PendingView>();
 const seen = new Set<string>();
@@ -65,7 +69,7 @@ export function addView(
 
 /** Whether the buffer has waited long enough to be written. */
 export function flushDue(now: number = Date.now()): boolean {
-  return firstPendingAt > 0 && now - firstPendingAt >= FLUSH_AFTER_MS;
+  return firstPendingAt > 0 && now - firstPendingAt >= flushAfterMs();
 }
 
 /** Empties the buffer and returns what was in it. */
@@ -109,7 +113,7 @@ export async function flushIfDue(write: Writer): Promise<void> {
     timer = setTimeout(() => {
       timer = null;
       void flushIfDue(write);
-    }, FLUSH_AFTER_MS);
+    }, flushAfterMs());
     timer.unref?.();
   }
 }
