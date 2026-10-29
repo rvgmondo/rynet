@@ -5,6 +5,7 @@ import { DealerBlock } from "@/components/listing/dealer-block";
 import type { FinanceAssumptions } from "@/components/listing/finance-estimate";
 import { ShareButton } from "@/components/listing/share-button";
 import { StickyActionBar } from "@/components/listing/sticky-action-bar";
+import { TrackedWhatsApp } from "@/components/track/tracked-whatsapp";
 import { Badge, DemoListingBadge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button-classes";
 import { Notice } from "@/components/ui/notice";
@@ -224,7 +225,8 @@ export function ListingSummary({
                   className="w-full"
                 />
                 {whatsapp ? (
-                  <a
+                  <TrackedWhatsApp
+                    vehicleRef={vehicle.publicRef ?? ""}
                     href={whatsappHref(whatsapp, vehicle)}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -233,7 +235,7 @@ export function ListingSummary({
                     <MessageCircle aria-hidden="true" />
                     WhatsApp
                     <span className="sr-only">, opens in a new tab</span>
-                  </a>
+                  </TrackedWhatsApp>
                 ) : null}
               </div>
             ) : null}
@@ -244,7 +246,8 @@ export function ListingSummary({
                 <ul className="mt-2 flex flex-wrap gap-2">
                   {WHATSAPP_QUESTIONS.map((question) => (
                     <li key={question}>
-                      <a
+                      <TrackedWhatsApp
+                        vehicleRef={vehicle.publicRef ?? ""}
                         href={whatsappHref(whatsapp, vehicle, question)}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -252,7 +255,7 @@ export function ListingSummary({
                       >
                         {question}
                         <span className="sr-only">, opens WhatsApp in a new tab</span>
-                      </a>
+                      </TrackedWhatsApp>
                     </li>
                   ))}
                 </ul>

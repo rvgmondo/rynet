@@ -16,6 +16,7 @@ import * as migration_20261017_081431_mockup_links from './20261017_081431_mocku
 import * as migration_20261018_152516_social_posting from './20261018_152516_social_posting';
 import * as migration_20261018_173633_mailer_and_rynet_social from './20261018_173633_mailer_and_rynet_social';
 import * as migration_20261019_120000_real_thumbnails from './20261019_120000_real_thumbnails';
+import * as migration_20261029_092905_car_views from './20261029_092905_car_views';
 
 export const migrations = [
   {
@@ -101,11 +102,16 @@ export const migrations = [
   {
     up: migration_20261018_173633_mailer_and_rynet_social.up,
     down: migration_20261018_173633_mailer_and_rynet_social.down,
-    name: '20261018_173633_mailer_and_rynet_social'
+    name: '20261018_173633_mailer_and_rynet_social',
   },
   {
     up: migration_20261019_120000_real_thumbnails.up,
     down: migration_20261019_120000_real_thumbnails.down,
     name: '20261019_120000_real_thumbnails',
+  },
+  {
+    up: migration_20261029_092905_car_views.up,
+    down: migration_20261029_092905_car_views.down,
+    name: '20261029_092905_car_views'
   },
 ];

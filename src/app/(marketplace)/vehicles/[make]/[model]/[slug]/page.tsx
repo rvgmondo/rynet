@@ -10,6 +10,7 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { assumptionsFrom } from "@/components/listing/finance-estimate";
 import { FeaturesPanel, keyFactsFor } from "@/components/listing/listing-overview";
 import { SellerDescription } from "@/components/listing/seller-description";
+import { ViewBeacon } from "@/components/track/view-beacon";
 import { FinancePanel } from "@/components/vehicles/finance-panel";
 import { ListingSummary, MobileActionBar } from "@/components/vehicles/price-rail";
 import { SimilarVehicles } from "@/components/vehicles/similar-vehicles";
@@ -197,8 +198,14 @@ export default async function VehiclePage({ params }: { params: Params }) {
   const sold = vehicle.status === "sold";
   const poa = vehicle.priceType === "poa";
 
+  const demonstration = Boolean(
+    vehicle.isDemonstration ||
+      (typeof vehicle.dealer === "object" && vehicle.dealer?.isDemonstration),
+  );
+
   return (
     <>
+      <ViewBeacon vehicleRef={vehicle.publicRef ?? ""} isDemonstration={demonstration || sold} />
       {/*
         Vehicle, Offer and AutoDealer structured data. vehicleIdentificationNumber is
         deliberately absent: the VIN is encrypted at rest and never leaves the server for a

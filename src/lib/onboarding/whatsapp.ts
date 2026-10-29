@@ -24,6 +24,10 @@ export function firstNameOf(name: string | null | undefined): string {
 }
 
 /** The message that tells a dealership it is live, with the link to its showroom. */
+/** Told to every dealership when it goes live, in the WhatsApp welcome and the portal invite. */
+export const MONTHLY_REPORT_LINE =
+  "Every month you'll get a short report: how many people looked at your cars and contacted you, and what we've improved on Rynet. We keep improving the site all the time.";
+
 export function liveMessage(options: {
   contactName: string | null | undefined;
   showroomUrl: string;
@@ -48,6 +52,8 @@ export function liveMessage(options: {
       : options.loading
         ? [`Your cars are being loaded now.${upkeep}`, ""]
         : []),
+    MONTHLY_REPORT_LINE,
+    "",
     "Any questions, just reply here.",
   ].join("\n");
 }

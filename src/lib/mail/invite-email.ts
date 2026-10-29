@@ -1,5 +1,5 @@
 import { renderEmail } from "@/lib/mail/layout";
-import { firstNameOf } from "@/lib/onboarding/whatsapp";
+import { firstNameOf, MONTHLY_REPORT_LINE } from "@/lib/onboarding/whatsapp";
 import { INVITE_DAYS } from "@/lib/portal/invite-message";
 
 /** The portal invite as an email, for a dealership that would rather have it there than on WhatsApp. */
@@ -15,6 +15,8 @@ Here is your own login to Rynet's portal for ${options.tradingName}. In it you w
 - every enquiry about your cars, with WhatsApp a tap away
 - your cars, to mark sold or reserved the moment it happens
 - ready-made ads, and posting to your Facebook Page and Instagram
+
+${MONTHLY_REPORT_LINE}
 
 Choose your password with the button below. The link works for ${INVITE_DAYS} days and only once. Nobody at Rynet will ever know your password.`,
     button: { label: "Choose your password", url: options.link },

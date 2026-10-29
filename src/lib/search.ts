@@ -187,7 +187,9 @@ export function toCard(doc: Vehicle): VehicleCardData {
     dealerSlug: populated(doc.dealer)?.slug ?? "",
     cityName: branch ? relName(branch.city) : null,
     provinceName: branch ? relName(branch.province) : null,
-    isDemonstration: Boolean(doc.isDemonstration),
+    // The same rule as the car's own page: a car from a demonstration dealership is an example,
+    // even when the car itself was added later (through the portal, say) without the flag.
+    isDemonstration: Boolean(doc.isDemonstration || populated(doc.dealer)?.isDemonstration),
     photo: vehiclePhoto(doc, "card"),
     colourName: relName(colour),
     colourSwatch: colour && typeof colour === "object" ? (colour.swatch ?? null) : null,

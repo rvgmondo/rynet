@@ -64,6 +64,10 @@ export default defineConfig({
            * times, so the timer stays off here.
            */
           RYNET_STOCK_SYNC: "off",
+          // Car views are written at once rather than a minute later, and the monthly report
+          // route accepts this key, so e2e/report.spec.ts can follow a view into the report.
+          VIEW_FLUSH_MS: "0",
+          REPORT_KEY: "e2e-report-key",
         },
         url: "http://localhost:3100",
         /**

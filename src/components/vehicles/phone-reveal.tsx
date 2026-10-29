@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { buttonClasses } from "@/components/ui/button-classes";
+import { sendTrack } from "@/lib/track/beacon";
 
 /**
  * The dealership's phone number, in two shapes.
@@ -28,19 +29,7 @@ import { buttonClasses } from "@/components/ui/button-classes";
  * a phone number.
  */
 function recordReveal(vehicleRef: string) {
-  const body = JSON.stringify({ vehicleRef });
-  try {
-    const blob = new Blob([body], { type: "application/json" });
-    if (navigator.sendBeacon?.("/api/track/phone-reveal", blob)) return;
-  } catch {
-    // Fall through to fetch.
-  }
-  void fetch("/api/track/phone-reveal", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body,
-    keepalive: true,
-  }).catch(() => {});
+  sendTrack("/api/track/phone-reveal", vehicleRef);
 }
 
 export function PhoneReveal({
