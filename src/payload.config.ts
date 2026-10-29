@@ -12,6 +12,7 @@ import sharp from "sharp";
 
 import { Branches } from "./collections/Branches";
 import { Buyers } from "./collections/Buyers";
+import { CarViews } from "./collections/CarViews";
 import { ConsentRecords } from "./collections/ConsentRecords";
 import { Dealers } from "./collections/Dealers";
 import { Leads } from "./collections/Leads";
@@ -382,6 +383,7 @@ export default buildConfig({
       EmailTemplates,
       Mailings,
       MailDeliveries,
+      CarViews,
     ]),
   ),
 
