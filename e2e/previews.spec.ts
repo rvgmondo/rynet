@@ -100,6 +100,21 @@ test.describe("a mockup's private link", () => {
     ).json()) as { viewCount: number };
     expect(afterStaff.viewCount).toBe(2);
 
+    // The same, signed in by cookie and arriving from an email client, which is how staff
+    // actually open these links. Payload alone treats that as a stranger.
+    await call((headers) =>
+      request.get(`/p/${doc.slug}`, {
+        headers: {
+          cookie: `payload-token=${String(headers.Authorization).replace("JWT ", "")}`,
+          "sec-fetch-site": "cross-site",
+        },
+      }),
+    );
+    const afterStaffCookie = (await (
+      await call((headers) => request.get(`/api/previews/${doc.id}?depth=0`, { headers }))
+    ).json()) as { viewCount: number };
+    expect(afterStaffCookie.viewCount).toBe(2);
+
     // Ended: the dealership sees a note, staff still see the mockup.
     await call((headers) =>
       request.patch(`/api/previews/${doc.id}`, {

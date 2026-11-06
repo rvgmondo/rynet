@@ -72,6 +72,31 @@ export function endedPage(dealership: string): string {
 </main></body></html>`;
 }
 
+/**
+ * Who is opening the link, if they are signed in.
+ *
+ * Payload trusts its login cookie only on requests that look same-site (an Origin it knows, or
+ * Sec-Fetch-Site same-origin, same-site or none). A mockup link is opened from an email client or
+ * webmail, so Rynet staff checking one arrive cross-site, or through a proxy that drops those
+ * headers, and Payload sees a stranger: the open was counted against the dealership. That rule
+ * protects requests that change something; this one only decides whether to count a view and
+ * whether an ended link may still be shown to staff, so the cookie is read here directly.
+ */
+async function viewer(payload: Awaited<ReturnType<typeof getPayload>>, request: Request) {
+  const { user } = await payload.auth({ headers: request.headers }).catch(() => ({ user: null }));
+  if (user) return user;
+  const cookie = request.headers.get("cookie") ?? "";
+  const name = `${payload.config.cookiePrefix}-token=`;
+  const token = cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(name))
+    ?.slice(name.length);
+  if (!token) return null;
+  const headers = new Headers({ Authorization: `JWT ${decodeURIComponent(token)}` });
+  return (await payload.auth({ headers }).catch(() => ({ user: null }))).user;
+}
+
 export async function servePreview(request: Request, where: Where): Promise<Response> {
   const payload = await getPayload({ config });
   const found = await payload.find({
@@ -84,8 +109,7 @@ export async function servePreview(request: Request, where: Where): Promise<Resp
   const preview = found.docs[0] as PreviewRow | undefined;
   if (!preview?.filename) return previewNotFound();
 
-  const { user } = await payload.auth({ headers: request.headers }).catch(() => ({ user: null }));
-  const staff = isPlatformStaff(user);
+  const staff = isPlatformStaff(await viewer(payload, request));
   const dealership = preview.dealership ?? "your dealership";
 
   if (!staff && isExpired(preview.expiresAt)) {

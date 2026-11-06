@@ -8,6 +8,7 @@ import { generatePublicRef } from "@/lib/slug";
 import { vehicleTitle } from "@/lib/vehicle-title";
 
 import { AMICO_ORIGIN, AMICO_TITLE_SUFFIXES } from "./amico";
+import { amicoApiReader, amicoApiUrl, looksLikeAmicoApi } from "./amico-api";
 import { ensureAmicoDealership } from "./amico-dealer";
 import {
   changesBetween,
@@ -243,8 +244,20 @@ export type ImportTarget = {
 };
 
 /**
+ * Which of Amico's two websites is live: the new one answers its vehicles API with JSON, the old
+ * WordPress one answers that address with a "page not found". Asked on every run, so the day
+ * their domain moves to the new site the import follows it with nothing to switch over.
+ */
+async function amicoReader(fetcher: PoliteFetcher): Promise<StockReader> {
+  const body = await fetcher.text(amicoApiUrl(AMICO_ORIGIN)).catch(() => "");
+  return looksLikeAmicoApi(body)
+    ? amicoApiReader(AMICO_ORIGIN)
+    : motorsWebsiteReader(AMICO_ORIGIN, AMICO_TITLE_SUFFIXES);
+}
+
+/**
  * Amico Motors, as before: their record kept to what their own website publishes, then their
- * stock read from amicomotors.co.za.
+ * stock read from amicomotors.co.za, from whichever of their two sites is live (see above).
  */
 export async function importAmicoStock(options: RunOptions): Promise<ImportReport> {
   const dealership = await ensureAmicoDealership({
@@ -252,9 +265,11 @@ export async function importAmicoStock(options: RunOptions): Promise<ImportRepor
     dryRun: options.dryRun,
     req: options.req,
   });
+  const fetcher = options.fetcher ?? createPoliteFetcher();
   return importStock({
     ...options,
-    reader: motorsWebsiteReader(AMICO_ORIGIN, AMICO_TITLE_SUFFIXES),
+    fetcher,
+    reader: await amicoReader(fetcher),
     target: {
       dealerId: dealership.dealerId,
       branchId: dealership.branchId,
